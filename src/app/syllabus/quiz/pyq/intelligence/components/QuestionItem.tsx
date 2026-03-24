@@ -48,36 +48,36 @@ export function QuestionItem({
   // Helper to normalize options and correct answer
   const normalizedOptions = useMemo(() => {
     if (!question.options) return [];
-    
+
     try {
       // If it's already an array, check if it's strings or objects
       if (Array.isArray(question.options)) {
         if (question.options.length === 0) return [];
-        
+
         if (typeof question.options[0] === 'string') {
           return (question.options as string[]).map((opt, i) => ({
             id: String.fromCharCode(65 + i),
             text: opt,
-            textEn: question.optionsEn?.[i] || opt
+            textEn: question.optionsEn?.[i] || opt,
           }));
         }
-        
+
         // Handle DB JSON format: [{id, text, text_en}]
-        return (question.options as any[]).map(opt => ({
+        return (question.options as any[]).map((opt) => ({
           id: opt.id || '',
           text: opt.text || '',
-          textEn: opt.text_en || opt.text || opt.textEn || ''
+          textEn: opt.text_en || opt.text || opt.textEn || '',
         }));
       }
-      
+
       // If it's a string, try parsing
       if (typeof question.options === 'string') {
         const opts = JSON.parse(question.options);
         if (Array.isArray(opts)) {
-          return opts.map(opt => ({
+          return opts.map((opt) => ({
             id: opt.id || '',
             text: opt.text || '',
-            textEn: opt.text_en || opt.text || opt.textEn || ''
+            textEn: opt.text_en || opt.text || opt.textEn || '',
           }));
         }
       }
@@ -90,14 +90,14 @@ export function QuestionItem({
   const correctIdx = useMemo(() => {
     if (question.correctAnswer === undefined || question.correctAnswer === null) return -1;
     if (typeof question.correctAnswer === 'number') return question.correctAnswer;
-    
+
     // Match 'A', 'B', 'C', 'D' to 0, 1, 2, 3
     const ans = String(question.correctAnswer).toUpperCase();
     const charCode = ans.charCodeAt(0);
     if (ans.length === 1 && charCode >= 65 && charCode <= 68) return charCode - 65;
-    
+
     // Fallback: try to find by ID in normalized options
-    return normalizedOptions.findIndex(opt => opt.id === question.correctAnswer);
+    return normalizedOptions.findIndex((opt) => opt.id === question.correctAnswer);
   }, [question.correctAnswer, normalizedOptions]);
 
   if (variant === 'card') {
@@ -108,7 +108,7 @@ export function QuestionItem({
           isExpanded && 'bg-black/40 ring-1 ring-emerald-500/20'
         )}
       >
-        <div 
+        <div
           className="flex cursor-pointer items-start gap-3"
           onClick={() => setIsExpanded(!isExpanded)}
         >
@@ -119,36 +119,38 @@ export function QuestionItem({
 
           {/* Question Content */}
           <div className="min-w-0 flex-1">
-            <p className={cn(
-              "mb-2 text-xs leading-relaxed font-medium text-slate-300 transition-colors",
-              isExpanded ? "text-white" : "line-clamp-2"
-            )}>
+            <p
+              className={cn(
+                'mb-2 text-xs leading-relaxed font-medium text-slate-300 transition-colors',
+                isExpanded ? 'text-white' : 'line-clamp-2'
+              )}
+            >
               {displayText}
             </p>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[9px] font-black tracking-widest text-slate-500 uppercase">
-              <span className="text-emerald-500/80">
-                {question.year}
-              </span>
+              <span className="text-emerald-500/80">{question.year}</span>
               <span className="h-1 w-1 rounded-full bg-slate-800" />
-              <span className="truncate">{question.testTitle || `Q${question.qNo || (index + 1)}`}</span>
+              <span className="truncate">
+                {question.testTitle || `Q${question.qNo || index + 1}`}
+              </span>
               {question.subject && (
                 <>
                   <span className="h-1 w-1 rounded-full bg-slate-800" />
-                  <span className="truncate text-emerald-400/80">
-                    {question.subject}
-                  </span>
+                  <span className="truncate text-emerald-400/80">{question.subject}</span>
                 </>
               )}
               {repeatCount > 1 && (
                 <>
                   <span className="h-1 w-1 rounded-full bg-slate-800" />
-                  <span className="text-rose-400">
-                    {repeatCount}x REPEAT
-                  </span>
+                  <span className="text-rose-400">{repeatCount}x REPEAT</span>
                 </>
               )}
               <div className="ml-auto flex items-center gap-1 text-slate-600">
-                {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                {isExpanded ? (
+                  <ChevronUp className="h-3 w-3" />
+                ) : (
+                  <ChevronDown className="h-3 w-3" />
+                )}
               </div>
             </div>
           </div>
@@ -183,7 +185,7 @@ export function QuestionItem({
                               : 'border-white/[0.03] bg-white/[0.02] text-slate-400'
                           )}
                         >
-                          <span className="font-black text-slate-500 mr-2">{opt.id}</span>
+                          <span className="mr-2 font-black text-slate-500">{opt.id}</span>
                           {isHindi ? opt.text : opt.textEn || opt.text}
                         </div>
                       );
@@ -192,7 +194,7 @@ export function QuestionItem({
                 )}
 
                 {/* View full question link */}
-                <div className="flex items-center justify-between">
+                {/* <div className="flex items-center justify-between">
                   <Link
                     href={`/syllabus/quiz/pyq/question/${question.id}`}
                     className="inline-flex items-center gap-1.5 text-[10px] font-black tracking-widest text-emerald-500 uppercase hover:text-emerald-400"
@@ -200,7 +202,7 @@ export function QuestionItem({
                     {isHindi ? 'पूरा प्रश्न' : 'View Full'}
                     <ArrowRight className="h-3 w-3" />
                   </Link>
-                </div>
+                </div> */}
               </div>
             </motion.div>
           )}
@@ -231,33 +233,31 @@ export function QuestionItem({
             </p>
           </div>
 
-            <div className="flex shrink-0 items-center gap-2">
-              {question.subject && (
-                <Badge 
-                  variant="outline" 
-                  className="hidden h-5 border-emerald-500/30 bg-emerald-500/10 px-1.5 text-[9px] font-black tracking-tight text-emerald-400 sm:inline-flex uppercase"
-                >
-                  {question.subject}
-                </Badge>
-              )}
-              {question.qNo && (
-                <span className="font-mono text-[10px] text-slate-500">
-                  Q{question.qNo}
-                </span>
-              )}
-              {showYear && <YearBadge year={question.year} variant="emerald" />}
-              {repeatCount > 1 && (
-                <Badge className="h-5 border-none bg-rose-500/20 px-1.5 text-[10px] text-rose-400">
-                  <Repeat className="mr-0.5 h-3 w-3" />
-                  {isHindi ? `${repeatCount}x रिपीट` : `Repeated ${repeatCount}x`}
-                </Badge>
-              )}
-              {isExpanded ? (
-                <ChevronUp className="h-4 w-4 text-emerald-400" />
-              ) : (
-                <ChevronDown className="h-4 w-4 text-slate-600" />
-              )}
-            </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {question.subject && (
+              <Badge
+                variant="outline"
+                className="hidden h-5 border-emerald-500/30 bg-emerald-500/10 px-1.5 text-[9px] font-black tracking-tight text-emerald-400 uppercase sm:inline-flex"
+              >
+                {question.subject}
+              </Badge>
+            )}
+            {question.qNo && (
+              <span className="font-mono text-[10px] text-slate-500">Q{question.qNo}</span>
+            )}
+            {showYear && <YearBadge year={question.year} variant="emerald" />}
+            {repeatCount > 1 && (
+              <Badge className="h-5 border-none bg-rose-500/20 px-1.5 text-[10px] text-rose-400">
+                <Repeat className="mr-0.5 h-3 w-3" />
+                {isHindi ? `${repeatCount}x रिपीट` : `Repeated ${repeatCount}x`}
+              </Badge>
+            )}
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4 text-emerald-400" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-slate-600" />
+            )}
+          </div>
         </div>
 
         <AnimatePresence>
@@ -324,14 +324,12 @@ export function QuestionItem({
           {showYear && (
             <div className="mt-1 flex items-center gap-1.5">
               {question.qNo && (
-                <span className="font-mono text-[10px] text-slate-500">
-                  Q{question.qNo}
-                </span>
+                <span className="font-mono text-[10px] text-slate-500">Q{question.qNo}</span>
               )}
               {question.subject && (
-                <Badge 
-                  variant="outline" 
-                  className="h-5 border-emerald-500/30 bg-emerald-500/10 px-1.5 text-[9px] font-black tracking-tight text-emerald-400 sm:inline-flex uppercase"
+                <Badge
+                  variant="outline"
+                  className="h-5 border-emerald-500/30 bg-emerald-500/10 px-1.5 text-[9px] font-black tracking-tight text-emerald-400 uppercase sm:inline-flex"
                 >
                   {question.subject}
                 </Badge>
@@ -401,25 +399,31 @@ export function QuestionList({
       .sort((a, b) => b - a);
 
     return (
-      <div className={cn(
-        "divide-y divide-slate-800/30",
-        variant === 'card' && "divide-none space-y-4 p-4"
-      )}>
+      <div
+        className={cn(
+          'divide-y divide-slate-800/30',
+          variant === 'card' && 'space-y-4 divide-none p-4'
+        )}
+      >
         {sortedYears.map((year) => (
-          <div key={year} className={cn(variant === 'card' && "space-y-3")}>
-            <div className={cn(
-              "sticky top-0 z-10 flex items-center gap-2 bg-slate-900/95 px-4 py-2 backdrop-blur-sm",
-              variant === 'card' && "relative top-auto z-0 bg-transparent px-0 py-1"
-            )}>
+          <div key={year} className={cn(variant === 'card' && 'space-y-3')}>
+            <div
+              className={cn(
+                'sticky top-0 z-10 flex items-center gap-2 bg-slate-900/95 px-4 py-2 backdrop-blur-sm',
+                variant === 'card' && 'relative top-auto z-0 bg-transparent px-0 py-1'
+              )}
+            >
               <YearBadge year={year} variant="emerald" />
               <span className="text-xs text-slate-500">
                 ({byYear[year].length} {isHindi ? 'प्रश्न' : 'questions'})
               </span>
             </div>
-            <div className={cn(
-              "divide-y divide-slate-800/20",
-              variant === 'card' && "divide-none grid gap-3"
-            )}>
+            <div
+              className={cn(
+                'divide-y divide-slate-800/20',
+                variant === 'card' && 'grid gap-3 divide-none'
+              )}
+            >
               {byYear[year].map((q, idx) => (
                 <QuestionItem
                   key={q.id}
@@ -443,11 +447,13 @@ export function QuestionList({
   const hasMore = maxVisible && questions.length > maxVisible;
 
   return (
-    <div className={cn(variant === 'card' && "grid gap-3 p-4")}>
-      <div className={cn(
-        "divide-y divide-slate-800/30",
-        variant === 'card' && "divide-none grid gap-3"
-      )}>
+    <div className={cn(variant === 'card' && 'grid gap-3 p-4')}>
+      <div
+        className={cn(
+          'divide-y divide-slate-800/30',
+          variant === 'card' && 'grid gap-3 divide-none'
+        )}
+      >
         {visibleQuestions.map((q, idx) => (
           <QuestionItem
             key={q.id}
@@ -463,17 +469,21 @@ export function QuestionList({
       </div>
 
       {hasMore && !showAll && (
-        <div className={cn(
-          "border-t border-slate-800/30 p-4",
-          variant === 'card' && "border-none pt-2"
-        )}>
+        <div
+          className={cn(
+            'border-t border-slate-800/30 p-4',
+            variant === 'card' && 'border-none pt-2'
+          )}
+        >
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowAll(true)}
             className="w-full text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300"
           >
-            {isHindi ? `सभी ${questions.length} प्रश्न देखें` : `Show all ${questions.length} questions`}
+            {isHindi
+              ? `सभी ${questions.length} प्रश्न देखें`
+              : `Show all ${questions.length} questions`}
             <ChevronDown className="ml-1 h-4 w-4" />
           </Button>
         </div>
