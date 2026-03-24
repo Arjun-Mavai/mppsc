@@ -9,7 +9,7 @@ import { logger } from '@/lib/logger';
 import { cachedData } from '@/lib/cache';
 
 // 🎯 MPPSC Expected Cutoff (based on historical data)
-const EXPECTED_CUTOFF_PERCENTAGE = 76;
+const EXPECTED_CUTOFF_PERCENTAGE = 80;
 
 // Cache Analytics per user for 5 minutes to avoid DB spam on refresh
 export const getUserAnalytics = async (userId: string) => {

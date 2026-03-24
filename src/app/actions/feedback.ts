@@ -34,6 +34,8 @@ export async function submitTestFeedback(params: SubmitFeedbackParams) {
     }
 
     // Convert to DB format with proper types
+    const dbRecommend = data.wouldRecommend === 'yes' ? 'definitely' : 'no';
+
     const newFeedback = {
       id: randomUUID(),
       testId,
@@ -41,9 +43,9 @@ export async function submitTestFeedback(params: SubmitFeedbackParams) {
       testType,
       overallRating: data.overallRating,
       difficultyLevel: data.difficultyLevel,
-      questionQuality: 'good' as const, // Not collected in UI yet, defaulting to good
-      wouldRecommend: data.wouldRecommend,
-      comments: data.comments || null,
+      questionQuality: 'good' as const, // Not collected in UI yet
+      wouldRecommend: dbRecommend as 'definitely' | 'no',
+      comments: null,
       userName: effectiveName,
       userEmail: effectiveEmail,
     };

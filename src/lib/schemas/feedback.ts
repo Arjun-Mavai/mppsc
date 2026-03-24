@@ -20,14 +20,12 @@ import { z } from 'zod';
 export const feedbackFormSchema = z.object({
   overallRating: z
     .number()
-    .min(1, 'Please provide an overall rating')
-    .max(5, 'Rating must be between 1 and 5'),
+    .min(1, 'Please provide a rating')
+    .max(5),
 
   difficultyLevel: z.enum(['too_easy', 'just_right', 'too_hard'] as const),
 
-  wouldRecommend: z.enum(['definitely', 'probably', 'maybe', 'no'] as const),
-
-  comments: z.string().max(500, 'Comments cannot exceed 500 characters').optional(),
+  wouldRecommend: z.enum(['yes', 'no'] as const).default('yes'),
 });
 
 export type FeedbackFormType = z.infer<typeof feedbackFormSchema>;
@@ -36,37 +34,29 @@ export const feedbackQuestions = [
   {
     id: 'overallRating',
     name: 'overallRating' as const,
-    label: 'How would you rate the overall test quality?',
+    label: 'How was the test quality?',
     type: 'stars' as const,
     maxStars: 5,
   },
   {
     id: 'difficultyLevel',
     name: 'difficultyLevel' as const,
-    label: 'How was the difficulty level of the questions?',
+    label: 'Test Difficulty?',
     type: 'radio' as const,
     options: [
-      { value: 'too_easy', label: 'Too Easy' },
-      { value: 'just_right', label: 'Just Right (Exam Level)' },
-      { value: 'too_hard', label: 'Too Hard' },
+      { value: 'too_easy', label: 'Easy 😊' },
+      { value: 'just_right', label: 'Balanced ⚖️' },
+      { value: 'too_hard', label: 'Hard 🤯' },
     ],
   },
   {
     id: 'wouldRecommend',
     name: 'wouldRecommend' as const,
-    label: 'Would you recommend this test to other aspirants?',
+    label: 'Recommend to others?',
     type: 'radio' as const,
     options: [
-      { value: 'definitely', label: 'Definitely' },
-      { value: 'probably', label: 'Probably' },
-      { value: 'maybe', label: 'Maybe' },
-      { value: 'no', label: 'No' },
+      { value: 'yes', label: 'Yes! 👍' },
+      { value: 'no', label: 'Not really 👎' },
     ],
-  },
-  {
-    id: 'comments',
-    name: 'comments' as const,
-    label: 'Any additional comments? (Optional)',
-    type: 'textarea' as const,
   },
 ];

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   BookOpenText,
@@ -8,9 +8,19 @@ import {
   Lightbulb,
   BarChart3,
   Target,
-  ListChecks,
   ArrowLeft,
+  Filter,
+  Layers,
+  Calendar,
+  Sparkles,
+  Zap,
+  Bookmark,
+  Share2,
+  ChevronRight,
+  ShieldAlert,
+  Check,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,40 +41,40 @@ import { cn } from '@/lib/utils';
 
 const VARIANTS = {
   blue: {
-    bg: 'bg-slate-800/40',
-    text: 'text-indigo-300',
+    bg: 'bg-indigo-500/5',
+    text: 'text-indigo-400',
     icon: 'text-indigo-400',
     border: 'border-indigo-500/20',
-    shadow: 'shadow-indigo-500/10',
+    shadow: 'shadow-indigo-500/5',
     dot: 'bg-indigo-500',
-    highlight: 'bg-indigo-500/20',
+    highlight: 'bg-indigo-500/10',
   },
   pink: {
-    bg: 'bg-slate-800/40',
-    text: 'text-pink-300',
-    icon: 'text-pink-400',
-    border: 'border-pink-500/20',
-    shadow: 'shadow-pink-500/10',
-    dot: 'bg-pink-500',
-    highlight: 'bg-pink-500/20',
+    bg: 'bg-rose-500/5',
+    text: 'text-rose-400',
+    icon: 'text-rose-400',
+    border: 'border-rose-500/20',
+    shadow: 'shadow-rose-500/5',
+    dot: 'bg-rose-500',
+    highlight: 'bg-rose-500/10',
   },
   emerald: {
-    bg: 'bg-slate-800/40',
-    text: 'text-emerald-300',
+    bg: 'bg-emerald-500/5',
+    text: 'text-emerald-400',
     icon: 'text-emerald-400',
     border: 'border-emerald-500/20',
-    shadow: 'shadow-emerald-500/10',
+    shadow: 'shadow-emerald-500/5',
     dot: 'bg-emerald-500',
-    highlight: 'bg-emerald-500/20',
+    highlight: 'bg-emerald-500/10',
   },
   amber: {
-    bg: 'bg-slate-800/40',
-    text: 'text-amber-300',
+    bg: 'bg-amber-500/5',
+    text: 'text-amber-400',
     icon: 'text-amber-400',
     border: 'border-amber-500/20',
-    shadow: 'shadow-amber-500/10',
+    shadow: 'shadow-amber-500/5',
     dot: 'bg-amber-500',
-    highlight: 'bg-amber-500/20',
+    highlight: 'bg-amber-500/10',
   },
 };
 
@@ -118,7 +128,23 @@ export default function PYQFactsClient({
   const pathname = usePathname();
   const { language } = useSettingsStore();
   const isHindi = language === 'hi';
+  const [isPending, startTransition] = useTransition();
+  const [showFilters, setShowFilters] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [readFacts, setReadFacts] = useState<Set<string>>(new Set());
 
+  const readCount = readFacts.size;
+
+  const toggleFactRead = (id: string) => {
+    setReadFacts(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  // Auto-track progress as user scrolls (simplified simulation for now)
   const activeTopic = useMemo(() => {
     if (selectedTopic && selectedTopic !== 'all') {
       return topics.find((t) => t.topicSlug === selectedTopic);
@@ -130,674 +156,347 @@ export default function PYQFactsClient({
 
   const searchParams = useSearchParams();
   const applyFilters = (subject: string, topic?: string, year?: number, nextLimit = limit) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    // Always reset page on filter change
-    params.delete('page');
-
-    if (subject) params.set('subject', subject);
-
-    if (topic && topic !== 'all') {
-      params.set('topic', topic);
-    } else {
-      params.delete('topic');
-    }
-
-    if (year !== undefined && year !== 0) {
-      params.set('year', String(year));
-    } else {
-      params.delete('year');
-    }
-
-    params.set('limit', String(nextLimit));
-
-    // Optimize: Use replace instead of push for filter updates to avoid history pollution
-    router.replace(`${pathname}?${params.toString()}`);
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('page');
+      if (subject) params.set('subject', subject);
+      if (topic && topic !== 'all') params.set('topic', topic);
+      else params.delete('topic');
+      if (year !== undefined && year !== 0) params.set('year', String(year));
+      else params.delete('year');
+      params.set('limit', String(nextLimit));
+      router.replace(`${pathname}?${params.toString()}`);
+    });
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-950 pb-20 text-slate-200 selection:bg-indigo-500/30">
-      {/* Background Effects */}
-      <div className="pointer-events-none fixed inset-0">
-        <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-amber-500/10 blur-[100px]" />
-        <div className="absolute right-[-10%] bottom-[-10%] h-[500px] w-[500px] rounded-full bg-amber-600/5 blur-[100px]" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
+    <div className="relative min-h-screen bg-[#fafafa] pb-32 text-slate-900 selection:bg-rose-100">
+      {/* Light Multi-Gradient Background */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] h-[60%] w-[60%] rounded-full bg-indigo-50/60 blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] h-[60%] w-[60%] rounded-full bg-emerald-50/60 blur-[120px]" />
+        <div className="absolute top-[20%] right-[-5%] h-[50%] w-[50%] rounded-full bg-rose-50/60 blur-[120px]" />
+        <div className="absolute bottom-[20%] left-[-5%] h-[50%] w-[50%] rounded-full bg-amber-50/40 blur-[120px]" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
-        {/* Navigation & Back Button */}
-        <div className="mb-6 flex items-center justify-between">
-          <Button
-            variant="ghost"
-            onClick={() => router.push('/syllabus/quiz/pyq/intelligence')}
-            className="group rounded-xl border border-white/5 bg-white/5 px-4 font-bold text-slate-400 backdrop-blur-md transition-all hover:bg-white/10 hover:text-white"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
-            {isHindi ? 'वापस जाएं' : 'Back to Intelligence'}
-          </Button>
-
-          <div className="flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/5 px-3 py-1 backdrop-blur-sm">
-            <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
-            <span className="text-[10px] font-black tracking-widest text-amber-500/80 uppercase">
-              Premium Library
-            </span>
-          </div>
+      {/* Floating Progress Tracker (Retention Hook) */}
+      <motion.div 
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-full border border-slate-200/60 bg-white/80 px-6 py-3 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl"
+      >
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+          <BookOpenText size={14} />
         </div>
+        <span className="text-[10px] font-bold tracking-widest text-slate-600 uppercase whitespace-nowrap">
+          {isHindi ? `पढ़े गए: ${readCount}/${facts.length}` : `Progress: ${readCount}/${facts.length}`}
+        </span>
+        <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-100 sm:w-24">
+          <motion.div 
+            className="h-full bg-emerald-500"
+            initial={{ width: 0 }}
+            animate={{ width: `${(readCount / Math.max(facts.length, 1)) * 100}%` }}
+          />
+        </div>
+      </motion.div>
 
-        {/* Header Section - Dark Intelligence Style */}
-        <div className="relative mb-8 overflow-hidden rounded-[2.5rem] border border-slate-800 bg-slate-900/40 p-8 shadow-2xl backdrop-blur-xl sm:p-10">
-          {/* grid texture */}
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:32px_32px] opacity-[0.2]" />
-          {/* glow spots */}
-          <div className="pointer-events-none absolute -top-12 -right-12 h-56 w-56 rounded-full bg-amber-500/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-amber-500/5 blur-3xl" />
-
-          <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex-1 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-inner ring-1 ring-amber-500/30">
-                  <Lightbulb className="h-6 w-6 text-amber-500" />
-                </div>
-                <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
-                  {isHindi ? 'फैक्ट लाइब्रेरी' : 'Facts Library'}
-                </h1>
+      <div className={cn(
+        "relative z-10 mx-auto max-w-6xl px-4 pt-20 transition-all duration-500",
+        isPending && "blur-[1px] opacity-70 pointer-events-none"
+      )}>
+        {/* Elite Mobile-First Header */}
+        <div className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-5">
+            <button
+              onClick={() => router.push('/syllabus/quiz/pyq/intelligence')}
+              className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50 hover:scale-105 active:scale-95"
+            >
+              <ArrowLeft className="h-5 w-5 text-slate-500" />
+            </button>
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <Sparkles size={12} className="text-rose-500" />
+                <span className="text-[10px] font-bold tracking-[0.2em] text-rose-500 uppercase">Expert Vault</span>
               </div>
-              <p className="max-w-xl text-base leading-relaxed font-medium text-slate-400">
-                {isHindi
-                  ? 'MPPSC पैटर्न को high-yield facts, memory tricks और trap alerts के साथ master करें।'
-                  : 'Master MPPSC patterns with high-yield facts, mnemonics, and trap alerts.'}
-              </p>
+              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
+                {isHindi ? 'फैक्ट लाइब्रेरी' : 'Facts Library'}
+              </h1>
             </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowStats(!showStats)}
+              className={cn(
+                "h-12 w-12 rounded-2xl border-slate-200 bg-white p-0 text-slate-600 transition-all hover:bg-slate-50 shadow-sm",
+                showStats && "bg-amber-50 text-amber-600 border-amber-200"
+              )}
+            >
+              <Target className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+              className={cn(
+                "h-12 flex-1 rounded-2xl border-slate-200 bg-white px-6 text-[11px] font-bold tracking-widest text-slate-600 uppercase transition-all sm:flex-none shadow-sm",
+                showFilters && "bg-rose-50 text-rose-600 border-rose-200"
+              )}
+            >
+              <Filter className="mr-2 h-4 w-4" />
+              {isHindi ? 'फिल्टर' : 'Filters'}
+            </Button>
             <Button
               variant="outline"
               onClick={() => router.push('/syllabus/quiz/pyq/analysis')}
-              className="inline-flex h-12 w-full shrink-0 items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 px-6 text-sm font-black text-amber-500 shadow-sm transition-all hover:bg-amber-500 hover:text-black sm:w-auto"
+              className="h-12 hidden sm:flex rounded-2xl border-slate-200 bg-white px-6 text-[11px] font-bold tracking-widest text-slate-600 uppercase transition-all hover:bg-slate-50 shadow-sm"
             >
               <BarChart3 className="mr-2 h-4 w-4" />
-              {isHindi ? 'टॉपिक विश्लेषण' : 'Topic Analysis'}
+              {isHindi ? 'एनालिसिस' : 'Analysis'}
             </Button>
-          </div>
-
-          <div className="relative z-10 mt-10 space-y-8">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-              {/* Subject Select */}
-              <div className="space-y-2.5">
-                <label className="flex items-center gap-2 px-1 text-[11px] font-black tracking-widest text-amber-400 uppercase">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></span>
-                  {isHindi ? 'विषय' : 'Subject'}
-                </label>
-                <Select
-                  value={selectedSubject}
-                  onValueChange={(val) => applyFilters(val, undefined, selectedYear)}
-                >
-                  <SelectTrigger className="h-14 w-full rounded-2xl border-slate-800 bg-slate-900/60 font-black tracking-tight text-white shadow-sm backdrop-blur-md transition-all hover:border-amber-500/50 hover:bg-slate-900/80 focus:ring-amber-500/30 focus:ring-offset-0">
-                    <SelectValue placeholder={isHindi ? 'विषय चुनें' : 'Select Subject'} />
-                  </SelectTrigger>
-                  <SelectContent
-                    position="popper"
-                    sideOffset={4}
-                    className="z-[100] max-h-[350px] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950 text-slate-200 shadow-2xl backdrop-blur-xl"
-                  >
-                    {subjects.map((s) => (
-                      <SelectItem
-                        key={s.subject}
-                        value={s.subject}
-                        className="cursor-pointer py-3 font-bold text-slate-400 focus:bg-amber-500/10 focus:text-amber-400"
-                      >
-                        {s.subject} ({s.factCount} PYQ)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Topic Select */}
-              <div className="space-y-2.5">
-                <label className="flex items-center gap-2 px-1 text-[11px] font-black tracking-widest text-amber-500/70 uppercase">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500/50"></span>
-                  {isHindi ? 'टॉपिक' : 'Topic'}
-                </label>
-                <Select
-                  value={selectedTopic || 'all'}
-                  onValueChange={(val) =>
-                    applyFilters(selectedSubject, val === 'all' ? undefined : val, selectedYear)
-                  }
-                >
-                  <SelectTrigger className="h-14 w-full rounded-2xl border-slate-800 bg-slate-900/60 font-black tracking-tight text-white shadow-sm backdrop-blur-md transition-all hover:border-amber-500/40 hover:bg-slate-900/80 focus:ring-amber-500/30">
-                    <SelectValue placeholder={isHindi ? 'सभी टॉपिक' : 'All Topics'} />
-                  </SelectTrigger>
-                  <SelectContent
-                    position="popper"
-                    sideOffset={4}
-                    className="z-[100] max-h-[350px] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950 text-slate-200 shadow-2xl backdrop-blur-xl"
-                  >
-                    <SelectItem
-                      value="all"
-                      className="cursor-pointer py-3 font-bold text-slate-400 focus:bg-amber-500/10 focus:text-amber-400"
-                    >
-                      {isHindi ? 'सभी टॉपिक' : 'All Topics'}
-                    </SelectItem>
-                    {topics.map((t) => (
-                      <SelectItem
-                        key={t.topicSlug}
-                        value={t.topicSlug}
-                        className="cursor-pointer py-3 font-bold text-slate-400 focus:bg-amber-500/10 focus:text-amber-400"
-                      >
-                        {isHindi ? t.topicTitle : t.topicTitleEn || t.topicTitle}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Year Select */}
-              <div className="space-y-2.5">
-                <label className="flex items-center gap-2 px-1 text-[11px] font-black tracking-widest text-amber-600 uppercase">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-700"></span>
-                  {isHindi ? 'वर्ष' : 'Year'}
-                </label>
-                <Select
-                  value={selectedYear ? String(selectedYear) : 'all'}
-                  onValueChange={(val) =>
-                    applyFilters(selectedSubject, selectedTopic, val === 'all' ? 0 : Number(val))
-                  }
-                >
-                  <SelectTrigger className="h-14 w-full rounded-2xl border-slate-800 bg-slate-900/60 font-black tracking-tight text-white shadow-sm backdrop-blur-md transition-all hover:border-amber-500/30 hover:bg-slate-900/80 focus:ring-amber-500/30">
-                    <SelectValue placeholder={isHindi ? 'सभी वर्ष' : 'All Years'} />
-                  </SelectTrigger>
-                  <SelectContent
-                    position="popper"
-                    sideOffset={4}
-                    className="z-[100] max-h-[350px] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950 text-slate-200 shadow-2xl backdrop-blur-xl"
-                  >
-                    <SelectItem
-                      value="all"
-                      className="cursor-pointer py-3 font-bold text-slate-400 focus:bg-amber-500/10 focus:text-amber-400"
-                    >
-                      {isHindi ? 'सभी वर्ष' : 'All Years'}
-                    </SelectItem>
-                    {yearOptions.map((y) => (
-                      <SelectItem
-                        key={y}
-                        value={String(y)}
-                        className="cursor-pointer py-3 font-bold text-slate-400 focus:bg-amber-500/10 focus:text-amber-400"
-                      >
-                        {y} Exam
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          {/* ✦ Dark Amber Stats Card */}
-          <div className="relative mt-8 overflow-hidden rounded-[2rem] border border-amber-500/20 bg-amber-950/20 p-6 shadow-2xl backdrop-blur-xl">
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:32px_32px] opacity-[0.1]" />
-            <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex flex-wrap gap-6 sm:grid sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-white/5">
-                {[
-                  {
-                    emoji: '📅',
-                    label: isHindi ? 'डेटासेट' : 'Dataset',
-                    val: `${coverage.fromYear}–${coverage.toYear}`,
-                    color: 'text-amber-400',
-                  },
-                  {
-                    emoji: '📝',
-                    label: isHindi ? 'कुल PYQ' : 'Total PYQ',
-                    val: coverage.pyqQuestionCount,
-                    color: 'text-amber-300',
-                  },
-                  {
-                    emoji: '🎯',
-                    label: isHindi ? 'mapped प्रश्न' : 'Questions Mapped',
-                    val: `${coverage.mappedQuestionCount} (${coverage.mappingCoveragePercent}%)`,
-                    color: 'text-amber-200',
-                  },
-                ].map((stat, i) => (
-                  <div key={i} className="space-y-0.5 first:pl-0 sm:px-6">
-                    <p className="flex items-center gap-1 text-[9px] font-black tracking-[0.2em] text-amber-600/60 uppercase">
-                      <span className="text-sm">{stat.emoji}</span>
-                      {stat.label}
-                    </p>
-                    <p className={`text-xl font-black tracking-tight ${stat.color}`}>{stat.val}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex shrink-0 items-center gap-3">
-                <span className="text-[11px] font-black tracking-widest text-amber-600/60 uppercase">
-                  {isHindi ? `दिख रहे: ${facts.length}` : `Showing ${facts.length}`}
-                </span>
-                <div className="flex gap-1 rounded-xl border border-amber-500/20 bg-slate-900/60 p-1">
-                  {LIMIT_OPTIONS.map((item) => (
-                    <button
-                      key={item}
-                      onClick={() =>
-                        applyFilters(selectedSubject, selectedTopic, selectedYear, item)
-                      }
-                      className={`rounded-lg px-3 py-1.5 text-xs font-black transition-all ${
-                        limit === item
-                          ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]'
-                          : 'text-amber-500/60 hover:text-amber-400'
-                      }`}
-                    >
-                      {item}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* Deep Learning CTA (Empty State) */}
-        {!deepLearning && topics.length > 0 && (
-          <div className="animate-in fade-in zoom-in-95 mt-4 mb-8 rounded-[2rem] border-2 border-dashed border-slate-700 bg-slate-900/50 p-8 text-center duration-500">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-800 text-slate-200 shadow-sm ring-4 ring-slate-900">
-              <Brain className="h-7 w-7 text-indigo-400" />
-            </div>
-            <h3 className="mb-2 text-lg font-black text-white">
-              {isHindi ? 'Deep Learning इनसाइट्स अनलॉक करें' : 'Unlock Deep Learning Insights'}
-            </h3>
-            <p className="mx-auto mb-6 max-w-md text-sm leading-relaxed font-medium text-slate-400">
-              {isHindi
-                ? 'Concept Capsules, Must-Know Lists और Practice Prompts देखने के लिए ऊपर से कोई एक टॉपिक चुनें।'
-                : 'Select a specific topic to access premium Concept Capsules, Must-Know Lists, and Practice Prompts.'}
-            </p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {topics.slice(0, 3).map((topic) => (
-                <button
-                  key={topic.topicSlug}
-                  onClick={() => applyFilters(selectedSubject, topic.topicSlug, selectedYear)}
-                  className="inline-flex items-center justify-center rounded-full border border-slate-700 bg-slate-800 px-4 py-1.5 text-xs font-bold text-slate-300 shadow-sm transition-colors hover:border-indigo-500/50 hover:bg-slate-700 hover:text-white"
-                >
-                  {isHindi ? topic.topicTitle : topic.topicTitleEn || topic.topicTitle}
-                </button>
-              ))}
-              {topics.length > 3 && (
-                <span className="inline-flex items-center justify-center px-2 text-xs font-bold text-slate-500">
-                  +{topics.length - 3} more
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Deep Learning Hero Section */}
-        {deepLearning && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 mt-4 mb-8 space-y-6 duration-700">
-            <div className="flex items-center gap-2 px-2">
-              <div className="h-0.5 flex-1 rounded-full bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
-              <span className="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">
-                {isHindi ? 'मुख्य इनसाइट्स' : 'Key Insights'}
-              </span>
-              <div className="h-0.5 flex-1 rounded-full bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
-            </div>
-
-            <div className="grid items-start gap-6 lg:grid-cols-12">
-              {/* Left Column: Concept Capsule & Practice Prompts */}
-              <div className="flex flex-col gap-6 lg:col-span-5">
-                {/* Concept Capsule - Elite Glass Style */}
-                {(deepLearning.concept_capsule || deepLearning.concept_capsule_en) && (
-                  <div
-                    className={cn(
-                      'group relative overflow-hidden rounded-[2.5rem] border p-6 shadow-xl backdrop-blur-xl transition-all hover:shadow-2xl',
-                      VARIANTS.blue.bg.replace('bg-', 'bg-opacity-50'),
-                      VARIANTS.blue.border
-                    )}
-                  >
-                    <div className="absolute top-0 left-0 h-1 w-full bg-blue-500 opacity-80" />
-                    <h3 className="mb-4 flex items-center gap-2 text-xs font-black tracking-widest text-white uppercase">
-                      <Target className="h-4 w-4 text-blue-500" />{' '}
-                      {isHindi ? 'कांसेप्ट कैप्सूल' : 'Concept Capsule'}
-                    </h3>
-                    <ul className="space-y-3.5 text-[15px] leading-relaxed font-bold tracking-wide text-slate-800 [text-shadow:1px_1px_2px_rgba(0,0,0,0.4)] sm:text-[17px] lg:text-[19px] 2xl:text-[21px]">
-                      {(isHindi
-                        ? deepLearning.concept_capsule
-                        : deepLearning.concept_capsule_en || deepLearning.concept_capsule
-                      )
-                        ?.split(/\n+/)
-                        ?.flatMap((text) => text.split(/(?<=[.|।])\s+/))
-                        .filter((p) => p.trim().length > 5)
-                        .map((point, i) => (
-                          <li
-                            key={i}
-                            className="flex items-start gap-3 rounded-2xl border border-blue-500/20 bg-slate-950/60 p-3 shadow-sm"
-                          >
-                            <span className="mt-2.5 flex h-2 w-2 shrink-0 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></span>
-                            <span className="flex-1 text-slate-200">
-                              {point.trim() + (point.trim().endsWith('.') ? '' : '.')}
-                            </span>
-                          </li>
-                        ))}
-                    </ul>
+        {/* Coverage Intelligence Card - Collapsible */}
+        <AnimatePresence>
+          {showStats && (
+            <motion.div
+              initial={{ height: 0, opacity: 0, marginBottom: 0 }}
+              animate={{ height: 'auto', opacity: 1, marginBottom: 48 }}
+              exit={{ height: 0, opacity: 0, marginBottom: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                {[
+                  { label: 'Dataset', val: `${coverage.fromYear}-${coverage.toYear}`, icon: Calendar, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                  { label: 'Total PYQ', val: coverage.pyqQuestionCount, icon: Layers, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                  { label: 'Confidence', val: `${coverage.mappingCoveragePercent}%`, icon: Target, color: 'text-amber-600', bg: 'bg-amber-50' },
+                  { label: 'Intelligence', val: topics.length, icon: Brain, color: 'text-rose-600', bg: 'bg-rose-50' },
+                ].map((stat, i) => (
+                  <div key={i} className="flex flex-col gap-1 rounded-[1.5rem] border border-slate-100 bg-white p-5 shadow-sm">
+                    <div className={cn("flex h-8 w-8 items-center justify-center rounded-xl mb-1", stat.bg)}>
+                      <stat.icon className={cn("h-4 w-4", stat.color)} />
+                    </div>
+                    <span className="text-[9px] font-bold tracking-widest text-slate-400 uppercase">{stat.label}</span>
+                    <span className="text-sm font-extrabold text-slate-900">{stat.val}</span>
                   </div>
-                )}
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-                {/* Active Recall - Glassy Emerald */}
-                {deepLearning.practice_prompts && deepLearning.practice_prompts.length > 0 && (
-                  <div className="rounded-[2.5rem] border border-emerald-500/20 bg-emerald-950/20 p-5 shadow-xl backdrop-blur-md">
-                    <h4 className="mb-4 flex items-center gap-2 text-xs font-black tracking-widest text-emerald-400 uppercase">
-                      <span className="relative flex h-2 w-2">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                      </span>
-                      {isHindi ? 'एक्टिव रीकॉल' : 'Active Recall'}
-                    </h4>
-                    <ul className="space-y-3">
-                      {(isHindi
-                        ? deepLearning.practice_prompts
-                        : deepLearning.practice_prompts_en || deepLearning.practice_prompts
-                      ).map((prompt, i) => (
-                        <li
-                          key={i}
-                          className="flex items-start gap-3 rounded-2xl border border-emerald-500/20 bg-slate-950/70 p-3.5 text-[14px] leading-relaxed font-bold text-emerald-200 shadow-sm sm:text-[16px]"
-                        >
-                          <span className="mt-1 shrink-0 text-emerald-500">❖</span>
-                          <span>{prompt}</span>
-                        </li>
+        {/* Reverted Animated Filters Tray */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="mb-10 overflow-hidden"
+            >
+              <div className="grid grid-cols-1 gap-4 rounded-[2.5rem] border border-slate-200 bg-white/80 p-6 backdrop-blur-xl sm:grid-cols-3 shadow-lg">
+                <div className="space-y-2">
+                  <span className="ml-1 text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase">Subject</span>
+                  <Select value={selectedSubject} onValueChange={(val) => applyFilters(val, undefined, selectedYear)}>
+                    <SelectTrigger className="h-12 rounded-2xl border-slate-100 bg-slate-50 font-bold text-slate-700">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent position="popper" sideOffset={5} className="w-[320px] max-w-[90vw] rounded-2xl border-slate-200 bg-white text-slate-700 max-h-[280px] overflow-auto no-scrollbar shadow-2xl z-[100]">
+                      {subjects.map((s) => (
+                        <SelectItem key={s.subject} value={s.subject} className="rounded-xl focus:bg-rose-50 focus:text-rose-600 py-3">
+                          {s.subject} ({s.factCount})
+                        </SelectItem>
                       ))}
-                    </ul>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <span className="ml-1 text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase">Topic</span>
+                  <Select value={selectedTopic || 'all'} onValueChange={(val) => applyFilters(selectedSubject, val === 'all' ? undefined : val, selectedYear)}>
+                    <SelectTrigger className="h-12 rounded-2xl border-slate-100 bg-slate-50 font-bold text-slate-700">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent position="popper" sideOffset={5} className="w-[320px] max-w-[90vw] rounded-2xl border-slate-200 bg-white text-slate-700 max-h-[280px] overflow-auto no-scrollbar shadow-2xl z-[100]">
+                      <SelectItem value="all" className="rounded-xl py-3">All Topics</SelectItem>
+                      {topics.map((t) => (
+                        <SelectItem key={t.topicSlug} value={t.topicSlug} className="rounded-xl focus:bg-rose-50 focus:text-rose-600 py-3">
+                          {isHindi ? t.topicTitle : t.topicTitleEn || t.topicTitle}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <span className="ml-1 text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase">Year</span>
+                  <Select value={selectedYear ? String(selectedYear) : 'all'} onValueChange={(val) => applyFilters(selectedSubject, selectedTopic, val === 'all' ? 0 : Number(val))}>
+                    <SelectTrigger className="h-12 rounded-2xl border-slate-100 bg-slate-50 font-bold text-slate-700">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent position="popper" sideOffset={5} className="w-[320px] max-w-[90vw] rounded-2xl border-slate-200 bg-white text-slate-700 max-h-[280px] overflow-auto no-scrollbar shadow-2xl z-[100]">
+                      <SelectItem value="all" className="rounded-xl py-3">All Years</SelectItem>
+                      {yearOptions.map((y) => (
+                        <SelectItem key={y} value={String(y)} className="rounded-xl focus:bg-rose-50 focus:text-rose-600">
+                          {y} Exam
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Deep Learning Insights - Google Clean Look */}
+        {deepLearning && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 mb-16 space-y-8 duration-700">
+            <div className="flex items-center gap-4 px-2">
+              <Sparkles size={14} className="text-indigo-500" />
+              <h3 className="text-[10px] font-bold tracking-[0.3em] text-slate-400 uppercase">Topic Insight</h3>
+              <div className="h-px flex-1 bg-slate-100" />
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-12">
+              <div className="lg:col-span-7">
+                <div className="relative overflow-hidden rounded-[2.5rem] bg-indigo-50 border border-indigo-100 px-10 py-12 transition-all hover:bg-indigo-100/50 sm:px-16 sm:py-14 lg:px-20 lg:py-16">
+                  <h4 className="mb-6 flex items-center gap-2 text-[10px] font-bold tracking-widest text-indigo-600 uppercase">
+                    <Target className="h-3.5 w-3.5" /> Concept Summary
+                  </h4>
+                  <div className="space-y-5 text-[17px] leading-[1.7] font-semibold text-slate-800 sm:text-[19px]">
+                    {(isHindi ? deepLearning.concept_capsule : deepLearning.concept_capsule_en || deepLearning.concept_capsule)
+                      ?.split(/\n+/)
+                      .filter(p => p.trim().length > 5)
+                      .map((point, i) => (
+                        <div key={i} className="flex items-start gap-4">
+                          <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.5)]" />
+                          <p className="[text-wrap:pretty]">{point.trim()}</p>
+                        </div>
+                      ))}
                   </div>
-                )}
+                </div>
               </div>
 
-              {/* Right Column: Must Know Lists */}
-              <div className="lg:col-span-7">
-                {deepLearning.must_know_lists && deepLearning.must_know_lists.length > 0 && (
-                  <div className="grid h-full gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                    {deepLearning.must_know_lists.map((list, idx) => {
-                      const variants = ['blue', 'pink', 'emerald', 'amber'] as const;
-                      const color = VARIANTS[variants[idx % 4]];
-
-                      return (
-                        <div
-                          key={idx}
-                          className={cn(
-                            'group relative flex flex-col overflow-hidden rounded-[2.5rem] border bg-slate-900/50 p-5 shadow-xl backdrop-blur-md transition-all hover:bg-slate-800/80 hover:shadow-2xl',
-                            color.border,
-                            color.shadow
-                          )}
-                        >
-                          <h4 className="mb-4 flex items-center gap-3 text-[15px] leading-tight font-black tracking-wide text-slate-200 sm:text-[17px]">
-                            <div
-                              className={cn(
-                                'rounded-xl border border-slate-700 bg-slate-800 p-2 shadow-sm transition-transform group-hover:scale-110',
-                                color.text
-                              )}
-                            >
-                              <ListChecks className="h-5 w-5" />
-                            </div>
-                            {isHindi ? list.list_title : list.list_title_en || list.list_title}
-                          </h4>
-
-                          <ul className="mb-5 flex-grow space-y-3">
-                            {(isHindi ? list.items : list.items_en || list.items).map((item, i) => (
-                              <li
-                                key={i}
-                                className={`flex items-start gap-3 text-[14px] leading-relaxed font-bold tracking-wide text-slate-300 sm:text-[16px]`}
-                              >
-                                <span
-                                  className={cn(
-                                    `mt-2 flex h-2 w-2 shrink-0 rounded-full shadow-sm transition-colors`,
-                                    color.dot
-                                  )}
-                                ></span>
-                                <span>{item}</span>
-                              </li>
-                            ))}
-                          </ul>
-
-                          {(list.memory_hook || list.memory_hook_en) && (
-                            <div
-                              className={cn(
-                                'relative mt-auto overflow-hidden rounded-[1.25rem] border p-4 transition-all duration-500',
-                                color.highlight,
-                                color.border
-                              )}
-                            >
-                              <span
-                                className={cn(
-                                  'mb-2 flex items-center gap-2 text-xs font-black tracking-widest uppercase',
-                                  color.text
-                                )}
-                              >
-                                <Lightbulb className="h-3.5 w-3.5" />{' '}
-                                {isHindi ? 'याद रखने की ट्रिक' : 'Memory Hook'}
-                              </span>
-                              <span
-                                className={cn(
-                                  'block text-[14px] leading-relaxed font-bold tracking-wide text-white sm:text-[15px]'
-                                )}
-                              >
-                                {isHindi
-                                  ? list.memory_hook
-                                  : list.memory_hook_en || list.memory_hook}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+              <div className="space-y-6 lg:col-span-5">
+                <div className="rounded-[2.5rem] bg-emerald-50 p-7">
+                  <h4 className="mb-5 flex items-center gap-2 text-[10px] font-bold tracking-widest text-emerald-600 uppercase">
+                    <Zap className="h-3.5 w-3.5 fill-emerald-600" /> Core Questions
+                  </h4>
+                  <div className="space-y-3">
+                    {(isHindi ? deepLearning.practice_prompts : deepLearning.practice_prompts_en || deepLearning.practice_prompts)?.map((prompt, i) => (
+                      <div key={i} className="rounded-2xl bg-white/60 p-4 text-[13px] font-bold text-slate-700 leading-relaxed shadow-sm transition-all hover:bg-white">
+                        <span className="mr-2 text-emerald-500">Q.</span>
+                        {prompt}
+                      </div>
+                    ))}
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Facts Feed */}
-        <div className="space-y-6">
+        {/* Facts Feed - Neural Bento Grid */}
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-1">
           {facts.map((fact, idx) => {
-            const years = Array.from(
-              new Set(
-                fact.enrichedRefs?.map((r) => r.year) || fact.pyqRefs?.map((r) => r.year) || []
-              )
-            ).sort((a, b) => (b ?? 0) - (a ?? 0));
-
+            const years = Array.from(new Set(fact.enrichedRefs?.map(r => r.year) || fact.pyqRefs?.map(r => r.year) || [])).sort((a, b) => (b ?? 0) - (a ?? 0));
+            const cardColors = [
+              'bg-[#ebf5ff] border-[#cce4ff] text-[#005cb2]', // Soft Blue
+              'bg-[#fdf2f8] border-[#fce7f3] text-[#be185d]', // Soft Pink
+              'bg-[#ecfdf5] border-[#d1fae5] text-[#047857]', // Soft Emerald
+              'bg-[#fffbeb] border-[#fef3c7] text-[#b45309]', // Soft Amber
+              'bg-[#f5f3ff] border-[#ede9fe] text-[#6d28d9]', // Soft Purple
+            ];
+            const colorIndex = idx % cardColors.length;
+            const bgClass = cardColors[colorIndex].split(' ')[0];
+            const borderClass = cardColors[colorIndex].split(' ')[1];
+            
             return (
-              <div
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, margin: "-50px" }}
                 key={fact.id}
                 className={cn(
-                  'group relative overflow-hidden rounded-[2.5rem] border border-amber-500/10 bg-slate-900/40 backdrop-blur-md transition-all duration-500 hover:border-amber-500/30 hover:bg-slate-800/60 hover:shadow-[0_0_30px_rgba(245,158,11,0.1)]'
+                  "group relative overflow-hidden rounded-[2.5rem] px-10 py-12 border transition-all hover:shadow-2xl sm:px-16 sm:py-14 lg:px-20 lg:py-16",
+                  bgClass,
+                  borderClass
                 )}
               >
-                <div
-                  className={cn(
-                    'absolute top-0 left-0 h-full w-1.5 bg-amber-500 opacity-60 transition-all group-hover:opacity-100'
-                  )}
-                />
-
-                {/* Card Header: Metadata Badges */}
-                <div
-                  className={cn(
-                    'flex flex-wrap items-center gap-2 border-b border-white/5 bg-white/5 px-6 py-4'
-                  )}
-                >
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      'border-none bg-amber-500/10 px-3 py-1 font-black tracking-tight text-amber-500 shadow-sm'
-                    )}
-                  >
-                    {isHindi ? fact.topicTitle : fact.topicTitleEn || fact.topicTitle}
-                  </Badge>
-
-                  {years.length > 0 && (
-                    <Badge
-                      variant="outline"
-                      className="border-amber-500/30 bg-amber-500/5 px-2.5 py-1 font-mono text-xs font-black text-amber-400/80"
-                    >
-                      {years.join(', ')}
-                    </Badge>
-                  )}
-                  {fact.tags?.map((tag, i) => (
-                    <Badge
-                      key={i}
-                      variant="secondary"
-                      className="border border-slate-700/50 bg-slate-800/50 px-2.5 py-1 font-bold text-slate-400"
-                    >
-                      #{tag}
-                    </Badge>
-                  ))}
-                  {fact.importanceScore && fact.importanceScore > 8 && (
-                    <Badge className="ml-auto border-amber-500/30 bg-amber-500 px-3 py-1 font-black text-black shadow-lg shadow-amber-500/20">
-                      🔥 {isHindi ? 'High Yield' : 'High Yield'}
-                    </Badge>
-                  )}
-                  {!fact.importanceScore && (
-                    <Badge
-                      variant="secondary"
-                      className="ml-auto border border-amber-500/20 bg-amber-500/5 px-3 py-1 font-black text-amber-500/60 shadow-sm"
-                    >
-                      {isHindi ? 'रीविजन' : 'Revision'}
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="space-y-7 p-5 sm:p-8">
-                  {/* Main Fact */}
-                  <div>
-                    <h3 className="mb-3 flex items-center gap-2 text-xs font-black tracking-widest text-amber-500/50 uppercase">
-                      <div
-                        className={cn(
-                          'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-amber-500/30 bg-amber-500/10 text-[11px] text-amber-500 shadow-inner'
-                        )}
-                      >
-                        🎯
+                <div className="relative z-10 space-y-8">
+                  {/* Metadata Hierarchy */}
+                  <div className="flex wrap items-center justify-between gap-4">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="rounded-full bg-white/95 px-4 py-2 text-[9px] font-bold tracking-[0.2em] uppercase shadow-sm">
+                        {isHindi ? fact.topicTitle : fact.topicTitleEn || fact.topicTitle}
                       </div>
-                      {isHindi ? 'महत्वपूर्ण तथ्य' : 'Core Fact'}
-                    </h3>
-                    <div className="text-[17px] leading-relaxed font-black tracking-tight whitespace-pre-line text-white sm:text-[19px] sm:leading-loose md:text-[21px] lg:text-[23px]">
-                      {isHindi ? fact.factText : fact.factTextEn || fact.factText}
+                      {years.map(y => (
+                        <div key={y} className="flex items-center gap-1.5 rounded-full bg-white/70 px-4 py-2 text-[9px] font-bold shadow-sm opacity-90">
+                          <Calendar size={10} className="opacity-40" />
+                          {y} Exam
+                        </div>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Mnemonics / Memory Tips */}
-                  {fact.memoryTip && (
-                    <div
+                  {/* Core Fact Content - Optimized Rhythm */}
+                  <div className="space-y-6">
+                    <h3 className="text-[10px] font-bold tracking-[0.6em] opacity-25 uppercase text-slate-600">Fact Insight</h3>
+                    <p className="text-[20px] leading-[1.65] font-extrabold tracking-[-0.01em] text-slate-800 sm:text-[26px] lg:text-[30px] [text-wrap:pretty]">
+                      {isHindi ? fact.factText : fact.factTextEn || fact.factText}
+                    </p>
+                  </div>
+
+                  {/* Memory & Trap Panels - Rhythmic Balance */}
+                  <div className="grid gap-6 pt-4 sm:grid-cols-2">
+                    {fact.memoryTip && (
+                      <div className="rounded-[2.25rem] bg-white/50 p-7 shadow-sm transition-all hover:bg-white/80">
+                        <h5 className="mb-4 flex items-center gap-2 text-[10px] font-black tracking-[0.2em] uppercase opacity-40">
+                          <Lightbulb className="h-4 w-4" /> Learning Key
+                        </h5>
+                        <p className="text-[15px] leading-[1.6] font-semibold text-slate-600 tracking-tight">
+                          {isHindi ? fact.memoryTip : fact.memoryTipEn || fact.memoryTip}
+                        </p>
+                      </div>
+                    )}
+                    {fact.scamAlert && (
+                      <div className="rounded-[2.25rem] bg-rose-50/70 p-7 shadow-sm transition-all hover:bg-rose-50/90">
+                        <h5 className="mb-4 flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-rose-600 uppercase">
+                          <ShieldAlert className="h-4 w-4" /> Exam Trap
+                        </h5>
+                        <p className="text-[15px] leading-[1.6] font-semibold text-rose-900 tracking-tight">
+                          {isHindi ? fact.scamAlert : fact.scamAlertEn || fact.scamAlert}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Enhanced Mastered Interaction */}
+                  <div className="flex items-center justify-between border-t border-slate-200/50 pt-10">
+                     <div className="flex items-center gap-3">
+                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]" />
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Mastery Focus</span>
+                     </div>
+                    <button 
+                      onClick={() => toggleFactRead(fact.id)}
                       className={cn(
-                        'relative overflow-hidden rounded-[1.5rem] border border-amber-500/20 bg-amber-950/20 p-5 transition-all duration-500 sm:p-6'
+                        "group flex items-center gap-3 rounded-2xl px-8 py-4 text-[12px] font-black tracking-widest uppercase transition-all shadow-md",
+                        readFacts.has(fact.id)
+                          ? "bg-emerald-500 text-white shadow-emerald-100"
+                          : "bg-white text-slate-900 hover:bg-slate-900 hover:text-white"
                       )}
                     >
-                      <div
-                        className={cn(
-                          'absolute -top-6 -right-6 text-6xl text-amber-500 opacity-[0.03] select-none'
-                        )}
-                      >
-                        🧠
-                      </div>
-                      <h4
-                        className={cn(
-                          'mb-3 flex items-center gap-2 text-xs font-black tracking-widest text-amber-400 uppercase'
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-amber-500/30 bg-amber-500/20 text-[11px] text-amber-400 shadow-sm'
-                          )}
-                        >
-                          🧠
-                        </span>
-                        {isHindi ? 'स्मृति युक्ति' : 'Memory Trick'}
-                      </h4>
-                      <p className="relative z-10 text-[15px] leading-relaxed font-bold tracking-tight whitespace-pre-line text-amber-100 sm:text-[17px] sm:leading-loose md:text-[19px]">
-                        {isHindi ? fact.memoryTip : fact.memoryTipEn || fact.memoryTip}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Scam / Trap Alert */}
-                  {fact.scamAlert && (
-                    <div className="relative overflow-hidden rounded-[1.5rem] border border-orange-500/30 bg-orange-950/20 p-5 sm:p-6">
-                      <div className="absolute -top-6 -right-6 text-6xl text-orange-500 opacity-[0.05] select-none">
-                        ⚠️
-                      </div>
-                      <h4 className="mb-3 flex items-center gap-2 text-xs font-black tracking-widest text-orange-400 uppercase">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-orange-500/30 bg-orange-500/20 text-[11px] text-orange-400 shadow-sm">
-                          ⚠️
-                        </span>
-                        {isHindi ? 'गलतियों से बचें' : 'Trap Alert'}
-                      </h4>
-                      <p className="relative z-10 text-[15px] leading-relaxed font-bold tracking-tight whitespace-pre-line text-orange-100 sm:text-[17px] sm:leading-loose md:text-[19px]">
-                        {isHindi ? fact.scamAlert : fact.scamAlertEn || fact.scamAlert}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* References Footer */}
-                  <div className="flex flex-wrap items-center gap-1.5 border-t border-white/5 pt-4">
-                    <span className="flex items-center gap-1.5 text-[10px] font-black tracking-widest text-slate-500 uppercase">
-                      <Lightbulb className="h-3.5 w-3.5 text-amber-500" />{' '}
-                      {isHindi ? 'पूछा गया:' : 'Asked in:'}
-                    </span>
-
-                    {fact.enrichedRefs && fact.enrichedRefs.length > 0
-                      ? fact.enrichedRefs.map((ref, i) => (
-                          <Badge
-                            key={i}
-                            variant="secondary"
-                            className={cn(
-                              'border border-slate-800 bg-slate-900 px-2.5 py-1 text-[11px] font-bold text-slate-400 shadow-none transition-colors hover:bg-slate-800 hover:text-amber-500/80'
-                            )}
-                          >
-                            {ref.year
-                              ? `MPPSC ${ref.year}`
-                              : formatTestTitle(
-                                  isHindi ? ref.testTitle : ref.testTitleEn || ref.testTitle,
-                                  isHindi
-                                )}
-                            {ref.questionOrder && (
-                              <span className="ml-1 rounded bg-black/20 px-1 text-[9px] opacity-50">
-                                Q.{ref.questionOrder}
-                              </span>
-                            )}
-                          </Badge>
-                        ))
-                      : fact.pyqRefs.map((ref, i) => (
-                          <Badge
-                            key={i}
-                            variant="secondary"
-                            className={cn(
-                              'border border-slate-800 bg-slate-900 px-2.5 py-1 text-[11px] font-bold text-slate-400 shadow-none transition-colors hover:bg-slate-800 hover:text-amber-500/80'
-                            )}
-                          >
-                            {ref.year
-                              ? `MPPSC ${ref.year}`
-                              : ref.questionId
-                                ? `PYQ (Q.${ref.questionId.slice(-4)})`
-                                : 'PYQ (Year N/A)'}
-                          </Badge>
-                        ))}
+                      {readFacts.has(fact.id) ? (
+                        <>Mastered <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}><Check className="h-4 w-4" /></motion.div></>
+                      ) : (
+                        <>Got it <motion.div animate={{ x: [0, 4, 0] }} transition={{ repeat: Infinity, duration: 2 }}><ChevronRight className="h-4 w-4" /></motion.div></>
+                      )}
+                    </button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
-
-          {facts.length === 0 && (
-            <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-slate-700 bg-slate-900/50 py-16 text-center">
-              <div className="mb-4 rounded-full border border-slate-700 bg-slate-800 p-4 shadow-sm">
-                <BookOpenText className="h-8 w-8 text-slate-500" />
-              </div>
-              <h3 className="text-lg font-black text-slate-200">
-                {isHindi ? 'कोई तथ्य नहीं मिला' : 'No facts found'}
-              </h3>
-              <p className="mb-6 text-sm font-medium text-slate-500">
-                {isHindi
-                  ? 'कृपया कोई दूसरा विषय या टॉपिक चुनें।'
-                  : 'Try selecting a different subject or topic.'}
-              </p>
-              <button
-                onClick={() => applyFilters(selectedSubject, undefined)}
-                className="text-sm font-black text-indigo-400 underline underline-offset-4 hover:text-indigo-300"
-              >
-                {isHindi ? 'फ़िल्टर हटाएं' : 'Clear Filters'}
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

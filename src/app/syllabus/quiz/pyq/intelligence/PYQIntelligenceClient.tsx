@@ -46,8 +46,8 @@ export default function PYQIntelligenceClient({
     <div className="min-h-screen bg-slate-950 pb-20 text-white selection:bg-indigo-500/30">
       {/* Background Effects */}
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-indigo-500/10 blur-[100px]" />
-        <div className="absolute right-[-10%] bottom-[-10%] h-[500px] w-[500px] rounded-full bg-rose-500/10 blur-[100px]" />
+        <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[100px]" />
+        <div className="absolute right-[-10%] bottom-[-10%] h-[500px] w-[500px] rounded-full bg-teal-500/10 blur-[100px]" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
       </div>
 

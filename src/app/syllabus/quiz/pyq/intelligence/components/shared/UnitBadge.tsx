@@ -26,7 +26,7 @@ export function UnitBadge({ unitId, size = 'md', className }: UnitBadgeProps) {
 
 interface YearBadgeProps {
   year: number;
-  variant?: 'default' | 'pink' | 'indigo' | 'amber';
+  variant?: 'default' | 'pink' | 'indigo' | 'amber' | 'emerald';
   className?: string;
 }
 
@@ -36,6 +36,7 @@ export function YearBadge({ year, variant = 'default', className }: YearBadgePro
     pink: 'border-pink-500/30 bg-pink-500/5 text-pink-400',
     indigo: 'border-indigo-500/30 bg-indigo-500/10 text-indigo-400',
     amber: 'border-amber-500/30 bg-amber-500/10 text-amber-400',
+    emerald: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400',
   };
 
   return (

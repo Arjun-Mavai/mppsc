@@ -284,14 +284,15 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                 );
               })}
             {user && user.isSubscribed && user.planTier === 'pro' ? (
-              /* Pro Badge — Google Gemini Ultra style seamless gradient */
-              <div className="relative overflow-hidden rounded-full p-[1.5px]">
-                {/* Static Gradient Border for Performance */}
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400" />
-                <div className="relative flex cursor-default items-center gap-2 overflow-hidden rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white">
-                  <div className="animate-shimmer absolute inset-0 bg-[linear-gradient(110deg,transparent,25%,rgba(255,255,255,0.1),50%,transparent)] bg-[length:250%_100%]" />
-                  <Sparkles size={12} className="relative z-10 fill-yellow-400 text-yellow-400" />
-                  <span className="relative z-10 text-[10px] font-black tracking-wide uppercase">
+              /* Pro Badge — Premium Gold/Amber Gradient style */
+              <div className="group relative overflow-hidden rounded-full p-[1px]">
+                {/* Animated Gradient Border */}
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600" />
+                <div className="relative flex cursor-default items-center gap-2 rounded-full bg-slate-900 px-4 py-1.5 text-sm font-bold text-white transition-colors group-hover:bg-slate-800">
+                  {/* Glossy overlay effect */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-50" />
+                  <Sparkles size={12} className="relative z-10 fill-amber-400 text-amber-400" />
+                  <span className="relative z-10 text-[10px] font-black tracking-widest uppercase">
                     Pro
                   </span>
                 </div>
@@ -544,17 +545,19 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
 
                     <div className="pt-3">
                       {user?.isSubscribed && user.planTier === 'pro' ? (
-                        <div className="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900 p-4 shadow-sm">
-                          <div className="relative z-10 flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
-                              <Crown size={14} className="fill-yellow-400 text-yellow-400" />
+                        <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 p-[1.5px] shadow-lg shadow-amber-200/40">
+                          <div className="relative z-10 flex items-center gap-3 rounded-[11px] bg-slate-900 p-4 transition-all group-hover:bg-slate-800">
+                             {/* Glossy overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-50" />
+                            <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
+                              <Crown size={14} className="fill-amber-400 text-amber-400 shadow-sm" />
                             </div>
-                            <div>
-                              <h4 className="text-sm leading-tight font-bold text-white">
+                            <div className="relative">
+                              <h4 className="text-sm leading-tight font-black text-white uppercase tracking-wider">
                                 Pro Active
                               </h4>
-                              <p className="text-[10px] font-medium text-slate-400">
-                                All Features Unlocked
+                              <p className="text-[10px] font-bold text-amber-500/80 uppercase tracking-widest">
+                                Premium Access Unlocked
                               </p>
                             </div>
                           </div>

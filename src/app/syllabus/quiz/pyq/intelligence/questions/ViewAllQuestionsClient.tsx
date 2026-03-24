@@ -27,6 +27,7 @@ interface QuestionData {
   correctAnswer?: number;
   explanation?: string | null;
   explanationEn?: string | null;
+  subject?: string | null;
 }
 
 interface ViewAllQuestionsClientProps {
@@ -175,38 +176,41 @@ export default function ViewAllQuestionsClient({
       <div className="sticky top-16 z-40 border-b border-white/[0.03] bg-[#080510]/60 backdrop-blur-xl">
         <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            {/* Year Filter Pills */}
-            {uniqueYears.length > 1 && (
-              <div className="no-scrollbar flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-                <div className="flex h-9 items-center rounded-2xl bg-white/5 p-1">
-                  <button
-                    onClick={() => setFilterYear(null)}
-                    className={cn(
-                      'h-full rounded-xl px-4 text-xs font-black transition-all active:scale-95',
-                      filterYear === null
-                        ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]'
-                        : 'text-slate-400 hover:text-white'
-                    )}
-                  >
-                    ALL
-                  </button>
-                  {uniqueYears.map((y) => (
+            {/* Filter Group - Horizontal Pills */}
+            <div className="flex flex-col gap-3">
+              {/* Year Filter Pills */}
+              {uniqueYears.length > 1 && (
+                <div className="no-scrollbar flex items-center gap-2 overflow-x-auto pb-1">
+                  <div className="flex h-9 items-center rounded-2xl bg-white/5 p-1">
                     <button
-                      key={y}
-                      onClick={() => setFilterYear(y)}
+                      onClick={() => setFilterYear(null)}
                       className={cn(
-                        'h-full rounded-xl px-4 text-xs font-black transition-all active:scale-95',
-                        filterYear === y
+                        'h-full rounded-xl px-4 text-[10px] font-black tracking-widest transition-all active:scale-95',
+                        filterYear === null
                           ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]'
                           : 'text-slate-400 hover:text-white'
                       )}
                     >
-                      {y}
+                      ALL YEARS
                     </button>
-                  ))}
+                    {uniqueYears.map((y) => (
+                      <button
+                        key={y}
+                        onClick={() => setFilterYear(y)}
+                        className={cn(
+                          'h-full rounded-xl px-4 text-[10px] font-black tracking-widest transition-all active:scale-95',
+                          filterYear === y
+                            ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]'
+                            : 'text-slate-400 hover:text-white'
+                        )}
+                      >
+                        {y}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Expand/Collapse All - Glass Action */}
             <Button
@@ -303,20 +307,23 @@ export default function ViewAllQuestionsClient({
                       }}
                     />
 
-                    {!isExpanded && (
-                      <div className="mt-3 flex items-center gap-3">
-                        <YearBadge
-                          year={q.year ?? 2020}
-                          variant="amber"
-                          className="border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[10px] font-black text-amber-500 uppercase"
-                        />
-                        {q.qNo && (
-                          <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">
-                            SET-Q{q.qNo}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    <div className="mt-3 flex items-center gap-3">
+                      <YearBadge
+                        year={q.year ?? 2020}
+                        variant="amber"
+                        className="border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[10px] font-black text-amber-500 uppercase"
+                      />
+                      {q.subject && (
+                        <Badge className="border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-black tracking-widest text-emerald-400 uppercase">
+                          {q.subject}
+                        </Badge>
+                      )}
+                      {q.qNo && (
+                        <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">
+                          SET-Q{q.qNo}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="mt-1 flex shrink-0 items-center">

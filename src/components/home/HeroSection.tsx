@@ -1,6 +1,7 @@
 'use client';
 
-import { Sparkles, Zap, ChevronRight, ArrowLeft } from 'lucide-react';
+import { useState, useTransition } from 'react';
+import { Sparkles, Zap, ChevronRight, ArrowLeft, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useRouter } from 'next/navigation';
@@ -9,6 +10,7 @@ import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
 
 export function HeroSection() {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const { language, user: globalUser } = useSettingsStore();
 
   return (
@@ -60,25 +62,30 @@ export function HeroSection() {
         <div className="mx-auto flex w-full max-w-[420px] flex-col items-center justify-center gap-6 px-4">
           {/* GOOGLE-STYLE HERO BUTTON (ID: 74) */}
           {!globalUser ? (
-            <Link
-              href="/free-quiz"
-              className="group relative w-full"
-              onMouseEnter={() => router.prefetch('/free-quiz')}
-              onTouchStart={() => router.prefetch('/free-quiz')}
+            <button
               onClick={() => {
                 trackFbCustomEvent('hero_free_test_clicked', {
                   location: 'home_page_hero_section',
                   user_status: 'guest',
                 });
+                startTransition(() => {
+                  router.push('/free-quiz');
+                });
               }}
+              onMouseEnter={() => router.prefetch('/free-quiz')}
+              className="group relative w-full focus:outline-none"
             >
-              <div className="relative flex h-14 w-full transform items-center justify-center overflow-hidden rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.2)] transition-all duration-500 group-hover:-translate-y-1 group-hover:scale-[1.03] group-hover:shadow-[0_40px_80px_rgba(245,158,11,0.2)] group-active:scale-[0.98] md:h-24">
+              <div className="relative flex h-14 w-full transform items-center justify-center overflow-hidden rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.2)] transition-all duration-500 group-hover:-translate-y-1 group-hover:scale-[1.03] group-hover:shadow-[0_40px_80px_rgba(245,158,11,0.2)] group-active:scale-[0.96] md:h-24">
                 {/* 🌈 PREMIUM MOVING GRADIENT (ID: 75) */}
                 <div className="animate-gradient-x absolute inset-0 bg-gradient-to-r from-slate-950 via-amber-950 to-slate-950 bg-[length:200%_auto]" />
 
                 <div className="relative z-10 flex h-full w-full items-center justify-center gap-3 px-6 md:gap-6 md:px-14">
                   <div className="rounded-xl border border-white/10 bg-white/5 p-1.5 backdrop-blur-md transition-colors group-hover:bg-amber-500/20 md:rounded-2xl md:p-3">
-                    <Zap className="h-4 w-4 fill-amber-400 text-amber-400 md:h-8 md:w-8" />
+                    {isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-amber-400 md:h-8 md:w-8" />
+                    ) : (
+                      <Zap className="h-4 w-4 fill-amber-400 text-amber-400 md:h-8 md:w-8" />
+                    )}
                   </div>
 
                   <span className="text-xs font-black tracking-widest whitespace-nowrap text-white uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] sm:text-sm md:text-xl md:tracking-[0.15em] lg:text-2xl">
@@ -94,7 +101,7 @@ export function HeroSection() {
                 {/* Inner Highlight */}
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/10 to-transparent" />
               </div>
-            </Link>
+            </button>
           ) : (
             <Link href="/dashboard" className="group relative w-full">
               <div className="relative flex h-14 w-full transform items-center justify-center overflow-hidden rounded-full shadow-[0_20px_40px_rgba(0,0,0,0.1)] transition-all duration-500 group-hover:-translate-y-0.5 group-hover:scale-[1.02] group-hover:shadow-[0_30px_60px_rgba(245,158,11,0.2)] group-active:scale-[0.96] md:h-24">

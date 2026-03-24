@@ -42,6 +42,7 @@ const getQuestionsWithDetails = unstable_cache(
         testId: questions.testId,
         testTitle: tests.title,
         order: questions.order,
+        subject: questions.subject,
       })
       .from(questions)
       .innerJoin(tests, eq(questions.testId, tests.id))
@@ -61,10 +62,11 @@ const getQuestionsWithDetails = unstable_cache(
         explanationEn: q.explanationEn,
         year: yearMatch ? parseInt(yearMatch[1]) : 2020,
         qNo: q.order,
+        subject: q.subject,
       };
     });
   },
-  ['pyq-questions-details-v2'],
+  ['pyq-questions-details-v3'],
   { revalidate: 3600, tags: ['pyq-questions'] }
 );
 

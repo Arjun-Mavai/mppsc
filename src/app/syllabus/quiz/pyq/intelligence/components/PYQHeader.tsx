@@ -29,7 +29,7 @@ export function PYQHeader({ title, subtitle, icon }: PYQHeaderProps) {
             </Button>
             <div className="flex flex-col">
               <h1 className="flex items-center gap-2 text-lg font-black text-white sm:text-xl">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-400 shadow-sm ring-1 ring-white/10">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 shadow-sm ring-1 ring-white/10">
                   {icon || <Zap className="h-5 w-5" />}
                 </span>
                 {title}

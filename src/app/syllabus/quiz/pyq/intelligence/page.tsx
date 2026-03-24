@@ -16,11 +16,11 @@ import { unstable_cache } from 'next/cache';
 export const revalidate = 3600;
 
 // Cached versions of the analytics functions  
-const getCachedSubjectStats = unstable_cache(getSubjectDistributionStats, ['subject-stats-v1'], { revalidate: 3600 });
-const getCachedUnitStats = unstable_cache(getUnitDistributionStats, ['unit-stats-v4'], { revalidate: 3600 });
-const getCachedRepeatedQuestions = unstable_cache(getRepeatedQuestions, ['repeated-v4'], { revalidate: 3600 });
-const getCachedTopicStats = unstable_cache(getMostRepeatedTopics, ['topics-v4'], { revalidate: 3600 });
-const getCachedSubjectQuestionsData = unstable_cache(getOverallWeightageSubjectData, ['subject-questions-v1'], { revalidate: 3600 });
+const getCachedSubjectStats = unstable_cache(getSubjectDistributionStats, ['subject-stats-v5'], { revalidate: 3600 });
+const getCachedUnitStats = unstable_cache(getUnitDistributionStats, ['unit-stats-v5'], { revalidate: 3600 });
+const getCachedRepeatedQuestions = unstable_cache(getRepeatedQuestions, ['repeated-v6'], { revalidate: 3600 });
+const getCachedTopicStats = unstable_cache(getMostRepeatedTopics, ['topics-v5'], { revalidate: 3600 });
+const getCachedSubjectQuestionsData = unstable_cache(getOverallWeightageSubjectData, ['subject-questions-v5'], { revalidate: 3600 });
 
 export default async function PYQIntelligencePage() {
   const user = await verifyAuth();

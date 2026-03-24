@@ -89,7 +89,7 @@ export function UnitCard({
 
         <div className="shrink-0">
           {isExpanded ? (
-            <ChevronUp className="h-5 w-5 text-indigo-400" />
+            <ChevronUp className="h-5 w-5 text-emerald-400" />
           ) : (
             <ChevronDown className="h-5 w-5 text-slate-600" />
           )}
@@ -130,7 +130,7 @@ export function UnitCard({
                     href={viewAllUrl}
                     onClick={(e) => e.stopPropagation()}
                     transitionTypes={['slide']}
-                    className="inline-flex h-7 items-center gap-1.5 rounded-md bg-indigo-500/10 px-3 text-xs font-bold text-indigo-400 transition-colors hover:bg-indigo-500/20 hover:text-indigo-300"
+                    className="inline-flex h-7 items-center gap-1.5 rounded-md bg-emerald-500/10 px-3 text-xs font-bold text-emerald-400 transition-colors hover:bg-emerald-500/20 hover:text-emerald-300"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
                     {isHindi ? 'सभी देखें' : 'View All'}
@@ -140,7 +140,7 @@ export function UnitCard({
               
               <div className={cn(
                 'overflow-y-auto',
-                showAllQuestions ? 'max-h-none' : 'max-h-[50vh]'
+                showAllQuestions ? 'max-h-none' : 'max-h-[80vh] sm:max-h-none'
               )}>
                 <QuestionList
                   questions={questions}
@@ -148,7 +148,7 @@ export function UnitCard({
                   getRepeatCount={getRepeatCount}
                   showYears={true}
                   groupByYear={groupQuestionsByYear}
-                  variant="compact"
+                  variant="card"
                   showAllExpanded={showAllQuestions}
                 />
               </div>

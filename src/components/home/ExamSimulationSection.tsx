@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { Trophy, CheckCircle2, X } from 'lucide-react';
+import { Trophy, CheckCircle2, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -23,6 +23,7 @@ export function ExamSimulationSection() {
   const [correctCount, setCorrectCount] = React.useState(0);
   const [wrongCount, setWrongCount] = React.useState(0);
   const [mockSelected, setMockSelected] = React.useState<number | null>(null);
+  const [isPreparing, setIsPreparing] = React.useState(false);
 
   const mockQuestions = [
     {
@@ -68,11 +69,15 @@ export function ExamSimulationSection() {
   ];
 
   const handleMockStart = () => {
-    setMockStep('active');
-    setMockQIndex(0);
-    setCorrectCount(0);
-    setWrongCount(0);
-    setMockSelected(null);
+    setIsPreparing(true);
+    setTimeout(() => {
+      setIsPreparing(false);
+      setMockStep('active');
+      setMockQIndex(0);
+      setCorrectCount(0);
+      setWrongCount(0);
+      setMockSelected(null);
+    }, 600);
   };
 
   const handleMockAnswer = (idx: number) => {
@@ -150,9 +155,16 @@ export function ExamSimulationSection() {
                       </div>
                       <Button
                         onClick={handleMockStart}
-                        className="h-12 w-full rounded-xl bg-rose-600 font-bold text-white shadow-lg shadow-rose-200 hover:bg-rose-700"
+                        disabled={isPreparing}
+                        className="h-12 w-full rounded-xl bg-rose-600 font-bold text-white shadow-lg shadow-rose-200 transition-all hover:bg-rose-700 active:scale-95"
                       >
-                        {language === 'hi' ? 'डेमो टेस्ट शुरू करें' : 'Start Demo Test'}
+                        {isPreparing ? (
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : language === 'hi' ? (
+                          'डेमो टेस्ट शुरू करें'
+                        ) : (
+                          'Start Demo Test'
+                        )}
                       </Button>
                     </div>
                   )}
@@ -304,9 +316,16 @@ export function ExamSimulationSection() {
             </p>
             <Button
               onClick={handleMockStart}
-              className="h-14 rounded-full bg-rose-600 px-8 text-lg font-bold text-white shadow-lg shadow-rose-600/20 hover:bg-rose-500"
+              disabled={isPreparing}
+              className="h-14 rounded-full bg-rose-600 px-8 text-lg font-bold text-white shadow-lg shadow-rose-600/20 transition-all hover:bg-rose-500 active:scale-95"
             >
-              {language === 'hi' ? 'फ्री मॉक टेस्ट शुरू करें' : 'Start Free Mock Test'}
+              {isPreparing ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : language === 'hi' ? (
+                'फ्री मॉक टेस्ट शुरू करें'
+              ) : (
+                'Start Free Mock Test'
+              )}
             </Button>
           </div>
         </div>

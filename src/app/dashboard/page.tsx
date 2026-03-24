@@ -49,13 +49,21 @@ export default async function DashboardPage() {
 
           <div className="flex items-center gap-3">
             {user.planTier === 'pro' ? (
-              <div className="flex items-center gap-2 rounded-2xl bg-indigo-600 px-5 py-2 text-xs font-black tracking-widest text-white uppercase shadow-lg shadow-indigo-200">
-                <div className="h-2 w-2 animate-pulse rounded-full bg-white" />
-                PRO Member
+              <div className="group relative flex items-center gap-3 overflow-hidden rounded-full p-[1px] shadow-[0_8px_30px_rgb(0,0,0,0.05)] transition-all sm:px-0">
+                {/* 🌈 ANIMATED MULTI-COLOR GRADIENT BORDER */}
+                <div className="absolute inset-0 animate-[shimmer_3s_linear_infinite] bg-gradient-to-r from-red-500 via-green-500 via-pink-500 to-yellow-500" />
+                
+                <div className="relative flex items-center gap-3 rounded-full bg-white/90 px-5 py-2 text-[10px] font-black tracking-[0.2em] text-slate-900 uppercase backdrop-blur-md sm:px-6">
+                  <div className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]"></span>
+                  </div>
+                  <span className="relative z-10 drop-shadow-sm">PRO Member</span>
+                </div>
               </div>
             ) : user.planTier === 'lite' ? (
-              <div className="flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-2 text-xs font-black tracking-widest text-white uppercase shadow-lg shadow-emerald-200">
-                <div className="h-2 w-2 animate-pulse rounded-full bg-white" />
+              <div className="flex items-center gap-2.5 rounded-full border border-emerald-500/20 bg-emerald-50/50 px-5 py-2 text-[10px] font-black tracking-widest text-emerald-600 uppercase backdrop-blur-sm">
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                 LITE Member
               </div>
             ) : (

@@ -1,12 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { X, Star } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
+import { Star, CheckCircle2, ThumbsUp, ThumbsDown, Zap } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 import {
   feedbackFormSchema,
   feedbackQuestions,
@@ -20,31 +19,10 @@ interface TestSeriesFeedbackModalProps {
   testSeriesId?: string;
 }
 
-/**
- * BEAUTIFUL FEEDBACK MODAL COMPONENT
- *
- * This component collects feedback for test series with:
- * - Radio buttons for multiple choice questions
- * - Star ratings for numeric feedback
- * - Fully validated with Zod + React Hook Form
- * - Easily customizable (see lib/schemas/feedback.ts)
- *
- * USAGE:
- * const [isOpen, setIsOpen] = useState(false)
- * <TestSeriesFeedbackModal
- *   isOpen={isOpen}
- *   onClose={() => setIsOpen(false)}
- *   onSubmit={async (data) => {
- *     await submitFeedbackToAPI(data)
- *   }}
- * />
- */
-
 export function TestSeriesFeedbackModal({
   isOpen,
   onClose,
   onSubmit,
-  testSeriesId,
 }: TestSeriesFeedbackModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -52,12 +30,33 @@ export function TestSeriesFeedbackModal({
   const {
     control,
     handleSubmit,
-    formState: { errors },
-    reset,
+    watch,
+    formState: { isValid },
   } = useForm<FeedbackFormType>({
     resolver: zodResolver(feedbackFormSchema),
     mode: 'onChange',
+    defaultValues: {
+      overallRating: 0,
+    }
   });
+
+  const formData = watch();
+
+  // Auto-submit logic: When all required fields are filled, submit automatically
+  useEffect(() => {
+    const isReady = formData.overallRating > 0 && 
+                  formData.difficultyLevel && 
+                  formData.wouldRecommend && 
+                  !isSubmitting && 
+                  !isCompleted;
+
+    if (isReady) {
+      const timer = setTimeout(() => {
+        handleSubmit(handleFormSubmit)();
+      }, 600); // 600ms delay to give user time to react if they misclicked
+      return () => clearTimeout(timer);
+    }
+  }, [formData.overallRating, formData.difficultyLevel, formData.wouldRecommend, isSubmitting, isCompleted, handleSubmit]);
 
   const handleFormSubmit = async (data: FeedbackFormType) => {
     setIsSubmitting(true);
@@ -65,9 +64,11 @@ export function TestSeriesFeedbackModal({
       if (onSubmit) {
         await onSubmit(data);
       }
-      // Here you can also save to database directly:
-      // await saveFeedbackToDatabase({ ...data, testSeriesId })
       setIsCompleted(true);
+      // Auto-close after 2 seconds
+      setTimeout(() => {
+        onClose();
+      }, 2500);
     } catch (error) {
       console.error('Error submitting feedback:', error);
     } finally {
@@ -75,180 +76,150 @@ export function TestSeriesFeedbackModal({
     }
   };
 
-  const handleClose = () => {
-    reset();
-    setIsCompleted(false);
-    onClose();
-  };
-
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
-        {/* HEADER */}
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-          <h2 className="text-lg font-semibold text-black">
-            {isCompleted ? 'Thank You!' : 'Share Your Feedback'}
-          </h2>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 transition-colors hover:text-black"
-            aria-label="Close modal"
-          >
-            <X size={20} />
-          </button>
-        </div>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-md transition-all duration-500">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="relative w-full max-w-[380px] overflow-hidden rounded-[2.5rem] border border-white/10 bg-slate-900/80 p-8 shadow-2xl backdrop-blur-2xl"
+      >
+        {/* Glow Effects */}
+        <div className="pointer-events-none absolute -top-24 -right-24 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-amber-500/10 blur-3xl" />
 
-        {/* CONTENT */}
-        <div className="px-6 py-5">
+        <AnimatePresence mode="wait">
           {!isCompleted ? (
-            <>
-              {/* INTRO MESSAGE */}
-              <p className="mb-6 text-sm text-gray-600">
-                We value your time. Your feedback helps us improve the test series.
-              </p>
+            <motion.div
+              key="form"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-8"
+            >
+              <div className="space-y-2 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500">
+                  <Zap className="h-6 w-6 fill-emerald-500" />
+                </div>
+                <h2 className="text-xl font-black tracking-tight text-white">
+                  Quick Feedback
+                </h2>
+                <p className="text-xs font-bold tracking-wide text-slate-400 uppercase">
+                  Helps us improve in 2 clicks
+                </p>
+              </div>
 
-              {/* FORM */}
-              <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+              <form className="space-y-8">
                 {feedbackQuestions.map((question) => (
-                  <div key={question.id} className="space-y-3">
-                    {/* QUESTION LABEL */}
-                    <label className="block text-sm font-medium text-black">{question.label}</label>
+                  <div key={question.id} className="space-y-4">
+                    <label className="block text-center text-[10px] font-black tracking-[0.2em] text-slate-500 uppercase">
+                      {question.label}
+                    </label>
 
-                    {/* RADIO BUTTON QUESTIONS */}
-                    {question.type === 'radio' && (
-                      <Controller
-                        name={question.name}
-                        control={control}
-                        render={({ field }) => (
-                          <RadioGroup value={field.value as string} onValueChange={field.onChange}>
-                            <div className="space-y-2">
-                              {question.options?.map((option) => (
-                                <div key={option.value} className="flex items-center space-x-3">
-                                  <RadioGroupItem
-                                    value={option.value}
-                                    id={`${question.id}-${option.value}`}
-                                  />
-                                  <Label
-                                    htmlFor={`${question.id}-${option.value}`}
-                                    className="cursor-pointer text-sm font-normal text-gray-700"
-                                  >
-                                    {option.label}
-                                  </Label>
-                                </div>
-                              ))}
-                            </div>
-                          </RadioGroup>
-                        )}
-                      />
-                    )}
-
-                    {/* STAR RATING QUESTIONS */}
+                    {/* STARS */}
                     {question.type === 'stars' && (
                       <Controller
                         name={question.name}
                         control={control}
                         render={({ field }) => (
-                          <div className="flex gap-2">
-                            {Array.from({ length: question.maxStars || 5 }, (_, i) => i + 1).map(
-                              (star) => (
-                                <button
-                                  key={star}
-                                  type="button"
-                                  onClick={() => field.onChange(star)}
-                                  className="transition-all duration-200 hover:scale-110 focus:outline-none"
-                                  aria-label={`Rate ${star} star${star !== 1 ? 's' : ''}`}
-                                >
-                                  <Star
-                                    size={28}
-                                    className={`${
-                                      star <= (field.value as number)
-                                        ? 'fill-amber-400 text-amber-400'
-                                        : 'text-gray-200'
-                                    }`}
+                          <div className="flex justify-center gap-2">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                onClick={() => field.onChange(star)}
+                                className="group relative transition-all duration-300 hover:scale-125 active:scale-95"
+                              >
+                                {star <= field.value && (
+                                  <motion.div
+                                    layoutId="star-glow"
+                                    className="absolute inset-0 bg-amber-400/20 blur-md rounded-full"
                                   />
-                                </button>
-                              )
-                            )}
+                                )}
+                                <Star
+                                  size={32}
+                                  className={cn(
+                                    "transition-all duration-300",
+                                    star <= field.value
+                                      ? "fill-amber-400 text-amber-400 scale-110"
+                                      : "text-slate-700 group-hover:text-slate-500"
+                                  )}
+                                />
+                              </button>
+                            ))}
                           </div>
                         )}
                       />
                     )}
 
-                    {/* TEXTAREA QUESTIONS */}
-                    {question.type === 'textarea' && (
+                    {/* RADIO CHIPS */}
+                    {question.type === 'radio' && (
                       <Controller
                         name={question.name}
                         control={control}
                         render={({ field }) => (
-                          <textarea
-                            {...field}
-                            value={field.value as string || ''}
-                            className="w-full rounded-md border border-gray-300 p-3 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black min-h-[100px] resize-y"
-                            placeholder="Share your thoughts..."
-                          />
+                          <div className="flex flex-wrap justify-center gap-2">
+                            {question.options?.map((option) => (
+                              <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => field.onChange(option.value)}
+                                className={cn(
+                                  "relative flex h-11 items-center justify-center rounded-2xl border px-4 text-xs font-black transition-all duration-300 active:scale-95",
+                                  field.value === option.value
+                                    ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                                    : "border-white/5 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
+                                )}
+                              >
+                                {option.label}
+                                {field.value === option.value && (
+                                  <motion.div
+                                    layoutId={`${question.id}-active`}
+                                    className="absolute inset-0 rounded-2xl border-2 border-emerald-500/50"
+                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                  />
+                                )}
+                              </button>
+                            ))}
+                          </div>
                         )}
                       />
-                    )}
-
-                    {/* ERROR MESSAGE */}
-                    {errors[question.name as keyof FeedbackFormType] && (
-                      <p className="text-xs text-red-500">
-                        {errors[question.name as keyof FeedbackFormType]?.message}
-                      </p>
                     )}
                   </div>
                 ))}
 
-                {/* SUBMIT BUTTON */}
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleClose}
-                    className="flex-1 border-gray-300 text-black hover:bg-gray-50"
-                  >
-                    Close
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="flex-1 bg-black text-white hover:bg-gray-900 disabled:opacity-50"
-                  >
-                    {isSubmitting ? 'Submitting...' : 'Submit'}
-                  </Button>
-                </div>
-              </form>
-            </>
-          ) : (
-            <>
-              {/* SUCCESS STATE */}
-              <div className="space-y-4 text-center">
-                <div className="flex justify-center">
-                  <div className="rounded-full bg-black/10 p-3">
-                    <Star size={32} className="fill-black text-black" />
+                {isSubmitting && (
+                  <div className="flex justify-center pt-2">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="h-6 w-6 rounded-full border-2 border-emerald-500 border-t-transparent"
+                    />
                   </div>
-                </div>
-                <div>
-                  <h3 className="mb-2 text-base font-semibold text-black">
-                    Thank you for your feedback!
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Your response helps us create better test series for you.
-                  </p>
-                </div>
-                <Button
-                  onClick={handleClose}
-                  className="w-full bg-black text-white hover:bg-gray-900"
-                >
-                  View Results
-                </Button>
+                )}
+              </form>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="success"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="py-12 text-center"
+            >
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-[2.5rem] bg-emerald-500/20 text-emerald-500">
+                <CheckCircle2 size={48} className="fill-emerald-500/20" />
               </div>
-            </>
+              <h3 className="text-2xl font-black tracking-tight text-white">
+                Awesome!
+              </h3>
+              <p className="mt-2 text-sm font-bold tracking-widest text-emerald-500/60 uppercase">
+                Feedback Captured
+              </p>
+            </motion.div>
           )}
-        </div>
-      </div>
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }

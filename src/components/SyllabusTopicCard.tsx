@@ -88,7 +88,8 @@ export const SyllabusTopicCard: React.FC<SyllabusTopicCardProps> = ({
         style.border,
         'shadow-sm hover:shadow-2xl',
         style.shadow,
-        (isLocked || isLoading) && 'pointer-events-none opacity-90 grayscale-[0.5]'
+        isLoading && 'pointer-events-none opacity-90 grayscale-[0.5]',
+        isLocked && 'grayscale-[0.5]'
       )}
     >
       {/* Loading Overlay */}

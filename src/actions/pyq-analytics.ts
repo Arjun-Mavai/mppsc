@@ -32,6 +32,9 @@ export interface OverallWeightageSubjectData {
     qNo: number;
     testTitle: string;
     testId: string;
+    subject?: string;
+    options?: any;
+    correctAnswer?: string;
   }[];
 }
 
@@ -48,6 +51,8 @@ export async function getOverallWeightageSubjectData(limit?: number): Promise<Ov
       subject: questions.subject,
       testId: questions.testId,
       order: questions.order,
+      options: questions.options,
+      correctAnswer: questions.correctAnswer,
     })
     .from(questions)
     .where(inArray(questions.testId, canonicalTestIds));
@@ -74,6 +79,8 @@ export async function getOverallWeightageSubjectData(limit?: number): Promise<Ov
         qNo: q.order,
         testTitle: `MPPSC Prelims ${getYearFromTestId(q.testId)}`,
         testId: q.testId,
+        options: q.options,
+        correctAnswer: q.correctAnswer,
       }))
       .sort((a, b) => b.year - a.year || a.qNo - b.qNo);
 
@@ -93,7 +100,16 @@ export interface UnitDistributionStats {
   unitId: string;
   unitTitle: string;
   count: number;
-  questions: { id: string; text: string; textEn?: string | null; year: number; qNo: number }[];
+  questions: { 
+    id: string; 
+    text: string; 
+    textEn?: string | null; 
+    year: number; 
+    qNo: number; 
+    subject?: string;
+    options?: any;
+    correctAnswer?: string;
+  }[];
 }
 
 export interface TopicStat {
@@ -104,7 +120,7 @@ export interface TopicStat {
   topicTitleEn?: string | null;
   count: number;
   years: number[];
-  questions: { id: string; text: string; textEn?: string | null; year: number; qNo: number }[];
+  questions: { id: string; text: string; textEn?: string | null; year: number; qNo: number; subject?: string }[];
 }
 
 // ============================================
@@ -219,223 +235,134 @@ const STOP_WORDS = new Set([
 
 const manualKeywords: Record<string, string[]> = {
   unit_1: [
-    'indus',
-    'harappa',
-    'vedic',
-    'mauryan',
-    'gupta',
-    'delhi sultanate',
-    'mughal',
-    'maratha',
-    'freedom struggle',
-    'gandhi',
-    'nehru',
-    'congress',
-    'revolution',
-    '1857',
-    'buddha',
-    'mahavira',
-    'jain',
-    'ashoka',
-    'chandragupta',
-    'akbar',
-    'aurangzeb',
-    'shivaji',
-    'british',
-    'viceroy',
-    'governor',
-    'quit india',
-    'dandi',
-    'swadeshi',
-    'satyagraha',
-    'मौर्य',
-    'गुप्त',
-    'मुगल',
-    'स्वतंत्रता',
-    'आंदोलन',
+    'history', 'ancient', 'medieval', 'modern', 'harappa', 'vedic', 'mauryan', 'gupta', 
+    'delhi sultanate', 'mughal', 'maratha', 'freedom struggle', 'gandhi', 'nehru', 
+    'congress', 'revolution', '1857', 'buddha', 'mahavira', 'jain', 'ashoka', 
+    'chandragupta', 'akbar', 'aurangzeb', 'shivaji', 'british', 'viceroy', 
+    'governor', 'quit india', 'dandi', 'swadeshi', 'satyagraha', 'मौर्य', 'गुप्त', 
+    'मुगल', 'स्वतंत्रता', 'आंदोलन'
   ],
   unit_2: [
-    'mp history',
-    'holkar',
-    'scindia',
-    'bhopal state',
-    'bundela',
-    'baghel',
-    'bhima nayak',
-    'tantya bhil',
-    'culture of mp',
-    'folk',
-    'festivals',
-    'gwalior',
-    'indore',
-    'ujjain',
-    'maheshwar',
-    'mandu',
-    'chanderi',
-    'बुन्देला',
-    'होलकर',
-    'सिंधिया',
-    'भोपाल',
-    'ग्वालियर',
-    'मध्यप्रदेश',
-    'संस्कृति',
+    'mp history', 'holkar', 'scindia', 'bhopal state', 'bundela', 'baghel', 'bhima nayak', 
+    'tantya bhil', 'culture of mp', 'folk', 'festivals', 'gwalior', 'indore', 'ujjain', 
+    'maheshwar', 'mandu', 'chanderi', 'बुन्देला', 'होलकर', 'सिंधिया', 'भोपाल', 
+    'ग्वालियर', 'मध्यप्रदेश', 'संस्कृति', 'कालिदास', 'खजुराहो', 'सांची', 'भीमबेटका'
   ],
   unit_3: [
-    'geography of india',
-    'mountains',
-    'rivers india',
-    'climate india',
-    'monsoon',
-    'soil types',
-    'minerals india',
-    'population',
-    'census',
-    'himalaya',
-    'ganga',
-    'brahmaputra',
-    'plateau',
-    'coastal',
-    'peninsula',
-    'western ghats',
-    'eastern ghats',
-    'deccan',
-    'भारत का भूगोल',
-    'हिमालय',
-    'नदी',
-    'जलवायु',
+    'geography', 'mountains', 'rivers', 'climate', 'monsoon', 'soil', 'minerals', 
+    'population', 'census', 'himalaya', 'ganga', 'brahmaputra', 'plateau', 'coastal', 
+    'peninsula', 'western ghats', 'eastern ghats', 'deccan', 'भारत का भूगोल', 
+    'हिमालय', 'नदी', 'जलवायु'
   ],
   unit_4: [
-    'mp geography',
-    'forests mp',
-    'wildlife mp',
-    'national parks mp',
-    'narmada',
-    'chambal',
-    'betwa',
-    'tapti',
-    'satpura',
-    'vindhya',
-    'malwa',
-    'bundelkhand',
-    'पन्ना',
-    'कान्हा',
-    'बांधवगढ़',
-    'पचमढ़ी',
-    'नर्मदा',
-    'चम्बल',
-    'मध्यप्रदेश भूगोल',
-  ],
-  unit_5: [
-    'constitution',
-    'polity',
-    'president',
-    'parliament',
-    'supreme court',
-    'fundamental rights',
-    'dpsp',
-    'amendment',
-    'article',
-    'lok sabha',
-    'rajya sabha',
-    'judiciary',
-    'executive',
-    'legislature',
-    'directive principles',
-    'संविधान',
-    'मूल अधिकार',
-    'राष्ट्रपति',
-    'संसद',
-    'न्यायपालिका',
   ],
   unit_6: [
-    'economy',
-    'gdp',
-    'rbi',
-    'banking',
-    'budget',
-    'gst',
-    'poverty',
-    'unemployment',
-    'fiscal policy',
-    'monetary policy',
-    'inflation',
-    'five year plan',
-    'niti aayog',
-    'अर्थव्यवस्था',
-    'बजट',
-    'मुद्रास्फीति',
-    'बैंकिंग',
+    'economy', 'gdp', 'rbi', 'banking', 'budget', 'gst', 'poverty', 'unemployment', 
+    'fiscal policy', 'monetary policy', 'inflation', 'five year plan', 'niti aayog', 
+    'industry', 'industries', 'agriculture', 'infrastructure', 'mining', 'अर्थव्यवस्था', 'बजट', 'मुद्रास्फीति', 'बैंकिंग'
   ],
   unit_7: [
-    'science',
-    'physics',
-    'chemistry',
-    'biology',
-    'environment',
-    'pollution',
-    'diseases',
-    'vitamins',
-    'space',
-    'isro',
-    'satellite',
-    'ecology',
-    'biodiversity',
-    'greenhouse',
-    'ozone',
-    'विज्ञान',
-    'पर्यावरण',
-    'विटामिन',
-    'रोग',
-    'प्रदूषण',
+    'science', 'physics', 'chemistry', 'biology', 'environment', 'pollution', 
+    'diseases', 'vitamins', 'isro', 'satellite', 'ecology', 'biodiversity', 
+    'greenhouse', 'ozone', 'nutrition', 'disaster', 'disaster management', 'विज्ञान', 'पर्यावरण', 'विटामिन', 'रोग', 'प्रदूषण', 'आपदा'
   ],
   unit_8: [
-    'current affairs',
-    'sports',
-    'olympics',
-    'commonwealth',
-    'asian games',
-    'awards',
-    'padma',
-    'nobel',
-    'cricket',
-    'hockey',
-    'world cup',
-    'summit',
-    'g20',
-    'खेल',
-    'पुरस्कार',
-    'समसामयिक',
+    'current affairs', 'sports', 'olympics', 'commonwealth', 'asian games', 'awards', 
+    'padma', 'nobel', 'cricket', 'hockey', 'world cup', 'summit', 'g20', 'international relations', 'ir', 
+    'defence', 'energy', 'scheme', 'schemes', 'yojana', 'welfare', 'खेल', 'पुरस्कार', 'समसामयिक', 'योजना'
   ],
   unit_9: [
-    'ict',
-    'computer',
-    'internet',
-    'cyber security',
-    'artificial intelligence',
-    'software',
-    'hardware',
-    'digital',
-    'कंप्यूटर',
-    'इंटरनेट',
-    'साइबर',
-    'सॉफ्टवेयर',
+    'ict', 'computer', 'internet', 'cyber security', 'artificial intelligence', 
+    'software', 'hardware', 'digital', 'robotics', 'e-governance', 'कंप्यूटर', 
+    'इंटरनेट', 'साइबर', 'सॉफ्टवेयर'
   ],
   unit_10: [
-    'tribes mp',
-    'gond',
-    'bhil',
-    'baiga',
-    'sahariya',
-    'korku',
-    'scheduled tribes',
-    'adivasi',
-    'जनजाति',
-    'गोंड',
-    'भील',
-    'बैगा',
-    'अनुसूचित',
+    'tribes', 'gond', 'bhil', 'baiga', 'sahariya', 'korku', 'scheduled tribes', 
+    'adivasi', 'pvtg', 'bharia', 'जनजाति', 'गोंड', 'भील', 'बैगा', 'अनुसूचित'
   ],
 };
+
+function mapSubjectToUnit(subjectText: string | null): { id: string; title: string } | undefined {
+  if (!subjectText) return undefined;
+  
+  const sub = subjectText.toLowerCase().trim();
+  const has = (word: string) => new RegExp(`\\b${word}\\b`, 'i').test(sub);
+
+  // 1. UNIT 10: Tribes of MP (Highest Priority)
+  if (has('tribal') || has('tribes') || has('जनजाति') || has('scheduled tribe') || has('pvtg')) {
+    return { id: 'unit_10', title: syllabusData.units.unit_10?.unit_title || 'Tribes of MP' };
+  }
+
+  // 2. CONTEXTUAL MP ROUTING (Units 2, 4, 5, 6)
+  if (sub.includes('mp')) {
+    if (has('history') || has('culture') || has('literature') || has('dynasties') || has('freedom') || has('movement')) {
+      return { id: 'unit_2', title: syllabusData.units.unit_2?.unit_title || 'History of MP' };
+    }
+    if (has('geography') || has('forest') || has('river') || has('mineral') || has('census') || has('mountain') || has('climate')) {
+      return { id: 'unit_4', title: syllabusData.units.unit_4?.unit_title || 'Geography of MP' };
+    }
+    if (has('polity') || has('politics') || has('constitution') || has('governor') || has('panchayat') || has('administration')) {
+      return { id: 'unit_5', title: syllabusData.units.unit_5?.unit_title || 'Polity of MP' };
+    }
+    if (has('economy') || has('industry') || has('agriculture') || has('budget')) {
+      return { id: 'unit_6', title: syllabusData.units.unit_6?.unit_title || 'Economy of MP' };
+    }
+  }
+
+  // 3. UNIT 9: ICT
+  if (has('ict') || has('computer') || has('information technology') || sub === 'it' || has('robotics') || has('ai') || has('cyber')) {
+    return { id: 'unit_9', title: syllabusData.units.unit_9?.unit_title || 'ICT' };
+  }
+
+  // 4. UNIT 8: Current Affairs, Sports, Awards, IR, Defence, Energy & Schemes
+  if (has('current affairs') || has('sports') || has('awards') || has('summit') || has('g20') || has('international relations') || has('ir') || has('defence') || has('energy') || has('scheme') || has('schemes') || has('yojana') || has('योजना') || has('समसामयिक')) {
+    return { id: 'unit_8', title: syllabusData.units.unit_8?.unit_title || 'Current Affairs & IR' };
+  }
+
+  // 5. UNIT 7: Science & Environment (Including Disaster Management)
+  if (has('science') || has('biology') || has('physics') || has('chemistry') || has('environment') || has('health') || has('disaster')) {
+    return { id: 'unit_7', title: syllabusData.units.unit_7?.unit_title || 'Science' };
+  }
+
+  // 6. UNIT 6: Indian Economy
+  if (has('economy') || has('economics') || has('budget') || has('gdp') || has('banking') || has('industry') || has('agriculture')) {
+    return { id: 'unit_6', title: syllabusData.units.unit_6?.unit_title || 'Economy' };
+  }
+
+  // 7. UNIT 5: Indian Polity
+  if (has('polity') || has('politics') || has('constitution') || has('president') || has('parliament')) {
+    return { id: 'unit_5', title: syllabusData.units.unit_5?.unit_title || 'Polity' };
+  }
+
+  // 8. UNIT 3: Geography of India
+  if (has('geography') || has('census') || has('mountains') || has('rivers')) {
+    return { id: 'unit_3', title: syllabusData.units.unit_3?.unit_title || 'Geography of India' };
+  }
+
+  // 9. UNIT 2: General MP GK (Fallback for MP tags)
+  if (sub.includes('mp')) {
+    return { id: 'unit_2', title: syllabusData.units.unit_2?.unit_title || 'History of MP' };
+  }
+
+  // 10. UNIT 1: History of India
+  if (has('history') || has('ancient') || has('medieval') || has('modern')) {
+    return { id: 'unit_1', title: syllabusData.units.unit_1?.unit_title || 'History of India' };
+  }
+
+  // Explicit Unit mentions as fallback
+  if (sub.includes('unit 10')) return { id: 'unit_10', title: syllabusData.units.unit_10?.unit_title || 'Tribes of MP' };
+  if (sub.includes('unit 9')) return { id: 'unit_9', title: syllabusData.units.unit_9?.unit_title || 'ICT' };
+  if (sub.includes('unit 8')) return { id: 'unit_8', title: syllabusData.units.unit_8?.unit_title || 'Current Affairs' };
+  if (sub.includes('unit 7')) return { id: 'unit_7', title: syllabusData.units.unit_7?.unit_title || 'Science' };
+  if (sub.includes('unit 6')) return { id: 'unit_6', title: syllabusData.units.unit_6?.unit_title || 'Economy' };
+  if (sub.includes('unit 5')) return { id: 'unit_5', title: syllabusData.units.unit_5?.unit_title || 'Polity' };
+  if (sub.includes('unit 4')) return { id: 'unit_4', title: syllabusData.units.unit_4?.unit_title || 'MP Geography' };
+  if (sub.includes('unit 3')) return { id: 'unit_3', title: syllabusData.units.unit_3?.unit_title || 'Geography of India' };
+  if (sub.includes('unit 2')) return { id: 'unit_2', title: syllabusData.units.unit_2?.unit_title || 'MP History' };
+  if (sub.includes('unit 1')) return { id: 'unit_1', title: syllabusData.units.unit_1?.unit_title || 'History of India' };
+  
+  return undefined;
+}
 
 let unitKeywordsCache: Map<string, { title: string; tokens: Set<string> }> | null = null;
 
@@ -679,7 +606,13 @@ export const getRepeatedQuestions = unstable_cache(
       return [];
     }
   },
-  ['pyq-repeated-questions'],
+  ['pyq-repeated-questions-v13'], // Bumped version
+  { revalidate: 3600, tags: ['pyq-insights', 'questions'] }
+);
+
+export const getUnifiedSubjectStatsCached = unstable_cache(
+  getUnifiedSubjectStats,
+  ['pyq-unified-stats-v13'],
   { revalidate: 3600, tags: ['pyq-insights', 'questions'] }
 );
 
@@ -704,7 +637,10 @@ export async function getUnitDistributionStats(limit?: number): Promise<UnitDist
         testId: questions.testId,
         text: questions.questionText,
         textEn: questions.questionTextEn,
+        subject: questions.subject,
         order: questions.order,
+        options: questions.options,
+        correctAnswer: questions.correctAnswer,
       })
       .from(questions)
       .where(inArray(questions.testId, testIds));
@@ -715,7 +651,12 @@ export async function getUnitDistributionStats(limit?: number): Promise<UnitDist
     for (const q of allQuestions) {
       const year = getYearFromTestId(q.testId);
       const fullText = (q.text || '') + ' ' + (q.textEn || '');
-      const unit = assignUnitToQuestion(fullText);
+      
+      // 🎯 IMPROVEMENT: Use DB Subject first, then fallback to keywords
+      let unit = mapSubjectToUnit(q.subject);
+      if (!unit) {
+        unit = assignUnitToQuestion(fullText);
+      }
 
       const unitId = unit ? unit.id : 'unmapped';
       const unitTitle = unit ? unit.title : 'Unmapped / General';
@@ -741,6 +682,9 @@ export async function getUnitDistributionStats(limit?: number): Promise<UnitDist
           textEn: q.textEn,
           year,
           qNo: q.order,
+          subject: q.subject || undefined,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
         });
       }
     }
@@ -954,6 +898,7 @@ export async function getMostRepeatedTopics(): Promise<Record<string, TopicStat[
         questionText: questions.questionText,
         questionTextEn: questions.questionTextEn,
         questionOrder: questions.order,
+        questionSubject: questions.subject,
         topicId: pyqTopics.id,
         topicSlug: pyqTopics.topicSlug,
         topicTitle: pyqTopics.topicTitle,
@@ -970,7 +915,13 @@ export async function getMostRepeatedTopics(): Promise<Record<string, TopicStat[
     for (const row of topicData) {
       const year = getYearFromTestId(row.testId);
       const fullText = (row.questionText || '') + ' ' + (row.questionTextEn || '');
-      const unit = assignUnitToQuestion(fullText);
+      
+      // 🎯 IMPROVEMENT: Use DB Subject first, then fallback to keywords
+      let unit = mapSubjectToUnit(row.questionSubject);
+      if (!unit) {
+        unit = assignUnitToQuestion(fullText);
+      }
+      
       const unitId = unit ? unit.id : 'unmapped';
 
       if (!unitTopics[unitId]) unitTopics[unitId] = new Map();
@@ -999,6 +950,7 @@ export async function getMostRepeatedTopics(): Promise<Record<string, TopicStat[
           textEn: row.questionTextEn,
           year,
           qNo: row.questionOrder,
+          subject: row.questionSubject || undefined,
         });
       }
     }

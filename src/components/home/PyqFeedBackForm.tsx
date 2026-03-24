@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { TestSeriesFeedbackModal } from '@/components/test-series-feedback-modal';
 import type { FeedbackFormType } from '@/lib/schemas/feedback';
@@ -54,29 +55,31 @@ export default function Home() {
 
         {/* SUBMITTED DATA DISPLAY */}
         {submittedData && (
-          <div className="space-y-4 rounded-lg border border-gray-200 p-6">
-            <h2 className="font-semibold text-black">Submitted Feedback</h2>
-            <div className="space-y-2 text-sm">
-              <div>
-                <span className="font-medium text-black">Overall Rating:</span>
-                <span className="ml-2 text-gray-600">{submittedData.overallRating} / 5 stars</span>
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4 rounded-[2rem] border border-white/10 bg-slate-900/50 p-6 backdrop-blur-md"
+          >
+            <h2 className="text-center text-sm font-black tracking-widest text-emerald-500 uppercase">Latest Feedback</h2>
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div className="rounded-xl bg-white/5 p-3 text-center">
+                <span className="block font-bold text-slate-500 uppercase tracking-tighter mb-1">Rating</span>
+                <span className="text-lg font-black text-white">{submittedData.overallRating} / 5</span>
               </div>
-              <div>
-                <span className="font-medium text-black">Difficulty Level:</span>
-                <span className="ml-2 text-gray-600">{submittedData.difficultyLevel}</span>
+              <div className="rounded-xl bg-white/5 p-3 text-center">
+                <span className="block font-bold text-slate-500 uppercase tracking-tighter mb-1">Difficulty</span>
+                <span className="text-sm font-black text-white uppercase">{submittedData.difficultyLevel.replace('_', ' ')}</span>
               </div>
-              <div>
-                <span className="font-medium text-black">Would Recommend:</span>
-                <span className="ml-2 text-gray-600">{submittedData.wouldRecommend}</span>
+              <div className="col-span-2 rounded-xl bg-white/5 p-3 text-center">
+                <span className="block font-bold text-slate-500 uppercase tracking-tighter mb-1">Recommended</span>
+                <span className="text-sm font-black text-white uppercase">
+                  {submittedData.wouldRecommend === 'yes' || submittedData.wouldRecommend === 'definitely' || submittedData.wouldRecommend === 'probably' 
+                    ? 'YES 👍' 
+                    : 'NO 👎'}
+                </span>
               </div>
-              {submittedData.comments && (
-                <div>
-                  <span className="font-medium text-black">Comments:</span>
-                  <span className="ml-2 text-gray-600">{submittedData.comments}</span>
-                </div>
-              )}
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* INTEGRATION GUIDE */}

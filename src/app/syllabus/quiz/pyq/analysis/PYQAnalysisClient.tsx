@@ -17,6 +17,8 @@ import {
   Hand,
   Zap,
   ArrowLeft,
+  Target,
+  Filter,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -104,11 +106,13 @@ export default function PYQAnalysisClient({
   const { language } = useSettingsStore();
   const isHindi = language === 'hi';
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
-    distribution: true, // Default to true for better initial view
+    distribution: false,
     rising: false,
     timeline: false,
     matrix: false,
   });
+  const [showStats, setShowStats] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
   const [topicLimit, setTopicLimit] = useState(10);
   const [isPending, startTransition] = useTransition();
 
@@ -132,16 +136,23 @@ export default function PYQAnalysisClient({
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-950 pb-20">
-      {/* Premium background effects */}
-      <div className="pointer-events-none fixed inset-0">
-        <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-amber-500/10 blur-[120px]" />
-        <div className="absolute right-[-5%] bottom-[10%] h-[500px] w-[500px] rounded-full bg-amber-600/5 blur-[100px]" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
+    <div className="relative min-h-screen overflow-hidden bg-[#fafafa] pb-20">
+      {/* Premium multi-colored gradient background blobs */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute top-[-10%] left-[-20%] h-[1000px] w-[1000px] rounded-full bg-indigo-200/20 blur-[130px]" />
+        <div className="absolute right-[-10%] top-[10%] h-[800px] w-[800px] rounded-full bg-emerald-100/30 blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-5%] h-[900px] w-[900px] rounded-full bg-rose-100/20 blur-[140px]" />
+        <div className="absolute right-[10%] bottom-[20%] h-[700px] w-[700px] rounded-full bg-amber-100/20 blur-[110px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:32px_32px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-30" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-[1400px] space-y-8 px-4 pt-4 sm:px-6 lg:px-8 transition-all duration-500"
-        style={{ opacity: isPending ? 0.4 : 1, filter: isPending ? 'blur(4px)' : 'none', pointerEvents: isPending ? 'none' : 'auto' }}
+      <div
+        className="relative z-10 mx-auto max-w-[1400px] space-y-8 px-4 pt-4 transition-all duration-500 sm:px-6 lg:px-8"
+        style={{
+          opacity: isPending ? 0.4 : 1,
+          filter: isPending ? 'blur(4px)' : 'none',
+          pointerEvents: isPending ? 'none' : 'auto',
+        }}
       >
         {/* Transition Overlay */}
         <AnimatePresence>
@@ -153,12 +164,12 @@ export default function PYQAnalysisClient({
               className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/20 backdrop-blur-md"
             >
               <div className="relative">
-                 <div className="h-20 w-20 animate-spin rounded-full border-b-2 border-t-2 border-amber-500"></div>
-                 <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="h-12 w-12 animate-pulse rounded-full bg-amber-500/20"></div>
-                 </div>
+                <div className="h-20 w-20 animate-spin rounded-full border-t-2 border-b-2 border-emerald-500"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="h-12 w-12 animate-pulse rounded-full bg-emerald-500/20"></div>
+                </div>
               </div>
-              <p className="mt-6 text-sm font-black tracking-[0.2em] text-amber-500 uppercase animate-pulse">
+              <p className="mt-6 animate-pulse text-sm font-black tracking-[0.2em] text-emerald-500 uppercase">
                 {isHindi ? 'नया डेटा लोड हो रहा है...' : 'Syncing Analysis...'}
               </p>
             </motion.div>
@@ -169,229 +180,469 @@ export default function PYQAnalysisClient({
           <Button
             variant="ghost"
             onClick={() => router.push('/syllabus/quiz/pyq/intelligence')}
-            className="group rounded-xl border border-white/5 bg-white/5 px-4 font-bold text-slate-400 backdrop-blur-md transition-all hover:bg-white/10 hover:text-white"
+            className="group rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-xs font-black text-slate-600 shadow-sm backdrop-blur-md transition-all hover:bg-white hover:text-black active:scale-95"
           >
-            <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
-            {isHindi ? 'वापस जाएं' : 'Back to Intelligence'}
+            <ArrowLeft className="mr-1.5 h-3.5 w-3.5 transition-transform group-hover:-translate-x-1" />
+            {isHindi ? 'वापस' : 'Back'}
           </Button>
 
-          <div className="flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/5 px-3 py-1 backdrop-blur-sm">
-            <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-amber-500/80">
-              {isHindi ? 'लाइव विश्लेषण सूट' : 'Live Analysis Suite'}
+          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 shadow-sm backdrop-blur-md">
+            <div className="h-1 w-1 animate-pulse rounded-full bg-slate-400" />
+            <span className="text-[9px] font-black tracking-[0.2em] text-slate-500 uppercase">
+              {isHindi ? 'विशेषज्ञ विश्लेषण' : 'Expert Analysis'}
             </span>
           </div>
         </div>
 
-        {/* ✨ Premium Intelligence Header Card with Amber/Gold Theme */}
-        <div className="relative overflow-hidden rounded-[2.5rem] border border-slate-800 bg-slate-900/40 shadow-2xl backdrop-blur-xl">
-          {/* grid texture */}
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:32px_32px] opacity-[0.2]" />
-          {/* glow spots */}
-          <div className="pointer-events-none absolute -top-12 -right-12 h-56 w-56 rounded-full bg-amber-500/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-amber-500/5 blur-3xl" />
-
-          <div className="relative z-10 space-y-8 p-8 sm:p-10">
-            {/* Header row */}
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-              <div className="flex-1 space-y-2">
-                <p className="flex items-center gap-2 text-[10px] font-black tracking-[0.25em] text-amber-500/80 uppercase">
-                  <span className="text-lg">🧠</span>
-                  {isHindi
-                    ? 'प्रीमियम इंटेलिजेंस · 2020-2025 · 6 वर्ष'
-                    : 'Premium Analysis · 2020–2025 · 6 Years'}
-                </p>
-                <h1 className="flex items-center gap-2.5 text-3xl font-black tracking-tight text-white sm:text-4xl">
-                  <span className="text-2xl leading-none">🔍</span>
-                  <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
-                    {isHindi ? 'PYQ टॉपिक विश्लेषण' : 'PYQ Topic Analysis'}
-                  </span>
-                </h1>
-                <p className="max-w-xl text-base leading-relaxed font-semibold text-slate-400">
-                  {isHindi
-                    ? '20% सिलेबस → 80% सवाल। High-weight topics और yearly pattern shifts पहचानें। 🎯'
-                    : '20% syllabus → 80% questions. Identify high-weight topics and pattern shifts. 🎯'}
-                </p>
-              </div>
-              <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
-                <Button
-                  variant="outline"
+        {/* ✨ Premium Intelligence Header Card with Emerald/Teal Theme */}
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center gap-5">
+                <button
                   onClick={() => router.push('/syllabus/quiz/pyq/intelligence')}
-                  className="inline-flex h-12 w-full items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 px-6 font-black text-amber-500 shadow-sm transition-all hover:bg-amber-500 hover:text-black sm:w-auto"
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50 hover:scale-105 active:scale-95"
                 >
-                  <Zap className="h-4 w-4" />
-                  {isHindi ? 'प्रीमियम ईंटेलिजेंस' : 'Expert Insights'}
+                  <ArrowLeft className="h-5 w-5 text-slate-500" />
+                </button>
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={12} className="text-indigo-500" />
+                    <span className="text-[10px] font-bold tracking-[0.2em] text-indigo-500 uppercase">
+                      Expert Analysis
+                    </span>
+                  </div>
+                  <h1 className="text-3xl font-black tracking-tight text-slate-900">
+                    {isHindi ? 'PYQ टॉपिक विश्लेषण' : 'PYQ Topic Analysis'}
+                  </h1>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowStats(!showStats)}
+                  className={cn(
+                    'h-12 w-12 rounded-2xl border-slate-200 bg-white p-0 text-slate-600 transition-all hover:bg-slate-50 shadow-sm',
+                    showStats && 'bg-amber-50 text-amber-600 border-amber-200'
+                  )}
+                >
+                  <Target className="h-5 w-5" />
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => router.push('/syllabus/quiz/pyq/facts')}
-                  className="inline-flex h-12 w-full items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/50 px-6 font-black text-slate-200 shadow-sm transition hover:border-amber-500/50 hover:bg-slate-800 hover:text-amber-400 sm:w-auto"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={cn(
+                    'h-12 flex-1 rounded-2xl border-slate-200 bg-white px-6 text-[11px] font-bold tracking-widest text-slate-600 uppercase transition-all shadow-sm sm:flex-none',
+                    showFilters && 'bg-rose-50 text-rose-600 border-rose-200'
+                  )}
                 >
-                  <BookOpenText className="h-4 w-4" />
-                  {isHindi ? 'फैक्ट लाइब्रेरी' : 'Facts Library'}
+                  <Filter className="mr-2 h-4 w-4" />
+                  {isHindi ? 'फिल्टर' : 'Filters'}
                 </Button>
-                {isAdmin && (
-                  <Button
-                    variant="outline"
-                    onClick={() => router.push('/syllabus/quiz/pyq/analysis/guide')}
-                    className="inline-flex h-12 w-full items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/50 px-6 font-black text-slate-200 shadow-sm transition hover:border-amber-500/50 hover:bg-slate-800 hover:text-amber-400 sm:w-auto"
-                  >
-                    <Sparkles className="h-4 w-4" />
-                    {isHindi ? 'गाइड' : 'Guide'}
-                  </Button>
-                )}
               </div>
             </div>
+
+            <AnimatePresence>
+              {showStats && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-8 sm:grid-cols-4">
+                    <div className="rounded-3xl border border-slate-100 bg-slate-50/50 p-6">
+                      <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
+                        Dataset
+                      </p>
+                      <p className="mt-1 text-xl font-black text-slate-900">
+                        2020 - 2025
+                      </p>
+                    </div>
+                    <div className="rounded-3xl border border-slate-100 bg-slate-50/50 p-6">
+                      <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
+                        Total PYQs
+                      </p>
+                      <p className="mt-1 text-xl font-black text-slate-900">
+                        {coverage.pyqQuestionCount}
+                      </p>
+                    </div>
+                    <div className="rounded-3xl border border-slate-100 bg-slate-50/50 p-6">
+                      <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
+                        Mapped
+                      </p>
+                      <p className="mt-1 text-xl font-black text-slate-900">
+                        {coverage.mappedQuestionCount}
+                      </p>
+                    </div>
+                    <div className="rounded-3xl border border-slate-100 bg-slate-50/50 p-6">
+                      <p className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">
+                        Coverage
+                      </p>
+                      <p className="mt-1 text-xl font-black text-indigo-600">
+                        {coverage.mappingCoveragePercent}%
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Selects */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 px-1 text-[11px] font-black tracking-widest text-amber-400 uppercase">
-                  <div className="h-1.5 w-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-                  {isHindi ? 'विषय चुनें' : 'Select Subject'}
-                </label>
-                <Select
-                  value={selectedSubject}
-                  onValueChange={(val) => applyFilters(val, selectedYears)}
+            {/* Selects */}
+            <AnimatePresence>
+              {showFilters && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
                 >
-                  <SelectTrigger className="h-14 w-full rounded-2xl border-slate-800 bg-slate-900/60 font-black tracking-tight text-white shadow-sm backdrop-blur-md transition-all hover:border-amber-500/50 hover:bg-slate-900/80 focus:ring-amber-500/30 ring-offset-0">
-                    <SelectValue placeholder={isHindi ? 'विषय चुनें' : 'Select Subject'} />
-                  </SelectTrigger>
-                  <SelectContent
-                    position="popper"
-                    sideOffset={4}
-                    className="z-[100] max-h-[350px] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950 text-slate-200 shadow-2xl backdrop-blur-xl [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-800"
-                  >
-                    {subjects.map((subject) => (
-                      <SelectItem
-                        key={subject.subject}
-                        value={subject.subject}
-                        className="cursor-pointer py-3 font-bold text-slate-400 focus:bg-amber-500/10 focus:text-amber-400"
+                  <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-8 sm:grid-cols-2">
+                    <div className="relative">
+                      <div className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                      </div>
+                      <Select
+                        value={selectedSubject}
+                        onValueChange={(val) => applyFilters(val, selectedYears)}
                       >
-                        {subject.subject} ({subject.topicCount} {isHindi ? 'टॉपिक्स' : 'Topics'})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                        <SelectTrigger className="h-12 w-full rounded-2xl border-slate-100 bg-slate-50/50 pl-10 font-bold text-slate-700 shadow-sm ring-offset-0 transition-all hover:border-indigo-200 hover:bg-white focus:ring-0">
+                          <SelectValue placeholder={isHindi ? 'विषय चुनें' : 'Select Subject'} />
+                        </SelectTrigger>
+                        <SelectContent
+                          position="popper"
+                          sideOffset={5}
+                          className="z-[100] w-[320px] max-w-[90vw] overflow-y-auto rounded-2xl border-slate-100 bg-white text-slate-700 shadow-2xl max-h-[280px] no-scrollbar"
+                        >
+                          {subjects.map((subject) => (
+                            <SelectItem
+                              key={subject.subject}
+                              value={subject.subject}
+                              className="cursor-pointer py-3 font-bold text-slate-600 focus:bg-indigo-50 focus:text-indigo-600"
+                            >
+                              {subject.subject} ({subject.topicCount}{' '}
+                              {isHindi ? 'टॉपिक्स' : 'Topics'})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 px-1 text-[11px] font-black tracking-widest text-amber-500/60 uppercase">
-                  <div className="h-1.5 w-1.5 rounded-full bg-amber-500/50" />
-                  {isHindi ? 'वर्ष चुनें' : 'Select Years'}
-                </label>
-                <Select
-                  value={selectedYears.toString()}
-                  onValueChange={(val) => applyFilters(selectedSubject, Number(val))}
-                >
-                  <SelectTrigger className="h-14 w-full rounded-2xl border-slate-800 bg-slate-900/60 font-black tracking-tight text-white shadow-sm backdrop-blur-md transition-all hover:border-amber-500/40 hover:bg-slate-900/80 focus:ring-amber-500/30">
-                    <SelectValue placeholder={isHindi ? 'वर्ष चुनें' : 'Select Years'} />
-                  </SelectTrigger>
-                  <SelectContent
-                    position="popper"
-                    sideOffset={4}
-                    className="z-[100] max-h-[350px] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950 text-slate-200 shadow-2xl backdrop-blur-xl [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-800"
-                  >
-                    {YEAR_OPTIONS.map((years) => (
-                      <SelectItem
-                        key={years}
-                        value={years.toString()}
-                        className="cursor-pointer py-3 font-bold text-slate-400 focus:bg-amber-500/10 focus:text-amber-400"
+                    <div className="relative">
+                      <div className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                      </div>
+                      <Select
+                        value={selectedYears.toString()}
+                        onValueChange={(val) => applyFilters(selectedSubject, Number(val))}
                       >
-                        {isHindi ? `पिछले ${years} वर्ष` : `Last ${years} Years`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Stat badges row */}
-            <div className="flex flex-wrap gap-3 border-t border-white/5 pt-6">
-              {[
-                { emoji: '📅', label: isHindi ? 'डेटासेट' : 'Dataset', val: `${coverage.fromYear}–${coverage.toYear}` },
-                { emoji: '📝', label: isHindi ? 'कुल PYQ' : 'Total PYQ', val: coverage.pyqQuestionCount },
-                { emoji: '🎯', label: isHindi ? 'विश्लेषित' : 'Analyzed', val: coverage.mappedQuestionCount },
-                { emoji: '📊', label: isHindi ? 'कवरेज' : 'Coverage', val: `${coverage.mappingCoveragePercent}%` },
-              ].map((stat, i) => (
-                <div key={i} className="flex items-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/40 px-4 py-2.5 backdrop-blur-sm transition-colors hover:bg-slate-800/60">
-                  <span className="text-base">{stat.emoji}</span>
-                  <div>
-                    <p className="text-[9px] font-black tracking-widest text-slate-500 uppercase">
-                      {stat.label}
-                    </p>
-                    <p className="text-sm font-black text-slate-200">
-                      {stat.val}
-                    </p>
+                        <SelectTrigger className="h-12 w-full rounded-2xl border-slate-100 bg-slate-50/50 pl-10 font-bold text-slate-700 shadow-sm transition-all hover:border-emerald-200 hover:bg-white focus:ring-0">
+                          <SelectValue placeholder={isHindi ? 'वर्ष चुनें' : 'Select Years'} />
+                        </SelectTrigger>
+                        <SelectContent
+                          position="popper"
+                          sideOffset={5}
+                          className="z-[100] w-[320px] max-w-[90vw] overflow-y-auto rounded-2xl border-slate-100 bg-white text-slate-700 shadow-2xl max-h-[280px] no-scrollbar"
+                        >
+                          {YEAR_OPTIONS.map((years) => (
+                            <SelectItem
+                              key={years}
+                              value={years.toString()}
+                              className="cursor-pointer py-3 font-bold text-slate-600 focus:bg-emerald-50 focus:text-emerald-600"
+                            >
+                              {isHindi ? `पिछले ${years} वर्ष` : `Last ${years} Years`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Subject Selection Stats Banner */}
+            {selectedSubject && (
+              <div className="flex items-center gap-4 rounded-[2rem] border border-indigo-100 bg-indigo-50/30 p-5 px-8 transition-all hover:bg-indigo-50/50">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-indigo-600 shadow-sm">
+                  <BarChart3 className="h-6 w-6" />
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ✦ Dark Amber Intelligence Stats Card */}
-        <div className="relative overflow-hidden rounded-[2.5rem] border border-amber-900 bg-amber-950/20 p-7 shadow-2xl backdrop-blur-xl">
-          {/* subtle grid */}
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:32px_32px] opacity-[0.1]" />
-          {/* corner glow */}
-          <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-amber-500/10 blur-3xl" />
-
-          <div className="relative z-10 flex flex-wrap gap-6 sm:grid sm:grid-cols-4 sm:gap-0 sm:divide-x sm:divide-white/5">
-            {[
-              {
-                emoji: '🔍',
-                label: isHindi ? 'चयनित विषय' : 'Subject',
-                val: analysis.subject,
-                color: 'text-amber-400',
-              },
-              {
-                emoji: '📝',
-                label: isHindi ? 'कुल प्रश्न' : 'Total Questions',
-                val: totalQuestions,
-                color: 'text-amber-300',
-              },
-              {
-                emoji: '🏷️',
-                label: isHindi ? 'टॉपिक्स' : 'Topics Covered',
-                val: analysis.topicDistribution.length,
-                color: 'text-amber-200',
-              },
-              {
-                emoji: '📅',
-                label: isHindi ? 'अवधि' : 'Period',
-                val: `${analysis.fromYear}–2025`,
-                color: 'text-amber-100',
-              },
-            ].map((stat, i) => (
-              <div key={i} className="flex-1 space-y-1 first:pl-0 last:pr-0 sm:px-6">
-                <p className="flex items-center gap-1.5 text-[9px] font-black tracking-[0.2em] text-amber-600/60 uppercase">
-                  <span className="text-base">{stat.emoji}</span>
-                  {stat.label}
-                </p>
-                <p className={`text-2xl font-black tracking-tight ${stat.color}`}>{stat.val}</p>
+                <div>
+                  <h4 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+                    {selectedSubject}
+                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                  </h4>
+                  <p className="text-[10px] font-black tracking-widest text-indigo-600/80 uppercase">
+                    {totalQuestions} {isHindi ? 'कुल प्रश्न' : 'Total Questions Found'} •{' '}
+                    {analysis.topicDistribution.length} {isHindi ? 'विषय' : 'Topics'}
+                  </p>
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
+            )}
 
         {/* Most Repeated Questions section temporarily hidden for now */}
 
+        {/* Marketing-style Matrix Card (Synced with other sections) */}
+        <div className="h-fit overflow-hidden rounded-[2.5rem] border border-slate-200/60 bg-white/70 shadow-sm backdrop-blur-md transition-all hover:bg-white/90">
+          <CardHeader
+            className="relative z-10 cursor-pointer border-b border-slate-100 bg-slate-50/30 transition-colors select-none hover:bg-slate-50/50"
+            onClick={() => toggleSection('matrix')}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="mb-1 flex items-center gap-2 text-[10px] font-black tracking-[0.3em] text-indigo-600 uppercase">
+                  <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                  {isHindi ? 'कवरेज चेक' : 'Coverage Check'}
+                </p>
+                <CardTitle className="flex items-center gap-2 text-xl font-black text-slate-800">
+                  {isHindi ? 'वर्ष-वार मैट्रिक्स' : 'Year-wise Matrix'}
+                </CardTitle>
+              </div>
+
+              {expanded.matrix ? (
+                <ChevronUp className="h-6 w-6 text-slate-400" />
+              ) : (
+                <ChevronDown className="h-6 w-6 text-slate-400" />
+              )}
+            </div>
+          </CardHeader>
+          <AnimatePresence>
+            {expanded.matrix && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="relative z-10 bg-[#08081a]"
+              >
+                <CardContent className="space-y-3 p-8 sm:p-12">
+                  <div className="mb-8 flex items-center justify-between border-b border-white/5 pb-4">
+                    <span className="text-[10px] font-black tracking-[0.3em] text-slate-500 uppercase">
+                      Yearly Volume
+                    </span>
+                    <span className="text-[10px] font-black tracking-[0.3em] text-slate-500 uppercase">
+                      Count
+                    </span>
+                  </div>
+                  {analysis.yearMatrix.map((item, idx) => {
+                    const gradients = [
+                      'from-emerald-600 to-teal-400 shadow-[0_0_12px_rgba(16,185,129,0.3)]',
+                      'from-amber-600 to-orange-400 shadow-[0_0_12px_rgba(245,158,11,0.3)]',
+                      'from-pink-600 to-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.3)]',
+                      'from-red-600 to-rose-400 shadow-[0_0_12px_rgba(220,38,38,0.3)]',
+                    ];
+                    const gradient = gradients[idx % gradients.length];
+
+                    return (
+                      <div
+                        key={item.year}
+                        onClick={() =>
+                          router.push(
+                            `/syllabus/quiz/pyq/analysis/year/${item.year}?subject=${selectedSubject}`
+                          )
+                        }
+                        className="group flex cursor-pointer flex-col gap-1.5 rounded-xl border-b border-white/[0.02] py-2.5 px-2 transition-all hover:bg-white/[0.02] last:border-0 active:scale-[0.99]"
+                      >
+                        <div className="flex items-center justify-between px-1">
+                          <div className="text-[13px] font-black tracking-tight text-slate-500 transition-colors group-hover:text-white">
+                            {item.year}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-[11px] font-black text-slate-500 transition-colors group-hover:text-slate-300">
+                              {item.questionCount}
+                              <span className="ml-0.5 text-[8px] font-black tracking-widest text-slate-600 uppercase">
+                                Qs
+                              </span>
+                            </div>
+                            <ChevronRight
+                              className={cn(
+                                'h-3.5 w-3.5 text-slate-700 transition-all group-hover:translate-x-0.5 group-hover:text-white',
+                                idx === 0 && 'animate-pulse text-emerald-500'
+                              )}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="relative px-1">
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-900/40 shadow-inner">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{
+                                width: `${Math.max(
+                                  3,
+                                  (item.questionCount /
+                                    Math.max(
+                                      ...analysis.yearMatrix.map((row) => row.questionCount),
+                                      1
+                                    )) *
+                                    100
+                                )}%`,
+                              }}
+                              transition={{ duration: 1.2, ease: 'easeOut' }}
+                              className={cn(
+                                'h-full rounded-full bg-gradient-to-r transition-all',
+                                gradient
+                              )}
+                            />
+                          </div>
+
+                          {idx === 0 && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -5 }}
+                              animate={{ opacity: [0.4, 1, 0.4], y: [-2, 0, -2] }}
+                              transition={{ repeat: Infinity, duration: 2.5 }}
+                              className="absolute top-4 right-1 flex items-center gap-1 text-[7px] font-black tracking-widest text-emerald-400 uppercase"
+                            >
+                              <Hand className="h-2 w-2" />
+                              <span>{isHindi ? 'टैप करें' : 'Click to see'}</span>
+                            </motion.div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="overflow-hidden rounded-[2.5rem] border border-slate-200/60 bg-white/70 shadow-sm backdrop-blur-md">
+          <CardHeader
+            className="cursor-pointer border-b border-slate-100 bg-slate-50/30 transition-colors select-none hover:bg-slate-50/50"
+            onClick={() => toggleSection('timeline')}
+          >
+            <CardTitle className="flex items-center justify-between text-lg font-black text-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-sm">
+                  <CalendarDays className="h-5 w-5" />
+                </div>
+                {isHindi
+                  ? 'टॉपिक अनुसार विश्लेषण — Recency'
+                  : 'Topic-wise Timeline — Recency'}
+              </div>
+              {expanded.timeline ? (
+                <ChevronUp className="h-5 w-5 text-slate-400" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-slate-400" />
+              )}
+            </CardTitle>
+          </CardHeader>
+
+          {expanded.timeline && (
+            <div>
+              {/* Mobile Card List for Timeline */}
+              <div className="block divide-y divide-slate-100 sm:hidden">
+                {analysis.topicYearBreakdown.slice(0, 20).map((row) => {
+                  const totalForTopic = row.years.reduce((sum, y) => sum + y.questionCount, 0);
+                  return (
+                    <div key={row.topicId} className="space-y-4 bg-slate-50/30 p-6">
+                      <div>
+                        <h4 className="leading-tight font-black text-slate-800">
+                          {isHindi ? row.topicTitle : row.topicTitleEn || row.topicTitle}
+                        </h4>
+                        <p className="mt-1 text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                          {totalForTopic} {isHindi ? 'कुल प्रश्न' : 'Questions'}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {row.years.map((y, idx) => {
+                          return (
+                            <div
+                              key={`${row.topicId}-${y.year}`}
+                              className="flex min-w-[70px] flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm transition-all hover:border-indigo-200"
+                            >
+                              <span className="text-[9px] font-black text-slate-400 uppercase">
+                                {y.year}
+                              </span>
+                              <span className="text-sm font-black text-indigo-600">
+                                {y.questionCount} {isHindi ? 'प्र' : 'Q'}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="hidden overflow-x-auto border-t border-slate-100 sm:block">
+                <Table>
+                  <TableHeader className="bg-slate-50/50">
+                    <TableRow className="border-slate-100 hover:bg-transparent">
+                      <TableHead className="w-[30%] min-w-[200px] px-8 py-5 text-[11px] font-black tracking-widest text-slate-400 uppercase">
+                        {isHindi ? 'टॉपिक' : 'Topic'}
+                      </TableHead>
+                      <TableHead className="min-w-[400px] px-8 py-5 text-[11px] font-black tracking-widest text-slate-400 uppercase">
+                        {isHindi ? 'वर्ष अनुसार विश्लेषण' : 'Yearly Trend'}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {analysis.topicYearBreakdown.slice(0, 20).map((row) => {
+                      const totalForTopic = row.years.reduce((sum, y) => sum + y.questionCount, 0);
+
+                      return (
+                        <TableRow
+                          key={row.topicId}
+                          className="border-slate-100 transition-colors hover:bg-slate-50/30"
+                        >
+                          <TableCell className="px-8 py-6 align-top">
+                            <div className="font-black text-slate-700">
+                              {isHindi ? row.topicTitle : row.topicTitleEn || row.topicTitle}
+                            </div>
+                            <div className="mt-1 text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                              {totalForTopic} {isHindi ? 'कुल प्रश्न' : 'Questions'}
+                            </div>
+                          </TableCell>
+                          <TableCell className="px-8 py-6 align-middle">
+                            <div className="flex flex-wrap items-center gap-2.5">
+                              {row.years.map((y, idx) => {
+                                return (
+                                  <div
+                                    key={`${row.topicId}-${y.year}`}
+                                    className="flex items-center gap-2 rounded-xl border border-slate-100 bg-white px-4 py-2.5 shadow-sm transition-all hover:border-indigo-200"
+                                  >
+                                    <span className="text-[10px] font-black text-slate-400 uppercase">
+                                      {y.year}
+                                    </span>
+                                    <div className="h-3 w-[1px] bg-slate-100"></div>
+                                    <span className="flex items-center gap-0.5 text-xs font-black text-indigo-600">
+                                      {y.questionCount} {isHindi ? 'प्र' : 'Q'}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="grid items-start gap-4 lg:grid-cols-12">
-          <div className="h-fit overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-900/40 shadow-xl backdrop-blur-md lg:col-span-8">
+          <div className="h-fit overflow-hidden rounded-[2.5rem] border border-slate-200/60 bg-white/70 shadow-sm backdrop-blur-md lg:col-span-8">
             <CardHeader
-              className="cursor-pointer border-b border-white/5 bg-white/5 transition-colors select-none hover:bg-white/10"
+              className="cursor-pointer border-b border-slate-100 bg-slate-50/30 transition-colors select-none hover:bg-slate-50/50"
               onClick={() => toggleSection('distribution')}
             >
-              <CardTitle className="flex items-center justify-between text-lg font-black text-amber-500">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-amber-500/80" />
+              <CardTitle className="flex items-center justify-between text-lg font-black text-slate-800">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600 shadow-sm">
+                    <BarChart3 className="h-5 w-5" />
+                  </div>
                   {isHindi ? 'टॉपिक वितरण — हाई वेटेज' : 'Topic Distribution — High Weightage'}
                 </div>
                 {expanded.distribution ? (
-                  <ChevronUp className="h-5 w-5 text-slate-500" />
+                  <ChevronUp className="h-5 w-5 text-slate-400" />
                 ) : (
-                  <ChevronDown className="h-5 w-5 text-slate-500" />
+                  <ChevronDown className="h-5 w-5 text-slate-400" />
                 )}
               </CardTitle>
             </CardHeader>
@@ -407,7 +658,7 @@ export default function PYQAnalysisClient({
                   <div>
                     <CardContent className="p-0">
                       {/* Mobile Card List */}
-                      <div className="block divide-y divide-white/5 sm:hidden">
+                      <div className="block divide-y divide-slate-100 sm:hidden">
                         {analysis.topicDistribution.length > 0 ? (
                           analysis.topicDistribution.slice(0, topicLimit).map((item, idx) => (
                             <div
@@ -416,13 +667,13 @@ export default function PYQAnalysisClient({
                                 router.push(`/syllabus/quiz/pyq/analysis/topic/${item.topicSlug}`)
                               }
                               className={cn(
-                                'group cursor-pointer space-y-3 border-l-4 border-amber-500/30 bg-white/[0.02] p-4 transition-all active:scale-[0.98] hover:bg-white/[0.05]'
+                                'group cursor-pointer space-y-4 border-l-4 border-indigo-500/30 bg-white p-6 transition-all hover:bg-slate-50 active:scale-[0.98]'
                               )}
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <h4
                                   className={cn(
-                                    'leading-tight text-[15px] font-black text-slate-200 group-hover:text-amber-400'
+                                    'text-[15px] leading-tight font-black text-slate-700 group-hover:text-indigo-600'
                                   )}
                                 >
                                   {isHindi ? item.topicTitle : item.topicTitleEn || item.topicTitle}
@@ -431,17 +682,17 @@ export default function PYQAnalysisClient({
                                   <Badge
                                     variant="outline"
                                     className={cn(
-                                      'border-none bg-amber-500/10 font-bold text-amber-500'
+                                      'border-none bg-indigo-50 font-bold text-indigo-600'
                                     )}
                                   >
                                     {item.trendDelta > 0
                                       ? `+${Math.round(item.trendDelta)} Qs`
                                       : `${Math.round(item.trendDelta)} Qs`}
                                   </Badge>
-                                  <ChevronRight className="h-4 w-4 text-slate-600 transition-transform group-hover:translate-x-1" />
+                                  <ChevronRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1" />
                                 </div>
                               </div>
-                              <div className="flex items-center justify-between text-[10px] font-black tracking-widest text-slate-500 uppercase">
+                              <div className="flex items-center justify-between text-[10px] font-black tracking-widest text-slate-400 uppercase">
                                 <span>
                                   {item.totalQuestions} {isHindi ? 'प्रश्न' : 'Questions'}
                                 </span>
@@ -452,12 +703,12 @@ export default function PYQAnalysisClient({
                               </div>
                               <div
                                 className={cn(
-                                  'h-2 w-full overflow-hidden rounded-full bg-slate-800'
+                                  'h-2 w-full overflow-hidden rounded-full bg-slate-100'
                                 )}
                               >
                                 <div
                                   className={cn(
-                                    'h-full rounded-full bg-gradient-to-r from-amber-600 to-orange-500 transition-all duration-700'
+                                    'h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-700'
                                   )}
                                   style={{ width: `${Math.min(item.overallWeightPercent, 100)}%` }}
                                 />
@@ -465,28 +716,30 @@ export default function PYQAnalysisClient({
                             </div>
                           ))
                         ) : (
-                          <div className="p-8 text-center text-slate-500">
-                            {isHindi ? 'इस विषय के लिए कोई टॉपिक डेटा नहीं मिला।' : 'No topic distribution data found for this subject.'}
+                          <div className="p-12 text-center text-slate-400">
+                            {isHindi
+                              ? 'इस विषय के लिए कोई टॉपिक डेटा नहीं मिला।'
+                              : 'No topic distribution data found for this subject.'}
                           </div>
                         )}
                       </div>
 
                       {/* Desktop Table */}
-                      <div className="hidden p-2 sm:block">
-                        <div className="overflow-hidden rounded-xl border border-white/5">
+                      <div className="hidden p-4 sm:block">
+                        <div className="overflow-hidden rounded-[2rem] border border-slate-100 bg-white">
                           <Table>
-                            <TableHeader className="bg-white/5">
-                              <TableRow className="border-white/5 hover:bg-transparent">
-                                <TableHead className="px-6 py-4 text-[11px] font-black tracking-widest text-slate-400 uppercase">
+                            <TableHeader className="bg-slate-50/50">
+                              <TableRow className="border-slate-100 hover:bg-transparent">
+                                <TableHead className="px-8 py-5 text-[11px] font-black tracking-widest text-slate-400 uppercase">
                                   {isHindi ? 'टॉपिक' : 'Topic'}
                                 </TableHead>
-                                <TableHead className="px-4 py-4 text-right text-[11px] font-black tracking-widest text-slate-400 uppercase">
+                                <TableHead className="px-6 py-5 text-right text-[11px] font-black tracking-widest text-slate-400 uppercase">
                                   {isHindi ? 'प्रश्न' : 'Questions'}
                                 </TableHead>
-                                <TableHead className="px-4 py-4 text-right text-[11px] font-black tracking-widest text-slate-400 uppercase">
+                                <TableHead className="px-6 py-5 text-right text-[11px] font-black tracking-widest text-slate-400 uppercase">
                                   {isHindi ? 'वेट %' : 'Weight %'}
                                 </TableHead>
-                                <TableHead className="px-6 py-4 text-right text-[11px] font-black tracking-widest text-slate-400 uppercase">
+                                <TableHead className="px-8 py-5 text-right text-[11px] font-black tracking-widest text-slate-400 uppercase">
                                   {isHindi ? 'ट्रेंड' : 'Trend'}
                                 </TableHead>
                               </TableRow>
@@ -502,12 +755,12 @@ export default function PYQAnalysisClient({
                                       )
                                     }
                                     className={cn(
-                                      'group border-white/5 transition-colors hover:bg-white/5 cursor-pointer'
+                                      'group cursor-pointer border-slate-100 transition-colors hover:bg-slate-50/50'
                                     )}
                                   >
                                     <TableCell
                                       className={cn(
-                                        'px-6 py-5 font-black text-slate-200 group-hover:text-amber-400'
+                                        'px-8 py-6 font-black text-slate-700 group-hover:text-indigo-600'
                                       )}
                                     >
                                       <div className="flex items-center justify-between">
@@ -516,21 +769,21 @@ export default function PYQAnalysisClient({
                                             ? item.topicTitle
                                             : item.topicTitleEn || item.topicTitle}
                                         </span>
-                                        <ChevronRight className="h-3 w-3 text-amber-500/50 opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100" />
+                                        <ChevronRight className="h-3 w-3 text-indigo-400 opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100" />
                                       </div>
                                     </TableCell>
-                                    <TableCell className="px-4 py-5 text-right font-black text-slate-400 group-hover:text-slate-200">
+                                    <TableCell className="px-6 py-6 text-right font-black text-slate-500 group-hover:text-slate-800">
                                       {item.totalQuestions}
                                     </TableCell>
-                                    <TableCell className="px-4 py-5 text-right">
+                                    <TableCell className="px-6 py-6 text-right">
                                       <div className="flex items-center justify-end gap-3">
-                                        <span className="w-12 text-sm font-black text-slate-500 group-hover:text-slate-300">
+                                        <span className="w-12 text-sm font-black text-slate-600 group-hover:text-indigo-600">
                                           {item.overallWeightPercent.toFixed(1)}%
                                         </span>
-                                        <div className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-800">
+                                        <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-100">
                                           <div
                                             className={cn(
-                                              'h-full rounded-full bg-gradient-to-r from-amber-600 to-orange-500 shadow-[0_0_10px_rgba(245,158,11,0.3)] transition-all duration-700'
+                                              'h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 shadow-[0_0_10px_rgba(99,102,241,0.2)] transition-all duration-700'
                                             )}
                                             style={{
                                               width: `${Math.min(item.overallWeightPercent, 100)}%`,
@@ -539,11 +792,11 @@ export default function PYQAnalysisClient({
                                         </div>
                                       </div>
                                     </TableCell>
-                                    <TableCell className="px-6 py-5 text-right">
+                                    <TableCell className="px-8 py-6 text-right">
                                       <Badge
                                         variant="outline"
                                         className={cn(
-                                          'border-none bg-amber-500/10 font-black text-amber-500'
+                                          'border-none bg-indigo-50 font-black text-indigo-600'
                                         )}
                                       >
                                         {item.trendDelta > 0
@@ -568,7 +821,7 @@ export default function PYQAnalysisClient({
                               prev >= analysis.topicDistribution.length ? 10 : prev + 20
                             )
                           }
-                          className="flex items-center gap-1 text-xs font-black tracking-wider text-amber-500 uppercase transition-all hover:bg-amber-500/10 hover:text-amber-400 active:scale-95"
+                          className="flex items-center gap-1 text-xs font-black tracking-wider text-emerald-500 uppercase transition-all hover:bg-emerald-500/10 hover:text-emerald-400 active:scale-95"
                         >
                           {topicLimit >= analysis.topicDistribution.length
                             ? isHindi
@@ -592,20 +845,22 @@ export default function PYQAnalysisClient({
             </AnimatePresence>
           </div>
 
-          <div className="h-fit overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-900/40 shadow-xl backdrop-blur-md lg:col-span-4">
+          <div className="h-fit overflow-hidden rounded-[2.5rem] border border-slate-200/60 bg-white/70 shadow-sm backdrop-blur-md lg:col-span-4">
             <CardHeader
-              className="cursor-pointer border-b border-white/5 bg-white/5 transition-colors select-none hover:bg-white/10"
+              className="cursor-pointer border-b border-slate-100 bg-slate-50/30 transition-colors select-none hover:bg-slate-50/50"
               onClick={() => toggleSection('rising')}
             >
-              <CardTitle className="flex items-center justify-between text-lg font-black text-amber-500">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-amber-500/80" />
+              <CardTitle className="flex items-center justify-between text-lg font-black text-slate-800">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 shadow-sm">
+                    <TrendingUp className="h-5 w-5" />
+                  </div>
                   {isHindi ? 'उभरते टॉपिक — Hot Trends' : 'Rising Topics — Hot Trends'}
                 </div>
                 {expanded.rising ? (
-                  <ChevronUp className="h-5 w-5 text-slate-500" />
+                  <ChevronUp className="h-5 w-5 text-slate-400" />
                 ) : (
-                  <ChevronDown className="h-5 w-5 text-slate-500" />
+                  <ChevronDown className="h-5 w-5 text-slate-400" />
                 )}
               </CardTitle>
             </CardHeader>
@@ -619,10 +874,9 @@ export default function PYQAnalysisClient({
                   className="overflow-hidden"
                 >
                   <div>
-                    <CardContent className="space-y-4 p-5 sm:p-8">
+                    <CardContent className="space-y-4 p-8 sm:p-10">
                       {analysis.risingTopics.length > 0 ? (
                         analysis.risingTopics.map((item, idx) => {
-                          const style = VARIANTS['amber'];
                           return (
                             <div
                               key={item.topicId}
@@ -630,52 +884,54 @@ export default function PYQAnalysisClient({
                                 router.push(`/syllabus/quiz/pyq/analysis/topic/${item.topicSlug}`)
                               }
                               className={cn(
-                                'group relative cursor-pointer space-y-4 rounded-3xl border border-white/10 bg-slate-900/40 p-5 shadow-xl backdrop-blur-md transition-all hover:bg-slate-800/60 active:scale-[0.98]'
+                                'group relative cursor-pointer space-y-4 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm transition-all hover:border-amber-200 hover:bg-amber-50/30 active:scale-[0.98]'
                               )}
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="flex items-start gap-3">
                                   <div
                                     className={cn(
-                                      'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-black bg-amber-500 text-black shadow-[0_0_10px_rgba(245,158,11,0.3)]'
+                                      'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-50 text-[11px] font-black text-slate-400 group-hover:bg-amber-100 group-hover:text-amber-600'
                                     )}
                                   >
                                     #{idx + 1}
                                   </div>
-                                  <h4 className="text-base leading-tight font-black text-slate-100 group-hover:text-amber-400 transition-colors">
-                                    {isHindi ? item.topicTitle : item.topicTitleEn || item.topicTitle}
+                                  <h4 className="text-base leading-tight font-black text-slate-700 transition-colors group-hover:text-amber-600">
+                                    {isHindi
+                                      ? item.topicTitle
+                                      : item.topicTitleEn || item.topicTitle}
                                   </h4>
                                 </div>
                                 <Badge
                                   variant="outline"
-                                  className="shrink-0 rounded-lg border-amber-500/20 bg-amber-500/10 px-2 py-0.5 font-black text-amber-500"
+                                  className="shrink-0 rounded-lg border-amber-100 bg-amber-50 px-2 py-0.5 font-black text-amber-600"
                                 >
                                   +{Math.round(item.trendDelta)} {isHindi ? 'अधिक' : 'more'}
                                 </Badge>
                               </div>
 
-                              <div className="flex items-center justify-between px-1 text-[11px] font-black tracking-widest text-slate-500 uppercase">
+                              <div className="flex items-center justify-between px-1 text-[11px] font-black tracking-widest text-slate-400 uppercase">
                                 <span>
                                   {item.totalQuestions} {isHindi ? 'प्रश्न' : 'Questions'}
                                 </span>
-                                <span className="text-amber-500/80">
+                                <span className="text-emerald-600 font-bold">
                                   {item.latestWeightPercent.toFixed(1)}%{' '}
                                   {isHindi ? 'लेटेस्ट हिस्सा' : 'Latest Share'}
                                 </span>
                               </div>
 
-                              <div className="flex items-center justify-between border-t border-white/5 pt-3 transition-colors group-hover:border-white/10">
-                                <span className="flex items-center gap-1.5 text-[10px] font-black tracking-widest text-amber-500/60 uppercase group-hover:text-amber-400">
+                              <div className="flex items-center justify-between border-t border-slate-100 pt-4 transition-colors group-hover:border-rose-100">
+                                <span className="flex items-center gap-1.5 text-[10px] font-black tracking-widest text-slate-400 uppercase group-hover:text-emerald-600">
                                   <ShieldCheck className="h-3.5 w-3.5" />
                                   {isHindi ? 'प्रमाण देखें' : 'View Proof'}
                                 </span>
-                                <ChevronRight className="h-4 w-4 text-slate-600 transition-transform group-hover:translate-x-1 group-hover:text-amber-500" />
+                                <ChevronRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-emerald-600" />
                               </div>
 
-                              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-950/50">
+                              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
                                 <div
                                   className={cn(
-                                    'h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 shadow-[0_0_10px_rgba(245,158,11,0.3)] transition-all duration-1000 ease-out'
+                                    'h-full rounded-full bg-gradient-to-r from-amber-500 via-emerald-500 to-teal-500 shadow-[0_0_10px_rgba(245,158,11,0.2)] transition-all duration-1000 ease-out'
                                   )}
                                   style={{ width: `${Math.min(item.latestWeightPercent, 100)}%` }}
                                 />
@@ -684,8 +940,10 @@ export default function PYQAnalysisClient({
                           );
                         })
                       ) : (
-                        <div className="py-12 text-center text-slate-500">
-                          {isHindi ? 'कोई उभरते टॉपिक (Rising Trends) नहीं मिले।' : 'No rising trends found for this subject.'}
+                        <div className="py-20 text-center text-slate-400">
+                          {isHindi
+                            ? 'कोई उभरते टॉपिक (Rising Trends) नहीं मिले।'
+                            : 'No rising trends found for this subject.'}
                         </div>
                       )}
                     </CardContent>
@@ -694,237 +952,6 @@ export default function PYQAnalysisClient({
               )}
             </AnimatePresence>
           </div>
-        </div>
-
-        {/* Marketing-style Matrix Card (Synced with other sections) */}
-        <div className="h-fit overflow-hidden rounded-[2.5rem] border border-slate-800 bg-slate-900/40 shadow-xl backdrop-blur-md">
-          <CardHeader
-            className="relative z-10 cursor-pointer border-b border-white/5 bg-white/5 transition-colors select-none hover:bg-white/10"
-            onClick={() => toggleSection('matrix')}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="mb-1 flex items-center gap-2 text-[10px] font-black tracking-[0.25em] text-amber-500/60 uppercase">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-                  {isHindi ? 'कवरेज चेक' : 'Coverage Check'}
-                </p>
-                <CardTitle className="flex items-center gap-2 text-xl font-black text-amber-500">
-                  {isHindi ? 'वर्ष-वार मैट्रिक्स' : 'Year-wise Matrix'}
-                </CardTitle>
-              </div>
-
-              {expanded.matrix ? (
-                <ChevronUp className="h-6 w-6 text-slate-500" />
-              ) : (
-                <ChevronDown className="h-6 w-6 text-slate-500" />
-              )}
-            </div>
-          </CardHeader>
-          <AnimatePresence>
-            {expanded.matrix && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="relative z-10 bg-slate-900/40"
-              >
-                <CardContent className="space-y-4 p-6 sm:p-8">
-                  {analysis.yearMatrix.map((item, idx) => {
-                    // Standardize on More Vibrant / Colorful gradients for Matrix
-                    const gradients = [
-                      'from-amber-400 via-amber-500 to-orange-500 shadow-[0_0_12px_rgba(245,158,11,0.4)]',
-                      'from-yellow-400 via-amber-500 to-amber-600 shadow-[0_0_12px_rgba(234,179,8,0.4)]',
-                      'from-orange-400 via-orange-500 to-red-500 shadow-[0_0_12px_rgba(249,115,22,0.4)]',
-                      'from-rose-400 via-red-500 to-red-600 shadow-[0_0_12px_rgba(244,63,94,0.4)]',
-                    ];
-                    const gradient = gradients[idx % gradients.length];
-
-                    return (
-                      <div
-                        key={item.year}
-                        onClick={() =>
-                          router.push(
-                            `/syllabus/quiz/pyq/analysis/year/${item.year}?subject=${selectedSubject}`
-                          )
-                        }
-                        className="group flex cursor-pointer items-center gap-5 rounded-xl p-2 transition-all hover:bg-white/5 active:scale-[0.99]"
-                      >
-                        <div className="w-12 text-sm font-black tracking-tight text-slate-400 transition-colors group-hover:text-white">
-                          {item.year}
-                        </div>
-
-                        <div className="flex flex-1 flex-col gap-2">
-                          <div className="h-3 w-full overflow-hidden rounded-full border border-white/5 bg-slate-950/40">
-                            <div
-                              className={cn(
-                                'h-full rounded-full bg-gradient-to-r transition-all duration-1000 ease-out',
-                                gradient
-                              )}
-                              style={{
-                                width: `${Math.max(
-                                  3,
-                                  (item.questionCount /
-                                    Math.max(
-                                      ...analysis.yearMatrix.map((row) => row.questionCount),
-                                      1
-                                    )) *
-                                    100
-                                )}%`,
-                              }}
-                            />
-                          </div>
-
-                          {/* Mobile Hand Pointer Animation - Only on first row */}
-                          {idx === 0 && (
-                            <motion.div
-                              initial={{ opacity: 0, y: -5 }}
-                              animate={{ opacity: [0.4, 1, 0.4], y: [0, 2, 0] }}
-                              transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-                              className="flex items-center gap-1.5 px-1 sm:hidden"
-                            >
-                              <Hand className="h-3 w-3 text-amber-500/80" />
-                              <span className="text-[9px] font-black tracking-[0.2em] text-amber-500/80 uppercase">
-                                Tap
-                              </span>
-                            </motion.div>
-                          )}
-                        </div>
-
-                        <div className="min-w-[60px] text-right">
-                          <div className="text-lg font-black text-slate-300 transition-colors group-hover:text-white">
-                            {item.questionCount}{' '}
-                            <span className="ml-0.5 text-[10px] font-bold text-slate-600 uppercase">
-                              Qs
-                            </span>
-                          </div>
-                        </div>
-
-                        <ChevronRight className="h-4 w-4 -translate-x-2 text-slate-600 opacity-0 transition-colors group-hover:translate-x-0 group-hover:text-white group-hover:opacity-100" />
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        <div className="overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-900/40 shadow-xl backdrop-blur-md">
-          <CardHeader
-            className="cursor-pointer border-b border-white/5 bg-white/5 transition-colors select-none hover:bg-white/10"
-            onClick={() => toggleSection('timeline')}
-          >
-            <CardTitle className="flex items-center justify-between text-lg font-black text-amber-500">
-              <div className="flex items-center gap-2">
-                <CalendarDays className="h-5 w-5 text-amber-500/80" />
-                {isHindi
-                  ? 'टॉपिक अनुसार विश्लेषण — Recency Tracker'
-                  : 'Topic-wise Timeline — Recency Tracker'}
-              </div>
-              {expanded.timeline ? (
-                <ChevronUp className="h-5 w-5 text-slate-500" />
-              ) : (
-                <ChevronDown className="h-5 w-5 text-slate-500" />
-              )}
-            </CardTitle>
-          </CardHeader>
-
-          {expanded.timeline && (
-            <div>
-              {/* Mobile Card List for Timeline */}
-              <div className="block divide-y divide-white/5 sm:hidden">
-                {analysis.topicYearBreakdown.slice(0, 20).map((row) => {
-                  const totalForTopic = row.years.reduce((sum, y) => sum + y.questionCount, 0);
-                  return (
-                    <div key={row.topicId} className="space-y-4 bg-white/[0.02] p-5">
-                      <div>
-                        <h4 className="leading-tight font-black text-slate-200">
-                          {isHindi ? row.topicTitle : row.topicTitleEn || row.topicTitle}
-                        </h4>
-                        <p className="mt-1 text-[10px] font-black tracking-widest text-slate-500 uppercase">
-                          {totalForTopic} {isHindi ? 'कुल प्रश्न' : 'Questions'}
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {row.years.map((y, idx) => {
-                          return (
-                            <div
-                              key={`${row.topicId}-${y.year}`}
-                              className="flex min-w-[60px] flex-col items-center justify-center rounded-xl border border-slate-800 bg-slate-900/60 p-2 shadow-sm"
-                            >
-                              <span className="text-[9px] font-black text-slate-500 uppercase">
-                                {y.year}
-                              </span>
-                              <span className="text-sm font-black text-amber-500">
-                                {y.questionCount} {isHindi ? 'प्र' : 'Q'}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="hidden border-t border-white/5 overflow-x-auto sm:block">
-                <Table>
-                  <TableHeader className="bg-white/5">
-                    <TableRow className="border-white/5 hover:bg-transparent">
-                      <TableHead className="w-[30%] min-w-[200px] px-6 py-4 text-[11px] font-black tracking-widest text-slate-400 uppercase">
-                        {isHindi ? 'टॉपिक' : 'Topic'}
-                      </TableHead>
-                      <TableHead className="min-w-[400px] px-6 py-4 text-[11px] font-black tracking-widest text-slate-400 uppercase">
-                        {isHindi ? 'वर्ष अनुसार विश्लेषण' : 'Yearly Trend'}
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {analysis.topicYearBreakdown.slice(0, 20).map((row) => {
-                      const totalForTopic = row.years.reduce((sum, y) => sum + y.questionCount, 0);
-
-                      return (
-                        <TableRow
-                          key={row.topicId}
-                          className="border-white/5 transition-colors hover:bg-white/5"
-                        >
-                          <TableCell className="px-6 py-5 align-top">
-                            <div className="font-black text-slate-200">
-                              {isHindi ? row.topicTitle : row.topicTitleEn || row.topicTitle}
-                            </div>
-                            <div className="mt-1 text-[10px] font-black tracking-widest text-slate-500 uppercase">
-                              {totalForTopic} {isHindi ? 'कुल प्रश्न' : 'Questions'}
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-6 py-5 align-middle">
-                            <div className="flex flex-wrap items-center gap-2">
-                              {row.years.map((y, idx) => {
-                                return (
-                                  <div
-                                    key={`${row.topicId}-${y.year}`}
-                                    className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 shadow-sm"
-                                  >
-                                    <span className="text-[10px] font-black text-slate-500 uppercase">
-                                      {y.year}
-                                    </span>
-                                    <div className="h-3 w-[1px] bg-white/5"></div>
-                                    <span className="flex items-center gap-0.5 text-xs font-black text-amber-500">
-                                      {y.questionCount} {isHindi ? 'प्र' : 'Q'}
-                                    </span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

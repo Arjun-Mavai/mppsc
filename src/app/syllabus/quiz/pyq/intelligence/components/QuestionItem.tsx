@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ChevronDown, ChevronUp, Repeat } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -15,9 +15,11 @@ export interface QuestionData {
   textEn?: string | null;
   year: number;
   qNo?: number;
-  options?: string[];
+  subject?: string;
+  testTitle?: string;
+  options?: any; // Can be string[] or DB JSON [{id, text, text_en}]
   optionsEn?: string[];
-  correctAnswer?: number;
+  correctAnswer?: number | string;
 }
 
 interface QuestionItemProps {
@@ -26,7 +28,7 @@ interface QuestionItemProps {
   isHindi: boolean;
   repeatCount?: number;
   showYear?: boolean;
-  variant?: 'compact' | 'full';
+  variant?: 'compact' | 'full' | 'card';
   defaultExpanded?: boolean;
 }
 
@@ -42,6 +44,170 @@ export function QuestionItem({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const displayText = isHindi ? question.text : question.textEn || question.text;
   const altText = isHindi ? question.textEn : question.text;
+
+  // Helper to normalize options and correct answer
+  const normalizedOptions = useMemo(() => {
+    if (!question.options) return [];
+    
+    try {
+      // If it's already an array, check if it's strings or objects
+      if (Array.isArray(question.options)) {
+        if (question.options.length === 0) return [];
+        
+        if (typeof question.options[0] === 'string') {
+          return (question.options as string[]).map((opt, i) => ({
+            id: String.fromCharCode(65 + i),
+            text: opt,
+            textEn: question.optionsEn?.[i] || opt
+          }));
+        }
+        
+        // Handle DB JSON format: [{id, text, text_en}]
+        return (question.options as any[]).map(opt => ({
+          id: opt.id || '',
+          text: opt.text || '',
+          textEn: opt.text_en || opt.text || opt.textEn || ''
+        }));
+      }
+      
+      // If it's a string, try parsing
+      if (typeof question.options === 'string') {
+        const opts = JSON.parse(question.options);
+        if (Array.isArray(opts)) {
+          return opts.map(opt => ({
+            id: opt.id || '',
+            text: opt.text || '',
+            textEn: opt.text_en || opt.text || opt.textEn || ''
+          }));
+        }
+      }
+    } catch (e) {
+      console.error('Error normalizing options for question:', question.id, e);
+    }
+    return [];
+  }, [question.options, question.optionsEn, question.id]);
+
+  const correctIdx = useMemo(() => {
+    if (question.correctAnswer === undefined || question.correctAnswer === null) return -1;
+    if (typeof question.correctAnswer === 'number') return question.correctAnswer;
+    
+    // Match 'A', 'B', 'C', 'D' to 0, 1, 2, 3
+    const ans = String(question.correctAnswer).toUpperCase();
+    const charCode = ans.charCodeAt(0);
+    if (ans.length === 1 && charCode >= 65 && charCode <= 68) return charCode - 65;
+    
+    // Fallback: try to find by ID in normalized options
+    return normalizedOptions.findIndex(opt => opt.id === question.correctAnswer);
+  }, [question.correctAnswer, normalizedOptions]);
+
+  if (variant === 'card') {
+    return (
+      <div
+        className={cn(
+          'rounded-xl border border-white/[0.03] bg-black/20 p-4 transition-all hover:bg-black/30',
+          isExpanded && 'bg-black/40 ring-1 ring-emerald-500/20'
+        )}
+      >
+        <div 
+          className="flex cursor-pointer items-start gap-3"
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          {/* Question Number */}
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-[10px] font-black text-emerald-500">
+            {index + 1}
+          </div>
+
+          {/* Question Content */}
+          <div className="min-w-0 flex-1">
+            <p className={cn(
+              "mb-2 text-xs leading-relaxed font-medium text-slate-300 transition-colors",
+              isExpanded ? "text-white" : "line-clamp-2"
+            )}>
+              {displayText}
+            </p>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[9px] font-black tracking-widest text-slate-500 uppercase">
+              <span className="text-emerald-500/80">
+                {question.year}
+              </span>
+              <span className="h-1 w-1 rounded-full bg-slate-800" />
+              <span className="truncate">{question.testTitle || `Q${question.qNo || (index + 1)}`}</span>
+              {question.subject && (
+                <>
+                  <span className="h-1 w-1 rounded-full bg-slate-800" />
+                  <span className="truncate text-emerald-400/80">
+                    {question.subject}
+                  </span>
+                </>
+              )}
+              {repeatCount > 1 && (
+                <>
+                  <span className="h-1 w-1 rounded-full bg-slate-800" />
+                  <span className="text-rose-400">
+                    {repeatCount}x REPEAT
+                  </span>
+                </>
+              )}
+              <div className="ml-auto flex items-center gap-1 text-slate-600">
+                {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-4 space-y-4 border-t border-white/[0.05] pt-4">
+                {/* Full question text */}
+                {altText && altText !== displayText && (
+                  <p className="text-[11px] leading-relaxed text-slate-500 italic">{altText}</p>
+                )}
+
+                {/* Options if available */}
+                {normalizedOptions.length > 0 && (
+                  <div className="space-y-2">
+                    {normalizedOptions.map((opt, i) => {
+                      const isCorrect = correctIdx === i;
+                      return (
+                        <div
+                          key={i}
+                          className={cn(
+                            'rounded-lg border px-3 py-2 text-[11px]',
+                            isCorrect
+                              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                              : 'border-white/[0.03] bg-white/[0.02] text-slate-400'
+                          )}
+                        >
+                          <span className="font-black text-slate-500 mr-2">{opt.id}</span>
+                          {isHindi ? opt.text : opt.textEn || opt.text}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* View full question link */}
+                <div className="flex items-center justify-between">
+                  <Link
+                    href={`/syllabus/quiz/pyq/question/${question.id}`}
+                    className="inline-flex items-center gap-1.5 text-[10px] font-black tracking-widest text-emerald-500 uppercase hover:text-emerald-400"
+                  >
+                    {isHindi ? 'पूरा प्रश्न' : 'View Full'}
+                    <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
 
   if (variant === 'compact') {
     return (
@@ -65,25 +231,33 @@ export function QuestionItem({
             </p>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
-            {question.qNo && (
-              <span className="font-mono text-[10px] text-slate-500">
-                Q{question.qNo}
-              </span>
-            )}
-            {showYear && <YearBadge year={question.year} variant="pink" />}
-            {repeatCount > 1 && (
-              <Badge className="h-5 border-none bg-amber-500/20 px-1.5 text-[10px] text-amber-400">
-                <Repeat className="mr-0.5 h-3 w-3" />
-                {isHindi ? `${repeatCount}x रिपीट` : `Repeated ${repeatCount}x`}
-              </Badge>
-            )}
-            {isExpanded ? (
-              <ChevronUp className="h-4 w-4 text-indigo-400" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-slate-600" />
-            )}
-          </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {question.subject && (
+                <Badge 
+                  variant="outline" 
+                  className="hidden h-5 border-emerald-500/30 bg-emerald-500/10 px-1.5 text-[9px] font-black tracking-tight text-emerald-400 sm:inline-flex uppercase"
+                >
+                  {question.subject}
+                </Badge>
+              )}
+              {question.qNo && (
+                <span className="font-mono text-[10px] text-slate-500">
+                  Q{question.qNo}
+                </span>
+              )}
+              {showYear && <YearBadge year={question.year} variant="emerald" />}
+              {repeatCount > 1 && (
+                <Badge className="h-5 border-none bg-rose-500/20 px-1.5 text-[10px] text-rose-400">
+                  <Repeat className="mr-0.5 h-3 w-3" />
+                  {isHindi ? `${repeatCount}x रिपीट` : `Repeated ${repeatCount}x`}
+                </Badge>
+              )}
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4 text-emerald-400" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-slate-600" />
+              )}
+            </div>
         </div>
 
         <AnimatePresence>
@@ -104,11 +278,10 @@ export function QuestionItem({
                 )}
 
                 {/* Options if available */}
-                {question.options && question.options.length > 0 && (
+                {normalizedOptions.length > 0 && (
                   <div className="mt-3 space-y-2">
-                    {question.options.map((opt, i) => {
-                      const optEn = question.optionsEn?.[i];
-                      const isCorrect = question.correctAnswer === i;
+                    {normalizedOptions.map((opt, i) => {
+                      const isCorrect = correctIdx === i;
                       return (
                         <div
                           key={i}
@@ -119,8 +292,8 @@ export function QuestionItem({
                               : 'border-slate-700/50 bg-slate-800/30 text-slate-400'
                           )}
                         >
-                          <span className="font-medium">{String.fromCharCode(65 + i)}.</span>{' '}
-                          {isHindi ? opt : optEn || opt}
+                          <span className="font-medium">{opt.id}.</span>{' '}
+                          {isHindi ? opt.text : opt.textEn || opt.text}
                         </div>
                       );
                     })}
@@ -130,7 +303,7 @@ export function QuestionItem({
                 {/* View full question link */}
                 <Link
                   href={`/syllabus/quiz/pyq/question/${question.id}`}
-                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-indigo-400 hover:text-indigo-300"
+                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-400 hover:text-emerald-300"
                 >
                   {isHindi ? 'पूरा प्रश्न देखें' : 'View full question'}
                   <ArrowRight className="h-3 w-3" />
@@ -155,7 +328,15 @@ export function QuestionItem({
                   Q{question.qNo}
                 </span>
               )}
-              <YearBadge year={question.year} variant="pink" />
+              {question.subject && (
+                <Badge 
+                  variant="outline" 
+                  className="h-5 border-emerald-500/30 bg-emerald-500/10 px-1.5 text-[9px] font-black tracking-tight text-emerald-400 sm:inline-flex uppercase"
+                >
+                  {question.subject}
+                </Badge>
+              )}
+              <YearBadge year={question.year} variant="emerald" />
             </div>
           )}
           <div className="min-w-0 flex-1">
@@ -169,12 +350,12 @@ export function QuestionItem({
             )}
           </div>
           {repeatCount > 1 && (
-            <Badge className="shrink-0 border-none bg-amber-500/20 px-2 py-1 text-xs text-amber-400">
+            <Badge className="shrink-0 border-none bg-rose-500/20 px-2 py-1 text-xs text-rose-400">
               <Repeat className="mr-1 h-3 w-3" />
               {repeatCount}x
             </Badge>
           )}
-          <ArrowRight className="h-4 w-4 shrink-0 -translate-x-1 text-slate-800 opacity-0 transition-all group-hover/question:translate-x-0 group-hover/question:text-pink-500 group-hover/question:opacity-100" />
+          <ArrowRight className="h-4 w-4 shrink-0 -translate-x-1 text-slate-800 opacity-0 transition-all group-hover/question:translate-x-0 group-hover/question:text-emerald-500 group-hover/question:opacity-100" />
         </div>
       </div>
     </Link>
@@ -188,7 +369,7 @@ interface QuestionListProps {
   showYears?: boolean;
   groupByYear?: boolean;
   maxVisible?: number;
-  variant?: 'compact' | 'full';
+  variant?: 'compact' | 'full' | 'card';
   showAllExpanded?: boolean;
 }
 
@@ -220,16 +401,25 @@ export function QuestionList({
       .sort((a, b) => b - a);
 
     return (
-      <div className="divide-y divide-slate-800/30">
+      <div className={cn(
+        "divide-y divide-slate-800/30",
+        variant === 'card' && "divide-none space-y-4 p-4"
+      )}>
         {sortedYears.map((year) => (
-          <div key={year}>
-            <div className="sticky top-0 z-10 flex items-center gap-2 bg-slate-900/95 px-4 py-2 backdrop-blur-sm">
-              <YearBadge year={year} variant="indigo" />
+          <div key={year} className={cn(variant === 'card' && "space-y-3")}>
+            <div className={cn(
+              "sticky top-0 z-10 flex items-center gap-2 bg-slate-900/95 px-4 py-2 backdrop-blur-sm",
+              variant === 'card' && "relative top-auto z-0 bg-transparent px-0 py-1"
+            )}>
+              <YearBadge year={year} variant="emerald" />
               <span className="text-xs text-slate-500">
                 ({byYear[year].length} {isHindi ? 'प्रश्न' : 'questions'})
               </span>
             </div>
-            <div className="divide-y divide-slate-800/20">
+            <div className={cn(
+              "divide-y divide-slate-800/20",
+              variant === 'card' && "divide-none grid gap-3"
+            )}>
               {byYear[year].map((q, idx) => (
                 <QuestionItem
                   key={q.id}
@@ -253,8 +443,11 @@ export function QuestionList({
   const hasMore = maxVisible && questions.length > maxVisible;
 
   return (
-    <div>
-      <div className="divide-y divide-slate-800/30">
+    <div className={cn(variant === 'card' && "grid gap-3 p-4")}>
+      <div className={cn(
+        "divide-y divide-slate-800/30",
+        variant === 'card' && "divide-none grid gap-3"
+      )}>
         {visibleQuestions.map((q, idx) => (
           <QuestionItem
             key={q.id}
@@ -270,12 +463,15 @@ export function QuestionList({
       </div>
 
       {hasMore && !showAll && (
-        <div className="border-t border-slate-800/30 p-4">
+        <div className={cn(
+          "border-t border-slate-800/30 p-4",
+          variant === 'card' && "border-none pt-2"
+        )}>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowAll(true)}
-            className="w-full text-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-300"
+            className="w-full text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300"
           >
             {isHindi ? `सभी ${questions.length} प्रश्न देखें` : `Show all ${questions.length} questions`}
             <ChevronDown className="ml-1 h-4 w-4" />
