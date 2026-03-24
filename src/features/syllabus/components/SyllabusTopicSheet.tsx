@@ -11,6 +11,7 @@ import {
   X,
   RefreshCw,
   Lock,
+  ArrowLeft,
 } from 'lucide-react';
 import { TopicData } from '@/app/syllabus/[unitId]/UnitContent';
 import { cn } from '@/lib/utils';
