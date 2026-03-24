@@ -193,7 +193,6 @@ export function QuestionItem({
                   </div>
                 )}
 
-                {/* View full question link */}
                 {/* <div className="flex items-center justify-between">
                   <Link
                     href={`/syllabus/quiz/pyq/question/${question.id}`}
