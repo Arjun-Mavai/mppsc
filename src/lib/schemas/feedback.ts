@@ -25,7 +25,7 @@ export const feedbackFormSchema = z.object({
 
   difficultyLevel: z.enum(['too_easy', 'just_right', 'too_hard'] as const),
 
-  wouldRecommend: z.enum(['yes', 'no'] as const).default('yes'),
+  wouldRecommend: z.enum(['yes', 'no', 'definitely', 'probably', 'maybe'] as const),
 });
 
 export type FeedbackFormType = z.infer<typeof feedbackFormSchema>;

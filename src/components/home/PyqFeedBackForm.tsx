@@ -73,7 +73,7 @@ export default function Home() {
               <div className="col-span-2 rounded-xl bg-white/5 p-3 text-center">
                 <span className="block font-bold text-slate-500 uppercase tracking-tighter mb-1">Recommended</span>
                 <span className="text-sm font-black text-white uppercase">
-                  {(submittedData.wouldRecommend as any) === 'yes' || (submittedData.wouldRecommend as any) === 'definitely' || (submittedData.wouldRecommend as any) === 'probably' 
+                  {submittedData.wouldRecommend === 'yes' || submittedData.wouldRecommend === 'definitely' || submittedData.wouldRecommend === 'probably' 
                     ? 'YES 👍' 
                     : 'NO 👎'}
                 </span>
