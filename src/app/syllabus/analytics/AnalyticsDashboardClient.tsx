@@ -439,7 +439,7 @@ export default function AnalyticsDashboardClient({
                     activity={activity}
                     showType={activeTab === 'ALL'}
                     onClick={() =>
-                      router.push(`/syllabus/quiz/play?testId=${activity.id}&completed=true`)
+                      router.push(`/syllabus/analytics/history/${activity.id}`)
                     }
                   />
                 ))
