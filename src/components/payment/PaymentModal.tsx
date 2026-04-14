@@ -93,6 +93,13 @@ export function PaymentModal({
   // Ye rock-solid solution h data loss bachane ka! 🛡️
   const formValuesRef = useRef<z.infer<typeof formSchema> | null>(null);
   const userIdRef = useRef<string | null>(null);
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach((t) => clearTimeout(t));
+    };
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -331,19 +338,21 @@ export function PaymentModal({
 
             // 7. FAIL-SAFE FALLBACK (Hard Redirect)
             // Agar router.push fail ho jaye, to 4 seconds ke baad hum force redirect karenge.
-            setTimeout(() => {
+            const t1 = setTimeout(() => {
               if (typeof window !== 'undefined' && !window.location.pathname.includes('/thank-you')) {
                 console.warn('SPA Navigation slow or failed, triggering hard redirect...');
                 window.location.href = successUrl;
               }
             }, 4000);
+            timeoutsRef.current.push(t1);
 
             // Cleanup loading state
-            setTimeout(() => {
+            const t2 = setTimeout(() => {
               onOpenChange(false);
               setIsLoading(false);
               setLoadingPhase(null);
             }, 100);
+            timeoutsRef.current.push(t2);
           } catch (error) {
             console.error(error);
             toast.error('Payment verification failed. Please contact support.');

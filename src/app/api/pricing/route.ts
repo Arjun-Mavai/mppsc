@@ -22,16 +22,20 @@ const DEFAULTS = { id: 'default' as const, ...PRICING_DEFAULTS };
 
 // ── GET — Public, cached ────────────────────────────────────
 export async function GET(request: Request) {
+  let examType: 'upsc' | 'mppsc' | 'mppolice' = 'mppsc';
   try {
     const { searchParams } = new URL(request.url);
-    const examType = (searchParams.get('examType') as any) || 'mppsc';
+    const rawExamType = searchParams.get('examType');
+    if (['upsc', 'mppsc', 'mppolice'].includes(rawExamType as string)) {
+      examType = rawExamType as 'upsc' | 'mppsc' | 'mppolice';
+    }
 
     const rows = await db
       .select()
       .from(pricingConfig)
       .where(eq(pricingConfig.examType, examType))
       .limit(1);
-    const pricing = rows[0] || { examType, ...PRICING_DEFAULTS };
+    const pricing = rows[0] || { ...PRICING_DEFAULTS, examType };
 
     return NextResponse.json(
       { pricing },
@@ -43,7 +47,7 @@ export async function GET(request: Request) {
     );
   } catch (error) {
     logger.error('Pricing GET error:', error);
-    return NextResponse.json({ pricing: PRICING_DEFAULTS });
+    return NextResponse.json({ pricing: { ...PRICING_DEFAULTS, examType } });
   }
 }
 

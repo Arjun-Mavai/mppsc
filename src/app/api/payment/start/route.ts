@@ -164,7 +164,7 @@ export async function POST(req: Request) {
     const message = error instanceof Error ? error.message : 'Failed to start payment';
     logger.error('Payment start error:', error, {
       category: 'payment',
-      metadata: { planType: (error as any)?.planType },
+      metadata: { planType },
     });
     
     // 🚨 Notify Admin on Start Failure

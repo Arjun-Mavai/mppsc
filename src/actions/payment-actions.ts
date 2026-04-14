@@ -24,7 +24,7 @@ const startPaymentSchema = z.object({
   phone: z.string().min(10, 'Phone must be at least 10 digits').max(20),
   source: z.string().optional(),
   planType: z.enum(['lite', 'pro', 'upgrade']),
-  examType: z.enum(['upsc', 'mppsc']).default('mppsc'),
+  examType: z.enum(['upsc', 'mppsc', 'mppolice']).default('mppsc'),
 });
 
 interface StartPaymentInput extends z.infer<typeof startPaymentSchema> {}

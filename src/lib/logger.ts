@@ -17,6 +17,7 @@ export type LogCategory =
   | 'content' // Added for blogs/syllabus
   | 'uncategorized'
   | 'email'
+  | 'telegram'
   | 'system'
   | 'admin'
   | 'ui'

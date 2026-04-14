@@ -120,18 +120,22 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
     });
 
     // 🚀 TELEGRAM NOTIFICATION (MPPSC ZEN Branding)
-    if (type === 'new_payment' || type === 'upgrade' || type === 'failed') {
-      const telegramMessage =
-        `👮 <b>MPPSC ZEN</b>\n` +
-        `${type === 'new_payment' ? '💰 <b>New Payment</b>' : type === 'upgrade' ? '🚀 <b>Plan Upgrade</b>' : '⚠️ <b>Payment Failed</b>'}\n\n` +
-        `👤 User: ${escapeHTML(userName)}\n` +
-        `📧 Email: ${escapeHTML(userEmail)}\n` +
-        `🎟️ Plan: ${planTier.toUpperCase()}${isUpgrade ? ' (Upgrade)' : ''}\n` +
-        `💵 Amount: <b>₹${amountInRupees}</b>\n` +
-        `🆔 PayID: <code>${paymentId}</code>` +
-        `${data.error ? `\n\n❌ Error: ${escapeHTML(data.error!)}` : ''}`;
+    const telegramMessage =
+      `👮 <b>MPPSC ZEN</b>\n` +
+      `${type === 'new_payment' ? '💰 <b>New Payment</b>' : type === 'upgrade' ? '🚀 <b>Plan Upgrade</b>' : '⚠️ <b>Payment Failed</b>'}\n\n` +
+      `👤 User: ${escapeHTML(userName)}\n` +
+      `📧 Email: ${escapeHTML(userEmail)}\n` +
+      `🎟️ Plan: ${planTier.toUpperCase()}${isUpgrade ? ' (Upgrade)' : ''}\n` +
+      `💵 Amount: <b>₹${amountInRupees}</b>\n` +
+      `🆔 PayID: <code>${paymentId}</code>` +
+      `${data.error ? `\n\n❌ Error: ${escapeHTML(data.error!)}` : ''}`;
 
+    try {
       await sendTelegramNotification(telegramMessage);
+    } catch (telegramError) {
+      logger.error('Telegram admin notification failed (non-blocking)', telegramError, {
+        category: 'telegram',
+      });
     }
 
     if (error) {

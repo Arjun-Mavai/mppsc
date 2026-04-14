@@ -489,26 +489,11 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                                           className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-xs font-bold text-slate-600 transition-all hover:bg-emerald-50 hover:text-emerald-700"
                                         >
                                           <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                                          {language === 'hi' ? 'विशेषज्ञ PYQ इनसाइट्स' : 'Expert PYQ Insights'}
-                                        </Link>
-                                      </SheetClose>
-                                      
-                                      {/* Sub-link 2: Subject-wise Intelligence */}
-                                      <SheetClose asChild>
-                                        <Link
-                                          href="/syllabus/quiz/pyq/intelligence"
-                                          prefetch={true}
-                                          onMouseEnter={() => router.prefetch('/syllabus/quiz/pyq/intelligence')}
-                                          onTouchStart={() => router.prefetch('/syllabus/quiz/pyq/intelligence')}
-                                          className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-xs font-bold text-slate-600 transition-all hover:bg-emerald-50 hover:text-emerald-700"
-                                        >
-                                          <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                                           {language === 'hi' ? 'विषय-वार इंटेलिजेंस' : 'Subject-wise Intelligence'}
                                         </Link>
                                       </SheetClose>
-                                      
-                                      {/* Sub-link 3: Year-wise Analysis */}
-                                      <SheetClose asChild>
+
+                                      {/* Sub-link 2: Year-wise Analysis */}                                      <SheetClose asChild>
                                         <Link
                                           href="/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject"
                                           prefetch={true}
