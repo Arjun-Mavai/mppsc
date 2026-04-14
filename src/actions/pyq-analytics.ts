@@ -33,8 +33,6 @@ export interface OverallWeightageSubjectData {
     testTitle: string;
     testId: string;
     subject?: string;
-    options?: any;
-    correctAnswer?: string;
   }[];
 }
 
@@ -51,8 +49,6 @@ export async function getOverallWeightageSubjectData(limit?: number): Promise<Ov
       subject: questions.subject,
       testId: questions.testId,
       order: questions.order,
-      options: questions.options,
-      correctAnswer: questions.correctAnswer,
     })
     .from(questions)
     .where(
@@ -84,8 +80,6 @@ export async function getOverallWeightageSubjectData(limit?: number): Promise<Ov
         qNo: q.order,
         testTitle: `MPPSC Prelims ${getYearFromTestId(q.testId)}`,
         testId: q.testId,
-        options: q.options,
-        correctAnswer: q.correctAnswer,
       }))
       .sort((a, b) => b.year - a.year || a.qNo - b.qNo);
 
@@ -112,8 +106,6 @@ export interface UnitDistributionStats {
     year: number; 
     qNo: number; 
     subject?: string;
-    options?: any;
-    correctAnswer?: string;
   }[];
 }
 
@@ -649,8 +641,6 @@ export async function getUnitDistributionStats(limit?: number): Promise<UnitDist
         textEn: questions.questionTextEn,
         subject: questions.subject,
         order: questions.order,
-        options: questions.options,
-        correctAnswer: questions.correctAnswer,
       })
       .from(questions)
       .where(
@@ -698,8 +688,6 @@ export async function getUnitDistributionStats(limit?: number): Promise<UnitDist
           year,
           qNo: q.order,
           subject: q.subject || undefined,
-          options: q.options,
-          correctAnswer: q.correctAnswer,
         });
       }
     }

@@ -48,23 +48,30 @@ const getCachedSubjectQuestionsData = unstable_cache(
 );
 
 async function IntelligenceDataFetcher() {
-  // 🚀 All 5 heavy queries run in parallel — Promise.all for max speed
-  const [subjectStats, unitStats, repeatedQuestions, topicStats, simpleSubjectStats, subjectQuestionsData] =
+  // 🚀 Optimize: Only run queries that are actually rendered in the UI
+  const [unitStats, repeatedQuestions, simpleSubjectStats, subjectQuestionsData] =
     await Promise.all([
-      getCachedSubjectStats(),
       getCachedUnitStats(),
       getRepeatedQuestions(),          // Already has its own unstable_cache internally
-      getCachedTopicStats(),
       getSubjectWisePYQStats(),        // Already has its own unstable_cache internally
       getCachedSubjectQuestionsData(),
     ]);
 
+  // Strip down raw repeated questions because PaperAnalysis only needs the count
+  const minimalRepeatedQuestions = repeatedQuestions.map(rq => ({
+    questionId: rq.questionId,
+    count: rq.count,
+    text: '', // Omitted to save RSC payload size
+    occurrences: [],
+    topics: []
+  }));
+
   return (
     <PYQIntelligenceClient
-      subjectStats={subjectStats}
+      subjectStats={[]}
       stats={unitStats}
-      repeatedQuestions={repeatedQuestions}
-      topicStats={topicStats}
+      repeatedQuestions={minimalRepeatedQuestions as any}
+      topicStats={{}}
       simpleSubjectStats={simpleSubjectStats}
       subjectQuestionsData={subjectQuestionsData}
     />
