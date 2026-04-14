@@ -37,7 +37,7 @@ export async function createGuestEntry(data: GuestData) {
       
       // Check if guest with this mobile already exists
       const existingGuest = await db.query.guests.findFirst({
-        where: eq(guests.mobile, normalizedMobile),
+        where: (g, { and, eq }) => and(eq(g.mobile, normalizedMobile), eq(g.examType, 'mppsc')),
       });
       
       if (existingGuest) {
@@ -71,6 +71,7 @@ export async function createGuestEntry(data: GuestData) {
         name: name.trim(),
         email: email?.trim() || null,
         mobile: normalizedMobile,
+        examType: 'mppsc',
       });
 
       const statsSummary = await getTelegramStatsSummary();
@@ -95,6 +96,7 @@ export async function createGuestEntry(data: GuestData) {
       name: name.trim(),
       email: email?.trim() || null,
       mobile: mobile?.trim() || null,
+      examType: 'mppsc',
     });
     
     return { success: true, guestId, isReturning: false };
@@ -115,7 +117,7 @@ export async function getGuestByMobile(mobile: string) {
     const normalizedMobile = mobile.trim().replace(/\D/g, '').slice(-10);
     
     const guest = await db.query.guests.findFirst({
-      where: eq(guests.mobile, normalizedMobile),
+      where: (g, { and, eq }) => and(eq(g.mobile, normalizedMobile), eq(g.examType, 'mppsc')),
     });
     
     return guest;

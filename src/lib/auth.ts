@@ -46,7 +46,12 @@ export const verifyAuth = cache(async () => {
       .select()
       .from(mppscUsers)
       .where(
-        and(eq(mppscUsers.id, userId), isNull(mppscUsers.deletedAt), eq(mppscUsers.isActive, true))
+        and(
+          eq(mppscUsers.id, userId),
+          eq(mppscUsers.examType, 'mppsc'),
+          isNull(mppscUsers.deletedAt),
+          eq(mppscUsers.isActive, true)
+        )
       )
       .limit(1);
     return users[0] || null;

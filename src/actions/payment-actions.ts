@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { mppscUsers, pricingConfig, payments } from '@/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, and } from 'drizzle-orm';
 import { PRICING_DEFAULTS } from '@/config/pricing';
 import { verifyAuth } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,6 +11,8 @@ import Razorpay from 'razorpay';
 import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import { z } from 'zod';
+import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
+import { notifyAdminOnVerificationFailure } from '@/lib/admin-notify';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 💳 START PAYMENT (Register + Create Order)
@@ -22,6 +24,7 @@ const startPaymentSchema = z.object({
   phone: z.string().min(10, 'Phone must be at least 10 digits').max(20),
   source: z.string().optional(),
   planType: z.enum(['lite', 'pro', 'upgrade']),
+  examType: z.enum(['upsc', 'mppsc', 'mppolice']).default('mppsc'),
 });
 
 interface StartPaymentInput extends z.infer<typeof startPaymentSchema> {}
@@ -48,12 +51,15 @@ export async function startPayment(input: StartPaymentInput) {
       };
     }
 
-    const { name, email, phone, source, planType } = validatedInput.data;
+    const { name, email, phone, source, planType, examType } = validatedInput.data;
     const normalizedEmail = email.toLowerCase().trim();
 
     // ── PHASE 1: Find existing user by email (case-insensitive)
     const existingUser = await db.query.mppscUsers.findFirst({
-      where: sql`LOWER(${mppscUsers.email}) = ${normalizedEmail}`,
+      where: and(
+        sql`LOWER(${mppscUsers.email}) = ${normalizedEmail}`,
+        eq(mppscUsers.examType, examType)
+      ),
     });
 
     const currentSession = await verifyAuth();
@@ -129,6 +135,7 @@ export async function startPayment(input: StartPaymentInput) {
         role: 'user',
         metadata: JSON.stringify({ source }),
         planTier: 'free',
+        examType: examType, // Set exam type on registration
       });
     }
 
@@ -140,7 +147,7 @@ export async function startPayment(input: StartPaymentInput) {
     const rows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.examType, examType))
       .limit(1);
     const p = rows[0] || PRICING_DEFAULTS;
 
@@ -163,7 +170,7 @@ export async function startPayment(input: StartPaymentInput) {
     const order = await instance.orders.create({
       amount,
       currency: 'INR',
-      notes: { planType, userId },
+      notes: { planType, userId, examType },
     });
 
     return {
@@ -210,15 +217,16 @@ interface VerifyPaymentInput {
  * - Type-safe
  */
 export async function verifyPayment(input: VerifyPaymentInput) {
-  try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = input;
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = input;
+  let userId: string | undefined;
+  let orderId: string = razorpay_order_id; // Map to local name if preferred, or just use razorpay_order_id
+  let paymentId: string | undefined = razorpay_payment_id;
 
+  try {
     // 🔒 Step 1: Get userId — JWT first, fallback to input (for new users)
-    // New users registered via startPayment don't have a JWT cookie yet,
-    // so we accept userId from the client as a fallback.
-    // Security: We ALWAYS verify this userId matches the Razorpay order's notes.userId (Step 4)
     const session = await verifyAuth();
-    const userId = session?.id || input.userId;
+    userId = session?.id || input.userId;
+    
     if (!userId) {
       return { error: 'Unauthorized — no session or userId provided' };
     }
@@ -247,6 +255,13 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         category: 'payment',
         metadata: { userId, orderId: razorpay_order_id, sigLength: razorpay_signature.length },
       });
+      
+      notifyAdminOnVerificationFailure({
+        userId: userId || 'unknown',
+        orderId: razorpay_order_id,
+        error: 'Malformed payment signature rejected (timingSafeEqual safety check)',
+      }).catch(() => {});
+
       return { error: 'Invalid signature format' };
     }
 
@@ -260,6 +275,14 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         category: 'payment',
         metadata: { userId, orderId: razorpay_order_id },
       });
+
+      notifyAdminOnVerificationFailure({
+        userId: userId || 'unknown',
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        error: 'Invalid Razorpay signature (cryptographic proof failed)',
+      }).catch(() => {});
+
       return { error: 'Invalid signature' };
     }
 
@@ -294,6 +317,14 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         category: 'payment',
         metadata: { orderUserId, requestUserId: userId, orderId: razorpay_order_id },
       });
+
+      notifyAdminOnVerificationFailure({
+        userId: userId || 'unknown',
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        error: `Order ownership mismatch (User: ${userId}, Order notes: ${orderUserId})`,
+      }).catch(() => {});
+
       return { error: 'Order does not belong to this user' };
     }
 
@@ -308,10 +339,14 @@ export async function verifyPayment(input: VerifyPaymentInput) {
     // After fix: Keep paise throughout. Compare against pricing × 100.
     // ─────────────────────────────────────────────────────────────────────
     const amountInPaise = Number(order.amount); // Already paise from Razorpay
+    
+    // Recover examType from order notes (fallback to user's examType or mppsc)
+    const examType = (order.notes?.examType as 'upsc' | 'mppsc' | 'mppolice') || 'mppsc';
+
     const rows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.examType, examType)) // 🔒 Isolation
       .limit(1);
     const p = rows[0] || PRICING_DEFAULTS;
 
@@ -336,9 +371,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
       return { error: 'Payment amount does not match any valid plan' };
     }
 
-    // 💾 Step 5: Atomic Transaction (Payment + User Update)
-    // DB columns: orderId, paymentId, signature, planTier, status (enum: created/captured/failed)
-    // amount stored in PAISE (integer column, Razorpay standard)
+    // 💾 Step 6: Atomic Transaction (Payment + User Update)
     await db.transaction(async (tx) => {
       await tx.insert(payments).values({
         id: uuidv4(),
@@ -346,9 +379,10 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         orderId: razorpay_order_id,
         paymentId: razorpay_payment_id,
         signature: razorpay_signature,
-        amount: amountInPaise, // ✅ Store paise (integer), NOT rupees
+        amount: amountInPaise,
         planTier,
-        status: 'captured', // Razorpay marks successful payments as 'captured'
+        status: 'captured',
+        examType, // 👈 FIXED: Add missing field
       });
 
       await tx
@@ -358,8 +392,33 @@ export async function verifyPayment(input: VerifyPaymentInput) {
           isSubscribed: true,
           isActive: true,
         })
-        .where(eq(mppscUsers.id, userId));
+        .where(eq(mppscUsers.id, userId!));
     });
+
+    // 🚀 Step 6: Notify via Telegram
+    try {
+      const amountInRupees = amountInPaise / 100;
+      const userResult = await db.query.mppscUsers.findFirst({
+        where: eq(mppscUsers.id, userId as string),
+        columns: { name: true, email: true, phone: true, examType: true },
+      });
+
+      const examLabel = userResult?.examType?.toUpperCase() || 'UNKNOWN';
+      
+      const message = `👮 <b>MPPSC ZEN</b>\n` +
+        `💰 <b>Payment Successful (${examLabel})!</b>\n\n` +
+        `👤 User: ${escapeHTML(userResult?.name || 'Unknown')}\n` +
+        `📧 Email: ${escapeHTML(userResult?.email || 'N/A')}\n` +
+        `📞 Phone: ${userResult?.phone || 'N/A'}\n` +
+        `🎟️ Plan: ${planTier.toUpperCase()}\n` +
+        `💵 Amount: ₹${amountInRupees}\n` +
+        `🆔 Payment ID: <code>${razorpay_payment_id}</code>\n` +
+        `✅ Access granted instantly.`;
+
+      await sendTelegramNotification(message);
+    } catch (err) {
+      logger.error('Telegram notification failed for payment', { err });
+    }
 
     logger.info('Payment verified successfully', {
       category: 'payment',
@@ -371,6 +430,14 @@ export async function verifyPayment(input: VerifyPaymentInput) {
     logger.error('Payment verification error:', error, {
       category: 'payment',
     });
+    
+    notifyAdminOnVerificationFailure({
+      userId: userId || 'unknown',
+      orderId: razorpay_order_id,
+      paymentId: razorpay_payment_id,
+      error: error instanceof Error ? error.message : 'Unexpected verification error in verifyPayment server action',
+    }).catch(() => {});
+
     const message = error instanceof Error ? error.message : 'Verification failed';
     return { error: message };
   }

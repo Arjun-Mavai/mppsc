@@ -9,7 +9,7 @@ import { Resend } from 'resend';
 import { v4 as uuidv4 } from 'uuid';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { PRICING_DEFAULTS } from '@/config/pricing';
-import { notifyAdminOnPayment, notifyAdminOnEmailFailure } from '@/lib/admin-notify';
+import { notifyAdminOnPayment, notifyAdminOnEmailFailure, notifyAdminOnVerificationFailure } from '@/lib/admin-notify';
 
 /**
  * Payment Verification API FOR UPGRADES 🚀
@@ -55,6 +55,11 @@ export async function POST(req: Request) {
     // with garbage signature like "abc" (odd hex → different buffer length)
     const isValidHex = /^[a-f0-9]+$/i.test(razorpay_signature);
     if (!isValidHex || razorpay_signature.length !== generated_signature.length) {
+      notifyAdminOnVerificationFailure({
+        userId,
+        orderId: razorpay_order_id,
+        error: 'Malformed payment signature format (Upgrade route)',
+      }).catch(() => {});
       return NextResponse.json({ error: 'Invalid payment signature format' }, { status: 400 });
     }
 
@@ -65,6 +70,12 @@ export async function POST(req: Request) {
     );
 
     if (!isValidSignature) {
+      notifyAdminOnVerificationFailure({
+        userId,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        error: 'Invalid Razorpay signature (Upgrade route)',
+      }).catch(() => {});
       return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 });
     }
 
@@ -82,8 +93,8 @@ export async function POST(req: Request) {
     const user = await db.query.mppscUsers.findFirst({
       where: eq(mppscUsers.id, userId),
     });
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 400 });
+    if (!user || !user.email) {
+      return NextResponse.json({ error: 'User not found or email missing' }, { status: 400 });
     }
 
     // 🕵️ Razorpay Cross-Check
@@ -106,17 +117,26 @@ export async function POST(req: Request) {
           metadata: { orderUserId, razorpay_order_id },
         }
       );
+      notifyAdminOnVerificationFailure({
+        userId,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        error: `Order ownership mismatch (User: ${userId}, Order notes: ${orderUserId})`,
+      }).catch(() => {});
       return NextResponse.json({ error: 'Order does not belong to this user' }, { status: 400 });
     }
 
     // 💡 Note: razorpay_key_id public hota h (safe to expose), secret server par safe h.
     const paidAmount = order.amount as number;
 
+    // Recover examType from order notes
+    const examType = (order.notes?.examType as 'upsc' | 'mppsc' | 'mppolice') || 'mppsc';
+
     // 🏷️ Plan Verification (Allows Upgrade Price OR Full Pro Price)
     const pricingRows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.examType, examType))
       .limit(1);
     const p = pricingRows[0] || PRICING_DEFAULTS;
 
@@ -167,12 +187,12 @@ export async function POST(req: Request) {
 
     const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC 2026';
     const fromAddress =
-      process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
+      process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'no-reply@mppsc.zenscroll.app';
     const fromEmail = `${fromName} <${fromAddress}>`;
 
     const { error: emailError } = await resend.emails.send({
       from: fromEmail,
-      to: [user.email],
+      to: [user.email!],
       subject: '🚀 Upgrade Successful — MPPSC ZEN',
       html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
@@ -201,7 +221,7 @@ export async function POST(req: Request) {
       // 🚨 Notify admin that user email failed
       notifyAdminOnEmailFailure({
         userName: user.name || 'Unknown',
-        userEmail: user.email,
+        userEmail: user.email!,
         errorMessage: typeof emailError === 'object' && emailError !== null && 'message' in emailError 
           ? String(emailError.message) 
           : JSON.stringify(emailError),
@@ -213,7 +233,7 @@ export async function POST(req: Request) {
     notifyAdminOnPayment({
       type: 'upgrade',
       userName: user.name || 'Unknown',
-      userEmail: user.email,
+      userEmail: user.email!,
       planTier: planTier as 'lite' | 'pro',
       amountInRupees: paidAmount / 100,
       orderId: razorpay_order_id,
@@ -226,7 +246,7 @@ export async function POST(req: Request) {
       const { logUserActivity } = await import('@/app/actions/user-activity');
       await logUserActivity({
         userId,
-        userEmail: user.email,
+        userEmail: user.email!,
         userName: user.name,
         adminId: 'system',
         action: 'PLAN_CHANGE',
@@ -253,6 +273,12 @@ export async function POST(req: Request) {
       userId: requestUserId,
       metadata: { razorpay_order_id: requestOrderId, razorpay_payment_id: requestPaymentId },
     });
+    notifyAdminOnVerificationFailure({
+      userId: requestUserId || 'unknown',
+      orderId: requestOrderId || 'unknown',
+      paymentId: requestPaymentId || undefined,
+      error: error instanceof Error ? error.message : 'Unexpected verification error in verify-upgrade API route',
+    }).catch(() => {});
     return NextResponse.json({ error: 'Payment verification failed' }, { status: 500 });
   }
 }

@@ -93,6 +93,13 @@ export function PaymentModal({
   // Ye rock-solid solution h data loss bachane ka! 🛡️
   const formValuesRef = useRef<z.infer<typeof formSchema> | null>(null);
   const userIdRef = useRef<string | null>(null);
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach((t) => clearTimeout(t));
+    };
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -216,7 +223,7 @@ export function PaymentModal({
       }
 
       // 🚀 Server Action: Register + Create Order in ONE call
-      const startRes = await startPayment({ ...values, planType });
+      const startRes = await startPayment({ ...values, planType, examType: 'mppsc' });
 
       // Server-side block: existing lite/pro must be same logged-in user
       if (!startRes.success || !startRes.data) {
@@ -271,45 +278,81 @@ export function PaymentModal({
               throw new Error(verifyResult.error);
             }
 
-            // 🔥 CACHE INVALIDATION MAGIC: Update local store immediately
-            // This ensures user sees "Pro" badge everywhere instantly without reload
-            if (user) {
-              // If we have previous user object, update it
-              // Fix TypeScript: Ensure planTier is properly typed
-              const updatedPlan = (verifyResult.planTier as 'free' | 'lite' | 'pro') || 'pro';
-              setUser({ ...user, planTier: updatedPlan, isSubscribed: true }, true);
-            }
-            // 🔒 Server Action: Re-fetch user data (no API visible!)
-            const meData = await getCurrentUser();
-            if (meData?.user) {
-              const u = {
-                ...meData.user,
-                role: meData.user.role ?? undefined,
-                isSubscribed: meData.user.isSubscribed ?? undefined,
-                planTier: meData.user.planTier ?? undefined,
-              };
-              setUser(u, true);
-            }
-            router.refresh();
-
-            // 🎯 Track Purchase Facebook Event
-            trackFbStandardEvent('Purchase', {
-              value: Number(orderData.amount) / 100,
-              currency: orderData.currency,
-            });
-
+            // 1. Immediate Success Feedback
             toast.success('Payment successful! 🎉');
 
-            // Sab clean up karke Thank You page par bhejo
-            onOpenChange(false);
-            setIsLoading(false);
-            setLoadingPhase(null);
+            // 2. Local State update (Fast/Synchronous)
+            try {
+              if (user) {
+                const updatedPlan = (verifyResult.planTier as 'free' | 'lite' | 'pro') || 'pro';
+                setUser({ ...user, planTier: updatedPlan, isSubscribed: true }, true);
+              }
+            } catch (err) {
+              console.warn('Local state update failed (non-blocking):', err);
+            }
 
+            // 3. Security Flag (Fail-safe)
+            try {
+              if (typeof window !== 'undefined') {
+                sessionStorage.setItem('payment_success_fresh', 'true');
+              }
+            } catch (err) {
+              console.warn('sessionStorage failed (non-blocking):', err);
+            }
+
+            // 4. PREPARE REDIRECT AS SOON AS POSSIBLE
             const displayPlan = planType === 'upgrade' ? 'pro' : verifyResult.planTier || planType;
             const upgradeParam = planType === 'upgrade' ? '&type=upgrade' : '';
-            router.push(
-              `/thank-you?plan=${displayPlan}&email=${encodeURIComponent(values.email)}&name=${encodeURIComponent(values.name)}${upgradeParam}`
-            );
+            const successUrl = `/thank-you?plan=${displayPlan}&email=${encodeURIComponent(values.email)}&name=${encodeURIComponent(values.name)}${upgradeParam}`;
+
+            // 5. Background Tasks (Non-blocking)
+            // Hum inhein await nahi karenge taaki redirect turant ho!
+            (async () => {
+              try {
+                // Tracking
+                trackFbStandardEvent('Purchase', {
+                  value: Number(orderData.amount) / 100,
+                  currency: orderData.currency,
+                });
+                
+                // Server state sync
+                const meData = await getCurrentUser();
+                if (meData?.user) {
+                  const u = {
+                    ...meData.user,
+                    role: meData.user.role ?? undefined,
+                    isSubscribed: meData.user.isSubscribed ?? undefined,
+                    planTier: meData.user.planTier ?? undefined,
+                  };
+                  setUser(u, true);
+                }
+                router.refresh();
+              } catch (err) {
+                console.warn('Background payment tasks failed:', err);
+              }
+            })();
+
+            // 6. FINAL REDIRECT
+            // Bhai, router.push use kar rahe h taaki SPA transition smooth ho.
+            router.push(successUrl);
+
+            // 7. FAIL-SAFE FALLBACK (Hard Redirect)
+            // Agar router.push fail ho jaye, to 4 seconds ke baad hum force redirect karenge.
+            const t1 = setTimeout(() => {
+              if (typeof window !== 'undefined' && !window.location.pathname.includes('/thank-you')) {
+                console.warn('SPA Navigation slow or failed, triggering hard redirect...');
+                window.location.href = successUrl;
+              }
+            }, 4000);
+            timeoutsRef.current.push(t1);
+
+            // Cleanup loading state
+            const t2 = setTimeout(() => {
+              onOpenChange(false);
+              setIsLoading(false);
+              setLoadingPhase(null);
+            }, 100);
+            timeoutsRef.current.push(t2);
           } catch (error) {
             console.error(error);
             toast.error('Payment verification failed. Please contact support.');

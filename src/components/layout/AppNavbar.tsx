@@ -12,6 +12,12 @@ import {
   SheetTrigger,
   SheetClose,
 } from '@/components/ui/sheet';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSettingsStore, User as StoreUser } from '@/store/useSettingsStore';
 import { useEffect, useState, useCallback, useMemo } from 'react';
@@ -453,6 +459,57 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                                 {item.name}
                               </Link>
                             </SheetClose>
+
+                            {/* ✅ UX EXPERT: Premium PYQ Analysis Dropdown - Positioned directly below Dashboard */}
+                            {item.name === 'Dashboard' && user?.isSubscribed && (
+                              <div className="mx-2 mt-1 mb-2">
+                                <Accordion type="single" collapsible className="border-none w-full">
+                                  <AccordionItem value="pyq-analysis" className="border-none">
+                                    <AccordionTrigger 
+                                      className={cn(
+                                        "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all hover:bg-emerald-50 hover:text-emerald-700 hover:no-underline [&[data-state=open]]:bg-emerald-50 [&[data-state=open]]:text-emerald-700",
+                                        "text-slate-700"
+                                      )}
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        <Sparkles size={18} className="text-emerald-500" />
+                                        <span>
+                                          {language === 'hi' ? 'PYQ विश्लेषण' : 'PYQ Analysis'}
+                                        </span>
+                                      </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="pt-1 pb-1 ml-4 space-y-1">
+                                      {/* Sub-link 1: Subject-wise Intelligence */}
+                                      <SheetClose asChild>
+                                        <Link
+                                          href="/syllabus/quiz/pyq/intelligence"
+                                          prefetch={true}
+                                          onMouseEnter={() => router.prefetch('/syllabus/quiz/pyq/intelligence')}
+                                          onTouchStart={() => router.prefetch('/syllabus/quiz/pyq/intelligence')}
+                                          className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-xs font-bold text-slate-600 transition-all hover:bg-emerald-50 hover:text-emerald-700"
+                                        >
+                                          <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                                          {language === 'hi' ? 'विषय-वार इंटेलिजेंस' : 'Subject-wise Intelligence'}
+                                        </Link>
+                                      </SheetClose>
+
+                                      {/* Sub-link 2: Year-wise Analysis */}                                      <SheetClose asChild>
+                                        <Link
+                                          href="/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject"
+                                          prefetch={true}
+                                          onMouseEnter={() => router.prefetch('/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject')}
+                                          onTouchStart={() => router.prefetch('/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject')}
+                                          className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-xs font-bold text-slate-600 transition-all hover:bg-emerald-50 hover:text-emerald-700"
+                                        >
+                                          <div className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                                          {language === 'hi' ? 'वर्ष-वार विश्लेषण (All PYQs)' : 'Year-wise Analysis (All PYQs)'}
+                                        </Link>
+                                      </SheetClose>
+                                    </AccordionContent>
+                                  </AccordionItem>
+                                </Accordion>
+                              </div>
+                            )}
                           </div>
                         );
                       })}

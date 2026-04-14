@@ -22,6 +22,7 @@ export async function getExistingTests() {
       })
       .from(tests)
       .leftJoin(questions, eq(tests.id, questions.testId))
+      .where(eq(tests.examType, 'mppsc')) // 🔒 Isolation
       .groupBy(tests.id)
       .orderBy(tests.createdAt);
 
@@ -98,6 +99,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
         totalMarks: parsedQuestions.length * 2, // Initial marks
         totalQuestions: parsedQuestions.length,
         durationMinutes: 120,
+        examType: 'mppsc', // 🔒 Strict isolation
         // MISC type = free quiz → isFreeAccess ON by default
         isFreeAccess: type === 'MISC' ? true : false,
         // Tags — subject tag bhi store karo (filter me kaam aayega)
@@ -246,7 +248,8 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
         totalQuestions: tests.totalQuestions,
         updatedAt: tests.updatedAt,
       })
-      .from(tests);
+      .from(tests)
+      .where(eq(tests.examType, 'mppsc'));
 
     const blogsData = await db
       .select({
@@ -256,7 +259,8 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
         contentType: contentBlogs.contentType,
         createdAt: contentBlogs.createdAt,
       })
-      .from(contentBlogs);
+      .from(contentBlogs)
+      .where(eq(contentBlogs.examType, 'mppsc'));
 
     const recentGuests = await db
       .select({
@@ -267,8 +271,9 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
         createdAt: guests.createdAt,
       })
       .from(guests)
+      .where(eq(guests.examType, 'mppsc'))
       .orderBy(desc(guests.createdAt))
-      .limit(100); // Increased limit to show more history per user request
+      .limit(100);
 
     const totalTests = testsData.length;
     const totalQuestions = testsData.reduce((acc, t) => acc + (t.totalQuestions || 0), 0);

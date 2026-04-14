@@ -16,6 +16,7 @@ const getCachedBaseSyllabusData = unstable_cache(
   async () => {
     try {
       const topics = await db.query.syllabusTopics.findMany({
+        where: (st, { eq }) => eq(st.examType, 'mppsc'),
         orderBy: [asc(syllabusTopics.order)],
       });
 
@@ -31,7 +32,13 @@ const getCachedBaseSyllabusData = unstable_cache(
           isProAccess: tests.isProAccess,
         })
         .from(tests)
-        .where(and(inArray(tests.topicId, topicIds), eq(tests.isHidden, false)));
+        .where(
+          and(
+            eq(tests.examType, 'mppsc'),
+            inArray(tests.topicId, topicIds),
+            eq(tests.isHidden, false)
+          )
+        );
 
       return { topics, relatedTests };
     } catch (error) {

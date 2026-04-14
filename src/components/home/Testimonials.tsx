@@ -148,7 +148,7 @@ export function Testimonials() {
 
         {/* Marquee Track */}
         <div className="group flex overflow-hidden select-none">
-          <div className="animate-marquee flex min-w-full items-stretch gap-6 pl-6 hover:[animation-play-state:paused]">
+          <div className="animate-marquee-scroll flex w-max shrink-0 items-stretch gap-6 pr-6 py-4 hover:[animation-play-state:paused]">
             {[...TESTIMONIALS, ...TESTIMONIALS].map((user, idx) => (
               <div
                 key={`${user.name}-${idx}`}

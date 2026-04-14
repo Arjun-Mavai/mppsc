@@ -18,10 +18,46 @@ import { Button } from '@/components/ui/button';
 function ThankYouContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const plan = searchParams.get('plan') || 'pro';
-  const email = searchParams.get('email') || '';
+  const plan = searchParams.get('plan');
+  const email = searchParams.get('email');
   const name = searchParams.get('name') || '';
   const type = searchParams.get('type'); // 'upgrade' or null
+
+  // 🔒 Step 1: Security Redirection Check
+  useEffect(() => {
+    // 🔒 Security Logic:
+    // 1. Fresh Payment Flag: One-time token from PaymentModal
+    // 2. Intelligent Fallback: Valid query params (email + paid plan)
+    // We allow access if ETITHER is true to prevent lockouts in strict mode or incognito.
+    const isFreshPayment = typeof window !== 'undefined' && sessionStorage.getItem('payment_success_fresh');
+    const hasValidParams = email && plan && plan !== 'free';
+
+    if (!isFreshPayment && !hasValidParams) {
+      console.warn('Unauthorized access to thank-you page or missing data');
+      router.replace('/');
+      return;
+    }
+
+    // 🔥 Consumption: Remove flag after a small delay to support React 18 double-render in dev
+    const timer = setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('payment_success_fresh');
+      }
+    }, 1000);
+
+    // Auto-redirect for upgrades
+    if (type === 'upgrade') {
+      const upgradeTimer = setTimeout(() => {
+        router.push('/syllabus/quiz/topic');
+      }, 3500);
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(upgradeTimer);
+      };
+    }
+
+    return () => clearTimeout(timer);
+  }, [email, plan, type, router]);
 
   const firstName = name.split(' ')[0] || 'Student';
   const isPro = plan === 'pro' || plan === 'upgrade';
@@ -29,16 +65,6 @@ function ThankYouContent() {
   const planLabel = isPro ? 'Pro' : 'Lite';
   const planColor = isPro ? 'text-amber-600' : 'text-blue-600';
   const planBg = isPro ? 'bg-amber-50 border-amber-200' : 'bg-blue-50 border-blue-200';
-
-  // Auto-redirect for upgrades
-  useEffect(() => {
-    if (isUpgrade) {
-      const timer = setTimeout(() => {
-        router.push('/syllabus/quiz/topic');
-      }, 3500);
-      return () => clearTimeout(timer);
-    }
-  }, [isUpgrade, router]);
 
   const features = isPro
     ? [

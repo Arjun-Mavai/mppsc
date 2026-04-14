@@ -55,7 +55,12 @@ export async function getTestLeaderboard(testId: string, userId?: string) {
   const countResult = await db
     .select({ count: sql<number>`count(*)` })
     .from(testLeaderboard)
-    .where(eq(testLeaderboard.testId, testId));
+    .where(
+      and(
+        eq(testLeaderboard.testId, testId),
+        eq(testLeaderboard.examType, 'mppsc')
+      )
+    );
 
   const totalParticipants = countResult[0]?.count || 0;
 
@@ -70,7 +75,12 @@ export async function getTestLeaderboard(testId: string, userId?: string) {
   const topTenEntries = await db
     .select()
     .from(testLeaderboard)
-    .where(eq(testLeaderboard.testId, testId))
+    .where(
+      and(
+        eq(testLeaderboard.testId, testId),
+        eq(testLeaderboard.examType, 'mppsc')
+      )
+    )
     .orderBy(desc(testLeaderboard.score), asc(testLeaderboard.timeTakenSeconds))
     .limit(10);
 
@@ -96,7 +106,11 @@ export async function getTestLeaderboard(testId: string, userId?: string) {
       // Top 10 mein nahi hai, toh alag se dhoondo
       const specificUserEntry = await db.query.testLeaderboard.findFirst({
         where: (leaderboard, { and, eq }) =>
-          and(eq(leaderboard.testId, testId), eq(leaderboard.userId, userId)),
+          and(
+            eq(leaderboard.testId, testId),
+            eq(leaderboard.userId, userId),
+            eq(leaderboard.examType, 'mppsc')
+          ),
       });
 
       if (specificUserEntry) {
@@ -110,6 +124,7 @@ export async function getTestLeaderboard(testId: string, userId?: string) {
           .where(
             and(
               eq(testLeaderboard.testId, testId),
+              eq(testLeaderboard.examType, 'mppsc'),
               sql`(${testLeaderboard.score} > ${specificUserEntry.score} OR (${testLeaderboard.score} = ${specificUserEntry.score} AND ${testLeaderboard.timeTakenSeconds} < ${specificUserEntry.timeTakenSeconds}))`
             )
           );
@@ -163,7 +178,7 @@ async function generateFakeLeaderboard(testId: string) {
   const shuffledUsers = shuffleArray(FAKE_USERS, random);
   
   // Generate fake entries
-  const fakeEntries = [];
+  const fakeEntries: (typeof testLeaderboard.$inferInsert)[] = [];
   const usedNames = new Set<string>();
 
   for (let i = 0; i < targetCount; i++) {
@@ -255,6 +270,7 @@ async function generateFakeLeaderboard(testId: string) {
       timeTakenSeconds: Math.min(timeTaken, maxSeconds), // Cap at max
       rank: 0,
       isFake: 1,
+      examType: 'mppsc' as const,
       createdAt: new Date(),
     });
   }
@@ -310,6 +326,7 @@ export async function insertUserToLeaderboard(data: {
       timeTakenSeconds: timeTaken,
       rank: 0, // Calculated on read
       isFake: 0,
+      examType: 'mppsc' as const,
       createdAt: new Date(),
     });
   }

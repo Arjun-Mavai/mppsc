@@ -13,27 +13,34 @@ import { toast } from 'sonner';
 import { type PricingData, PRICING_DEFAULTS } from '@/config/pricing';
 import { API } from '@/config/endpoints';
 
+type ExamType = 'upsc' | 'mppsc' | 'mppolice';
+
 export default function AdminPricingPage() {
+  const [activeExam, setActiveExam] = useState<ExamType>('mppsc');
   const [data, setData] = useState<PricingData>(PRICING_DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const fetchPricing = async () => {
+  const fetchPricing = async (exam: ExamType) => {
     setLoading(true);
     try {
-      const res = await fetch(API.PRICING, { cache: 'no-store' });
+      const res = await fetch(`${API.PRICING}?examType=${exam}`, { cache: 'no-store' });
       const json = await res.json();
-      if (json.pricing) setData(json.pricing);
+      if (json.pricing) {
+        // Remove examType from data if it exists to match PricingData interface
+        const { examType: _, ...cleanPricing } = json.pricing;
+        setData(cleanPricing);
+      }
     } catch {
-      /* defaults stay */
+      setData(PRICING_DEFAULTS);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPricing();
-  }, []);
+    fetchPricing(activeExam);
+  }, [activeExam]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -41,11 +48,11 @@ export default function AdminPricingPage() {
       const res = await fetch(API.PRICING, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, examType: activeExam }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
-      toast.success(json.message || 'Pricing updated!');
+      toast.success(json.message || `Pricing updated for ${activeExam.toUpperCase()}!`);
     } catch (err: any) {
       toast.error(err.message || 'Failed to update');
     } finally {
@@ -78,12 +85,77 @@ export default function AdminPricingPage() {
             Pricing Manager
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Prices change karo — turant /pricing par reflect hoga, deploy nahi karna
+            Prices change karo — turant /pricing par reflect hoga
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchPricing} disabled={loading}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => fetchPricing(activeExam)}
+          disabled={loading}
+        >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
         </Button>
+      </div>
+
+      {/* ── Exam Tabs ──────────────────────────────────────── */}
+      <div className="flex gap-1 rounded-xl bg-slate-100 p-1">
+        {(['mppsc', 'upsc', 'mppolice'] as const).map((exam) => (
+          <button
+            key={exam}
+            onClick={() => setActiveExam(exam)}
+            className={`flex-1 rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-all ${
+              activeExam === exam ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            {exam}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Lite Plan Card ─────────────────────────────────── */}
+      <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
+        <h2 className="flex items-center gap-2 font-bold text-slate-800">📖 Lite Plan</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className={labelClass}>Current Price (₹)</label>
+            <input
+              type="number"
+              value={data.litePrice}
+              onChange={(e) => updateField('litePrice', Number(e.target.value))}
+              className={inputClass}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className={labelClass}>Original Price (₹)</label>
+            <input
+              type="number"
+              value={data.liteOriginalPrice}
+              onChange={(e) => updateField('liteOriginalPrice', Number(e.target.value))}
+              className={inputClass}
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className={labelClass}>Validity Text</label>
+            <input
+              type="text"
+              value={data.liteValidityText}
+              onChange={(e) => updateField('liteValidityText', e.target.value)}
+              className={inputClass}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className={labelClass}>Duration (months)</label>
+            <input
+              type="number"
+              value={data.liteMonths}
+              onChange={(e) => updateField('liteMonths', Number(e.target.value))}
+              className={inputClass}
+            />
+          </div>
+        </div>
       </div>
 
       {/* ── Pro Plan Card ──────────────────────────────────── */}

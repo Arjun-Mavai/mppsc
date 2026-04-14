@@ -29,12 +29,13 @@ import Razorpay from 'razorpay';
 import { z } from 'zod';
 import { db } from '@/db';
 import { mppscUsers, pricingConfig } from '@/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, and } from 'drizzle-orm';
 import { PRICING_DEFAULTS } from '@/config/pricing';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { verifyAuth } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
+import { notifyAdminOnVerificationFailure } from '@/lib/admin-notify';
 
 const startSchema = z.object({
   name: z.string().min(2).max(100),
@@ -42,9 +43,11 @@ const startSchema = z.object({
   phone: z.string().min(10).max(15),
   source: z.string().optional(),
   planType: z.enum(['lite', 'pro', 'upgrade']),
+  examType: z.enum(['upsc', 'mppsc', 'mppolice']).default('mppsc'),
 });
 
 export async function POST(req: Request) {
+  let planType: string | undefined;
   try {
     // 🚦 Single rate-limit check (instead of 2 separate ones)
     const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1';
@@ -55,12 +58,17 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { name, email, phone, source, planType } = startSchema.parse(body);
+    const parsed = startSchema.parse(body);
+    planType = parsed.planType;
+    const { name, email, phone, source, examType } = parsed;
     const normalizedEmail = email.toLowerCase().trim();
 
     // ── PHASE 1: Find existing user by email (case-insensitive so we never create duplicate or overwrite Pro/Lite)
     const existingUser = await db.query.mppscUsers.findFirst({
-      where: sql`LOWER(${mppscUsers.email}) = ${normalizedEmail}`,
+      where: and(
+        sql`LOWER(${mppscUsers.email}) = ${normalizedEmail}`,
+        eq(mppscUsers.examType, examType)
+      ),
     });
 
     const currentSession = await verifyAuth();
@@ -112,6 +120,7 @@ export async function POST(req: Request) {
         role: 'user',
         metadata: JSON.stringify({ source }),
         planTier: 'free',
+        examType: examType,
       });
     }
 
@@ -123,7 +132,7 @@ export async function POST(req: Request) {
     const rows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.examType, examType))
       .limit(1);
     const p = rows[0] || PRICING_DEFAULTS;
 
@@ -146,17 +155,25 @@ export async function POST(req: Request) {
     const order = await instance.orders.create({
       amount,
       currency: 'INR',
-      notes: { planType, userId },
+      notes: { planType, userId, examType },
     });
 
     // Single response — userId + order details
     return NextResponse.json({ userId, order: { ...order, planType } });
   } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to start payment';
     logger.error('Payment start error:', error, {
       category: 'payment',
-      metadata: { planType: (error as any)?.planType },
+      metadata: { planType },
     });
-    const message = error instanceof Error ? error.message : 'Failed to start payment';
+    
+    // 🚨 Notify Admin on Start Failure
+    notifyAdminOnVerificationFailure({
+      userId: 'pending',
+      orderId: 'none',
+      error: `Payment Start Failure: ${message}`,
+    }).catch(() => {});
+
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

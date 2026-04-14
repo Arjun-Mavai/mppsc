@@ -83,6 +83,15 @@ export async function loginUserAction(formData: LoginParams) {
       return { error: 'Invalid credentials' };
     }
 
+    // ── Exam Type Check ────────────────────────────────────────
+    // This repo is for MPPSC only. Restrict login to mppsc users.
+    if (user.examType && user.examType !== 'mppsc') {
+      return {
+        error: `This account is for ${user.examType.toUpperCase()}. Please login to the correct site.`,
+        code: 'INVALID_EXAM_TYPE',
+      };
+    }
+
     // ── Soft Delete Check ──────────────────────────────────────
     if (user.deletedAt) {
       return {

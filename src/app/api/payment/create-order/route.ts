@@ -8,9 +8,11 @@ import { pricingConfig } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { PRICING_DEFAULTS } from '@/config/pricing';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { notifyAdminOnVerificationFailure } from '@/lib/admin-notify';
 
 const createOrderSchema = z.object({
   planType: z.enum(['lite', 'pro', 'upgrade']),
+  examType: z.enum(['upsc', 'mppsc', 'mppolice']).default('mppsc'),
 });
 
 /**
@@ -43,6 +45,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = createOrderSchema.parse(body);
     planType = parsed.planType;
+    const examType = parsed.examType;
 
     if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
       throw new Error('Razorpay keys not configured');
@@ -53,7 +56,7 @@ export async function POST(req: Request) {
     const rows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.examType, examType))
       .limit(1);
     const p = rows[0] || PRICING_DEFAULTS;
 
@@ -74,27 +77,33 @@ export async function POST(req: Request) {
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
 
-    // � Metadata: Add UserId for verification later
+    //  Metadata: Add UserId for verification later
     const session = await verifyAuth();
 
-    // �📝 Creating Order on Razorpay
+    // 📝 Creating Order on Razorpay
     // Ye ID (order_xxx) frontend par jayegi. Payment isi ID ke against hoga.
     const order = await instance.orders.create({
       amount,
       currency: 'INR',
-      notes: { planType, userId: session?.id ?? '' }, // Metadata for future reference
+      notes: { planType, userId: session?.id ?? '', examType }, // Metadata for future reference
     });
 
     return NextResponse.json({ ...(order as any), planType });
   } catch (error: any) {
+    const message = error instanceof Error ? error.message : 'Failed to create order';
     logger.error('Razorpay order creation error:', error, {
       category: 'payment',
       metadata: { planType },
     });
+    
+    // 🚨 Notify Admin on Order Creation Failure
+    notifyAdminOnVerificationFailure({
+      userId: 'requested',
+      orderId: 'failed',
+      error: `Order Creation Failure (${planType}): ${message}`,
+    }).catch(() => {});
+
     // 🛡️ SECURITY FIX: Don't expose internal error.message to client!
-    // Bhai, error.message mein sensitive info ho sakta hai (stack trace,
-    // DB connection string, etc.). Attacker isse exploit kar sakta hai.
-    // Generic message bhejo, details sirf server logs mein rakhho.
     return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
   }
 }

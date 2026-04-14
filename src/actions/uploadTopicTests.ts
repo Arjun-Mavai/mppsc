@@ -72,7 +72,11 @@ export async function uploadTopicTestQuestions(data: BulkUploadPayload, adminSec
 
       // 2. Find or Create Test
       // Using generic findFirst to avoid potential type issues with db.query if schema not perfectly aligned in inference
-      const existingTests = await db.select().from(tests).where(eq(tests.slug, testSlug)).limit(1);
+      const existingTests = await db
+        .select()
+        .from(tests)
+        .where(and(eq(tests.slug, testSlug), eq(tests.examType, 'mppsc')))
+        .limit(1);
 
       let testId = existingTests[0]?.id;
 
@@ -91,6 +95,7 @@ export async function uploadTopicTestQuestions(data: BulkUploadPayload, adminSec
           totalQuestions: topic.questions.length,
           totalMarks: topic.questions.reduce((sum, q) => sum + q.marks, 0),
           isPro: false,
+          examType: 'mppsc', // 🔒 Strict isolation
           createdAt: new Date(),
           updatedAt: new Date(),
         });
