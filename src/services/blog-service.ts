@@ -17,7 +17,13 @@ export const getBlogCounts = cachedData(
           count: count(),
         })
         .from(contentBlogs)
-        .where(and(eq(contentBlogs.isPublished, true), eq(contentBlogs.isHidden, false)))
+        .where(
+          and(
+            eq(contentBlogs.examType, 'mppsc'),
+            eq(contentBlogs.isPublished, true),
+            eq(contentBlogs.isHidden, false)
+          )
+        )
         .groupBy(contentBlogs.unitId);
 
       // Get counts grouped by category (subjects)
@@ -27,7 +33,13 @@ export const getBlogCounts = cachedData(
           count: count(),
         })
         .from(contentBlogs)
-        .where(and(eq(contentBlogs.isPublished, true), eq(contentBlogs.isHidden, false)))
+        .where(
+          and(
+            eq(contentBlogs.examType, 'mppsc'),
+            eq(contentBlogs.isPublished, true),
+            eq(contentBlogs.isHidden, false)
+          )
+        )
         .groupBy(contentBlogs.category);
 
       // Get count for Free articles
@@ -36,6 +48,7 @@ export const getBlogCounts = cachedData(
         .from(contentBlogs)
         .where(
           and(
+            eq(contentBlogs.examType, 'mppsc'),
             eq(contentBlogs.isPublished, true),
             eq(contentBlogs.isHidden, false),
             eq(contentBlogs.isFreeAccess, true)
@@ -61,7 +74,13 @@ export const getBlogCounts = cachedData(
       const allResult = await db
         .select({ count: count() })
         .from(contentBlogs)
-        .where(and(eq(contentBlogs.isPublished, true), eq(contentBlogs.isHidden, false)));
+        .where(
+          and(
+            eq(contentBlogs.examType, 'mppsc'),
+            eq(contentBlogs.isPublished, true),
+            eq(contentBlogs.isHidden, false)
+          )
+        );
 
       countsMap['All'] = allResult[0]?.count || 0;
       countsMap['Free'] = freeResult[0]?.count || 0;
@@ -87,7 +106,13 @@ export const getCachedBlogs = cachedData(
       return await db
         .select()
         .from(contentBlogs)
-        .where(and(eq(contentBlogs.isPublished, true), eq(contentBlogs.isHidden, false)))
+        .where(
+          and(
+            eq(contentBlogs.examType, 'mppsc'),
+            eq(contentBlogs.isPublished, true),
+            eq(contentBlogs.isHidden, false)
+          )
+        )
         .orderBy(desc(contentBlogs.createdAt));
     } catch (error) {
       logger.error('Get Blogs Error:', error);
@@ -123,6 +148,9 @@ export async function getBlogs({
 
     // Build Where Clause
     const whereConditions = [];
+
+    // 🔒 Filter by Exam Type (Strict Separation)
+    whereConditions.push(eq(contentBlogs.examType, 'mppsc'));
 
     // Filter by Published & Hidden (user view only)
     if (!isAdmin) {
@@ -207,6 +235,7 @@ export const getBlogBySlug = async (slug: string) => {
             .from(contentBlogs)
             .where(
               and(
+                eq(contentBlogs.examType, 'mppsc'),
                 eq(contentBlogs.slug, slug),
                 eq(contentBlogs.isPublished, true),
                 eq(contentBlogs.isHidden, false)

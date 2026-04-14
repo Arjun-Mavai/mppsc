@@ -12,7 +12,7 @@ import { addHours } from 'date-fns';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { appPath } from '@/lib/app-url';
 import { PRICING_DEFAULTS } from '@/config/pricing';
-import { notifyAdminOnPayment, notifyAdminOnEmailFailure } from '@/lib/admin-notify';
+import { notifyAdminOnPayment, notifyAdminOnEmailFailure, notifyAdminOnVerificationFailure } from '@/lib/admin-notify';
 
 /**
  * Payment Verification API - The Trust Center 🏦
@@ -64,6 +64,11 @@ export async function POST(req: Request) {
     // with garbage signature like "abc" (odd hex → different buffer length)
     const isValidHex = /^[a-f0-9]+$/i.test(razorpay_signature);
     if (!isValidHex || razorpay_signature.length !== generated_signature.length) {
+      notifyAdminOnVerificationFailure({
+        userId,
+        orderId: razorpay_order_id,
+        error: 'Malformed payment signature format (API route)',
+      }).catch(() => {});
       return NextResponse.json({ error: 'Invalid payment signature format' }, { status: 400 });
     }
 
@@ -74,6 +79,12 @@ export async function POST(req: Request) {
     );
 
     if (!isValidSignature) {
+      notifyAdminOnVerificationFailure({
+        userId,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        error: 'Invalid Razorpay signature (API route)',
+      }).catch(() => {});
       return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 });
     }
 
@@ -93,6 +104,12 @@ export async function POST(req: Request) {
       where: eq(mppscUsers.id, userId),
     });
     if (!user || user.email === null) {
+      notifyAdminOnVerificationFailure({
+        userId,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        error: `User not found or email is null (User ID: ${userId})`,
+      }).catch(() => {});
       return NextResponse.json({ error: 'User not found' }, { status: 400 });
     }
 
@@ -119,14 +136,23 @@ export async function POST(req: Request) {
           orderId: razorpay_order_id,
         },
       });
+      notifyAdminOnVerificationFailure({
+        userId,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        error: `Order ownership mismatch (User: ${userId}, Order notes: ${orderUserId})`,
+      }).catch(() => {});
       return NextResponse.json({ error: 'Order does not belong to this user' }, { status: 403 });
     }
 
     // 🏷️ Step 5: Logic to assign Plan based on Amount
+    // Recover examType from order notes
+    const examType = (order.notes?.examType as 'upsc' | 'mppsc' | 'mppolice') || 'mppsc';
+
     const pricingRows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.examType, examType))
       .limit(1);
     const p = pricingRows[0] || PRICING_DEFAULTS;
     const proAmountPaise = (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100;
@@ -179,7 +205,7 @@ export async function POST(req: Request) {
     // Resend API se beautiful email bhejo jisme Magic Link ho.
     const resend = new Resend(process.env.RESEND_API_KEY);
 
-    const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC 2026';
+    const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC ZEN';
     const fromAddress =
       process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
     const fromEmail = `${fromName} <${fromAddress}>`;
@@ -190,7 +216,7 @@ export async function POST(req: Request) {
 
     const { error: emailError } = await resend.emails.send({
       from: fromEmail,
-      to: [user.email],
+      to: [user.email!],
       subject: '🎉 Welcome to MPPSC ZEN — Set Your Password',
       react: EmailTemplate({ name: user.name || 'Student', actionUrl, planName: planLabel }),
     });
@@ -200,14 +226,14 @@ export async function POST(req: Request) {
       logger.error('Failed to send welcome email via Resend', emailError, {
         category: 'email',
         userId,
-        metadata: { to: user.email },
+        metadata: { to: user.email! },
       });
       
       // 📧 CRITICAL: Admin ko batao ki user ko email nahi gaya
       // Taaki manually contact kar sake!
       notifyAdminOnEmailFailure({
         userName: user.name || 'Unknown',
-        userEmail: user.email,
+        userEmail: user.email!,
         errorMessage: typeof emailError === 'object' && emailError !== null && 'message' in emailError 
           ? String(emailError.message) 
           : JSON.stringify(emailError),
@@ -220,7 +246,7 @@ export async function POST(req: Request) {
     notifyAdminOnPayment({
       type: 'new_payment',
       userName: user.name || 'Unknown',
-      userEmail: user.email,
+      userEmail: user.email!,
       planTier,
       amountInRupees: paidAmount / 100,
       orderId: razorpay_order_id,
@@ -232,7 +258,7 @@ export async function POST(req: Request) {
       const { logUserActivity } = await import('@/app/actions/user-activity');
       await logUserActivity({
         userId,
-        userEmail: user.email,
+        userEmail: user.email!,
         userName: user.name,
         adminId: 'system', // System triggered
         action: 'PLAN_CHANGE',
@@ -259,6 +285,12 @@ export async function POST(req: Request) {
       userId: requestUserId,
       metadata: { razorpay_order_id: requestOrderId, razorpay_payment_id: requestPaymentId },
     });
+    notifyAdminOnVerificationFailure({
+      userId: requestUserId || 'unknown',
+      orderId: requestOrderId || 'unknown',
+      paymentId: requestPaymentId,
+      error: error instanceof Error ? error.message : 'Unexpected verification error in verify API route',
+    }).catch(() => {});
     return NextResponse.json({ error: 'Payment verification failed' }, { status: 500 });
   }
 }

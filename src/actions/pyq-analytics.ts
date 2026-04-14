@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { questions, pyqQuestionTopics, pyqTopics } from '@/db/schema';
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray, and, sql, desc } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import { syllabusData } from '@/data/syllabusData';
 import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
@@ -55,7 +55,12 @@ export async function getOverallWeightageSubjectData(limit?: number): Promise<Ov
       correctAnswer: questions.correctAnswer,
     })
     .from(questions)
-    .where(inArray(questions.testId, canonicalTestIds));
+    .where(
+      and(
+        eq(questions.examType, 'mppsc'),
+        inArray(questions.testId, canonicalTestIds)
+      )
+    );
 
   // Group by subject
   const subjectGroups: Record<string, typeof allQuestions> = {};
@@ -479,7 +484,12 @@ export const getRepeatedQuestions = unstable_cache(
           order: questions.order,
         })
         .from(questions)
-        .where(inArray(questions.testId, testIds));
+        .where(
+          and(
+            eq(questions.examType, 'mppsc'),
+            inArray(questions.testId, testIds)
+          )
+        );
 
       // ... (mapping logic)
       const questionsByYear = new Map<number, typeof allQuestions>();
@@ -643,7 +653,12 @@ export async function getUnitDistributionStats(limit?: number): Promise<UnitDist
         correctAnswer: questions.correctAnswer,
       })
       .from(questions)
-      .where(inArray(questions.testId, testIds));
+      .where(
+        and(
+          eq(questions.examType, 'mppsc'),
+          inArray(questions.testId, testIds)
+        )
+      );
 
     // Classify each question into a unit
     const stats: Record<string, UnitDistributionStats> = {};

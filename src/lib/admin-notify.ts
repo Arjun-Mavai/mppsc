@@ -4,20 +4,22 @@ import { Resend } from 'resend';
 import { logger } from '@/lib/logger';
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
+import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
 
 /**
  * 📧 ADMIN NOTIFICATION SYSTEM
- * 
+ *
  * Sends email notifications to admin for important events:
  * - New payments
  * - Plan upgrades
  * - Failed email attempts (so admin knows to manually contact user!)
- * 
+ *
  * Admin email is configured via ADMIN_EMAIL env variable.
  * Falls back to RESEND_FROM_EMAIL if not set.
  */
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.RESEND_FROM_EMAIL || 'admin@zenscroll.app';
+const ADMIN_EMAIL =
+  process.env.ADMIN_EMAIL || process.env.RESEND_FROM_EMAIL || 'admin@zenscroll.app';
 
 interface PaymentNotification {
   type: 'new_payment' | 'upgrade' | 'failed';
@@ -28,6 +30,7 @@ interface PaymentNotification {
   orderId: string;
   paymentId: string;
   isUpgrade?: boolean;
+  error?: string; // Optional error details for failures
 }
 
 interface EmailFailureNotification {
@@ -39,7 +42,7 @@ interface EmailFailureNotification {
 
 /**
  * 💰 Notify Admin on Payment
- * 
+ *
  * Sends a concise email to admin when a payment is captured.
  * Non-blocking: Errors are logged but don't break the flow.
  */
@@ -53,11 +56,12 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
 
     const resend = new Resend(apiKey);
 
-    const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC 2026';
+    const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC ZEN';
     const fromAddress = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
     const fromEmail = `${fromName} <${fromAddress}>`;
 
-    const { type, userName, userEmail, planTier, amountInRupees, orderId, paymentId, isUpgrade } = data;
+    const { type, userName, userEmail, planTier, amountInRupees, orderId, paymentId, isUpgrade } =
+      data;
 
     // 📧 Different subject lines based on event type
     const subjects: Record<string, string> = {
@@ -115,10 +119,28 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
       html,
     });
 
+    // 🚀 TELEGRAM NOTIFICATION (MPPSC ZEN Branding)
+    if (type === 'new_payment' || type === 'upgrade' || type === 'failed') {
+      const telegramMessage =
+        `👮 <b>MPPSC ZEN</b>\n` +
+        `${type === 'new_payment' ? '💰 <b>New Payment</b>' : type === 'upgrade' ? '🚀 <b>Plan Upgrade</b>' : '⚠️ <b>Payment Failed</b>'}\n\n` +
+        `👤 User: ${escapeHTML(userName)}\n` +
+        `📧 Email: ${escapeHTML(userEmail)}\n` +
+        `🎟️ Plan: ${planTier.toUpperCase()}${isUpgrade ? ' (Upgrade)' : ''}\n` +
+        `💵 Amount: <b>₹${amountInRupees}</b>\n` +
+        `🆔 PayID: <code>${paymentId}</code>` +
+        `${data.error ? `\n\n❌ Error: ${escapeHTML(data.error!)}` : ''}`;
+
+      await sendTelegramNotification(telegramMessage);
+    }
+
     if (error) {
       logger.error('Failed to send admin notification email', error, { category: 'email' });
     } else {
-      logger.info('Admin notified of payment', { category: 'email', metadata: { type, userEmail, amount: amountInRupees } });
+      logger.info('Admin notified of payment', {
+        category: 'email',
+        metadata: { type, userEmail, amount: amountInRupees },
+      });
     }
   } catch (error) {
     // Non-blocking: Don't let email failure break payment flow
@@ -128,7 +150,7 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
 
 /**
  * 🚨 Notify Admin When User Email Fails
- * 
+ *
  * CRITICAL: Jab user ko welcome email fail ho, admin ko pata chalna chahiye
  * taaki manually contact kar sake!
  */
@@ -139,7 +161,7 @@ export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) 
 
     const resend = new Resend(apiKey);
 
-    const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC 2026';
+    const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC ZEN';
     const fromAddress = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
     const fromEmail = `${fromName} <${fromAddress}>`;
 
@@ -186,16 +208,61 @@ export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) 
     await resend.emails.send({
       from: fromEmail,
       to: [ADMIN_EMAIL],
-      subject: `🚨 EMAIL FAILED: ${userName} (${userEmail}) — Payment ID: ${paymentId}`,
+      subject: `🚨 USER EMAIL FAILED: ${userName} (${userEmail}) — MPPSC ZEN`,
       html,
     });
 
+    // 🚀 TELEGRAM NOTIFICATION (MPPSC ZEN Branding)
+    const telegramMessage =
+      `👮 <b>MPPSC ZEN ALERT</b>\n` +
+      `🚨 <b>USER EMAIL FAILED!</b>\n\n` +
+      `User ne payment kiya but unhe welcome email nahi gaya. <b>Manual Action Required!</b>\n\n` +
+      `👤 User: ${escapeHTML(userName)}\n` +
+      `📧 Email: ${escapeHTML(userEmail)}\n` +
+      `🆔 PayID: <code>${paymentId}</code>\n` +
+      `❌ Error: ${escapeHTML(errorMessage)}`;
+
+    await sendTelegramNotification(telegramMessage);
   } catch (error) {
     // Last resort: Log to DB if even this fails
-    logger.error('CRITICAL: Even admin notification failed!', error, { 
+    logger.error('CRITICAL: Even admin notification failed!', error, {
       category: 'email',
-      metadata: { userEmail: data.userEmail, paymentId: data.paymentId }
+      metadata: { userEmail: data.userEmail, paymentId: data.paymentId },
     });
+  }
+}
+
+/**
+ * 🕵️ Notify Admin on Verification Failure
+ *
+ * Called when Razorpay signature verification fails or order ownership mismatch occurs.
+ */
+export async function notifyAdminOnVerificationFailure(data: {
+  userId: string;
+  orderId: string;
+  paymentId?: string;
+  error: string;
+}) {
+  try {
+    const { userId, orderId, paymentId, error } = data;
+
+    const telegramMessage =
+      `👮 <b>MPPSC ZEN SECURITY</b>\n` +
+      `🛡️ <b>VERIFICATION FAILURE!</b>\n\n` +
+      `Payment verification process encountered an error.\n\n` +
+      `👤 User ID: <code>${userId}</code>\n` +
+      `🆔 Order ID: <code>${orderId}</code>\n` +
+      `${paymentId ? `🆔 PayID: <code>${paymentId}</code>\n` : ''}` +
+      `❌ Error: ${escapeHTML(error)}`;
+
+    await sendTelegramNotification(telegramMessage);
+
+    logger.warn('Admin notified of verification failure via Telegram', {
+      category: 'payment',
+      metadata: { userId, orderId, error: String(error) },
+    } as any);
+  } catch (err) {
+    logger.error('Failed to send verification failure notification', err);
   }
 }
 

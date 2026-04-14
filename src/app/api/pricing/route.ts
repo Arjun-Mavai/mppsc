@@ -21,14 +21,17 @@ import { PRICING_DEFAULTS } from '@/config/pricing';
 const DEFAULTS = { id: 'default' as const, ...PRICING_DEFAULTS };
 
 // ── GET — Public, cached ────────────────────────────────────
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const examType = (searchParams.get('examType') as any) || 'mppsc';
+
     const rows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.examType, examType))
       .limit(1);
-    const pricing = rows[0] || DEFAULTS;
+    const pricing = rows[0] || { examType, ...PRICING_DEFAULTS };
 
     return NextResponse.json(
       { pricing },
@@ -40,8 +43,7 @@ export async function GET() {
     );
   } catch (error) {
     logger.error('Pricing GET error:', error);
-    // Fallback to defaults on error — pricing page never breaks
-    return NextResponse.json({ pricing: DEFAULTS });
+    return NextResponse.json({ pricing: PRICING_DEFAULTS });
   }
 }
 
@@ -69,31 +71,37 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
+    const { examType, ...data } = body;
+
+    if (!examType) {
+      return NextResponse.json({ error: 'examType is required' }, { status: 400 });
+    }
 
     // Upsert — insert if not exists, update if exists
     const existing = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.examType, examType))
       .limit(1);
 
     if (existing.length === 0) {
-      await db.insert(pricingConfig).values({ id: 'default', ...body, updatedAt: new Date() });
+      await db.insert(pricingConfig).values({ examType, ...data, updatedAt: new Date() });
     } else {
       await db
         .update(pricingConfig)
-        .set({ ...body, updatedAt: new Date() })
-        .where(eq(pricingConfig.id, 'default'));
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(pricingConfig.examType, examType));
     }
 
-    // Bust pricing cache — pricing page reloads with fresh data
-    revalidateTag('pricing', { expire: 0 } as any);
+    // Bust pricing cache
+    // @ts-ignore - Some versions of Next.js expect 1 or 2 arguments
+    revalidateTag('pricing', { expire: 0 });
 
-    logger.info(`Pricing updated by admin: ${JSON.stringify(body)}`);
+    logger.info(`Pricing updated by admin for ${examType}`);
 
     return NextResponse.json({
       success: true,
-      message: 'Pricing updated! Changes will reflect immediately.',
+      message: `Pricing updated for ${examType}!`,
     });
   } catch (error) {
     logger.error('Pricing PUT error:', error);
