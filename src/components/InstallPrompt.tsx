@@ -5,6 +5,7 @@ import { usePwa } from '@/hooks/usePwa';
 import { X, Share, PlusSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 export function InstallPrompt() {
   const { isInstallable, installPwa, isPwaInstalled, isIos, isSafari } = usePwa();
@@ -76,9 +77,9 @@ export function InstallPrompt() {
         
         <div className="space-y-6">
           <div className="flex items-center gap-4">
-            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 shadow-xl shadow-orange-500/20">
-               <span className="text-xl font-black text-white">M</span>
-               <div className="absolute -top-1 -right-1 h-3 w-3 animate-ping rounded-full bg-amber-400 opacity-75"></div>
+            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl shadow-xl shadow-amber-500/20 border border-white/10">
+              <Image src="/icon.png" alt="Mindful Logo" fill className="object-cover" />
+              <div className="absolute -top-1 -right-1 z-10 h-3 w-3 animate-ping rounded-full bg-amber-400 opacity-75"></div>
             </div>
             <div>
               <h3 className="text-lg font-black tracking-tight text-white">Install Mindful App</h3>
@@ -151,8 +152,8 @@ export function InstallPrompt() {
         </button>
         
         <div className="flex items-center gap-5">
-          <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 shadow-xl shadow-orange-500/20">
-             <span className="text-xl font-black text-white">M</span>
+          <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl shadow-xl shadow-amber-500/20 border border-white/10">
+            <Image src="/icon.png" alt="Mindful Logo" fill className="object-cover" />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-lg font-black tracking-tight text-white">App Experience</h3>

@@ -33,16 +33,28 @@ export default function TestInterface({ test, questions }: { test: Test; questio
   const [submitting, setSubmitting] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false); // Mobile sidebar
 
-  // Timer
-  useEffect(() => {
-    if (!started || submitting) return;
-    if (timeLeft <= 0) {
-      handleSubmit(); // Auto submit
-      return;
+  const handleSubmit = async () => {
+    if (submitting) return;
+    const confirm = window.confirm('Are you sure you want to submit the test?');
+    if (!confirm && timeLeft > 0) return;
+
+    setSubmitting(true);
+    const timeTaken = test.durationMinutes * 60 - timeLeft;
+
+    // TODO: get user ID from session context if available, else 'anonymous'
+    const res = await submitTestAttempt(test.id, 'user-123', answers, timeTaken, {});
+
+    if (res.success) {
+      toast.success('Test Submitted Successfully!');
+      // Redirect to analysis
+      // We assume /tests/[slug]/analysis?attemptId=...
+      // Or just store attemptId in local storage and fetch latest
+      router.push(`/tests/${test.slug}/analysis?attemptId=${res.attemptId}`);
+    } else {
+      toast.error('Submission Failed: ' + res.error);
+      setSubmitting(false);
     }
-    const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-    return () => clearInterval(timer);
-  }, [started, timeLeft, submitting]);
+  };
 
   const handleStart = () => {
     setCurrentInfo(false);
@@ -72,28 +84,16 @@ export default function TestInterface({ test, questions }: { test: Test; questio
     });
   };
 
-  const handleSubmit = async () => {
-    if (submitting) return;
-    const confirm = window.confirm('Are you sure you want to submit the test?');
-    if (!confirm && timeLeft > 0) return;
-
-    setSubmitting(true);
-    const timeTaken = test.durationMinutes * 60 - timeLeft;
-
-    // TODO: get user ID from session context if available, else 'anonymous'
-    const res = await submitTestAttempt(test.id, 'user-123', answers, timeTaken, {});
-
-    if (res.success) {
-      toast.success('Test Submitted Successfully!');
-      // Redirect to analysis
-      // We assume /tests/[slug]/analysis?attemptId=...
-      // Or just store attemptId in local storage and fetch latest
-      router.push(`/tests/${test.slug}/analysis?attemptId=${res.attemptId}`);
-    } else {
-      toast.error('Submission Failed: ' + res.error);
-      setSubmitting(false);
+  // Timer
+  useEffect(() => {
+    if (!started || submitting) return;
+    if (timeLeft <= 0) {
+      handleSubmit(); // Auto submit
+      return;
     }
-  };
+    const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
+    return () => clearInterval(timer);
+  }, [started, timeLeft, submitting, handleSubmit]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);

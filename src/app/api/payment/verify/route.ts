@@ -207,7 +207,7 @@ export async function POST(req: Request) {
 
     const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC ZEN';
     const fromAddress =
-      process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
+      process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'no-reply@mppsc.zenscroll.app';
     const fromEmail = `${fromName} <${fromAddress}>`;
 
     const actionUrl = `${appPath('auth/set-password')}?token=${token}`;

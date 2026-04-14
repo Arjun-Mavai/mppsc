@@ -187,7 +187,7 @@ export async function POST(req: Request) {
 
     const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC 2026';
     const fromAddress =
-      process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
+      process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'no-reply@mppsc.zenscroll.app';
     const fromEmail = `${fromName} <${fromAddress}>`;
 
     const { error: emailError } = await resend.emails.send({

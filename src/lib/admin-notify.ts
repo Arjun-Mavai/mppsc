@@ -57,7 +57,7 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
     const resend = new Resend(apiKey);
 
     const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC ZEN';
-    const fromAddress = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    const fromAddress = process.env.RESEND_FROM_EMAIL || 'mppsc@zenscroll.app';
     const fromEmail = `${fromName} <${fromAddress}>`;
 
     const { type, userName, userEmail, planTier, amountInRupees, orderId, paymentId, isUpgrade } =
@@ -162,7 +162,7 @@ export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) 
     const resend = new Resend(apiKey);
 
     const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC ZEN';
-    const fromAddress = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    const fromAddress = process.env.RESEND_FROM_EMAIL || 'mppsc@zenscroll.app';
     const fromEmail = `${fromName} <${fromAddress}>`;
 
     const { userName, userEmail, errorMessage, paymentId } = data;
