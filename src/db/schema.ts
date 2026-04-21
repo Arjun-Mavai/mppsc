@@ -591,7 +591,7 @@ export const guests = sqliteTable(
     email: text('email'),
     mobile: text('mobile'), // Primary identifier for upsert (last 10 digits stored)
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
-    updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+    // updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
     // Exam type segregation - UPSC/MPPSC isolation  
     examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all', 'mppolice'] })
       .default('mppsc')  // Preserve existing guests as MPPSC

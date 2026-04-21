@@ -70,6 +70,7 @@ export async function submitTestFeedback(params: SubmitFeedbackParams): Promise<
       comments: data.comment || null,
       userName: effectiveName,
       userEmail: effectiveEmail,
+      examType: 'mppsc', // 🔒 Explicitly tag as MPPSC
     };
 
     await db.insert(testFeedback).values(newFeedback);
@@ -113,7 +114,12 @@ export async function hasUserSubmittedFeedback() {
     const existingFeedback = await db
       .select({ id: testFeedback.id })
       .from(testFeedback)
-      .where(eq(testFeedback.userId, authUser.id))
+      .where(
+        and(
+          eq(testFeedback.userId, authUser.id),
+          eq(testFeedback.examType, 'mppsc')
+        )
+      )
       .limit(1);
 
     return existingFeedback.length > 0;

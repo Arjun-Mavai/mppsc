@@ -13,7 +13,7 @@
 
 import { db } from '@/db';
 import { tests, questions, freeQuizAttempts } from '@/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, or } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import { logger } from '@/lib/logger';
 import { sendTelegramNotification } from '@/lib/telegram';
@@ -91,7 +91,7 @@ export async function recordGuestAttempt(data: {
 export const getCachedFreeQuizzes = unstable_cache(
   async () => {
     try {
-      console.log('--- DEBUG: Fetching Free Quizzes from DB ---');
+    try {
       const result = await db
         .select({
           id: tests.id,
@@ -109,13 +109,12 @@ export const getCachedFreeQuizzes = unstable_cache(
           and(
             eq(tests.type, 'MISC'),
             eq(tests.isFreeAccess, true),
-            eq(tests.isHidden, false)
-            // eq(tests.examType, 'mppsc') // Temporarily commented to fix blank list
+            eq(tests.isHidden, false),
+            or(eq(tests.examType, 'mppsc'), eq(tests.examType, 'all'))
           )
         )
         .orderBy(desc(tests.createdAt));
       
-      console.log(`--- DEBUG: Successfully fetched ${result.length} quizzes ---`);
       return result;
     } catch (error) {
       console.error('--- CRITICAL DB ERROR in getCachedFreeQuizzes ---');
@@ -124,7 +123,7 @@ export const getCachedFreeQuizzes = unstable_cache(
       return [];
     }
   },
-  ['free-tests-list-v4'],
+  ['free-tests-list-v5'],
   { revalidate: 60, tags: ['tests'] }
 );
 
@@ -143,7 +142,7 @@ const fetchFreeQuizData = async (testId: string) => {
         eq(tests.type, 'MISC'),
         eq(tests.isFreeAccess, true),
         eq(tests.isHidden, false),
-        eq(tests.examType, 'mppsc')
+        or(eq(tests.examType, 'mppsc'), eq(tests.examType, 'all'))
       )
     )
     .get();
@@ -161,7 +160,7 @@ const fetchFreeQuizData = async (testId: string) => {
 
 export const getCachedFreeQuizWithQuestions = unstable_cache(
   fetchFreeQuizData,
-  ['free-quiz-with-questions-v4'],
+  ['free-quiz-with-questions-v5'],
   { revalidate: 300, tags: ['tests'] }
 );
 

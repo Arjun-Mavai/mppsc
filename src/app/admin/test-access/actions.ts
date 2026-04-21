@@ -51,6 +51,7 @@ export async function getAllTestsForAdmin() {
       createdAt: tests.createdAt,
     })
     .from(tests)
+    .where(eq(tests.examType, 'mppsc'))
     .orderBy(desc(tests.createdAt));
 
   // TOPIC tests ke liye syllabusTopics se proper name fetch karo
@@ -134,7 +135,12 @@ export async function bulkUpdateTestAccess(
   await db
     .update(tests)
     .set({ [field]: value })
-    .where(eq(tests.type, testType));
+    .where(
+      and(
+        eq(tests.type, testType),
+        eq(tests.examType, 'mppsc')
+      )
+    );
 
   revalidateTag('tests', { expire: 0 });
   revalidateTag('tests-list', { expire: 0 });

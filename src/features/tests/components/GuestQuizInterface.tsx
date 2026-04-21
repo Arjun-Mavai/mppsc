@@ -446,7 +446,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
       />
 
       <GuestEntryDialog
-        open={showGuestEntryDialog}
+        open={showGuestEntryDialog && !showExitConfirm}
         guestName={guestName}
         guestEmail={guestEmail}
         guestMobile={guestMobile}

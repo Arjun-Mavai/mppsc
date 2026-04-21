@@ -8,12 +8,6 @@ const globalForDb = globalThis as unknown as {
   client: ReturnType<typeof createClient> | undefined;
 };
 
-// Determine connection URL based on environment
-console.log('--- DEBUG DB CONNECTION ---');
-console.log('process.env.USE_PROD_DB:', process.env.USE_PROD_DB);
-console.log('env.USE_PROD_DB:', env.USE_PROD_DB);
-console.log('env.NODE_ENV:', env.NODE_ENV);
-
 const isDev = env.NODE_ENV === 'development' && env.USE_PROD_DB.trim() !== 'true';
 const connectionUrl = isDev 
   ? 'file:mppsc_local_dev.db' 
@@ -22,10 +16,6 @@ const connectionUrl = isDev
 const connectionAuthToken = isDev
   ? undefined
   : env.TURSO_AUTH_TOKEN;
-
-if (process.env.NODE_ENV !== 'test') {
-  console.log(`🔌 Initializing DB Connection: ${isDev ? 'LOCAL (mppsc_local_dev.db)' : 'REMOTE (Turso)'}`);
-}
 
 export const client =
   globalForDb.client ??

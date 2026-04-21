@@ -296,7 +296,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
 
     const recentUploads = testsData
       .sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0))
-      .slice(0, 5);
+      .slice(0, 15); // Increased from 5 to 15 to show more "latest" tests
     const recentBlogs = blogsData
       .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0))
       .slice(0, 5);
@@ -350,6 +350,7 @@ export async function getPaymentExitStats() {
     const reasons = await db
       .select()
       .from(paymentExitReasons)
+      .where(eq(paymentExitReasons.examType, 'mppsc')) // 🔒 Isolation
       .orderBy(desc(paymentExitReasons.createdAt))
       .limit(50);
 

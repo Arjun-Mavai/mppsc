@@ -28,7 +28,11 @@ export async function GET(request: Request) {
     }
 
     // Fetch Feedbacks
-    const data = await db.select().from(feedbacks).orderBy(desc(feedbacks.createdAt));
+    const data = await db
+      .select()
+      .from(feedbacks)
+      .where(eq(feedbacks.examType, 'mppsc')) // 🔒 Isolation
+      .orderBy(desc(feedbacks.createdAt));
 
     return NextResponse.json({ feedbacks: data });
   } catch (error) {

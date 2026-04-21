@@ -83,7 +83,12 @@ const getScopedPyqTestsImpl = async (
     })
     .from(tests)
     .leftJoin(questions, eq(questions.testId, tests.id))
-    .where(eq(tests.type, 'PYQ'))
+    .where(
+      and(
+        eq(tests.type, 'PYQ'),
+        eq(tests.examType, 'mppsc')
+      )
+    )
     .groupBy(tests.id, tests.title);
 
   const byYear = new Map<number, ScopedTest>();
