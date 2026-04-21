@@ -91,7 +91,6 @@ export async function recordGuestAttempt(data: {
 export const getCachedFreeQuizzes = unstable_cache(
   async () => {
     try {
-    try {
       const result = await db
         .select({
           id: tests.id,

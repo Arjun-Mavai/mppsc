@@ -56,7 +56,9 @@ export function GuestEntryDialog({
 
   const isNameValid = useMemo(() => {
     const trimmed = guestName.trim();
-    return trimmed.length >= 3 && /^[a-zA-Z\s]+$/.test(trimmed);
+    // Allow any characters but require at least 2 for basic name validity
+    // (Relaxed from a strict regex to support Hindi/other scripts)
+    return trimmed.length >= 2;
   }, [guestName]);
 
   const isMobileValid = useMemo(() => {
@@ -86,9 +88,10 @@ export function GuestEntryDialog({
   }, [guestEmail]);
 
   const isFormValid = isNameValid && isMobileValid && isEmailValid;
+  const isBusy = isSubmitting || isVerifying;
 
   const handleInternalSubmit = async () => {
-    if (!isFormValid || isSubmitting) return;
+    if (!isFormValid || isBusy) return;
     onSubmit();
   };
 
@@ -151,7 +154,7 @@ export function GuestEntryDialog({
               />
               {guestName.length > 0 && !isNameValid && (
                 <p className="animate-in fade-in-0 slide-in-from-top-1 text-[11px] font-bold text-red-500">
-                  Please enter a valid name (min 3 letters, no special characters).
+                  Please enter a valid name (min 2 letters).
                 </p>
               )}
             </div>
@@ -169,7 +172,7 @@ export function GuestEntryDialog({
                       placeholder="10-digit mobile number"
                       value={guestMobile}
                       onChange={(e) => onMobileChange(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                      disabled={isSubmitting || isVerifying}
+                      disabled={isBusy}
                       className={`h-11 border-slate-200 bg-white text-base font-medium shadow-sm transition-all focus:ring-2 ${
                         guestMobile.length > 0 && !isMobileValid 
                           ? 'border-red-300 focus:border-red-500 focus:ring-red-100' 
@@ -200,7 +203,7 @@ export function GuestEntryDialog({
                       placeholder="yourname@gmail.com"
                       value={guestEmail}
                       onChange={(e) => onEmailChange(e.target.value)}
-                      disabled={isSubmitting || isVerifying}
+                      disabled={isBusy}
                       className={`h-11 border-slate-200 transition-all focus:ring-2 ${
                         guestEmail.length > 0 && !isEmailValid 
                           ? 'border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-red-100' 
@@ -219,12 +222,12 @@ export function GuestEntryDialog({
             <div className="animate-in slide-in-from-bottom-2 border-t border-slate-100 bg-slate-50/50 px-6 py-4 sm:px-6">
               <Button
                 onClick={handleInternalSubmit}
-                disabled={!isFormValid || isSubmitting}
+                disabled={!isFormValid || isBusy}
                 className="h-12 w-full rounded-xl bg-slate-900 text-lg font-bold text-white shadow-lg shadow-slate-900/20 transition-all hover:bg-slate-800 hover:shadow-xl hover:shadow-slate-900/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isSubmitting ? (
+                {isBusy ? (
                   <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Starting...
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" /> {isVerifying ? 'Verifying...' : 'Starting...'}
                   </>
                 ) : (
                   'Start Test 🚀'

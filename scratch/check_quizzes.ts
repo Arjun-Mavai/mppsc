@@ -1,5 +1,5 @@
-import { db } from './src/db';
-import { tests } from './src/db/schema';
+import { db } from '../src/db';
+import { tests } from '../src/db/schema';
 import { eq, and } from 'drizzle-orm';
 
 async function checkFreeQuizzes() {

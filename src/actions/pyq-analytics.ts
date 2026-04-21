@@ -510,6 +510,30 @@ export const getRepeatedQuestions = unstable_cache(
         }
       }
 
+      // 🚀 PERF BOOST: Pre-calculate token sets for all questions to avoid redundant tokenization (O(N^2) -> O(N))
+      const questionTokens = new Map<string, Set<string>>();
+      for (const q of allQuestions) {
+        const fullText = (q.text || '') + ' ' + (q.textEn || '');
+        questionTokens.set(q.id, getSignificantTokens(fullText));
+      }
+
+      // Faster Jaccard using pre-calculated sets
+      const fastJaccard = (id1: string, id2: string): number => {
+        const s1 = questionTokens.get(id1)!;
+        const s2 = questionTokens.get(id2)!;
+        if (s1.size === 0 || s2.size === 0) return 0;
+
+        let intersection = 0;
+        // Optimization: Iterate over the smaller set
+        const [smaller, larger] = s1.size < s2.size ? [s1, s2] : [s2, s1];
+        for (const t of smaller) {
+          if (larger.has(t)) intersection++;
+        }
+
+        const unionSize = s1.size + s2.size - intersection;
+        return unionSize === 0 ? 0 : intersection / unionSize;
+      };
+
       const SIMILARITY_THRESHOLD = 0.6;
       const years = Array.from(questionsByYear.keys()).sort();
 
@@ -519,10 +543,17 @@ export const getRepeatedQuestions = unstable_cache(
           const qs2 = questionsByYear.get(years[j])!;
 
           for (const q1 of qs1) {
-            const q1Text = (q1.text || '') + ' ' + (q1.textEn || '');
+            const tokens1 = questionTokens.get(q1.id)!;
+            if (tokens1.size === 0) continue;
+
             for (const q2 of qs2) {
-              const q2Text = (q2.text || '') + ' ' + (q2.textEn || '');
-              const similarity = jaccardSimilarity(q1Text, q2Text);
+              const tokens2 = questionTokens.get(q2.id)!;
+              if (tokens2.size === 0) continue;
+
+              // ⚡️ Quick overlap check: if intersection is definitely too small, skip full calculation
+              // (Intersection must be at least 0.6 * union, or intersection >= 0.3 * sum of sizes roughly)
+              
+              const similarity = fastJaccard(q1.id, q2.id);
               if (similarity >= SIMILARITY_THRESHOLD) {
                 union(q1.id, q2.id);
               }

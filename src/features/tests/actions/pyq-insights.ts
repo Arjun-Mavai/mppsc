@@ -430,31 +430,62 @@ export const getPyqTopicAnalysis = unstable_cache(
       trendDelta: number | null;
     };
 
-    let trendRows: TrendRow[] = [];
-    try {
-      trendRows = await db
+    // 🚀 PERF BOOST: Fetch trends and year matrix in parallel
+    const [trendRowsResult, rawYearMatrix] = await Promise.all([
+      (async () => {
+        try {
+          return await db
+            .select({
+              topicId: pyqTopicTrends.topicId,
+              topicSlug: pyqTopics.topicSlug,
+              topicTitle: pyqTopics.topicTitle,
+              topicTitleEn: pyqTopics.topicTitleEn,
+              year: pyqTopicTrends.year,
+              questionCount: pyqTopicTrends.questionCount,
+              weightPercent: pyqTopicTrends.weightPercent,
+              trendDelta: pyqTopicTrends.trendDelta,
+            })
+            .from(pyqTopicTrends)
+            .innerJoin(pyqTopics, eq(pyqTopicTrends.topicId, pyqTopics.id))
+            .where(and(eq(pyqTopicTrends.subject, effectiveSubject), gte(pyqTopicTrends.year, fromYear)));
+        } catch (error) {
+          if (isMissingInsightsTableError(error)) {
+            logger.warn('PYQ insights tables missing; returning empty analysis payload', {
+              category: 'system',
+            });
+            return [];
+          } else {
+            throw error;
+          }
+        }
+      })(),
+      db
         .select({
-          topicId: pyqTopicTrends.topicId,
-          topicSlug: pyqTopics.topicSlug,
-          topicTitle: pyqTopics.topicTitle,
-          topicTitleEn: pyqTopics.topicTitleEn,
-          year: pyqTopicTrends.year,
-          questionCount: pyqTopicTrends.questionCount,
-          weightPercent: pyqTopicTrends.weightPercent,
-          trendDelta: pyqTopicTrends.trendDelta,
+          year: sql<number>`CASE 
+            WHEN ${tests.title} LIKE '%2025%' THEN 2025 
+            WHEN ${tests.title} LIKE '%2024%' THEN 2024 
+            WHEN ${tests.title} LIKE '%2023%' THEN 2023 
+            WHEN ${tests.title} LIKE '%2022%' THEN 2022 
+            WHEN ${tests.title} LIKE '%2019-20%' OR ${tests.title} LIKE '%2020%' THEN 2020 
+            WHEN ${tests.title} LIKE '%2021%' THEN 2021
+            ELSE CAST(strftime('%Y', ${tests.createdAt}) AS INTEGER)
+          END`.as('resolved_year'),
+          questionCount: sql<number>`count(distinct ${pyqQuestionTopics.questionId})`,
         })
-        .from(pyqTopicTrends)
-        .innerJoin(pyqTopics, eq(pyqTopicTrends.topicId, pyqTopics.id))
-        .where(and(eq(pyqTopicTrends.subject, effectiveSubject), gte(pyqTopicTrends.year, fromYear)));
-    } catch (error) {
-      if (isMissingInsightsTableError(error)) {
-        logger.warn('PYQ insights tables missing; returning empty analysis payload', {
-          category: 'system',
-        });
-      } else {
-        throw error;
-      }
-    }
+        .from(pyqQuestionTopics)
+        .innerJoin(pyqTopics, eq(pyqQuestionTopics.topicId, pyqTopics.id))
+        .innerJoin(questions, eq(pyqQuestionTopics.questionId, questions.id))
+        .innerJoin(tests, eq(questions.testId, tests.id))
+        .where(and(
+          eq(pyqTopics.subject, effectiveSubject), 
+          eq(tests.type, 'PYQ'),
+          gte(sql`resolved_year`, fromYear)
+        ))
+        .groupBy(sql`resolved_year`)
+        .orderBy(sql`resolved_year`)
+    ]);
+
+    let trendRows = trendRowsResult;
 
     // If trend snapshot is empty for this subject, build a fallback from published facts + pyq_refs.
     if (trendRows.length === 0) {
@@ -577,31 +608,6 @@ export const getPyqTopicAnalysis = unstable_cache(
         trendDelta: item.trendDelta,
       }))
       .sort((a, b) => b.totalQuestions - a.totalQuestions);
-    // Calculate Year-wise Matrix for the subject efficiently
-    const rawYearMatrix = await db
-      .select({
-        year: sql<number>`CASE 
-          WHEN ${tests.title} LIKE '%2025%' THEN 2025 
-          WHEN ${tests.title} LIKE '%2024%' THEN 2024 
-          WHEN ${tests.title} LIKE '%2023%' THEN 2023 
-          WHEN ${tests.title} LIKE '%2022%' THEN 2022 
-          WHEN ${tests.title} LIKE '%2019-20%' OR ${tests.title} LIKE '%2020%' THEN 2020 
-          WHEN ${tests.title} LIKE '%2021%' THEN 2021
-          ELSE CAST(strftime('%Y', ${tests.createdAt}) AS INTEGER)
-        END`.as('resolved_year'),
-        questionCount: sql<number>`count(distinct ${pyqQuestionTopics.questionId})`,
-      })
-      .from(pyqQuestionTopics)
-      .innerJoin(pyqTopics, eq(pyqQuestionTopics.topicId, pyqTopics.id))
-      .innerJoin(questions, eq(pyqQuestionTopics.questionId, questions.id))
-      .innerJoin(tests, eq(questions.testId, tests.id))
-      .where(and(
-        eq(pyqTopics.subject, effectiveSubject), 
-        eq(tests.type, 'PYQ'),
-        gte(sql`resolved_year`, fromYear)
-      ))
-      .groupBy(sql`resolved_year`)
-      .orderBy(sql`resolved_year`);
 
     const yearMatrix = rawYearMatrix.map(row => ({
       year: Number(row.year),

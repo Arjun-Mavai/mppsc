@@ -71,7 +71,7 @@ export async function createGuestEntry(data: GuestData) {
         name: name.trim(),
         email: email?.trim() || null,
         mobile: normalizedMobile,
-        examType: 'mppsc',
+        examType: 'mppsc' as const,
       });
 
       const statsSummary = await getTelegramStatsSummary();
@@ -96,7 +96,7 @@ export async function createGuestEntry(data: GuestData) {
       name: name.trim(),
       email: email?.trim() || null,
       mobile: mobile?.trim() || null,
-      examType: 'mppsc',
+      examType: 'mppsc' as const,
     });
     
     return { success: true, guestId, isReturning: false };

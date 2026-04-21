@@ -25,7 +25,7 @@ export async function submitSupportTicket(data: any) {
       message,
       status: 'open',
       createdAt: new Date(),
-      examType: 'mppsc', // 🔒 Explicitly tag as MPPSC
+      examType: 'mppsc' as const, // 🔒 Explicitly tag as MPPSC
     });
 
     // revalidatePath('/admin/dashboard'); // If we show tickets there
