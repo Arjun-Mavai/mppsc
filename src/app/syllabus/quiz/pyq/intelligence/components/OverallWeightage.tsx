@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, ChevronUp, Eye, ExternalLink } from 'lucide-react';
+import { ChevronDown, ChevronUp, Eye, ExternalLink, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -27,6 +27,7 @@ export function OverallWeightage({
   theme = 'dark',
 }: OverallWeightageProps) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [isMainExpanded, setIsMainExpanded] = useState(false);
   const [expandedSubjects, setExpandedSubjects] = useState<string[]>([]);
 
@@ -66,6 +67,12 @@ export function OverallWeightage({
   useEffect(() => {
     router.prefetch('/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject');
   }, [router]);
+
+  const handleViewAll = () => {
+    startTransition(() => {
+      router.push('/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject');
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -303,25 +310,26 @@ export function OverallWeightage({
       </div>
 
       <div className="flex justify-center pt-8">
-        <TransitionLink
-          href="/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject"
-          transitionTypes={['slide']}
+        <Button
+          variant="outline"
+          size="lg"
+          onClick={handleViewAll}
+          disabled={isPending}
+          className={cn(
+            "h-14 w-full rounded-2xl px-10 text-xs font-black tracking-[0.1em] uppercase transition-all active:scale-95 sm:w-fit sm:min-w-[360px]",
+            theme === 'light'
+              ? "border-indigo-100 bg-white text-indigo-600 hover:bg-[#F5F5F7] hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)]"
+              : "border-emerald-500/20 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 hover:text-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]"
+          )}
         >
-          <Button
-            variant="outline"
-            size="lg"
-            className={cn(
-              "h-14 w-full rounded-2xl px-10 text-xs font-black tracking-[0.1em] uppercase transition-all active:scale-95 sm:w-fit sm:min-w-[360px]",
-              theme === 'light'
-                ? "border-indigo-100 bg-white text-indigo-600 hover:bg-[#F5F5F7] hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)]"
-                : "border-emerald-500/20 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 hover:text-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]"
-            )}
-          >
+          {isPending ? (
+            <Loader2 className="mr-3 h-4 w-4 animate-spin" />
+          ) : (
             <Eye className="mr-3 h-4 w-4" />
-            {isHindi ? 'सभी विषय प्रश्न देखें' : 'View All Subject Questions'}
-            <ExternalLink className="ml-3 h-4 w-4 opacity-50" />
-          </Button>
-        </TransitionLink>
+          )}
+          {isHindi ? 'सभी विषय प्रश्न देखें' : 'View All Subject Questions'}
+          {!isPending && <ExternalLink className="ml-3 h-4 w-4 opacity-50" />}
+        </Button>
       </div>
     </div>
   );
