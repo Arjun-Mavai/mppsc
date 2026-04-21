@@ -57,6 +57,7 @@ export async function POST(request: Request) {
       category: safeCategory,
       role: role || null,
       location: location || null,
+      examType: 'mppsc' as const, // 🔒 Explicitly tag as MPPSC
     });
 
     // 🚀 Notify Admin via Telegram

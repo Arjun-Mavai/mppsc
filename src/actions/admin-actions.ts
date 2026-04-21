@@ -99,7 +99,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
         totalMarks: parsedQuestions.length * 2, // Initial marks
         totalQuestions: parsedQuestions.length,
         durationMinutes: 120,
-        examType: 'mppsc', // 🔒 Strict isolation
+        examType: 'mppsc' as const, // 🔒 Strict isolation
         // MISC type = free quiz → isFreeAccess ON by default
         isFreeAccess: type === 'MISC' ? true : false,
         // Tags — subject tag bhi store karo (filter me kaam aayega)
@@ -296,7 +296,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
 
     const recentUploads = testsData
       .sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0))
-      .slice(0, 5);
+      .slice(0, 15); // Increased from 5 to 15 to show more "latest" tests
     const recentBlogs = blogsData
       .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0))
       .slice(0, 5);
@@ -350,6 +350,7 @@ export async function getPaymentExitStats() {
     const reasons = await db
       .select()
       .from(paymentExitReasons)
+      .where(eq(paymentExitReasons.examType, 'mppsc')) // 🔒 Isolation
       .orderBy(desc(paymentExitReasons.createdAt))
       .limit(50);
 

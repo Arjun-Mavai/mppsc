@@ -5,7 +5,7 @@ import { testFeedback, mppscUsers } from '@/db/schema';
 import { type FeedbackFormType, type FeedbackResponse, feedbackFormSchema } from '@/lib/schemas/feedback';
 import { randomUUID } from 'crypto';
 import { verifyAuth } from '@/lib/auth';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { sendTelegramNotification } from '@/lib/telegram';
 import { getTelegramStatsSummary } from '@/lib/telegram-stats-loader';
 
@@ -70,6 +70,7 @@ export async function submitTestFeedback(params: SubmitFeedbackParams): Promise<
       comments: data.comment || null,
       userName: effectiveName,
       userEmail: effectiveEmail,
+      examType: 'mppsc' as const, // 🔒 Explicitly tag as MPPSC
     };
 
     await db.insert(testFeedback).values(newFeedback);
@@ -113,7 +114,12 @@ export async function hasUserSubmittedFeedback() {
     const existingFeedback = await db
       .select({ id: testFeedback.id })
       .from(testFeedback)
-      .where(eq(testFeedback.userId, authUser.id))
+      .where(
+        and(
+          eq(testFeedback.userId, authUser.id),
+          eq(testFeedback.examType, 'mppsc')
+        )
+      )
       .limit(1);
 
     return existingFeedback.length > 0;

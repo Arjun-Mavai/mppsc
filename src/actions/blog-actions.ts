@@ -103,7 +103,7 @@ export async function uploadBlog(data: any) {
       isFreeAccess: metadata.isPremium === false || metadata.isFreeAccess === true, // Free if not premium
       isLiteAccess: false, // Default: not for lite
       isProAccess: true, // Default: pro users can access
-      examType: 'mppsc', // 🔒 Strict isolation
+      examType: 'mppsc' as const, // 🔒 Strict isolation
       isPublished: true,
       createdAt: new Date(),
       updatedAt: new Date(),

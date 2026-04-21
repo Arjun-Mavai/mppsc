@@ -1,148 +1,3 @@
-// 'use client';
-
-// import React from 'react';
-// import { Button } from '@/components/ui/button';
-// import { Input } from '@/components/ui/input';
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogDescription,
-//   DialogFooter,
-//   DialogHeader,
-//   DialogTitle,
-// } from '@/components/ui/dialog';
-// import { Loader2 } from 'lucide-react';
-
-// interface GuestEntryDialogProps {
-//   open: boolean;
-//   guestName: string;
-//   guestEmail: string;
-//   guestMobile: string;
-//   isSubmitting: boolean;
-//   onNameChange: (value: string) => void;
-//   onEmailChange: (value: string) => void;
-//   onMobileChange: (value: string) => void;
-//   onSubmit: () => void;
-//   onExit: () => void;
-// }
-
-// export function GuestEntryDialog({
-//   open,
-//   guestName,
-//   guestEmail,
-//   guestMobile,
-//   isSubmitting,
-//   onNameChange,
-//   onEmailChange,
-//   onMobileChange,
-//   onSubmit,
-//   onExit,
-// }: GuestEntryDialogProps) {
-//   return (
-//     <Dialog open={open} onOpenChange={() => {}}>
-//       <DialogContent
-//         showCloseButton={false}
-//         className="sm:max-w-md"
-//         onInteractOutside={(e) => e.preventDefault()}
-//       >
-//         <DialogHeader className="relative">
-//           <DialogTitle className="text-center text-2xl font-black text-slate-900">
-//             Welcome to MPPSC 2026! 🚀
-//           </DialogTitle>
-//           <button
-//             onClick={onExit}
-//             className="absolute -top-3 -right-3 z-10 rounded-full bg-slate-100 p-2.5 text-slate-500 shadow-sm transition-colors hover:bg-slate-200 hover:text-slate-700 active:scale-90"
-//           >
-//             <span className="sr-only">Close</span>
-//             <svg
-//               xmlns="http://www.w3.org/2000/svg"
-//               width="24"
-//               height="24"
-//               viewBox="0 0 24 24"
-//               fill="none"
-//               stroke="currentColor"
-//               strokeWidth="2.5"
-//               strokeLinecap="round"
-//               strokeLinejoin="round"
-//               className="h-5 w-5"
-//             >
-//               <path d="M18 6 6 18" />
-//               <path d="m6 6 12 12" />
-//             </svg>
-//           </button>
-//           <DialogDescription className="px-4 pt-3 text-center text-slate-600">
-//             <span className="block leading-relaxed text-balance">
-//               We value your time and just need your name to get started!
-//             </span>
-//             <span className="mt-2 block text-xs font-medium text-balance text-slate-400">
-//               Email and mobile are optional but help us serve you better.
-//             </span>
-//           </DialogDescription>
-//         </DialogHeader>
-
-//         <div className="space-y-4 py-4">
-//           <div className="space-y-2">
-//             <label className="flex items-center gap-1 text-sm font-bold text-slate-900">
-//               Name <span className="text-red-500">*</span>
-//             </label>
-//             <Input
-//               placeholder="Enter your name"
-//               value={guestName}
-//               onChange={(e) => onNameChange(e.target.value)}
-//               className="h-12 border-slate-300 bg-white text-lg font-medium shadow-sm transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-//               autoFocus
-//             />
-//           </div>
-
-//           <div className="grid grid-cols-2 gap-4">
-//             <div className="space-y-2">
-//               <label className="text-xs font-medium tracking-wider text-slate-500 uppercase">
-//                 Email
-//               </label>
-//               <Input
-//                 type="email"
-//                 placeholder="Optional"
-//                 value={guestEmail}
-//                 onChange={(e) => onEmailChange(e.target.value)}
-//                 className="h-10 border-slate-200 bg-slate-50 text-sm text-slate-600 placeholder:text-slate-400 focus:bg-white focus:ring-1 focus:ring-slate-300"
-//               />
-//             </div>
-
-//             <div className="space-y-2">
-//               <label className="text-xs font-medium tracking-wider text-slate-500 uppercase">
-//                 Mobile
-//               </label>
-//               <Input
-//                 type="tel"
-//                 placeholder="Optional"
-//                 value={guestMobile}
-//                 onChange={(e) => onMobileChange(e.target.value)}
-//                 className="h-10 border-slate-200 bg-slate-50 text-sm text-slate-600 placeholder:text-slate-400 focus:bg-white focus:ring-1 focus:ring-slate-300"
-//               />
-//             </div>
-//           </div>
-//         </div>
-
-//         <DialogFooter>
-//           <Button
-//             onClick={onSubmit}
-//             disabled={!guestName.trim() || isSubmitting}
-//             className="h-12 w-full rounded-xl bg-slate-900 font-bold text-white shadow-lg shadow-slate-900/20 transition-all hover:bg-slate-800 hover:shadow-xl hover:shadow-slate-900/30 active:scale-[0.98]"
-//           >
-//             {isSubmitting ? (
-//               <>
-//                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Starting...
-//               </>
-//             ) : (
-//               'Start Test 🚀'
-//             )}
-//           </Button>
-//         </DialogFooter>
-//       </DialogContent>
-//     </Dialog>
-//   );
-// }
-
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
@@ -163,6 +18,7 @@ interface GuestEntryDialogProps {
   guestEmail: string;
   guestMobile: string;
   isSubmitting: boolean;
+  isVerifying?: boolean; // Added to fix TS error
   onNameChange: (value: string) => void;
   onEmailChange: (value: string) => void;
   onMobileChange: (value: string) => void;
@@ -176,6 +32,7 @@ export function GuestEntryDialog({
   guestEmail,
   guestMobile,
   isSubmitting,
+  isVerifying = false, // Default to false
   onNameChange,
   onEmailChange,
   onMobileChange,
@@ -197,9 +54,46 @@ export function GuestEntryDialog({
     return () => window.visualViewport?.removeEventListener('resize', handleResize);
   }, [open]);
 
-  const isNameValid = guestName.trim().length > 0;
-  const isMobileValid = guestMobile.trim().length >= 10; // At least 10 digits
-  const isFormValid = isNameValid && isMobileValid;
+  const isNameValid = useMemo(() => {
+    const trimmed = guestName.trim();
+    // Allow any characters but require at least 2 for basic name validity
+    // (Relaxed from a strict regex to support Hindi/other scripts)
+    return trimmed.length >= 2;
+  }, [guestName]);
+
+  const isMobileValid = useMemo(() => {
+    const trimmed = guestMobile.trim();
+    // Indian standards: 10 digits, starts with 6-9
+    if (!/^[6-9]\d{9}$/.test(trimmed)) return false;
+
+    // Fake number detection: Identical digits (e.g. 9999999999)
+    if (/^(\d)\1{9}$/.test(trimmed)) return false;
+
+    // Fake number detection: Repeating patterns (e.g. 6565656565, 1212121212)
+    if (/^(\d{2})\1{4}$/.test(trimmed)) return false;
+
+    // Fake number detection: Triple repeating patterns (e.g. 1231231231)
+    if (/^(\d{3})\1{2}\d$/.test(trimmed)) return false;
+
+    // Fake number detection: Sequential digits (e.g. 1234567890, 0987654321)
+    const sequential = '012345678909876543210123456789';
+    if (sequential.includes(trimmed)) return false;
+
+    return true;
+  }, [guestMobile]);
+
+  const isEmailValid = useMemo(() => {
+    if (!guestEmail.trim()) return true; // Optional
+    return guestEmail.toLowerCase().endsWith('@gmail.com') && guestEmail.length > 10;
+  }, [guestEmail]);
+
+  const isFormValid = isNameValid && isMobileValid && isEmailValid;
+  const isBusy = isSubmitting || isVerifying;
+
+  const handleInternalSubmit = async () => {
+    if (!isFormValid || isBusy) return;
+    onSubmit();
+  };
 
   // ✅ Memoize style calculation for performance
   const dialogStyle = useMemo(() => ({
@@ -218,38 +112,30 @@ export function GuestEntryDialog({
           style={dialogStyle}
         >
           {/* Header */}
-          <DialogHeader className="relative overflow-hidden border-b border-slate-100 bg-gradient-to-b from-slate-50/80 to-white px-6 py-6 sm:px-6">
-            {/* Background Decor */}
-            <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-slate-200/40 blur-2xl" />
-            <div className="absolute -left-4 top-10 h-16 w-16 rounded-full bg-indigo-100/30 blur-xl" />
-
+          <DialogHeader className="relative border-b border-slate-100 bg-gradient-to-b from-slate-50 to-white px-6 py-8 sm:px-6">
             <button
               onClick={onExit}
-              className="absolute right-4 top-4 z-10 rounded-full bg-white/80 p-2 text-slate-500 shadow-sm backdrop-blur-md transition-all hover:bg-slate-100 hover:text-slate-800 active:scale-90"
+              className="absolute -top-2 -right-2 z-10 rounded-full bg-slate-100 p-2.5 text-slate-500 shadow-sm transition-all hover:bg-slate-200 hover:text-slate-800 active:scale-90 sm:top-2 sm:right-2"
             >
-              <X className="h-4 w-4 stroke-[2.5]" />
+              <X className="h-5 w-5 stroke-[2.5]" />
               <span className="sr-only">Close</span>
             </button>
 
-            <div className="relative z-10 flex flex-col gap-2">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white shadow-md shadow-slate-900/20">
-                  <Target className="h-5 w-5" />
-                </div>
-                <DialogTitle className="pr-4 text-left text-xl font-black text-slate-900 sm:text-2xl">
-                  Welcome to MPPSC 2026!
-                </DialogTitle>
-              </div>
-              <DialogDescription className="text-left text-sm font-medium leading-relaxed text-slate-500">
+            <div className="flex flex-col items-center justify-center gap-3 text-center">
+              <DialogTitle className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+                Welcome to MPPSC 2026! 🚀
+              </DialogTitle>
+              <DialogDescription className="max-w-[280px] text-sm font-medium leading-relaxed text-slate-500 sm:max-w-none">
                 Name and mobile help us show your detailed results.
               </DialogDescription>
             </div>
           </DialogHeader>
 
           {/* Form Content */}
-          <div className="flex-1 space-y-3 px-6 py-5 sm:px-6">
-            {/* Name Field - Primary Focus */}
-            <div className="space-y-2.5">
+          <div className="flex-1 space-y-4 px-6 py-5 sm:px-6">
+
+            {/* Name Field - Always Visible */}
+            <div className="space-y-2">
               <label className="flex items-center gap-1 text-sm font-semibold text-slate-900">
                 Full Name <span className="text-red-500">*</span>
               </label>
@@ -257,43 +143,72 @@ export function GuestEntryDialog({
                 placeholder="Enter your name"
                 value={guestName}
                 onChange={(e) => onNameChange(e.target.value)}
-                disabled={isSubmitting}
-                className="h-11 border-slate-200 bg-white text-base font-medium shadow-sm transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                disabled={isSubmitting || isVerifying}
+                className={`h-11 border-slate-200 bg-white text-base font-medium shadow-sm transition-all focus:ring-2 ${
+                  guestName.length > 0 && !isNameValid 
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-100' 
+                    : 'focus:border-indigo-500 focus:ring-indigo-200'
+                }`}
                 autoFocus
                 autoComplete="name"
               />
+              {guestName.length > 0 && !isNameValid && (
+                <p className="animate-in fade-in-0 slide-in-from-top-1 text-[11px] font-bold text-red-500">
+                  Please enter a valid name (min 2 letters).
+                </p>
+              )}
             </div>
 
-            {/* Optional Fields - Show when name is valid */}
+            {/* Optional Fields - Appears only after valid name */}
             {isNameValid && (
-              <div className="animate-in fade-in-50 space-y-3 duration-200">
-                <div className="space-y-3">
+              <div className="animate-in fade-in-50 slide-in-from-top-2 space-y-4 duration-300">
+                <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="flex items-center gap-1 text-sm font-semibold text-slate-900">
                       Mobile Number <span className="text-red-500">*</span>
                     </label>
                     <Input
                       type="tel"
-                      placeholder="Enter your mobile number"
+                      placeholder="10-digit mobile number"
                       value={guestMobile}
-                      onChange={(e) => onMobileChange(e.target.value)}
-                      disabled={isSubmitting}
-                      className="h-11 border-slate-200 bg-white text-base font-medium shadow-sm transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                      onChange={(e) => onMobileChange(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      disabled={isBusy}
+                      className={`h-11 border-slate-200 bg-white text-base font-medium shadow-sm transition-all focus:ring-2 ${
+                        guestMobile.length > 0 && !isMobileValid 
+                          ? 'border-red-300 focus:border-red-500 focus:ring-red-100' 
+                          : 'focus:border-indigo-500 focus:ring-indigo-200'
+                      }`}
                       autoComplete="tel"
                     />
+                    {guestMobile.length > 0 && !isMobileValid && (
+                      <p className="animate-in fade-in-0 slide-in-from-top-1 text-[11px] font-bold text-red-500">
+                        {guestMobile.length < 10 
+                          ? 'Enter a 10-digit mobile number.' 
+                          : 'Please enter a valid, non-fake mobile number.'}
+                      </p>
+                    )}
                   </div>
                   
                   <div className="space-y-2">
-                    <label className="text-xs font-semibold tracking-wide text-slate-700 uppercase">
-                      Email (Optional)
+                    <label className="flex items-center justify-between text-[11px] font-bold tracking-wide text-slate-500 uppercase">
+                      <span>Gmail (Optional)</span>
+                      {guestEmail.length > 0 && (
+                        <span className={isEmailValid ? 'text-emerald-600' : 'text-red-500'}>
+                          {isEmailValid ? '✓ Valid' : 'Must end with @gmail.com'}
+                        </span>
+                      )}
                     </label>
                     <Input
                       type="email"
-                      placeholder="Optional"
+                      placeholder="yourname@gmail.com"
                       value={guestEmail}
                       onChange={(e) => onEmailChange(e.target.value)}
-                      disabled={isSubmitting}
-                      className="h-10 border-slate-200 bg-slate-50 text-sm transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-200"
+                      disabled={isBusy}
+                      className={`h-11 border-slate-200 transition-all focus:ring-2 ${
+                        guestEmail.length > 0 && !isEmailValid 
+                          ? 'border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-red-100' 
+                          : 'bg-slate-50 focus:border-indigo-500 focus:bg-white focus:ring-indigo-200'
+                      }`}
                       autoComplete="email"
                     />
                   </div>
@@ -302,17 +217,17 @@ export function GuestEntryDialog({
             )}
           </div>
 
-          {/* Sticky Action Button - Always Visible Above Keyboard */}
-          {isFormValid && (
-            <div className="animate-in slide-in-from-bottom-3 border-t border-slate-100 bg-white px-6 py-4 duration-200 sm:px-6">
+          {/* Sticky Action Button - Always Visible Above Keyboard when fields shown */}
+          {isNameValid && (
+            <div className="animate-in slide-in-from-bottom-2 border-t border-slate-100 bg-slate-50/50 px-6 py-4 sm:px-6">
               <Button
-                onClick={onSubmit}
-                disabled={!isFormValid || isSubmitting}
+                onClick={handleInternalSubmit}
+                disabled={!isFormValid || isBusy}
                 className="h-12 w-full rounded-xl bg-slate-900 text-lg font-bold text-white shadow-lg shadow-slate-900/20 transition-all hover:bg-slate-800 hover:shadow-xl hover:shadow-slate-900/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isSubmitting ? (
+                {isBusy ? (
                   <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Starting...
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" /> {isVerifying ? 'Verifying...' : 'Starting...'}
                   </>
                 ) : (
                   'Start Test 🚀'
@@ -325,3 +240,4 @@ export function GuestEntryDialog({
     </Dialog>
   );
 }
+

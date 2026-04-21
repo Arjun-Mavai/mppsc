@@ -4,9 +4,8 @@ import { getUserTier } from '@/lib/access-control';
 import {
   getUnitDistributionStats,
   getRepeatedQuestions,
-  getMostRepeatedTopics,
-  getSubjectDistributionStats,
   getOverallWeightageSubjectData,
+  type RepeatedQuestion,
 } from '@/actions/pyq-analytics';
 import { getSubjectWisePYQStats } from '@/features/tests/actions/pyq-analytics';
 import PYQIntelligenceClient from './PYQIntelligenceClient';
@@ -24,21 +23,9 @@ export const metadata: Metadata = {
 export const revalidate = 21600;
 
 // ── Cached analytics functions (unique stable keys) ─────────────────────────
-// Note: getRepeatedQuestions is already wrapped with unstable_cache internally,
-// but we use a page-level wrapper for an extra stable route-scoped layer.
-const getCachedSubjectStats = unstable_cache(
-  getSubjectDistributionStats,
-  ['intelligence-subject-stats-v6'],
-  { revalidate: 21600 }
-);
 const getCachedUnitStats = unstable_cache(
   getUnitDistributionStats,
   ['intelligence-unit-stats-v6'],
-  { revalidate: 21600 }
-);
-const getCachedTopicStats = unstable_cache(
-  getMostRepeatedTopics,
-  ['intelligence-topics-v6'],
   { revalidate: 21600 }
 );
 const getCachedSubjectQuestionsData = unstable_cache(
@@ -48,23 +35,30 @@ const getCachedSubjectQuestionsData = unstable_cache(
 );
 
 async function IntelligenceDataFetcher() {
-  // 🚀 All 5 heavy queries run in parallel — Promise.all for max speed
-  const [subjectStats, unitStats, repeatedQuestions, topicStats, simpleSubjectStats, subjectQuestionsData] =
+  // 🚀 Optimize: Only run queries that are actually rendered in the UI
+  const [unitStats, repeatedQuestions, simpleSubjectStats, subjectQuestionsData] =
     await Promise.all([
-      getCachedSubjectStats(),
       getCachedUnitStats(),
       getRepeatedQuestions(),          // Already has its own unstable_cache internally
-      getCachedTopicStats(),
       getSubjectWisePYQStats(),        // Already has its own unstable_cache internally
       getCachedSubjectQuestionsData(),
     ]);
 
+  // Strip down raw repeated questions because PaperAnalysis only needs the count
+  const minimalRepeatedQuestions: RepeatedQuestion[] = repeatedQuestions.map(rq => ({
+    questionId: rq.questionId,
+    count: rq.count,
+    text: '', // Omitted to save RSC payload size
+    occurrences: [],
+    topics: []
+  }));
+
   return (
     <PYQIntelligenceClient
-      subjectStats={subjectStats}
+      subjectStats={[]}
       stats={unitStats}
-      repeatedQuestions={repeatedQuestions}
-      topicStats={topicStats}
+      repeatedQuestions={minimalRepeatedQuestions}
+      topicStats={{}}
       simpleSubjectStats={simpleSubjectStats}
       subjectQuestionsData={subjectQuestionsData}
     />

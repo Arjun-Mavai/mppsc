@@ -2,9 +2,10 @@
 
 import { db } from '@/db';
 import { questions, tests } from '@/db/schema';
-import { and, eq, or } from 'drizzle-orm';
+import { and, eq, or, inArray } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
+import { getCanonicalTestIds } from '@/lib/pyq-constants';
 
 // ------------------------------------------------------------------
 // 📊 Aggregation Action
@@ -12,30 +13,20 @@ import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
 // ------------------------------------------------------------------
 export const getSubjectWisePYQStats = unstable_cache(
   async () => {
-    // Fetch all questions from PYQ tests
-    // Joined fetch using Drizzle's query builder for efficiency
-    // But since we need to normalize heavily, raw SQL or simple select + JS processing is easier
-    // and safer for complex string matching.
+    // 🚀 RESTRICTION: Only use canonical 2020-2025 PYQ tests for analysis
+    // This ensures exactly 600 total questions are tracked (6 tests * 100 Qs).
+    const pyqTestIds = getCanonicalTestIds();
 
-    // Step 1: Get all PYQ Test IDs
-    const pyqTests = await db
-      .select({ id: tests.id, title: tests.title })
-      .from(tests)
-      .where(and(eq(tests.type, 'PYQ'), eq(tests.isHidden, false)));
-
-    if (pyqTests.length === 0) return {};
-
-    const pyqTestIds = pyqTests.map((t) => t.id);
+    if (pyqTestIds.length === 0) return {};
 
     // Step 2: Get all questions for these tests
-    // Query chunks if too many, but for < 10k questions, one query is fine.
     const allQuestions = await db
       .select({
         id: questions.id,
         subject: questions.subject,
       })
       .from(questions)
-      .where(or(...pyqTestIds.map((id) => eq(questions.testId, id))));
+      .where(inArray(questions.testId, pyqTestIds));
 
     // Step 3: Aggregate
     const stats: Record<string, number> = {};

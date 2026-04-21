@@ -95,7 +95,7 @@ export async function uploadTopicTestQuestions(data: BulkUploadPayload, adminSec
           totalQuestions: topic.questions.length,
           totalMarks: topic.questions.reduce((sum, q) => sum + q.marks, 0),
           isPro: false,
-          examType: 'mppsc', // 🔒 Strict isolation
+          examType: 'mppsc' as const, // 🔒 Strict isolation
           createdAt: new Date(),
           updatedAt: new Date(),
         });
