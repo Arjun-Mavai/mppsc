@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { eq, sql, desc } from 'drizzle-orm';
 import { AdminDashboardResponse } from '@/types/admin';
 import { logger } from '@/lib/logger';
+import { parseLenientJSON } from '@/lib/json-utils';
 import { requireAdmin } from '@/lib/auth-admin';
 
 // Helper to fetch tests for the dropdown
@@ -65,9 +66,10 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
 
     let parsedQuestions;
     try {
-      parsedQuestions = JSON.parse(jsonInput);
+      parsedQuestions = parseLenientJSON(jsonInput);
     } catch (e) {
-      return { success: false, message: 'Invalid JSON format' };
+      const msg = e instanceof Error ? e.message : 'Invalid JSON format';
+      return { success: false, message: `Invalid JSON: ${msg}` };
     }
 
     if (!Array.isArray(parsedQuestions)) {
@@ -127,95 +129,101 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
       startOrder = maxOrderResult[0]?.maxOrder || 0;
     }
 
+    const explanationFormat = formData.get('explanationFormat') as 'expert' | 'classic';
+
     // 2. Format Questions
-    // 2. Validate & Format Questions
-    for (const q of parsedQuestions) {
-      if (
-        !q.questionText ||
-        typeof q.questionText !== 'string' ||
-        q.questionText.trim().length === 0
-      ) {
-        return {
-          success: false,
-          message:
-            "Validation Failed: One or more questions are missing 'questionText'. Please check JSON keys.",
-        };
+    const formattedQuestions = parsedQuestions.map((q: any, idx: number) => {
+      // Validation
+      if (!q.questionText) {
+         throw new Error(`Question ${idx + 1} is missing "questionText"`);
+      }
+
+      const isExpert = explanationFormat === 'expert';
+      
+      return {
+        id: nanoid(),
+        testId: testId,
+        questionText: q.questionText,
+        questionTextEn: q.questionTextEn || null,
+        options: JSON.stringify(q.options),
+        correctAnswer: q.correctAnswer,
+        // Branching logic for explanation vs extendedData
+        explanation: isExpert ? (q.explanation_hi || q.explanation_en || null) : q.explanation,
+        explanationEn: q.explanationEn || (isExpert ? q.explanation_en : null),
+        extendedData: isExpert ? q.explanation : null,
+        marks: q.marks || 2,
+        negativeMarks: q.negativeMarks || 0,
+        idealTime: q.idealTime || 60,
+        order: startOrder + idx + 1,
+        subject: q.subject || 'General',
+        type: q.type || 'standard',
+        matchPairs: q.matchPairs || null,
+        examType: 'mppsc' as const,
+      };
+    });
+
+    // Upsert logic: For each question, check if it exists in this test.
+    // If it exists, update it. If not, add to insert list.
+    const questionsToUpdate = [];
+    const questionsToInsertFinal = [];
+    let duplicatesCount = 0;
+
+    const existingQsRows = await db
+      .select({ id: questions.id, text: questions.questionText })
+      .from(questions)
+      .where(eq(questions.testId, testId || ''));
+    
+    const existingMap = new Map(existingQsRows.map((q) => [q.text?.trim().toLowerCase(), q.id]));
+
+    for (const qData of formattedQuestions) {
+      const existingId = existingMap.get(qData.questionText.trim().toLowerCase());
+      if (existingId) {
+        questionsToUpdate.push({ id: existingId, data: qData });
+        duplicatesCount++;
+      } else {
+        questionsToInsertFinal.push(qData);
       }
     }
 
-    const questionsToInsert = parsedQuestions.map((q: any, idx: number) => ({
-      id: nanoid(),
-      testId: testId,
-      questionText: q.questionText, // No fallback "Missing Text"
-      questionTextEn: q.questionTextEn || null,
-      options: JSON.stringify(q.options), // Store as JSON string
-      correctAnswer: q.correctAnswer,
-      explanation: q.explanation,
-      explanationEn: q.explanationEn || null,
-      marks: q.marks || 2,
-      negativeMarks: q.negativeMarks || 0,
-      idealTime: q.idealTime || 60,
-      order: startOrder + idx + 1, // Continue from last order
-      subject: q.subject || 'General',
-      type: q.type || 'standard',
-      matchPairs: q.matchPairs || null,
-    }));
-
-    // Filter out duplicates (check against existing questions in this test)
-    let duplicatesCount = 0;
-    // ... (Duplicate logic remains same, skipping for brevity in replacement but preserving context)
-    if (mode === 'existing') {
-      const existingQs = await db
-        .select({ text: questions.questionText })
-        .from(questions)
-        .where(eq(questions.testId, testId || ''));
-      const existingSet = new Set(existingQs.map((q) => q.text?.trim().toLowerCase()));
-
-      const uniqueQuestions = questionsToInsert.filter((newQ: any) => {
-        const isDup = existingSet.has(newQ.questionText.trim().toLowerCase());
-        if (isDup) duplicatesCount++;
-        return !isDup;
-      });
-
-      questionsToInsert.length = 0;
-      questionsToInsert.push(...uniqueQuestions);
+    // 3. Process Updates
+    for (const update of questionsToUpdate) {
+      const { id, data } = update;
+      // Remove ID and testId for update - we use the existing ones
+      const { id: _, testId: __, ...updateData } = data;
+      await db.update(questions).set(updateData).where(eq(questions.id, id));
     }
 
-    // 3. Bulk Insert Questions
+    // 4. Bulk Insert New Questions
     let finalQuestionCount = 0;
 
-    if (questionsToInsert.length > 0) {
-      await db.insert(questions).values(questionsToInsert);
+    if (questionsToInsertFinal.length > 0) {
+      await db.insert(questions).values(questionsToInsertFinal);
+    }
+    
+    // Update count based on insert/update result
+    // (Compatibility note: logic below uses questionsToInsertFinal directly)
 
-      // Update Test Meta (Marks + Count + Timestamp)
-      const newMarksToAdd = questionsToInsert.reduce((sum, q) => sum + (q.marks || 0), 0);
+    // Update Test Meta (Marks + Count + Timestamp)
+    if (mode === 'existing' && testId) {
+      const newMarksToAdd = questionsToInsertFinal.reduce((sum, q) => sum + (q.marks || 0), 0);
 
-      // We need current total questions to add to it, or just set it based on COUNT(*)
-      // Setting based on COUNT(*) is safer for data consistency.
-      if (testId) {
-        const countResult = await db
-          .select({ count: sql<number>`COUNT(*)` })
-          .from(questions)
-          .where(eq(questions.testId, testId));
-        const totalQ = countResult[0]?.count || 0;
-        finalQuestionCount = totalQ;
+      const countResult = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(questions)
+        .where(eq(questions.testId, testId));
+      const totalQ = countResult[0]?.count || 0;
+      finalQuestionCount = totalQ;
 
-        await db
-          .update(tests)
-          .set({
-            updatedAt: new Date(),
-            totalMarks: sql`${tests.totalMarks} + ${newMarksToAdd}`,
-            totalQuestions: totalQ,
-          })
-          .where(eq(tests.id, testId));
-      }
-    } else if (mode === 'new') {
-      // If new test but 0 questions inserted (unlikely unless empty JSON), update count
-      finalQuestionCount = parsedQuestions.length;
       await db
         .update(tests)
-        .set({ totalQuestions: finalQuestionCount })
-        .where(eq(tests.id, testId || ''));
+        .set({
+          updatedAt: new Date(),
+          totalMarks: sql`${tests.totalMarks} + ${newMarksToAdd}`,
+          totalQuestions: totalQ,
+        })
+        .where(eq(tests.id, testId));
+    } else if (mode === 'new') {
+      finalQuestionCount = parsedQuestions.length;
     }
 
     revalidatePath('/tests');

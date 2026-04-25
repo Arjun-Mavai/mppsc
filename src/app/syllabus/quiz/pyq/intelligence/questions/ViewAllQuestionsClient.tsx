@@ -2,15 +2,14 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft, ChevronDown, ChevronUp, Filter, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Filter, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { PremiumExplanation } from '@/features/tests/components/PremiumExplanation';
+import { StructuredExplanation } from '@/components/StructuredExplanation';
 import { RenderTableQuestion } from '@/features/tests/utils/questionFormatter';
 import { YearBadge } from '../components/shared/UnitBadge';
 import { formatUnitTitle, getUnitColor } from '../components/shared/constants';
@@ -22,11 +21,13 @@ interface QuestionData {
   year?: number;
   qNo?: number;
   type?: string;
-  options?: any[];
-  matchPairs?: any[];
+  options?: unknown[];
+  matchPairs?: unknown[];
   correctAnswer?: number;
   explanation?: string | null;
   explanationEn?: string | null;
+  explanation_hi?: string | null;
+  extendedData?: string | Record<string, unknown> | null;
   subject?: string | null;
 }
 
@@ -77,8 +78,11 @@ export default function ViewAllQuestionsClient({
   // Auto-expand all questions in PDF mode
   useEffect(() => {
     if (isPdfMode && filteredQuestions.length > 0) {
-      setExpandedIds(new Set(filteredQuestions.map((q) => q.id)));
-      setShowAllExpanded(true);
+      const t = setTimeout(() => {
+        setExpandedIds(new Set(filteredQuestions.map((q) => q.id)));
+        setShowAllExpanded(true);
+      }, 0);
+      return () => clearTimeout(t);
     }
   }, [isPdfMode, filteredQuestions]);
 
@@ -120,7 +124,7 @@ export default function ViewAllQuestionsClient({
   }, [source, topicTitle, year, unitId, unitTitle, subject]);
 
   return (
-    <div className="min-h-screen bg-[#080510] pb-24 text-slate-200 selection:bg-violet-500/30">
+    <div className="min-h-screen bg-slate-950 pb-24 text-slate-200 selection:bg-violet-500/30">
       {/* Dynamic Background */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] animate-pulse rounded-full bg-violet-600/10 blur-[120px]" />
@@ -132,7 +136,7 @@ export default function ViewAllQuestionsClient({
       </div>
 
       {/* Premium Sticky Header */}
-      <div className="sticky top-0 z-50 border-b border-white/[0.03] bg-[#080510]/70 backdrop-blur-2xl">
+      <div className="sticky top-0 z-50 border-b border-white/[0.03] bg-slate-950/70 backdrop-blur-2xl">
         <div className="mx-auto max-w-4xl px-4 sm:px-6">
           <div className="flex h-16 items-center gap-4">
             <Button
@@ -173,7 +177,7 @@ export default function ViewAllQuestionsClient({
       </div>
 
       {/* Modernized Controls */}
-      <div className="sticky top-16 z-40 border-b border-white/[0.03] bg-[#080510]/60 backdrop-blur-xl">
+      <div className="sticky top-16 z-40 border-b border-white/[0.03] bg-slate-950/60 backdrop-blur-xl">
         <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             {/* Filter Group - Horizontal Pills */}
@@ -280,7 +284,7 @@ export default function ViewAllQuestionsClient({
               <Card
                 className={cn(
                   'relative z-10 overflow-hidden rounded-[2rem] border-white/[0.03] bg-slate-900/40 shadow-2xl backdrop-blur-sm transition-all duration-300',
-                  isExpanded ? 'bg-[#0b081a]/80 ring-1 ring-violet-500/20' : 'hover:bg-slate-900/60'
+                  isExpanded ? 'bg-slate-900/80 ring-1 ring-violet-500/20' : 'hover:bg-slate-900/60'
                 )}
               >
                 {/* Question Header Area */}
@@ -297,7 +301,7 @@ export default function ViewAllQuestionsClient({
                   <div className="min-w-0 flex-1 pt-1">
                     <div
                       className={cn(
-                        'text-[15px] leading-[1.6] font-medium tracking-tight text-slate-100 sm:text-[17px]',
+                        'text-[15px] leading-[1.6] font-bold tracking-tight text-white sm:text-[17px]',
                         !isExpanded && 'line-clamp-2'
                       )}
                       dangerouslySetInnerHTML={{
@@ -376,15 +380,20 @@ export default function ViewAllQuestionsClient({
                         <div className="grid gap-4 sm:grid-cols-2">
                           {q.options &&
                             q.options.slice(0, 4).map((opt, optIdx) => {
-                              const parsedOpt =
-                                typeof opt === 'object' && opt !== null ? opt : { text: opt };
+                              const parsedOpt: {
+                                text?: unknown;
+                                text_en?: unknown;
+                                textEn?: unknown;
+                              } =
+                                typeof opt === 'object' && opt !== null
+                                  ? (opt as Record<string, unknown>)
+                                  : { text: opt };
                               const isCorrect = Number(q.correctAnswer) === optIdx;
                               const optText = isHindi
-                                ? parsedOpt.text || parsedOpt
-                                : parsedOpt.text_en ||
-                                  parsedOpt.textEn ||
-                                  parsedOpt.text ||
-                                  parsedOpt;
+                                ? (parsedOpt.text ?? opt)
+                                : (parsedOpt.text_en ?? parsedOpt.textEn ?? parsedOpt.text ?? opt);
+                              
+                              const optHtml = typeof optText === 'string' ? optText : String(optText ?? '');
 
                               return (
                                 <div
@@ -413,7 +422,7 @@ export default function ViewAllQuestionsClient({
                                       'flex-1 text-sm leading-tight font-medium',
                                       isCorrect ? 'text-emerald-100' : 'text-slate-300'
                                     )}
-                                    dangerouslySetInnerHTML={{ __html: optText }}
+                                    dangerouslySetInnerHTML={{ __html: optHtml }}
                                   />
 
                                   {isCorrect && (
@@ -428,16 +437,18 @@ export default function ViewAllQuestionsClient({
 
                         {/* Premium Insights Section */}
                         <div className="space-y-4 pt-4">
-                          {(q.explanation || q.explanationEn) && (
-                            <PremiumExplanation
-                              explanation={
+                          {(q.explanation || q.explanationEn || q.extendedData) && (
+                            <StructuredExplanation
+                              extendedData={q.extendedData}
+                              plainExplanation={
                                 isHindi
                                   ? q.explanation || ''
                                   : q.explanationEn || q.explanation || ''
                               }
-                              darkMode={true}
-                              compact={false}
+                              explanationEn={q.explanationEn}
+                              explanationHi={q.explanation_hi || q.explanation}
                               language={isHindi ? 'hi' : 'en'}
+                              darkMode={true}
                             />
                           )}
 
