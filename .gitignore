@@ -61,6 +61,7 @@ local*.db
 docs/
 *.md
 !README.md
+!public/prompts/**/*.md
 
 # Sentry Config File
 .env.sentry-build-plugin
