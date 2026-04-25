@@ -17,6 +17,7 @@ import {
 import { parseExtendedData } from '@/lib/explanation-parser';
 import { PremiumExplanation } from '@/features/tests/components/PremiumExplanation';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface StructuredExplanationProps {
   extendedData?: string | object | null;
@@ -46,7 +47,12 @@ export function StructuredExplanation({
 
   const renderClassic = () => (
     plainExplanation || explanationEn || explanationHi ? (
-      <div className="mt-4 border-t border-slate-200 pt-4 animate-in fade-in duration-300">
+      <div
+        className={cn(
+          'mt-4 border-t pt-4 animate-in fade-in duration-300',
+          darkMode ? 'border-white/10' : 'border-slate-200',
+        )}
+      >
         <PremiumExplanation 
             explanation={plainExplanation || ''} 
             explanationEn={explanationEn} 

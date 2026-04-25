@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { questions, tests, syllabusTopics } from '@/db/schema';
-import { eq, isNull, and, sql } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { parseLenientJSON, minimalClean } from '@/lib/json-utils';
 
@@ -90,14 +90,20 @@ export async function processManualGeminiJSON(jsonString: string) {
     for (const upgraded of upgradedQuestions) {
       if (!upgraded.questionId || !upgraded.explanation) continue;
 
+      const updated = await db
+        .update(questions)
+        .set({ extendedData: upgraded.explanation })
+        .where(
+          and(eq(questions.id, upgraded.questionId), eq(questions.examType, 'mppsc')),
+        )
+        .returning({ id: questions.id });
+
+      if (updated.length === 0) continue;
+
       if (!firstPreview) {
         firstPreview = upgraded.explanation;
       }
 
-      await db.update(questions)
-        .set({ extendedData: upgraded.explanation })
-        .where(eq(questions.id, upgraded.questionId));
-        
       successCount++;
     }
 

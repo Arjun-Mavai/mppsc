@@ -116,6 +116,9 @@ export function parseLenientJSON<T = unknown>(raw: string): T {
   if (raw == null || typeof raw !== 'string') {
     throw new SyntaxError('JSON input is empty.');
   }
+  if (raw.trim().length === 0) {
+    throw new SyntaxError('JSON input is empty.');
+  }
 
   let lastError = 'Unknown parse error';
   const tried = new Set<string>();
@@ -166,7 +169,11 @@ export function parseLenientJSON<T = unknown>(raw: string): T {
     if (v !== null) return v;
   }
 
-  throw new SyntaxError(lastError);
+  throw new SyntaxError(
+    lastError === 'Unknown parse error'
+      ? 'Could not parse JSON after repair attempts.'
+      : lastError,
+  );
 }
 
 /** Canonical JSON string for FormData / APIs after lenient parse */
