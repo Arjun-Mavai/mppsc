@@ -1,10 +1,9 @@
 'use server';
 
 import { db } from '@/db';
-import { intelligenceFeedback, guests } from '@/db/schema';
+import { intelligenceFeedback } from '@/db/schema';
 import { logger } from '@/lib/logger';
-import { sendTelegramNotification } from '@/lib/telegram';
-import { eq } from 'drizzle-orm';
+import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
 import { randomUUID } from 'crypto';
 
 import { assertAdmin } from '@/lib/auth';
@@ -79,7 +78,8 @@ export async function submitIntelligenceFeedback(data: IntelligenceFeedbackData)
     // Build Display Name & Details
     let studentInfo = '';
     if (userName) {
-      studentInfo = `<b>Name:</b> ${userName}\n` + 
+      const escapedName = escapeHTML(userName);
+      studentInfo = `<b>Name:</b> ${escapedName}\n` + 
                    (finalMobile ? `<b>Mobile:</b> <code>${finalMobile}</code>\n` : '') +
                    (userEmail ? `<b>Email:</b> ${userEmail}` : '');
     } else {
@@ -90,7 +90,7 @@ export async function submitIntelligenceFeedback(data: IntelligenceFeedbackData)
           where: (g, { eq: eqOp }) => eqOp(g.id, guestId!),
           columns: { name: true }
         });
-        if (guest?.name) displayName = `${guest.name} (${finalMobile || 'No Mobile'})`;
+        if (guest?.name) displayName = `${escapeHTML(guest.name)} (${finalMobile || 'No Mobile'})`;
       }
       studentInfo = `<b>Student:</b> ${displayName}`;
     }
@@ -108,8 +108,8 @@ export async function submitIntelligenceFeedback(data: IntelligenceFeedbackData)
       `<b>Status:</b> ${studentLabel}\n` +
       `${studentInfo}\n` +
       `<b>Question ID:</b> <code>${questionId}</code>\n` +
-      `<b>Content:</b> <i>"${questionText.slice(0, 150)}${questionText.length > 150 ? '...' : ''}"</i>\n` +
-      (message ? `\n<b>Feedback:</b> ${message}\n` : '') +
+      `<b>Content:</b> <i>"${escapeHTML(questionText).slice(0, 150)}${questionText.length > 150 ? '...' : ''}"</i>\n` +
+      (message ? `\n<b>Feedback:</b> ${escapeHTML(message)}\n` : '') +
       `━━━━━━━━━━━━━━━━\n` +
       `#SolutionIntelligence #MPPSC2026 ${isPro ? '#ProUser' : ''}`
     );
@@ -193,10 +193,10 @@ export async function submitZenFeedback(params: {
       `<b>${priorityEmoji}Rating:</b> ${'⭐️'.repeat(rating)}\n` +
       `<b>Status:</b> ${studentLabel}\n` +
       `<b>Tags:</b> ${tags.join(', ')}\n` +
-      (guestName ? `<b>Name:</b> ${guestName}\n` : '') +
+      (guestName ? `<b>Name:</b> ${escapeHTML(guestName)}\n` : '') +
       (guestMobile ? `<b>Mobile:</b> <code>${guestMobile}</code>\n` : '') +
       (leadSource ? `<b>Source:</b> <code>${leadSource}</code>\n` : '') +
-      (comment ? `\n<b>Comment:</b> ${comment}\n` : '') +
+      (comment ? `\n<b>Comment:</b> ${escapeHTML(comment)}\n` : '') +
       `━━━━━━━━━━━━━━━━\n` +
       `#ZenFeedback #MPPSC2026 ${isPro ? '#ProUser' : ''}`
     );

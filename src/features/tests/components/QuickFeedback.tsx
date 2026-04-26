@@ -29,6 +29,7 @@ export function QuickFeedback({
   const { isSubscribed, user } = useSettingsStore();
   const [reaction, setReaction] = useState<IntelligenceReaction | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [submittingReaction, setSubmittingReaction] = useState<IntelligenceReaction | null>(null);
   const [showFeedbackBox, setShowFeedbackBox] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState('');
 
@@ -50,6 +51,7 @@ export function QuickFeedback({
     if (reaction === type) return;
 
     setSubmitting(true);
+    setSubmittingReaction(type);
     try {
       const res = await submitIntelligenceFeedback({
         questionId,
@@ -76,6 +78,7 @@ export function QuickFeedback({
       toast.error('Could not save reaction');
     } finally {
       setSubmitting(false);
+      setSubmittingReaction(null);
     }
   };
 
@@ -123,28 +126,32 @@ export function QuickFeedback({
             icon={<ThumbsUp className="h-3.5 w-3.5" />}
             active={reaction === 'helpful'}
             onClick={() => void onReact('helpful')}
-            submitting={submitting && reaction === 'helpful'}
+            submitting={submittingReaction === 'helpful'}
+            disabled={submitting}
             activeColor="bg-emerald-500"
           />
           <ReactionButton
             icon={<Lightbulb className="h-3.5 w-3.5" />}
             active={reaction === 'insightful'}
             onClick={() => void onReact('insightful')}
-            submitting={submitting && reaction === 'insightful'}
+            submitting={submittingReaction === 'insightful'}
+            disabled={submitting}
             activeColor="bg-amber-400"
           />
           <ReactionButton
             icon={<ThumbsDown className="h-3.5 w-3.5" />}
             active={reaction === 'unhelpful'}
             onClick={() => void onReact('unhelpful')}
-            submitting={submitting && reaction === 'unhelpful'}
+            submitting={submittingReaction === 'unhelpful'}
+            disabled={submitting}
             activeColor="bg-rose-500"
           />
           <ReactionButton
             icon={<HelpCircle className="h-3.5 w-3.5" />}
             active={reaction === 'doubt'}
             onClick={() => void onReact('doubt')}
-            submitting={submitting && reaction === 'doubt'}
+            submitting={submittingReaction === 'doubt'}
+            disabled={submitting}
             activeColor="bg-blue-500"
           />
         </div>
@@ -194,19 +201,21 @@ function ReactionButton({
   active,
   onClick,
   submitting,
+  disabled,
   activeColor,
 }: {
   icon: React.ReactNode;
   active: boolean;
   onClick: () => void;
   submitting: boolean;
+  disabled: boolean;
   activeColor: string;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      disabled={submitting}
+      disabled={disabled}
       className={cn(
         'group relative flex h-8 w-8 items-center justify-center rounded-full transition-all duration-300 active:scale-90',
         active ? cn(activeColor, 'text-white shadow-md') : 'text-slate-400 hover:bg-white hover:text-slate-600 hover:shadow-sm'

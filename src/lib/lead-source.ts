@@ -18,6 +18,9 @@ export function getGuestLeadSourceLabel(source: string | null | undefined): stri
   if (source === GUEST_LEAD_SOURCE.INTELLIGENCE_REACTION) {
     return 'Intelligence Reaction';
   }
+  if (source === GUEST_LEAD_SOURCE.SUBJECT_QUESTIONS_VIEW) {
+    return 'Subject Questions View';
+  }
   if (!source) return '—';
   return source;
 }

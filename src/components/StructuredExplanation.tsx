@@ -58,7 +58,7 @@ function isSubstantiveExplanationString(s: string | undefined | null): boolean {
 }
 
 /** Parses expert wisdom text to add line breaks at periods, Hindi full stops, and pipes */
-function parseExpertText(text: string, language: 'hi' | 'en') {
+function parseExpertText(text: string, _language: 'hi' | 'en') {
   if (!text) return null;
   // Split by English period, Hindi full stop, or pipe followed by space or end of string
   const sentences = text.split(/([।.|] )/);
@@ -417,7 +417,6 @@ const renderClassic = () => {
             />
           )}
         </div>
-        {hasBoth && !showExpert && renderClassic()}
       </div>
     );
   }

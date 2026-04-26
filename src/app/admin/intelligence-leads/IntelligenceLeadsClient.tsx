@@ -65,9 +65,9 @@ export default function IntelligenceLeadsClient({ initialData }: IntelligenceLea
   const filteredData = useMemo(() => {
     return initialData.filter((item) => {
       const matchesSearch =
-        item.guest?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.guest?.mobile.includes(searchTerm) ||
-        item.questionId.includes(searchTerm);
+        (item.userName || item.guest?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.userMobile || item.guest?.mobile || '').includes(searchTerm) ||
+        item.questionId.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesFilter = filterReaction ? item.reaction === filterReaction : true;
       const matchesSubject = filterSubject ? item.question?.subject === filterSubject : true;

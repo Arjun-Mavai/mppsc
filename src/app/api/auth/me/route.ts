@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 👤 ME ENDPOINT — Frontend calls this to check current session
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Returns user data including access_expires_at so frontend
+// Returns user data including accessExpiresAt so frontend
 // can show expiry warnings. Cache-Control: no-store ensures
 // browsers never cache this response.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
