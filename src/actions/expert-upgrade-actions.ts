@@ -41,7 +41,7 @@ export async function getDetailedUpgradeStats() {
       data: refinedData.filter(s => s.total > 0), // Omit empty tests
     };
   } catch (error) {
-    logger.error('Error fetching detailed expert upgrade stats', error);
+    logger.error('Error fetching detailed expert upgrade stats', error, { category: 'admin' });
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
@@ -119,13 +119,15 @@ export async function processManualGeminiJSON(jsonString: string) {
 
   } catch (error) {
     const cleaned = minimalClean(jsonString);
-    logger.error('Error in processManualGeminiJSON', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      jsonSnippet: jsonString.substring(0, 50),
-      cleanedSnippet: cleaned.substring(0, 50),
-      charCode0: cleaned.charCodeAt(0),
-      charCode1: cleaned.charCodeAt(1),
-      charCode2: cleaned.charCodeAt(2),
+    logger.error('Error in processManualGeminiJSON', error, {
+      category: 'admin',
+      metadata: {
+        jsonSnippet: jsonString.substring(0, 50),
+        cleanedSnippet: cleaned.substring(0, 50),
+        charCode0: cleaned.charCodeAt(0),
+        charCode1: cleaned.charCodeAt(1),
+        charCode2: cleaned.charCodeAt(2),
+      }
     });
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
@@ -153,6 +155,7 @@ export async function getGeminiPromptForTest(limit: number, testId: string, test
       .limit(limit);
 
     logger.info('[getGeminiPromptForTest] Retrieved pending questions for expert upgrade batch', {
+      category: 'admin',
       testId,
       limit,
       pendingCount: pending.length,
@@ -244,7 +247,7 @@ ${JSON.stringify({ questions: inputPayload }, null, 2)}`;
       count: pending.length
     };
   } catch (error) {
-    logger.error('Error in getGeminiPromptForTest', error);
+    logger.error('Error in getGeminiPromptForTest', error, { category: 'admin' });
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }

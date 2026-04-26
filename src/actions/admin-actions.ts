@@ -29,7 +29,7 @@ export async function getExistingTests() {
 
     return result;
   } catch (e) {
-    logger.error('Error fetching tests:', e);
+    logger.error('Error fetching tests:', e, { category: 'admin' });
     return [];
   }
 }
@@ -135,17 +135,18 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
         ? rawExplanationFormat
         : 'classic';
 
-    // 2. Format Questions
+    // 2. Format & Validate Questions
     const formattedQuestions = parsedQuestions.map((q: any, idx: number) => {
       // Validation
-      if (!q.questionText) {
-         throw new Error(`Question ${idx + 1} is missing "questionText"`);
+      if (!q.questionText || typeof q.questionText !== 'string') {
+         throw new Error(`Question ${idx + 1} is missing or has invalid "questionText"`);
       }
+      const qText = q.questionText.trim();
       if (!q.options) {
-        throw new Error(`Question ${idx + 1} ("${q.questionText.substring(0, 30)}...") is missing "options"`);
+        throw new Error(`Question ${idx + 1} ("${qText.substring(0, 30)}...") is missing "options"`);
       }
       if (q.correctAnswer === undefined || q.correctAnswer === null) {
-        throw new Error(`Question ${idx + 1} ("${q.questionText.substring(0, 30)}...") is missing "correctAnswer"`);
+        throw new Error(`Question ${idx + 1} ("${qText.substring(0, 30)}...") is missing "correctAnswer"`);
       }
 
       const isExpert = explanationFormat === 'expert';
@@ -153,7 +154,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
       return {
         id: nanoid(),
         testId: testId,
-        questionText: q.questionText,
+        questionText: qText,
         questionTextEn: q.questionTextEn || null,
         options: JSON.stringify(q.options),
         correctAnswer: q.correctAnswer,
@@ -173,7 +174,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
     });
 
     // Upsert logic: For each question, check if it exists in this test.
-    // If it exists, update it. If not, add to insert list.
+    // Also handle intra-batch duplicates.
     const questionsToUpdate = [];
     const questionsToInsertFinal = [];
     let duplicatesCount = 0;
@@ -184,9 +185,19 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
       .where(eq(questions.testId, testId || ''));
     
     const existingMap = new Map(existingQsRows.map((q) => [q.text?.trim().toLowerCase(), q.id]));
+    const seenInBatch = new Set<string>();
 
     for (const qData of formattedQuestions) {
-      const existingId = existingMap.get(qData.questionText.trim().toLowerCase());
+      const normalizedText = qData.questionText.trim().toLowerCase();
+      
+      // Check if we've already seen this in the CURRENT batch
+      if (seenInBatch.has(normalizedText)) {
+        duplicatesCount++;
+        continue; // Skip batch duplicates to avoid primary key/unique constraint issues
+      }
+      seenInBatch.add(normalizedText);
+
+      const existingId = existingMap.get(normalizedText);
       if (existingId) {
         questionsToUpdate.push({ id: existingId, data: qData });
         duplicatesCount++;
@@ -204,46 +215,42 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
     }
 
     // 4. Bulk Insert New Questions
-    let finalQuestionCount = 0;
-
     if (questionsToInsertFinal.length > 0) {
       await db.insert(questions).values(questionsToInsertFinal);
     }
     
-    // Update count based on insert/update result
-    // (Compatibility note: logic below uses questionsToInsertFinal directly)
-
-    // Update Test Meta (Marks + Count + Timestamp)
-    if (mode === 'existing' && testId) {
-      const newMarksToAdd = questionsToInsertFinal.reduce((sum, q) => sum + (q.marks || 0), 0);
-
-      const countResult = await db
-        .select({ count: sql<number>`COUNT(*)` })
+    // 5. Update Test Meta (Marks + Count + Timestamp)
+    let finalQuestionCount = 0;
+    if (testId) {
+      // Recompute everything from DB to ensure consistency (especially totalMarks after updates)
+      const allQs = await db
+        .select({ marks: questions.marks })
         .from(questions)
         .where(eq(questions.testId, testId));
-      const totalQ = countResult[0]?.count || 0;
-      finalQuestionCount = totalQ;
+      
+      finalQuestionCount = allQs.length;
+      const totalMarks = allQs.reduce((sum, q) => sum + (q.marks || 0), 0);
 
       await db
         .update(tests)
         .set({
           updatedAt: new Date(),
-          totalMarks: sql`${tests.totalMarks} + ${newMarksToAdd}`,
-          totalQuestions: totalQ,
+          totalMarks: totalMarks,
+          totalQuestions: finalQuestionCount,
         })
         .where(eq(tests.id, testId));
     } else if (mode === 'new') {
-      finalQuestionCount = parsedQuestions.length;
+      finalQuestionCount = seenInBatch.size;
     }
 
     revalidatePath('/tests');
-    const dupMsg = duplicatesCount > 0 ? ` (${duplicatesCount} duplicates updated)` : '';
+    const dupMsg = duplicatesCount > 0 ? ` (${duplicatesCount} duplicates updated/skipped)` : '';
     return {
       success: true,
       message: `Successfully ${mode === 'new' ? 'created' : 'updated'} "${testTitle}". Total Questions: ${finalQuestionCount}${dupMsg}`,
     };
   } catch (error) {
-    logger.error('Upload Error:', error);
+    logger.error('Upload Error:', error, { category: 'admin' });
     return {
       success: false,
       message: `Server Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -357,7 +364,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
       topicCoverage: serializedCoverage,
     };
   } catch (e) {
-    logger.error('Dashboard Stats Error:', e);
+    logger.error('Dashboard Stats Error:', e, { category: 'admin' });
     return { success: false, error: 'Failed to fetch stats' };
   }
 }
@@ -380,7 +387,7 @@ export async function getPaymentExitStats() {
 
     return { success: true, reasons, breakdown };
   } catch (error) {
-    logger.error('Failed to fetch payment exit stats:', error);
+    logger.error('Failed to fetch payment exit stats:', error, { category: 'admin' });
     return { success: false, error: 'Failed to fetch stats' };
   }
 }

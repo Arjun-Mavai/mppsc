@@ -35,7 +35,6 @@ import {
   Database,
   Zap,
   AlignLeft,
-  Globe,
 } from 'lucide-react';
 import { StructuredExplanation } from '@/components/StructuredExplanation';
 import { syllabusData } from '@/data/syllabusData';

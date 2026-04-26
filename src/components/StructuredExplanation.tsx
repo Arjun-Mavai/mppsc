@@ -40,6 +40,11 @@ export function StructuredExplanation({
   const [showExpert, setShowExpert] = useState(false);
   const [contentLang, setContentLang] = useState<'hi' | 'en'>(language);
   
+  // Sync contentLang with language prop if it changes
+  React.useEffect(() => {
+    setContentLang(language);
+  }, [language]);
+
   const explanation = parseExtendedData(extendedData);
 
   // If no properly structured expert data is present, just show the classic view

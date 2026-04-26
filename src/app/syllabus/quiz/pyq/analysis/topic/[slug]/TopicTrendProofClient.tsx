@@ -352,7 +352,7 @@ export default function TopicTrendProofClient({ proof }: { proof: TopicTrendProo
                         </div>
                       </div>
 
-                      {(q.explanation || q.explanationEn || q.extendedData) && (
+                      {(q.explanation || q.explanationEn || !!q.extendedData) && (
                         <div className="mt-4 pt-6 border-t border-white/5">
                            <StructuredExplanation 
                              extendedData={q.extendedData}

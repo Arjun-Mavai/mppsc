@@ -437,7 +437,7 @@ export default function ViewAllQuestionsClient({
 
                         {/* Premium Insights Section */}
                         <div className="space-y-4 pt-4">
-                          {(q.explanation || q.explanationEn || q.extendedData) && (
+                          {(q.explanation || q.explanationEn || !!q.extendedData) && (
                             <StructuredExplanation
                               extendedData={q.extendedData}
                               plainExplanation={

@@ -204,7 +204,7 @@ export default function RepeatedQuestionDetailClient({
               </div>
             </div>
             <CardContent className="p-6 sm:p-8">
-              {(question.explanation || question.explanationEn || question.extendedData) && (
+              {(question.explanation || question.explanationEn || !!question.extendedData) && (
                 <StructuredExplanation
                   extendedData={question.extendedData}
                   plainExplanation={question.explanation || ''}

@@ -12,7 +12,8 @@ export interface Question {
   explanationEn?: string | null;
   explanation_hi?: string | null; // Optional override handling if needed
   extendedData?: unknown; // Structured expert JSON data
-  marks?: number;
+  marks: number;
+
   negativeMarks?: number;
   type?: 'standard' | 'matching';
   subject?: string; // 🏷️ New field for mixed quizzes
