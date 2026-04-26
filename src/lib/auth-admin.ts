@@ -1,27 +1,17 @@
-import { verifyAuth } from './auth';
+import { assertAdmin } from './auth';
 import { redirect } from 'next/navigation';
-import { db } from '@/db';
-import { mppscUsers } from '@/db/schema';
-import { eq } from 'drizzle-orm';
 
+/**
+ * 🛡️ REQUIRE ADMIN — UI Route protection
+ * Verifies user is admin, redirects to login or home if not.
+ * Suitable for Page/Layout server components.
+ */
 export async function requireAdmin() {
-  const user = await verifyAuth();
-
-  if (!user) {
-    redirect('/login');
-  }
-
   try {
-    // Fetch fresh user data to check role
-    const dbUser = await db.select().from(mppscUsers).where(eq(mppscUsers.id, user.id)).get();
-
-    if (!dbUser || dbUser.role !== 'admin') {
-      redirect('/');
-    }
-
-    return dbUser;
-  } catch (error) {
-    console.error('Admin Check Error:', error);
+    return await assertAdmin();
+  } catch {
+    // If not logged in, redirect to login is usually handled by Middleware,
+    // but here we redirect to home as a safe fallback for Page components.
     redirect('/');
   }
 }

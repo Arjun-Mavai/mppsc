@@ -20,6 +20,7 @@ import {
 import type { Question } from '@/types/quiz';
 import { YearBadge } from '../components/shared/UnitBadge';
 import { formatUnitTitle, getUnitColor } from '../components/shared/constants';
+import { normalizeCorrectAnswer } from '@/lib/quiz-scoring';
 
 interface QuestionData {
   id: string;
@@ -412,7 +413,7 @@ export default function ViewAllQuestionsClient({
                                 typeof opt === 'object' && opt !== null
                                   ? (opt as Record<string, unknown>)
                                   : { text: opt };
-                              const isCorrect = Number(q.correctAnswer) === optIdx;
+                              const isCorrect = normalizeCorrectAnswer(q.correctAnswer) === optIdx;
                               const optText = isHindi
                                 ? (parsedOpt.text ?? opt)
                                 : (parsedOpt.text_en ?? parsedOpt.textEn ?? parsedOpt.text ?? opt);

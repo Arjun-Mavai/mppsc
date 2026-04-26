@@ -5,7 +5,7 @@ import { questions, tests, syllabusTopics } from '@/db/schema';
 import { eq, and, sql, asc } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { parseLenientJSON, minimalClean } from '@/lib/json-utils';
-import { requireAdmin } from '@/lib/auth';
+import { assertAdmin } from '@/lib/auth';
 
 function pickField(
   o: Record<string, unknown>,
@@ -22,7 +22,7 @@ function pickField(
 }
 
 export async function getDetailedUpgradeStats() {
-  await requireAdmin();
+  await assertAdmin();
   try {
     const statsQuery = await db
       .select({
@@ -88,7 +88,7 @@ interface UpgradedQuestion {
 }
 
 export async function processManualGeminiJSON(jsonString: string) {
-  await requireAdmin();
+  await assertAdmin();
   try {
     const root = parseLenientJSON(jsonString) as
       | { questions?: UpgradedQuestion[]; Questions?: UpgradedQuestion[] }
@@ -159,7 +159,7 @@ export async function processManualGeminiJSON(jsonString: string) {
  * Omitted keys are left unchanged; `null` clears that column.
  */
 export async function processManualClassicExplanationsJSON(jsonString: string) {
-  await requireAdmin();
+  await assertAdmin();
   try {
     const root = parseLenientJSON(jsonString) as
       | { questions?: unknown[]; items?: unknown[] }
@@ -280,7 +280,7 @@ const classicColumnsPendingFilter = () =>
  * Quick counts for admin UI: how many of `totalInTest` have both classic text columns filled.
  */
 export async function getClassicColumnProgressForTest(testId: string) {
-  await requireAdmin();
+  await assertAdmin();
   const testRow = await db
     .select({ title: tests.title })
     .from(tests)
@@ -315,7 +315,7 @@ export async function getClassicColumnProgressForTest(testId: string) {
  * prompt string — same workflow as getGeminiPromptForTest but for classic column upsert.
  */
 export async function getClassicPendingBatchPrompt(testId: string, limit: number) {
-  await requireAdmin();
+  await assertAdmin();
   const L = (CLASSIC_BATCH_SIZES as readonly number[]).includes(limit) ? limit : 25;
 
   const testRow = await db
@@ -402,7 +402,7 @@ export async function getClassicPendingBatchPrompt(testId: string, limit: number
 ### OUTPUT (NON-NEGOTIABLE)
 1. Return **ONLY** a valid JSON **array** of objects. No markdown code fences, no backticks, no trailing commas, no extra commentary.
 2. **Exactly** ${inputPayload.length} array items. Each object MUST be:
-   { "questionId": "<copy exactly from input>", "explanation_hi": "Hindi text", "explanationEn": "English text" }
+   { \"questionId\": \"<copy exactly from input>\", \"explanation_hi\": \"Hindi text\", \"explanationEn\": \"English text\" }
 3. \`explanation_en\` as snake_case is also accepted in your output, but **prefer** \`explanationEn\` (camelCase) for consistency.
 4. Style: use section markers in each language, e.g. **सही तर्क / **Correct Logic, **Exam Fact, **Memory Tip, **Scam Alert where useful. Separate blocks with newlines; escape newlines in JSON as \\\\n.
 5. **Do not** change, invent, reorder, or omit \`questionId\` — copy from INPUT verbatim.
@@ -410,7 +410,7 @@ export async function getClassicPendingBatchPrompt(testId: string, limit: number
 ### BILINGUAL
 - \`explanation_hi\` = natural Hindi. \`explanationEn\` = natural English. Not word-for-word translation only — exam-useful, concise.
 
-Test: "${testRow.title}" — **Classic progress: ${classicDoneCount} / ${totalInTest}** (paper questions with *both* Hindi + English classic columns filled). **${pendingTotal}** still need classic. This request is **${inputPayload.length}** of those, in order.
+Test: \"${testRow.title}\" — **Classic progress: ${classicDoneCount} / ${totalInTest}** (paper questions with *both* Hindi + English classic columns filled). **${pendingTotal}** still need classic. This request is **${inputPayload.length}** of those, in order.
 
 --- INPUT (questions) ---
 ${inputJson}
@@ -442,7 +442,7 @@ ${inputJson}
 
 export async function getGeminiPromptForTest(limit: number, testId: string, testType: string, testTitle: string) {
   try {
-    await requireAdmin();
+    await assertAdmin();
     const pending = await db
       .select({
         id: questions.id,
@@ -492,52 +492,52 @@ export async function getGeminiPromptForTest(limit: number, testId: string, test
        contextualEmphasis = `These are General Studies questions from a standard test ('${testTitle}'). Focus on creating a premium mentorship experience, identifying exact micro-syllabus topics and NCERT linkages where possible.`;
     }
 
-    const systemPrompt = `You are a legendary MPPSC Chief Mentor and Exam Strategist known as "The Veteran". Your mission is to provide the "Superior Explanation Framework" (The Veteran's Wisdom).
+    const systemPrompt = `You are a legendary MPPSC Chief Mentor and Exam Strategist known as \"The Veteran\". Your mission is to provide the \"Superior Explanation Framework\" (The Veteran's Wisdom).
 
 ### 🔴 CRITICAL QUALITY RULES (NON-NEGOTIABLE):
 1. **STRICTLY BILINGUAL**: You MUST provide content for BOTH English (_en) and Hindi (_hi) for EVERY SINGLE field in the schema.
-2. **NATURAL HINDI FLOW**: DO NOT use robotic, word-to-word literal translations from English to Hindi. Use the "Natural Mentorship Flow" (Amanat/Hindavi). It should sound like an elder mentor explaining to a student in a coaching center.
-3. **NEXT-LEVEL DEPTH**: Every insight must be "next-level"—providing value that a standard book cannot. If it's a simple fact, add a "Pro-Tip" or "Contextual Layer" to it.
+2. **NATURAL HINDI FLOW**: DO NOT use robotic, word-to-word literal translations from English to Hindi. Use the \"Natural Mentorship Flow\" (Amanat/Hindavi). It should sound like an elder mentor explaining to a student in a coaching center.
+3. **NEXT-LEVEL DEPTH**: Every insight must be \"next-level\"—providing value that a standard book cannot. If it's a simple fact, add a \"Pro-Tip\" or \"Contextual Layer\" to it.
 4. **NO HALLUCINATIONS**: Never guess years or sources. Stick to the logic of the subject.
-5. **GENERATE FROM SCRATCH**: You are NOT provided with any legacy explanation. Build the "Veteran's Wisdom" entirely from the question, options, and the correct answer.
-6. **STRICT JSON ESCAPING**: Ensure all newlines in strings are escaped as \\n. Avoid raw control characters that break JSON parsing.
+5. **GENERATE FROM SCRATCH**: You are NOT provided with any legacy explanation. Build the \"Veteran's Wisdom\" entirely from the question, options, and the correct answer.
+6. **STRICT JSON ESCAPING**: Ensure all newlines in strings are escaped as \\\\n. Avoid raw control characters that break JSON parsing.
 
 CONTEXT: ${contextualEmphasis}
 
 ### 💎 The Superior Explanation Framework (4-Part Structure):
-1. ✅ **Conceptual Core**: The "Why" and "How". Focus on the underlying principle. (Bilingual)
+1. ✅ **Conceptual Core**: The \"Why\" and \"How\". Focus on the underlying principle. (Bilingual)
 2. 🔄 **Inter-disciplinary Link**: Connect to other subjects (e.g., History linked to Art/Culture or Geography). (Bilingual)
-3. 🧠 **Veteran's Wisdom & Pattern**: The "Exam Insight". Why does MPPSC/UPSC ask this? Hidden patterns. (Bilingual)
+3. 🧠 **Veteran's Wisdom & Pattern**: The \"Exam Insight\". Why does MPPSC/UPSC ask this? Hidden patterns. (Bilingual)
 4. ⚡ **Tips, Tricks & Elimination**: 
    - **Red Flags**: Identify extreme words (only, all, never).
    - **Memory Mnemonics**: Acronyms, tricks, or stories to memorize. (Bilingual)
-   - **Topper's Mantra**: A high-impact, marketing-friendly "Gold Nugget". (Bilingual)
+   - **Topper's Mantra**: A high-impact, marketing-friendly \"Gold Nugget\". (Bilingual)
 
 JSON SCHEMA:
 {
-  "questions": [
+  \"questions\": [
     {
-      "questionId": "Copy from input",
-      "explanation": {
-        "stream": "mppsc_expert",
-        "topic_micro_mapping": "Syllabus micro-topic (Bilingual)",
-        "conceptual_depth_hi": "Conceptual Core (Natural Hindi - Professional & Conversational)",
-        "conceptual_depth_en": "Conceptual Core (English)",
-        "interdisciplinary_link_hi": "Holistic Link (Hindi)",
-        "interdisciplinary_link_en": "Holistic Link (English)",
-        "historical_trend_hi": "Veteran's Wisdom (Hindi)",
-        "historical_trend_en": "Veteran's Wisdom (English)",
-        "elimination_strategy_hi": "Elimination Logic (Hindi)",
-        "elimination_strategy_en": "Elimination Logic (English)",
-        "memory_mnemonic_hi": "Memory Trick (Hindi)",
-        "memory_mnemonic_en": "Memory Trick (English)",
-        "toppers_mantra_hi": "Marketing Mantra (Hindi)",
-        "toppers_mantra_en": "Marketing Mantra (English)",
-        "mains_application_hi": "Mains Connection (Hindi)",
-        "mains_application_en": "Mains Connection (English)",
-        "ncert_reference": "Standard Source (e.g. NCERT Class 12)",
-        "high_yield_facts_hi": ["Fact 1", "Fact 2"],
-        "high_yield_facts_en": ["Fact 1", "Fact 2"]
+      \"questionId\": \"Copy from input\",
+      \"explanation\": {
+        \"stream\": \"mppsc_expert\",
+        \"topic_micro_mapping\": \"Syllabus micro-topic (Bilingual)\",
+        \"conceptual_depth_hi\": \"Conceptual Core (Natural Hindi - Professional & Conversational)\",
+        \"conceptual_depth_en\": \"Conceptual Core (English)\",
+        \"interdisciplinary_link_hi\": \"Holistic Link (Hindi)\",
+        \"interdisciplinary_link_en\": \"Holistic Link (English)\",
+        \"historical_trend_hi\": \"Veteran's Wisdom (Hindi)\",
+        \"historical_trend_en\": \"Veteran's Wisdom (English)\",
+        \"elimination_strategy_hi\": \"Elimination Logic (Hindi)\",
+        \"elimination_strategy_en\": \"Elimination Logic (English)\",
+        \"memory_mnemonic_hi\": \"Memory Trick (Hindi)\",
+        \"memory_mnemonic_en\": \"Memory Trick (English)\",
+        \"toppers_mantra_hi\": \"Marketing Mantra (Hindi)\",
+        \"toppers_mantra_en\": \"Marketing Mantra (English)\",
+        \"mains_application_hi\": \"Mains Connection (Hindi)\",
+        \"mains_application_en\": \"Mains Connection (English)\",
+        \"ncert_reference\": \"Standard Source (e.g. NCERT Class 12)\",
+        \"high_yield_facts_hi\": [\"Fact 1\", \"Fact 2\"],
+        \"high_yield_facts_en\": [\"Fact 1\", \"Fact 2\"]
       }
     }
   ]

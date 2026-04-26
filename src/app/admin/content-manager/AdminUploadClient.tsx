@@ -47,11 +47,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { parseLenientJSON } from '@/lib/json-utils';
-import { CANONICAL_TEST_IDS } from '@/lib/pyq-constants';
+import { getCanonicalTestIds } from '@/lib/pyq-constants';
 
-const CANONICAL_IDS_LIST = Object.values(CANONICAL_TEST_IDS);
 /** 2026 Prelims paper row in `tests` (filter questions by `testId` in DB / UI). */
-const PYQ_2026_CANONICAL_TEST_ID = CANONICAL_TEST_IDS[2026];
+const getPyq2026CanonicalId = () => getCanonicalTestIds()[2026];
 const INTELLIGENCE_QUESTIONS_HREF = '/syllabus/quiz/pyq/intelligence/questions';
 const PYQ_PROMPT_HREF = '/prompts/pyq_dual_explanation_generation.md';
 
@@ -426,7 +425,7 @@ export default function AdminUploadPage() {
         setClassicBulkInput('');
         await fetchDetailedStats();
         try {
-          const p = await getClassicColumnProgressForTest(PYQ_2026_CANONICAL_TEST_ID);
+          const p = await getClassicColumnProgressForTest(getPyq2026CanonicalId());
           if (p.success) {
             setClassicGenMeta((prev) => ({
               testTitle: p.testTitle,
@@ -462,7 +461,7 @@ export default function AdminUploadPage() {
     ]);
     try {
       const res = await getClassicPendingBatchPrompt(
-        PYQ_2026_CANONICAL_TEST_ID,
+        getPyq2026CanonicalId(),
         classicGenBatchSize
       );
       if (!res.success) {
@@ -976,7 +975,7 @@ export default function AdminUploadPage() {
                           2026 Prelims — classic batch (same as expert queue)
                         </p>
                         <p className="mt-0.5 break-all font-mono text-[10px] text-slate-500">
-                          testId: {PYQ_2026_CANONICAL_TEST_ID}
+                          testId: {getPyq2026CanonicalId()}
                         </p>
                         <p className="mt-1 text-[10px] leading-relaxed text-slate-600">
                           Sirf woh questions jinke{' '}
@@ -1097,7 +1096,7 @@ export default function AdminUploadPage() {
                         {INTELLIGENCE_QUESTIONS_HREF}
                       </a>{' '}
                       se question rows mein <code className="font-mono">id</code> copy karo, ya DB mein filter{' '}
-                      <code className="break-all font-mono text-[10px]">testId = {PYQ_2026_CANONICAL_TEST_ID}</code>.
+                      <code className="break-all font-mono text-[10px]">testId = {getPyq2026CanonicalId()}</code>.
                     </li>
                     <li>
                       <span className="font-semibold text-slate-800">Batches of 25:</span> har baar chat ko max 25{' '}
@@ -1208,7 +1207,7 @@ export default function AdminUploadPage() {
 
                           if (expertCategory === 'pyq') {
                             categoryStats = categoryStats.filter((s) =>
-                              CANONICAL_IDS_LIST.includes(s.testId)
+                              Object.values(getCanonicalTestIds()).includes(s.testId)
                             );
                           }
 

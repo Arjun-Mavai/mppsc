@@ -28,6 +28,7 @@ import type { Question } from '@/types/quiz';
 import { YearBadge } from '@/app/syllabus/quiz/pyq/intelligence/components/shared/UnitBadge';
 import { getUnitColor } from '@/app/syllabus/quiz/pyq/intelligence/components/shared/constants';
 import type { OpenPaperViewQuestion } from '@/lib/map-quiz-to-open-paper-view';
+import { normalizeCorrectAnswer } from '@/lib/quiz-scoring';
 
 export type { OpenPaperViewQuestion };
 
@@ -38,8 +39,7 @@ function openRowToQuestion(q: OpenPaperViewQuestion): Question {
     question: q.text,
     questionEn: q.textEn ?? null,
     options: opts as Question['options'],
-    correctAnswer:
-      typeof q.correctAnswer === 'number' && !Number.isNaN(q.correctAnswer) ? q.correctAnswer : 0,
+    correctAnswer: normalizeCorrectAnswer(q.correctAnswer),
     marks: 2,
     negativeMarks: 0,
     type: q.type === 'matching' ? 'matching' : 'standard',
@@ -388,7 +388,7 @@ export function OpenPyq2026PaperView({
                                 typeof opt === 'object' && opt !== null
                                   ? (opt as Record<string, unknown>)
                                   : { text: opt };
-                              const isCorrect = Number(q.correctAnswer) === optIdx;
+                              const isCorrect = normalizeCorrectAnswer(q.correctAnswer) === optIdx;
                               const optText = isHindi
                                 ? (parsedOpt.text ?? opt)
                                 : (parsedOpt.text_en ?? parsedOpt.textEn ?? parsedOpt.text ?? opt);

@@ -1,4 +1,5 @@
 import type { Question } from '@/types/quiz';
+import { normalizeCorrectAnswer } from './quiz-scoring';
 
 /**
  * Split "(iii) rest of text" into list column id + body (Hindi/English matching columns).
@@ -180,9 +181,7 @@ export function mapRawQuestionToClientQuestion(
   const { explanation, explanationEn, explanation_hi, extendedData } = resolveExplanationFields(q);
 
   const matchPairs = normalizeMatchPairs(q.matchPairs);
-  const correctRaw = q.correctAnswer;
-  const correctNum = Number(correctRaw);
-  const correctAnswer = Number.isFinite(correctNum) ? correctNum : 0;
+  const correctAnswer = normalizeCorrectAnswer(q.correctAnswer as string | number);
 
   return {
     id: String(q.id),

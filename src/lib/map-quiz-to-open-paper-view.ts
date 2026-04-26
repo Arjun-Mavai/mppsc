@@ -13,7 +13,7 @@ export type OpenPaperViewQuestion = {
   type?: string;
   options?: unknown[];
   matchPairs?: unknown[];
-  correctAnswer?: number;
+  correctAnswer?: string | number;
   explanation?: string | null;
   explanationEn?: string | null;
   explanation_hi?: string | null;

@@ -76,17 +76,17 @@ export function StructuredExplanation({
     isSubstantiveExplanationString(coercedEn) ||
     isSubstantiveExplanationString(coercedHi);
   const hasBoth = !!hasExpertData && hasSubstantiveClassic;
+// When both exist: default expert-first unless `defaultToClassic` (e.g. quiz instant mode).
+const [showExpert, setShowExpert] = useState(() => (defaultToClassic && hasBoth ? false : true));
+const [contentLang, setContentLang] = useState<'hi' | 'en'>(language);
 
-  // When both exist: default expert-first unless `defaultToClassic` (e.g. quiz instant mode).
-  const [showExpert, setShowExpert] = useState(() => (defaultToClassic && hasBoth ? false : true));
-  const [contentLang, setContentLang] = useState<'hi' | 'en'>(language);
+// Sync contentLang with language prop if it changes
+React.useEffect(() => {
+  setContentLang(language);
+}, [language]);
 
-  // Sync contentLang with language prop if it changes
-  React.useEffect(() => {
-    setContentLang(language);
-  }, [language]);
+const renderClassic = () => {
 
-  const renderClassic = () => {
     const showPlain = isSubstantiveExplanationString(coercedPlain) ? coercedPlain : '';
     const showEn = isSubstantiveExplanationString(coercedEn) ? coercedEn : '';
     const showHi = isSubstantiveExplanationString(coercedHi) ? coercedHi : '';
@@ -121,6 +121,7 @@ export function StructuredExplanation({
           <Button
             variant="outline"
             size="sm"
+            type="button"
             onClick={() => setShowExpert(true)}
             className="h-7 border-amber-300/60 bg-amber-50/90 px-2 text-[10px] font-bold tracking-widest text-amber-950/90 uppercase hover:bg-amber-100/90"
           >

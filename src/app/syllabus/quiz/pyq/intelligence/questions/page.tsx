@@ -9,6 +9,7 @@ import ViewAllQuestionsClient from './ViewAllQuestionsClient';
 import { getUnitDistributionStats } from '@/actions/pyq-analytics';
 import { getScopedStateServiceYear, PYQ_SCOPE_START_YEAR, PYQ_SCOPE_END_YEAR } from '@/features/tests/utils/pyq-scope';
 import { getYearFromTestId } from '@/lib/pyq-constants';
+import { normalizeCorrectAnswer } from '@/lib/quiz-scoring';
 
 // Cache for 1 hour
 export const revalidate = 3600;
@@ -61,7 +62,7 @@ async function fetchQuestionsWithDetailsFromDb(questionIds: string[]) {
       options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
       type: q.type || 'standard',
       matchPairs: typeof q.matchPairs === 'string' ? JSON.parse(q.matchPairs) : q.matchPairs,
-      correctAnswer: q.correctAnswer !== null ? Number(q.correctAnswer) : undefined,
+      correctAnswer: normalizeCorrectAnswer(q.correctAnswer),
       explanation: q.explanation,
       explanationEn: q.explanationEn,
       explanation_hi: q.explanation,

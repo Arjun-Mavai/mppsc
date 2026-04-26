@@ -9,11 +9,11 @@ import { AdminDashboardResponse } from '@/types/admin';
 import { GUEST_LEAD_SOURCE } from '@/lib/lead-source';
 import { logger } from '@/lib/logger';
 import { parseLenientJSON } from '@/lib/json-utils';
-import { requireAdmin } from '@/lib/auth-admin';
+import { assertAdmin } from '@/lib/auth';
 
 // Helper to fetch tests for the dropdown
 export async function getExistingTests() {
-  await requireAdmin();
+  await assertAdmin();
   try {
     const result = await db
       .select({
@@ -36,7 +36,7 @@ export async function getExistingTests() {
 }
 
 export async function uploadTestFromJSON(prevState: any, formData: FormData) {
-  await requireAdmin();
+  await assertAdmin();
   try {
     const mode = formData.get('mode') as 'new' | 'existing'; // 'new' or 'existing'
     const existingTestId = formData.get('existingTestId') as string;
@@ -99,8 +99,8 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
         unitId: type === 'UNIT' || type === 'TOPIC' || type === 'MISC' ? unitId : null,
         topicId: type === 'TOPIC' ? topicId : null,
         description: `Imported test: ${title}`,
-        totalMarks: parsedQuestions.length * 2, // Initial marks
-        totalQuestions: parsedQuestions.length,
+        totalMarks: 0, // Computed below
+        totalQuestions: 0, // Computed below
         durationMinutes: 120,
         examType: 'mppsc' as const, // 🔒 Strict isolation
         // MISC type = free quiz → isFreeAccess ON by default
@@ -140,14 +140,20 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
     const formattedQuestions = parsedQuestions.map((q: any, idx: number) => {
       // Validation
       if (!q.questionText || typeof q.questionText !== 'string') {
-         throw new Error(`Question ${idx + 1} is missing or has invalid "questionText"`);
+        throw new Error(
+          `Question ${idx + 1} is missing or has invalid "questionText" (must be string)`
+        );
       }
       const qText = q.questionText.trim();
-      if (!q.options) {
+
+      if (!q.options || (typeof q.options !== 'string' && !Array.isArray(q.options))) {
         throw new Error(`Question ${idx + 1} ("${qText.substring(0, 30)}...") is missing "options"`);
       }
-      if (q.correctAnswer === undefined || q.correctAnswer === null) {
-        throw new Error(`Question ${idx + 1} ("${qText.substring(0, 30)}...") is missing "correctAnswer"`);
+
+      if (q.correctAnswer === undefined || q.correctAnswer === null || q.correctAnswer === '') {
+        throw new Error(
+          `Question ${idx + 1} ("${qText.substring(0, 30)}...") is missing "correctAnswer"`
+        );
       }
 
       const isExpert = explanationFormat === 'expert';
@@ -180,7 +186,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
         testId: testId,
         questionText: qText,
         questionTextEn: q.questionTextEn || null,
-        options: JSON.stringify(q.options),
+        options: typeof q.options === 'string' ? q.options : JSON.stringify(q.options),
         correctAnswer: String(q.correctAnswer).trim(),
         explanation: explanationTextForDb,
         explanationEn: explanationEnForDb,
@@ -206,17 +212,17 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
       .select({ id: questions.id, text: questions.questionText })
       .from(questions)
       .where(eq(questions.testId, testId || ''));
-    
+
     const existingMap = new Map(existingQsRows.map((q) => [q.text?.trim().toLowerCase(), q.id]));
     const seenInBatch = new Set<string>();
 
     for (const qData of formattedQuestions) {
       const normalizedText = qData.questionText.trim().toLowerCase();
-      
+
       // Check if we've already seen this in the CURRENT batch
       if (seenInBatch.has(normalizedText)) {
         duplicatesCount++;
-        continue; // Skip batch duplicates to avoid primary key/unique constraint issues
+        continue; // Skip batch duplicates
       }
       seenInBatch.add(normalizedText);
 
@@ -241,7 +247,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
     if (questionsToInsertFinal.length > 0) {
       await db.insert(questions).values(questionsToInsertFinal);
     }
-    
+
     // 5. Update Test Meta (Marks + Count + Timestamp)
     let finalQuestionCount = 0;
     if (testId) {
@@ -250,7 +256,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
         .select({ marks: questions.marks })
         .from(questions)
         .where(eq(questions.testId, testId));
-      
+
       finalQuestionCount = allQs.length;
       const totalMarks = allQs.reduce((sum, q) => sum + (q.marks || 0), 0);
 
@@ -267,7 +273,8 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
     }
 
     revalidatePath('/tests');
-    const dupMsg = duplicatesCount > 0 ? ` (${duplicatesCount} duplicates updated/skipped)` : '';
+    const dupMsg =
+      duplicatesCount > 0 ? ` (${duplicatesCount} duplicates updated/skipped)` : '';
     return {
       success: true,
       message: `Successfully ${mode === 'new' ? 'created' : 'updated'} "${testTitle}". Total Questions: ${finalQuestionCount}${dupMsg}`,
