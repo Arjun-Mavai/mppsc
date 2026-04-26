@@ -21,6 +21,8 @@ export interface QuestionData {
   options?: unknown;
   optionsEn?: string[];
   correctAnswer?: number | string;
+  explanation?: string | null;
+  explanationEn?: string | null;
 }
 
 interface QuestionItemProps {
@@ -32,6 +34,8 @@ interface QuestionItemProps {
   variant?: 'compact' | 'full' | 'card';
   defaultExpanded?: boolean;
   theme?: 'light' | 'dark';
+  /** Hide link to in-app full question (e.g. public open page). */
+  hideFullQuestionLink?: boolean;
 }
 
 export function QuestionItem({
@@ -43,10 +47,21 @@ export function QuestionItem({
   variant = 'compact',
   defaultExpanded = false,
   theme = 'dark',
+  hideFullQuestionLink = false,
 }: QuestionItemProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const displayText = isHindi ? question.text : question.textEn || question.text;
   const altText = isHindi ? question.textEn : question.text;
+  const explPrimary = isHindi
+    ? (question.explanation?.trim() || question.explanationEn?.trim() || '')
+    : (question.explanationEn?.trim() || question.explanation?.trim() || '');
+  const explAlt = isHindi
+    ? question.explanationEn && question.explanationEn !== explPrimary
+      ? question.explanationEn
+      : ''
+    : question.explanation && question.explanation !== explPrimary
+      ? question.explanation
+      : '';
 
   // Helper to normalize options and correct answer
   const normalizedOptions = useMemo(() => {
@@ -291,20 +306,41 @@ export function QuestionItem({
         </div>
 
         <AnimatePresence>
-          {isExpanded && (
+            {isExpanded && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <div className="space-y-3 border-t border-slate-800/50 bg-slate-900/50 px-4 py-4 sm:px-5">
+              <div
+                className={cn(
+                  'space-y-3 border-t px-4 py-4 sm:px-5',
+                  theme === 'light'
+                    ? 'border-slate-200 bg-[#F5F5F7]'
+                    : 'border-slate-800/50 bg-slate-900/50'
+                )}
+              >
                 {/* Full question text */}
-                <p className="text-sm leading-relaxed text-slate-200">{displayText}</p>
+                <p
+                  className={cn(
+                    'text-sm leading-relaxed',
+                    theme === 'light' ? 'text-[#1D1D1F]' : 'text-slate-200'
+                  )}
+                >
+                  {displayText}
+                </p>
 
                 {/* Alternate language */}
                 {altText && altText !== displayText && (
-                  <p className="text-xs leading-relaxed text-slate-500 italic">{altText}</p>
+                  <p
+                    className={cn(
+                      'text-xs leading-relaxed italic',
+                      theme === 'light' ? 'text-slate-500' : 'text-slate-500'
+                    )}
+                  >
+                    {altText}
+                  </p>
                 )}
 
                 {/* Options if available */}
@@ -317,9 +353,13 @@ export function QuestionItem({
                           key={i}
                           className={cn(
                             'rounded-lg border px-3 py-2 text-sm',
-                            isCorrect
-                              ? 'border-green-500/30 bg-green-500/10 text-green-300'
-                              : 'border-slate-700/50 bg-slate-800/30 text-slate-400'
+                            theme === 'light'
+                              ? isCorrect
+                                ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+                                : 'border-slate-200 bg-white text-slate-700'
+                              : isCorrect
+                                ? 'border-green-500/30 bg-green-500/10 text-green-300'
+                                : 'border-slate-700/50 bg-slate-800/30 text-slate-400'
                           )}
                         >
                           <span className="font-medium">{opt.id}.</span>{' '}
@@ -330,14 +370,43 @@ export function QuestionItem({
                   </div>
                 )}
 
+                {/* Explanation */}
+                {explPrimary ? (
+                  <div
+                    className={cn(
+                      'rounded-lg border p-3 text-sm leading-relaxed',
+                      theme === 'light'
+                        ? 'border-slate-200 bg-white text-slate-800'
+                        : 'border-emerald-500/20 bg-emerald-500/5 text-slate-200'
+                    )}
+                  >
+                    <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                      {isHindi ? 'व्याख्या' : 'Explanation'}
+                    </p>
+                    <p className="whitespace-pre-wrap">{explPrimary}</p>
+                    {explAlt ? (
+                      <p className="mt-2 border-t border-slate-200 pt-2 text-xs italic text-slate-500">
+                        {explAlt}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+
                 {/* View full question link */}
-                <Link
-                  href={`/syllabus/quiz/pyq/question/${question.id}`}
-                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-400 hover:text-emerald-300"
-                >
-                  {isHindi ? 'पूरा प्रश्न देखें' : 'View full question'}
-                  <ArrowRight className="h-3 w-3" />
-                </Link>
+                {!hideFullQuestionLink && (
+                  <Link
+                    href={`/syllabus/quiz/pyq/question/${question.id}`}
+                    className={cn(
+                      'mt-3 inline-flex items-center gap-1.5 text-xs font-medium',
+                      theme === 'light'
+                        ? 'text-indigo-600 hover:text-indigo-800'
+                        : 'text-emerald-400 hover:text-emerald-300'
+                    )}
+                  >
+                    {isHindi ? 'पूरा प्रश्न देखें' : 'View full question'}
+                    <ArrowRight className="h-3 w-3" />
+                  </Link>
+                )}
               </div>
             </motion.div>
           )}
@@ -400,6 +469,7 @@ interface QuestionListProps {
   variant?: 'compact' | 'full' | 'card';
   showAllExpanded?: boolean;
   theme?: 'light' | 'dark';
+  hideFullQuestionLink?: boolean;
 }
 
 export function QuestionList({
@@ -412,6 +482,7 @@ export function QuestionList({
   variant = 'compact',
   showAllExpanded = false,
   theme = 'dark',
+  hideFullQuestionLink = false,
 }: QuestionListProps) {
   const [showAll, setShowAll] = useState(false);
 
@@ -433,7 +504,8 @@ export function QuestionList({
     return (
       <div
         className={cn(
-          'divide-y divide-slate-800/30',
+          'divide-y',
+          theme === 'light' ? 'divide-slate-200' : 'divide-slate-800/30',
           variant === 'card' && 'space-y-4 divide-none p-4'
         )}
       >
@@ -452,7 +524,8 @@ export function QuestionList({
             </div>
             <div
               className={cn(
-                'divide-y divide-slate-800/20',
+                'divide-y',
+                theme === 'light' ? 'divide-slate-200' : 'divide-slate-800/20',
                 variant === 'card' && 'grid gap-3 divide-none'
               )}
             >
@@ -467,6 +540,7 @@ export function QuestionList({
                   variant={variant}
                   defaultExpanded={showAllExpanded}
                   theme={theme}
+                  hideFullQuestionLink={hideFullQuestionLink}
                 />
               ))}
             </div>
@@ -483,7 +557,8 @@ export function QuestionList({
     <div className={cn(variant === 'card' && 'grid gap-4 p-4 sm:p-5')}>
       <div
         className={cn(
-          'divide-y divide-slate-800/30',
+          'divide-y',
+          theme === 'light' ? 'divide-slate-200' : 'divide-slate-800/30',
           variant === 'card' && 'grid gap-4 divide-none'
         )}
       >
@@ -498,6 +573,7 @@ export function QuestionList({
             variant={variant}
             defaultExpanded={showAllExpanded}
             theme={theme}
+            hideFullQuestionLink={hideFullQuestionLink}
           />
         ))}
       </div>
@@ -505,7 +581,8 @@ export function QuestionList({
       {hasMore && !showAll && (
         <div
           className={cn(
-            'border-t border-slate-800/30 p-4',
+            'border-t p-4',
+            theme === 'light' ? 'border-slate-200' : 'border-slate-800/30',
             variant === 'card' && 'border-none pt-2'
           )}
         >
@@ -513,7 +590,12 @@ export function QuestionList({
             variant="ghost"
             size="sm"
             onClick={() => setShowAll(true)}
-            className="w-full text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300"
+            className={cn(
+              'w-full',
+              theme === 'light'
+                ? 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                : 'text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300'
+            )}
           >
             {isHindi
               ? `सभी ${questions.length} प्रश्न देखें`

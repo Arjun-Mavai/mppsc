@@ -2,10 +2,24 @@
 
 import { db } from '@/db';
 import { questions, tests, syllabusTopics } from '@/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, asc } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { parseLenientJSON, minimalClean } from '@/lib/json-utils';
 import { requireAdmin } from '@/lib/auth';
+
+function pickField(
+  o: Record<string, unknown>,
+  keys: string[],
+): string | null | undefined {
+  for (const k of keys) {
+    if (Object.prototype.hasOwnProperty.call(o, k)) {
+      const v = o[k];
+      if (v === null) return null;
+      if (typeof v === 'string') return v;
+    }
+  }
+  return undefined;
+}
 
 export async function getDetailedUpgradeStats() {
   await requireAdmin();
@@ -131,6 +145,299 @@ export async function processManualGeminiJSON(jsonString: string) {
     });
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
+}
+
+/**
+ * Bulk upsert legacy "classic" bilingual text into `explanation` (Hindi) and `explanation_en` (English)
+ * by question id — same columns the Tests tab uses in "Classic" mode. Use for 2026+ rows where the
+ * student UI needs markdown classic text alongside (or without) `extendedData` expert JSON.
+ *
+ * Accepts: a top-level array, or `{ questions: [...] }` / `{ items: [...] }`.
+ * Each item: `questionId` (or `id`), plus any of:
+ * - `explanation_hi` / `explanation` (string, Hindi — `explanation` must be a string, not expert object)
+ * - `explanationEn` / `explanation_en` (string, English)
+ * Omitted keys are left unchanged; `null` clears that column.
+ */
+export async function processManualClassicExplanationsJSON(jsonString: string) {
+  await requireAdmin();
+  try {
+    const root = parseLenientJSON(jsonString) as
+      | { questions?: unknown[]; items?: unknown[] }
+      | unknown[];
+    const rows = Array.isArray(root) ? root : (root.questions ?? root.items ?? []);
+    if (!Array.isArray(rows)) {
+      throw new Error(
+        'Expected a JSON array (or { "questions": [...] }) of objects with questionId and classic text fields.'
+      );
+    }
+
+    function buildPatch(item: Record<string, unknown>): {
+      questionId: string;
+      patch: { explanation?: string | null; explanationEn?: string | null };
+    } | null {
+      const qid = (item.questionId ?? item.id) as string | undefined;
+      if (!qid || typeof qid !== 'string' || !qid.trim()) return null;
+
+      const patch: { explanation?: string | null; explanationEn?: string | null } = {};
+
+      /** First matching key wins; common AI / copy-paste variants */
+      const hi =
+        pickField(item, ['explanation_hi', 'explanationHi', 'explanationHI']) ??
+        (() => {
+          if (!('explanation' in item)) return undefined;
+          const v = item.explanation;
+          if (v === null) return null;
+          if (typeof v === 'string') return v;
+          return undefined;
+        })();
+
+      if (hi !== undefined) {
+        if (hi === null) patch.explanation = null;
+        else if (typeof hi === 'string') patch.explanation = hi;
+      }
+
+      const en = pickField(item, [
+        'explanationEn',
+        'explanation_en',
+        'explanationEN',
+        'ExplanationEn',
+        'explanation_EN',
+      ]);
+      if (en !== undefined) {
+        if (en === null) patch.explanationEn = null;
+        else if (typeof en === 'string') patch.explanationEn = en;
+      }
+
+      if (Object.keys(patch).length === 0) return null;
+      return { questionId: qid.trim(), patch };
+    }
+
+    let successCount = 0;
+    const notFoundIds: string[] = [];
+    const skipped: string[] = [];
+
+    for (const raw of rows) {
+      if (!raw || typeof raw !== 'object') {
+        continue;
+      }
+      const item = raw as Record<string, unknown>;
+      const parsed = buildPatch(item);
+      if (!parsed) {
+        const id = (item.questionId ?? item.id) as string | undefined;
+        if (id && typeof id === 'string') skipped.push(id);
+        continue;
+      }
+
+      const { questionId, patch } = parsed;
+      const updated = await db
+        .update(questions)
+        .set(patch)
+        .where(and(eq(questions.id, questionId), eq(questions.examType, 'mppsc')))
+        .returning({ id: questions.id });
+
+      if (updated.length === 0) {
+        notFoundIds.push(questionId);
+      } else {
+        successCount++;
+      }
+    }
+
+    const parts = [
+      `Updated classic text for ${successCount} question(s).`,
+      notFoundIds.length > 0
+        ? `Not found (wrong id or non-mppsc): ${notFoundIds.slice(0, 15).join(', ')}${
+            notFoundIds.length > 15 ? ` …+${notFoundIds.length - 15}` : ''
+          }`
+        : '',
+      skipped.length > 0
+        ? `Skipped (no text fields or invalid id): ${skipped.slice(0, 10).join(', ')}${
+            skipped.length > 10 ? ` …+${skipped.length - 10}` : ''
+          }`
+        : '',
+    ].filter(Boolean);
+
+    return {
+      success: true,
+      message: parts.join(' '),
+      processedCount: successCount,
+      notFoundCount: notFoundIds.length,
+      skippedCount: skipped.length,
+    };
+  } catch (error) {
+    logger.error('Error in processManualClassicExplanationsJSON', error, { category: 'admin' });
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
+const CLASSIC_BATCH_SIZES = [10, 25, 50] as const;
+export type ClassicBatchSize = (typeof CLASSIC_BATCH_SIZES)[number];
+
+/** Hindi + English classic columns: both non-empty. For progress: done = total - pending. */
+const classicColumnsPendingFilter = () =>
+  sql`(trim(coalesce(${questions.explanation}, '')) = '' OR trim(coalesce(${questions.explanationEn}, '')) = '')`;
+
+/**
+ * Quick counts for admin UI: how many of `totalInTest` have both classic text columns filled.
+ */
+export async function getClassicColumnProgressForTest(testId: string) {
+  await requireAdmin();
+  const testRow = await db
+    .select({ title: tests.title })
+    .from(tests)
+    .where(eq(tests.id, testId))
+    .get();
+  const baseWhere = and(eq(questions.testId, testId), eq(questions.examType, 'mppsc'));
+  const wherePending = and(baseWhere, classicColumnsPendingFilter());
+  const [totRow] = await db
+    .select({ n: sql<number>`count(*)`.mapWith(Number) })
+    .from(questions)
+    .where(baseWhere);
+  const [penRow] = await db
+    .select({ n: sql<number>`count(*)`.mapWith(Number) })
+    .from(questions)
+    .where(wherePending);
+  const totalInTest = totRow?.n ?? 0;
+  const pendingTotal = penRow?.n ?? 0;
+  const classicDoneCount = Math.max(0, totalInTest - pendingTotal);
+  return {
+    success: true as const,
+    testId,
+    testTitle: testRow?.title ?? testId,
+    totalInTest,
+    pendingTotal,
+    classicDoneCount,
+  };
+}
+
+/**
+ * For a given test (e.g. 2026 canonical PYQ), return the next batch of questions that still need
+ * classic text (Hindi and/or `explanation` or `explanation_en` column empty) plus a full Gemini-style
+ * prompt string — same workflow as getGeminiPromptForTest but for classic column upsert.
+ */
+export async function getClassicPendingBatchPrompt(testId: string, limit: number) {
+  await requireAdmin();
+  const L = (CLASSIC_BATCH_SIZES as readonly number[]).includes(limit) ? limit : 25;
+
+  const testRow = await db
+    .select({ id: tests.id, title: tests.title })
+    .from(tests)
+    .where(eq(tests.id, testId))
+    .get();
+
+  if (!testRow) {
+    return { success: false as const, error: 'Test not found' };
+  }
+
+  const baseWhere = and(eq(questions.testId, testId), eq(questions.examType, 'mppsc'));
+  const wherePending = and(baseWhere, classicColumnsPendingFilter());
+
+  const totalCountRows = await db
+    .select({ n: sql<number>`count(*)`.mapWith(Number) })
+    .from(questions)
+    .where(baseWhere);
+  const totalInTest = totalCountRows[0]?.n ?? 0;
+
+  const countRows = await db
+    .select({ n: sql<number>`count(*)`.mapWith(Number) })
+    .from(questions)
+    .where(wherePending);
+  const pendingTotal = countRows[0]?.n ?? 0;
+  const classicDoneCount = Math.max(0, totalInTest - pendingTotal);
+
+  const rows = await db
+    .select({
+      id: questions.id,
+      questionText: questions.questionText,
+      questionTextEn: questions.questionTextEn,
+      options: questions.options,
+      correctAnswer: questions.correctAnswer,
+      order: questions.order,
+    })
+    .from(questions)
+    .where(wherePending)
+    .orderBy(asc(questions.order))
+    .limit(L);
+
+  if (rows.length === 0) {
+    return {
+      success: true as const,
+      testId,
+      testTitle: testRow.title,
+      count: 0,
+      pendingTotal,
+      totalInTest,
+      classicDoneCount,
+      fullPrompt: null,
+      inputJson: null,
+      emptyMessage:
+        pendingTotal === 0
+          ? 'All questions in this test already have both Hindi and English classic text (no empty columns), or the test has no questions.'
+          : 'No rows in this batch (unexpected).',
+    };
+  }
+
+  const inputPayload = rows.map((q) => {
+    let opts: unknown = q.options;
+    if (typeof opts === 'string') {
+      try {
+        opts = JSON.parse(opts);
+      } catch {
+        opts = [];
+      }
+    }
+    return {
+      questionId: q.id,
+      order: q.order,
+      questionText: q.questionText,
+      questionTextEn: q.questionTextEn,
+      options: opts,
+      correctAnswer: q.correctAnswer,
+    };
+  });
+
+  const inputJson = JSON.stringify({ questions: inputPayload }, null, 2);
+
+  const fullPrompt = `You are a legendary MPPSC mentor. Your job is to write **CLASSIC** bilingual coaching-style explanations (not the long expert JSON schema).
+
+### OUTPUT (NON-NEGOTIABLE)
+1. Return **ONLY** a valid JSON **array** of objects. No markdown code fences, no backticks, no trailing commas, no extra commentary.
+2. **Exactly** ${inputPayload.length} array items. Each object MUST be:
+   { "questionId": "<copy exactly from input>", "explanation_hi": "Hindi text", "explanationEn": "English text" }
+3. \`explanation_en\` as snake_case is also accepted in your output, but **prefer** \`explanationEn\` (camelCase) for consistency.
+4. Style: use section markers in each language, e.g. **सही तर्क / **Correct Logic, **Exam Fact, **Memory Tip, **Scam Alert where useful. Separate blocks with newlines; escape newlines in JSON as \\\\n.
+5. **Do not** change, invent, reorder, or omit \`questionId\` — copy from INPUT verbatim.
+
+### BILINGUAL
+- \`explanation_hi\` = natural Hindi. \`explanationEn\` = natural English. Not word-for-word translation only — exam-useful, concise.
+
+Test: "${testRow.title}" — **Classic progress: ${classicDoneCount} / ${totalInTest}** (paper questions with *both* Hindi + English classic columns filled). **${pendingTotal}** still need classic. This request is **${inputPayload.length}** of those, in order.
+
+--- INPUT (questions) ---
+${inputJson}
+
+--- Return ONLY the JSON array, nothing else. ---`;
+
+  logger.info('[getClassicPendingBatchPrompt] batch for classic', {
+    category: 'admin',
+    testId,
+    limit: L,
+    count: inputPayload.length,
+    pendingTotal,
+    totalInTest,
+    classicDoneCount,
+  });
+
+  return {
+    success: true as const,
+    testId,
+    testTitle: testRow.title,
+    count: inputPayload.length,
+    pendingTotal,
+    totalInTest,
+    classicDoneCount,
+    fullPrompt,
+    inputJson,
+  };
 }
 
 export async function getGeminiPromptForTest(limit: number, testId: string, testType: string, testTitle: string) {

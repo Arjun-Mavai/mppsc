@@ -6,6 +6,7 @@ import { verifyAuth } from '@/lib/auth';
 import { Question } from '@/types/quiz';
 import { logger } from '@/lib/logger';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
+import { mapRawQuestionToClientQuestion } from '@/lib/quiz-question-normalize';
 import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
 import { getSubjectPartAccess } from '@/app/syllabus/quiz/pyq/actions';
 import { canAccessTest, getUserTier } from '@/lib/access-control';
@@ -103,26 +104,13 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
       );
     }
 
-    const questions: Question[] = questionsSlice.map((q: any) => {
-      const parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
-      return {
-        id: q.id,
-        question: q.questionText,
-        questionEn: q.questionTextEn || undefined,
-        correctAnswer: Number(q.correctAnswer),
-        options: parsedOptions as string[],
-        explanation: q.explanation || undefined,
-        explanationEn: q.explanationEn || undefined,
-        explanation_hi: q.explanation || undefined,
-        // 🏷️ INJECT YEAR INTO SUBJECT FIELD FOR DISPLAY
+    const questions: Question[] = questionsSlice.map((q: any) =>
+      mapRawQuestionToClientQuestion(q as Record<string, unknown>, {
         subject: `PYQ ${q.year}`,
-        type: q.type || 'standard',
-        matchPairs: q.matchPairs, // Fixed typo matchPairs
-        extendedData: q.extendedData,
-        negativeMarks: SCORING_CONFIG.NEGATIVE_MARKING,
         marks: SCORING_CONFIG.MARKS_PER_QUESTION,
-      };
-    });
+        negativeMarks: SCORING_CONFIG.NEGATIVE_MARKING,
+      })
+    );
 
     const userAttempts = 0; // No attempts tracking for practice mode yet
     const hasPaidPlan = user ? getUserTier(user) !== 'free' : false;
@@ -187,31 +175,20 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
 
   // Map Questions
   const questions: Question[] = testData.questions.map((q) => {
-    // Ensure options are parsed if they come as a stringified array
-    const parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
-
-    return {
-      id: q.id,
-      question: q.questionText,
-      questionEn:
-        testData.type === 'CSAT' &&
-        (!q.questionTextEn ||
-          q.questionTextEn.trim().toLowerCase() === 'n/a' ||
-          q.questionTextEn.trim().toLowerCase() === 'na')
-          ? q.questionText
-          : q.questionTextEn || undefined,
-      correctAnswer: Number(q.correctAnswer),
-      options: parsedOptions as string[], // Cast assumes standard string[] options for now
-      explanation: q.explanation || undefined,
-      explanationEn: q.explanationEn || undefined,
-      explanation_hi: q.explanation || undefined,
+    const base = mapRawQuestionToClientQuestion(q as unknown as Record<string, unknown>, {
       subject: q.subject || undefined,
-      type: (q.type as 'standard' | 'matching') || 'standard',
-      matchPairs: (q.matchPairs as any) || undefined,
-      extendedData: q.extendedData,
-      negativeMarks: SCORING_CONFIG.NEGATIVE_MARKING, // Force Global Config (1)
-      marks: SCORING_CONFIG.MARKS_PER_QUESTION, // Force Global Config (3)
-    };
+      marks: SCORING_CONFIG.MARKS_PER_QUESTION,
+      negativeMarks: SCORING_CONFIG.NEGATIVE_MARKING,
+    });
+    if (
+      testData.type === 'CSAT' &&
+      (!q.questionTextEn ||
+        q.questionTextEn.trim().toLowerCase() === 'n/a' ||
+        q.questionTextEn.trim().toLowerCase() === 'na')
+    ) {
+      return { ...base, questionEn: q.questionText };
+    }
+    return base;
   });
 
   const userAttemptsCount = user ? ((attemptsMap as any)[testId] || 0) : 0;

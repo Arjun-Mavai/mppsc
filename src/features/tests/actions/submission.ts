@@ -5,7 +5,7 @@ import { tests, userAttempts, questions, attemptAnswers, syllabusTopics } from '
 import { eq, asc, desc, and, inArray, sql } from 'drizzle-orm';
 import { unstable_cache, revalidateTag } from 'next/cache';
 import { verifyAuth } from '@/lib/auth';
-import { SCORING_CONFIG } from '@/lib/quiz-scoring';
+import { SCORING_CONFIG, normalizeCorrectAnswer } from '@/lib/quiz-scoring';
 import { logger } from '@/lib/logger';
 import { insertUserToLeaderboard } from '@/actions/leaderboard-actions';
 import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
@@ -318,7 +318,11 @@ export async function submitTestAttempt(
     testQuestions.forEach((q) => {
       const userAnswer = answers[q.id];
       if (userAnswer !== undefined) {
-        const isCorrect = String(userAnswer) === String(q.correctAnswer);
+        // Bhai, userAnswer client se 0, 1, 2, 3 aata hai (index).
+        // q.correctAnswer DB se "A", "0", 0 kuch bhi ho sakta hai.
+        // normalizeCorrectAnswer dono ko numeric index me convert karke compare karega.
+        const correctIdx = normalizeCorrectAnswer(q.correctAnswer);
+        const isCorrect = Number(userAnswer) === correctIdx;
 
         if (isCorrect) {
           // Strict Scoring as per User Request ("Global Standard")

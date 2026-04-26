@@ -10,7 +10,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { StructuredExplanation } from '@/components/StructuredExplanation';
-import { RenderTableQuestion } from '@/features/tests/utils/questionFormatter';
+import {
+  FormattedQuestionText,
+  RenderTableQuestion,
+  cleanMatchingQuestionText,
+  normalizeMultilineText,
+  parseQuestionOptions,
+} from '@/features/tests/utils/questionFormatter';
+import type { Question } from '@/types/quiz';
 import { YearBadge } from '../components/shared/UnitBadge';
 import { formatUnitTitle, getUnitColor } from '../components/shared/constants';
 
@@ -39,6 +46,23 @@ interface ViewAllQuestionsClientProps {
   topicTitle?: string;
   year?: number;
   subject?: string;
+}
+
+/** Same shape as open 2026 paper view for `cleanMatchingQuestionText` / `FormattedQuestionText`. */
+function questionDataToQuestion(q: QuestionData): Question {
+  const opts = parseQuestionOptions(q.options);
+  return {
+    id: q.id,
+    question: q.text,
+    questionEn: q.textEn ?? null,
+    options: opts as Question['options'],
+    correctAnswer:
+      typeof q.correctAnswer === 'number' && !Number.isNaN(q.correctAnswer) ? q.correctAnswer : 0,
+    marks: 2,
+    negativeMarks: 0,
+    type: q.type === 'matching' ? 'matching' : 'standard',
+    matchPairs: (q.matchPairs as Question['matchPairs']) ?? undefined,
+  };
 }
 
 export default function ViewAllQuestionsClient({
@@ -118,7 +142,7 @@ export default function ViewAllQuestionsClient({
       return `MPPSC Prelims ${year} - ${formatUnitTitle(unitId)}`;
     }
     if (source === 'subject' && subject) {
-      return `${subject} Questions (2020-2025)`;
+      return `${subject} Questions (2020-2026)`;
     }
     return `${formatUnitTitle(unitId)} - ${unitTitle}`;
   }, [source, topicTitle, year, unitId, unitTitle, subject]);
@@ -165,11 +189,8 @@ export default function ViewAllQuestionsClient({
             </div>
             <div
               className={cn(
-                'h-10 w-1 rounded-full bg-gradient-to-b opacity-50',
-                colorClass
-                  .replace('bg-', 'from-')
-                  .replace('indigo', 'violet')
-                  .replace(' ', 'to-transparent')
+                'h-10 w-1 rounded-full bg-gradient-to-b to-transparent opacity-50',
+                colorClass.replace('bg-', 'from-').replace('indigo', 'violet')
               )}
             />
           </div>
@@ -260,8 +281,19 @@ export default function ViewAllQuestionsClient({
       >
         {filteredQuestions.map((q, idx) => {
           const isExpanded = expandedIds.has(q.id);
-          const displayText = isHindi ? q.text : q.textEn || q.text;
-          const altText = isHindi ? q.textEn : q.text;
+          const stemQ = questionDataToQuestion(q);
+          const rawStem =
+            (isHindi ? q.text : (q.textEn && String(q.textEn).trim() !== '' ? q.textEn : q.text)) ??
+            '';
+          const stemFormatted = cleanMatchingQuestionText(String(rawStem), stemQ);
+          const previewPlain = normalizeMultilineText(stemFormatted)
+            .replace(/<[^>]*>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          const previewShort =
+            previewPlain.length > 200 ? `${previewPlain.slice(0, 200)}…` : previewPlain;
+          const parsedOpts = parseQuestionOptions(q.options);
+          const hasMatch = Array.isArray(q.matchPairs) && q.matchPairs.length > 0;
 
           return (
             <div
@@ -299,17 +331,14 @@ export default function ViewAllQuestionsClient({
                   </div>
 
                   <div className="min-w-0 flex-1 pt-1">
-                    <div
+                    <p
                       className={cn(
-                        'text-[15px] leading-[1.6] font-bold tracking-tight text-white sm:text-[17px]',
+                        'text-[15px] leading-[1.6] font-bold tracking-tight text-slate-200 sm:text-[17px]',
                         !isExpanded && 'line-clamp-2'
                       )}
-                      dangerouslySetInnerHTML={{
-                        __html: isExpanded
-                          ? displayText
-                          : displayText.slice(0, 180) + (displayText.length > 180 ? '...' : ''),
-                      }}
-                    />
+                    >
+                      {previewShort || '\u00a0'}
+                    </p>
 
                     <div className="mt-3 flex items-center gap-3">
                       <YearBadge
@@ -355,8 +384,14 @@ export default function ViewAllQuestionsClient({
                       className="overflow-hidden"
                     >
                       <div className="space-y-6 border-t border-white/[0.05] bg-slate-950/40 p-5 sm:p-7">
-                        {/* Table Content (if matching) */}
-                        {q.type === 'matching' && q.matchPairs && q.matchPairs.length > 0 && (
+                        <div className="rounded-2xl border border-white/10 bg-slate-50 p-4 sm:p-5 text-slate-900 shadow-inner">
+                          <FormattedQuestionText
+                            text={stemFormatted}
+                            className="!text-slate-900 text-[15px] font-semibold leading-relaxed sm:text-[17px]"
+                          />
+                        </div>
+
+                        {q.type === 'matching' && hasMatch && (
                           <div className="rounded-2xl border border-white/5 bg-slate-900/50 p-4">
                             <RenderTableQuestion
                               matchPairs={q.matchPairs}
@@ -366,20 +401,9 @@ export default function ViewAllQuestionsClient({
                           </div>
                         )}
 
-                        {/* Translation Alternative */}
-                        {altText && altText !== displayText && (
-                          <div className="relative rounded-2xl border-l-[3px] border-amber-500/30 bg-amber-500/[0.03] p-4 text-[13px] leading-relaxed text-slate-400 italic">
-                            <div className="mb-1 text-[9px] font-black tracking-tighter text-amber-400/60 uppercase opacity-50">
-                              Translated Reference
-                            </div>
-                            <div dangerouslySetInnerHTML={{ __html: altText }} />
-                          </div>
-                        )}
-
-                        {/* Redesigned Options Grid */}
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          {q.options &&
-                            q.options.slice(0, 4).map((opt, optIdx) => {
+                        {parsedOpts.length > 0 && (
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            {parsedOpts.slice(0, 4).map((opt, optIdx) => {
                               const parsedOpt: {
                                 text?: unknown;
                                 text_en?: unknown;
@@ -392,8 +416,9 @@ export default function ViewAllQuestionsClient({
                               const optText = isHindi
                                 ? (parsedOpt.text ?? opt)
                                 : (parsedOpt.text_en ?? parsedOpt.textEn ?? parsedOpt.text ?? opt);
-                              
-                              const optHtml = typeof optText === 'string' ? optText : String(optText ?? '');
+                              const optDisplay = normalizeMultilineText(
+                                typeof optText === 'string' ? optText : String(optText ?? ''),
+                              );
 
                               return (
                                 <div
@@ -405,7 +430,6 @@ export default function ViewAllQuestionsClient({
                                       : 'border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.05]'
                                   )}
                                 >
-                                  {/* Alphabet Bubble */}
                                   <div
                                     className={cn(
                                       'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black transition-all',
@@ -416,15 +440,14 @@ export default function ViewAllQuestionsClient({
                                   >
                                     {String.fromCharCode(65 + optIdx)}
                                   </div>
-
                                   <div
                                     className={cn(
-                                      'flex-1 text-sm leading-tight font-medium',
+                                      'flex-1 whitespace-pre-line text-sm leading-relaxed font-medium',
                                       isCorrect ? 'text-emerald-100' : 'text-slate-300'
                                     )}
-                                    dangerouslySetInnerHTML={{ __html: optHtml }}
-                                  />
-
+                                  >
+                                    {optDisplay}
+                                  </div>
                                   {isCorrect && (
                                     <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20">
                                       <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
@@ -433,7 +456,8 @@ export default function ViewAllQuestionsClient({
                                 </div>
                               );
                             })}
-                        </div>
+                          </div>
+                        )}
 
                         {/* Premium Insights Section */}
                         <div className="space-y-4 pt-4">
@@ -442,7 +466,7 @@ export default function ViewAllQuestionsClient({
                               extendedData={q.extendedData}
                               plainExplanation={
                                 isHindi
-                                  ? q.explanation || ''
+                                  ? (q.explanation_hi ?? q.explanation) || ''
                                   : q.explanationEn || q.explanation || ''
                               }
                               explanationEn={q.explanationEn}

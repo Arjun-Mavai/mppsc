@@ -17,6 +17,10 @@ export interface Question {
   negativeMarks?: number;
   type?: 'standard' | 'matching';
   subject?: string; // 🏷️ New field for mixed quizzes
+  /**
+   * Normalized from DB/API: { label, matchId, match, ... }.
+   * Upload JSON may use `left` / `right` / `left_en` / `right_en`; those are converted in mapRawQuestionToClientQuestion.
+   */
   matchPairs?: {
     id: string;
     label: string;

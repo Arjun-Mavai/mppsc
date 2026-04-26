@@ -3,45 +3,61 @@ import { cn } from '@/lib/utils';
 import { Question } from '@/types/quiz';
 
 /**
+ * DB/JSON often stores newlines as the two characters \\ + n. Real newlines may be \r or \r\n.
+ * Many PYQ/matching stems use HTML <br> instead of newlines; normalize those so layout logic runs.
+ * Without this, question stems show as one run-on line and list patterns fail to match.
+ */
+export function normalizeMultilineText(s: string): string {
+  if (!s) return s;
+  return s
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/\\n/g, '\n');
+}
+
+/** Options may be stored as a JSON string in DB — same rules as quiz `getParsedOptions`. */
+export function parseQuestionOptions(opts: unknown): unknown[] {
+  if (opts == null) return [];
+  if (Array.isArray(opts)) return opts;
+  if (typeof opts === 'string') {
+    try {
+      const parsed = JSON.parse(opts);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+/**
  * Removes the raw "List-I ... List-II" text from the question description
  * if we already have structured matchPairs to render a beautiful table.
  */
-export function cleanMatchingQuestionText(questionText: string, question: Question): string {
+export function cleanMatchingQuestionText(
+  questionText: string,
+  question: Question
+): string {
+  const normalized = normalizeMultilineText(questionText);
   if (
-    !questionText ||
+    !normalized ||
     question.type !== 'matching' ||
     !question.matchPairs ||
     question.matchPairs.length === 0
   ) {
-    return questionText;
+    return normalized;
   }
 
   // Broad regex matching List-I, List-II, List-1, List-2, and Hindi variants
   const listRegex = /List-?\s*I{1,2}\b|सूची-?\s*I{1,2}\b|सूची-?\s*[12]/i;
-  const listIndex = questionText.search(listRegex);
+  const listIndex = normalized.search(listRegex);
 
   if (listIndex !== -1) {
-    return questionText.substring(0, listIndex).trim();
+    return normalized.substring(0, listIndex).trim();
   }
 
-  return questionText;
-}
-
-/**
- * Maps correct answer string (A/B/C/D or 0/1/2/3) to numeric index
- */
-export function mapCorrectAnswerToIndex(answer: string | number | null | undefined): number {
-  if (answer === null || answer === undefined || answer === '') return -1;
-  const num = Number(answer);
-  if (!isNaN(num)) return num;
-  
-  // Handle 'A', 'B', 'C', 'D'
-  if (typeof answer === 'string') {
-    const charCode = answer.toUpperCase().charCodeAt(0);
-    if (charCode >= 65 && charCode <= 90) return charCode - 65;
-  }
-  
-  return -1;
+  return normalized;
 }
 
 interface FormattedQuestionTextProps {
@@ -51,30 +67,31 @@ interface FormattedQuestionTextProps {
 
 export function FormattedQuestionText({ text, className }: FormattedQuestionTextProps) {
   if (!text) return null;
+  const normalized = normalizeMultilineText(text);
 
   // 1. Check for "Match Column" / "List-I & List-II" pattern (English + Hindi)
   const hasListPattern =
-    (text.includes('List-I') && text.includes('List-II')) ||
-    (text.includes('सूची-I') && text.includes('सूची-II')) ||
-    (text.includes('सूची-1') && text.includes('सूची-2')) ||
-    (text.includes('सूची- I') && text.includes('सूची- II'));
+    (normalized.includes('List-I') && normalized.includes('List-II')) ||
+    (normalized.includes('सूची-I') && normalized.includes('सूची-II')) ||
+    (normalized.includes('सूची-1') && normalized.includes('सूची-2')) ||
+    (normalized.includes('सूची- I') && normalized.includes('सूची- II'));
   if (hasListPattern) {
-    return <RenderTableQuestion text={text} className={className} />;
+    return <RenderTableQuestion text={normalized} className={className} />;
   }
 
   // 2. Check for "Assertion (A)" and "Reason (R)" or "Statement I" & "Statement II"
   if (
-    (text.includes('Assertion (A)') && text.includes('Reason (R)')) ||
-    (text.includes('Statement I:') && text.includes('Statement II:'))
+    (normalized.includes('Assertion (A)') && normalized.includes('Reason (R)')) ||
+    (normalized.includes('Statement I:') && normalized.includes('Statement II:'))
   ) {
-    return <RenderAssertionReason text={text} className={className} />;
+    return <RenderAssertionReason text={normalized} className={className} />;
   }
 
   // 3. Check for Numbered Lists (1. ... 2. ... 3. ...)
   // We use a heuristic: if distinct "1. ", "2. " patterns exist in the text closer to the end or middle
   // This is tricky because the main question might be numbered.
   // We'll rely on newline splits mostly.
-  return <RenderStandardText text={text} className={className} />;
+  return <RenderStandardText text={normalized} className={className} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -160,7 +177,8 @@ export function RenderTableQuestion({
 
   // Fallback to text parsing if no matchPairs or text is provided
   if (!text) return null;
-  const lines = text
+  const t = normalizeMultilineText(text);
+  const lines = t
     .split('\n')
     .map((l) => l.trim())
     .filter(Boolean);
@@ -423,34 +441,62 @@ function RenderAssertionReason({ text, className }: FormattedQuestionTextProps) 
   );
 }
 
+/**
+ * Split a stem that has (a) (b) (c) on one line (no newlines) or after \\n fix.
+ */
+function expandStatementLines(text: string): string[] {
+  const normalized = normalizeMultilineText(text);
+  const out: string[] = [];
+  for (const segment of normalized.split('\n').map((l) => l.trim()).filter(Boolean)) {
+    const markerCount = (segment.match(/\([a-zA-Z]\)/g) || []).length;
+    if (markerCount >= 2) {
+      const pieces = segment
+        .split(/(?=\([a-zA-Z]\)\s)/g)
+        .map((p) => p.trim())
+        .filter(Boolean);
+      if (pieces.length > 1) {
+        out.push(...pieces);
+        continue;
+      }
+    }
+    out.push(segment);
+  }
+  return out;
+}
+
 function RenderStandardText({ text, className }: FormattedQuestionTextProps) {
-  // Check for embedded numbered list "1. 2. 3. 4." in the text
-  // Many questions have "1. xxx 2. xxx" or newlines.
-
-  const lines = text
-    .split('\n')
-    .map((l) => l.trim())
-    .filter(Boolean);
-
-  // formatting logic:
-  // If line starts with "1.", "2." etc, allow indented rendering
+  const lines = expandStatementLines(text);
 
   return (
     <div className={cn('space-y-1 text-lg leading-relaxed font-medium text-slate-900', className)}>
       {lines.map((line, i) => {
-        // Check if numbered list item
-        const isListItem = line.match(/^\d+\./);
-        if (isListItem) {
+        const numbered = line.match(/^(\d+)\.\s*([\s\S]*)$/);
+        if (numbered) {
           return (
-            <div key={i} className="flex items-start gap-2 py-1 pl-4">
-              <span className="mt-1 rounded bg-slate-100 px-1.5 text-sm font-bold text-slate-500">
-                {line.split('.')[0]}
+            <div key={i} className="flex items-start gap-2 py-1 pl-1 sm:pl-4">
+              <span className="mt-0.5 shrink-0 rounded bg-slate-100 px-1.5 text-sm font-bold text-slate-500">
+                {numbered[1]}.
               </span>
-              <span>{line.substring(line.indexOf('.') + 1).trim()}</span>
+              <span className="min-w-0 flex-1">{numbered[2]}</span>
             </div>
           );
         }
-        return <div key={i}>{line}</div>;
+        const letterParen = line.match(/^\(([a-zA-Z])\)\s*([\s\S]*)$/);
+        if (letterParen) {
+          return (
+            <div key={i} className="flex items-start gap-2 py-1 pl-1 sm:pl-4">
+              <span className="mt-0.5 shrink-0 rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm font-bold text-slate-600">
+                ({letterParen[1]})
+              </span>
+              <span className="min-w-0 flex-1 leading-relaxed">{letterParen[2]}</span>
+            </div>
+          );
+        }
+        return (
+          <div key={i} className="min-w-0 py-0.5">
+            {line}
+          </div>
+        );
       })}
     </div>
   );

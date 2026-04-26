@@ -5,8 +5,12 @@ import { CheckCircle2, X, Flag, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Question } from '@/types/quiz';
-import { SCORING_CONFIG } from '@/lib/quiz-scoring';
-import { FormattedQuestionText, cleanMatchingQuestionText } from '../../utils/questionFormatter';
+import { SCORING_CONFIG, normalizeCorrectAnswer } from '@/lib/quiz-scoring';
+import {
+  FormattedQuestionText,
+  cleanMatchingQuestionText,
+  normalizeMultilineText,
+} from '../../utils/questionFormatter';
 
 interface QuizQuestionProps {
   question: Question;
@@ -149,20 +153,20 @@ export function QuizQuestion({
       <div className="space-y-3">
         {parsedOptions.map((opt: any, idx: number) => {
           const isSelected = selectedAnswer === idx;
-          // Bhai correctAnswer NaN ho sakta h agar DB me galat data h — safe check lagao
-          const correctIdx =
-            typeof question.correctAnswer === 'number' && !isNaN(question.correctAnswer)
-              ? question.correctAnswer
-              : -1; // -1 = koi bhi match nahi karega
+          // Bhai normalize use karo taaki "0", 0, "A" sab sahi se handle hon
+          const correctIdx = normalizeCorrectAnswer(question.correctAnswer);
           const isCorrect = correctIdx === idx;
 
-          let optionText = opt;
+          let optionText: string = '';
           if (typeof opt === 'object' && opt !== null) {
             optionText =
               language === 'hi'
                 ? opt.text || opt.textEn || opt.text_en || JSON.stringify(opt)
                 : opt.textEn || opt.text_en || opt.text || JSON.stringify(opt);
+          } else {
+            optionText = String(opt ?? '');
           }
+          const optionDisplay = normalizeMultilineText(String(optionText));
 
           return (
             <div
@@ -193,7 +197,7 @@ export function QuizQuestion({
               <div className="relative z-10 flex items-center justify-between">
                 <span
                   className={cn(
-                    'pr-4 text-base leading-relaxed sm:text-lg',
+                    'pr-4 text-base leading-relaxed sm:text-lg whitespace-pre-line',
                     // Text color bhi strong karo feedback me — green/red clearly dikhe
                     showFeedback && isCorrect && 'font-bold text-emerald-800',
                     showFeedback && isSelected && !isCorrect && 'font-bold text-red-800',
@@ -201,7 +205,7 @@ export function QuizQuestion({
                     !showFeedback && !isSelected && 'text-slate-700'
                   )}
                 >
-                  {optionText}
+                  {optionDisplay}
                 </span>
 
                 <div className="shrink-0">

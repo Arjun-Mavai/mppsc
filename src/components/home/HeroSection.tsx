@@ -1,7 +1,7 @@
 'use client';
 
 import { useTransition } from 'react';
-import { Sparkles, Zap, ChevronRight, Rocket, Star, ShieldCheck } from 'lucide-react';
+import { BookOpen, Sparkles, Zap, ChevronRight, Star, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useRouter } from 'next/navigation';
@@ -26,7 +26,9 @@ export function HeroSection() {
       title2: 'MPPSC Pattern.',
       subtitle: 'The ultimate data-driven platform with Bilingual Mnemonics, Smart PYQ Analysis & High-Performance Test Series.',
       primaryBtn: 'Practice PYQs',
+      /** Kept for when we re-enable the `/free-quiz` hero CTA (currently commented below). */
       secondaryBtn: 'Free Mock Test',
+      openPrelimsHeroBtn: '2026 Prelims paper',
       stats: ['100+ Topic Tests', 'Smart PYQ Analytics', 'Retention Mnemonics']
     },
     hi: {
@@ -38,6 +40,7 @@ export function HeroSection() {
       subtitle: 'मेमोनिक्स, स्मार्ट PYQ विश्लेषण और हाई-परफॉरमेंस टेस्ट सीरीज़ के साथ अपनी तैयारी को एलीट लेवल पर ले जाएं।',
       primaryBtn: 'PYQs प्रैक्टिस करें',
       secondaryBtn: 'फ्री मॉक टेस्ट',
+      openPrelimsHeroBtn: '2026 प्रारंभिक पेपर',
       stats: ['100+ टॉपिक टेस्ट', 'स्मार्ट PYQ एनालिसिस', 'स्मार्ट मेमोनिक्स']
     }
   };
@@ -125,34 +128,50 @@ export function HeroSection() {
           </motion.p>
         </motion.div>
 
-        {/* Action Buttons - Magnetic CTAs */}
+        {/* Action Buttons — 2026 open prelims first (hero priority), then PYQs */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
           className="mt-14 flex w-full flex-col items-center justify-center gap-5 sm:flex-row"
         >
-          {/* Primary CTA: PYQs */}
+          {/* Primary CTA: open 2026 MPPSC prelims paper (lead gate on that route) */}
           <button
-            onClick={() => handleNavigation('/syllabus/quiz/pyq', 'hero_pyq_clicked')}
+            type="button"
+            onClick={() => handleNavigation('/open/2026-mppsc-prelims', 'hero_open_2026_prelims_clicked')}
             disabled={isPending}
             className="group relative flex h-16 w-full items-center justify-center gap-4 overflow-hidden rounded-2xl bg-white px-10 font-black text-black transition-all hover:scale-[1.03] hover:shadow-[0_0_50px_rgba(255,255,255,0.15)] active:scale-[0.97] sm:w-auto"
           >
-            <Zap size={22} className="fill-black" />
-            <span className="text-lg tracking-tighter">{t.primaryBtn}</span>
+            <BookOpen size={22} className="text-amber-600" />
+            <span className="text-lg tracking-tighter">{t.openPrelimsHeroBtn}</span>
             <ChevronRight size={22} className="transition-transform group-hover:translate-x-1.5" />
-            
             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-black/5 to-transparent group-hover:animate-shimmer" />
           </button>
 
-          {/* Secondary CTA: Free Mock */}
+          {/*
+            Secondary CTA (Free mock at /free-quiz) — commented 2026-04-26: hero priority is the
+            open 2026 prelims PYQ paper at /open/2026-mppsc-prelims. Restore this block and swap
+            the button below if free quiz should lead the hero again.
+            <button
+              onClick={() => handleNavigation('/free-quiz', 'hero_free_test_clicked')}
+              disabled={isPending}
+              className="group flex h-16 w-full items-center justify-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] px-10 font-bold text-white backdrop-blur-2xl transition-all hover:bg-white/[0.08] hover:border-white/20 active:scale-[0.97] sm:w-auto"
+            >
+              <Rocket size={20} className="text-amber-500 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
+              <span className="text-lg tracking-tighter">{t.secondaryBtn}</span>
+            </button>
+          */}
+
+          {/* Secondary CTA: PYQs */}
           <button
-            onClick={() => handleNavigation('/free-quiz', 'hero_free_test_clicked')}
+            type="button"
+            onClick={() => handleNavigation('/syllabus/quiz/pyq', 'hero_pyq_clicked')}
             disabled={isPending}
             className="group flex h-16 w-full items-center justify-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] px-10 font-bold text-white backdrop-blur-2xl transition-all hover:bg-white/[0.08] hover:border-white/20 active:scale-[0.97] sm:w-auto"
           >
-            <Rocket size={20} className="text-amber-500 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
-            <span className="text-lg tracking-tighter">{t.secondaryBtn}</span>
+            <Zap size={20} className="text-amber-500 transition-transform group-hover:translate-x-0.5" />
+            <span className="text-lg tracking-tighter">{t.primaryBtn}</span>
+            <ChevronRight size={20} className="text-white/80 transition-transform group-hover:translate-x-1" />
           </button>
         </motion.div>
 

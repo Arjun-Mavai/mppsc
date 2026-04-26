@@ -16,21 +16,21 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Expert PYQ Intelligence | MPPSC Analytics',
-  description: 'Deep analysis of MPPSC Previous Year Questions — unit distribution, repeated questions & topic trends from 2020 to 2025.',
+  description: 'Deep analysis of MPPSC Previous Year Questions — unit distribution, repeated questions & topic trends from 2020 to 2026.',
 };
 
-// ISR: Revalidate every 6 hours — data is fixed for 2020–2025 period
+// ISR: Revalidate every 6 hours — canonical PYQ set may grow (see pyq-constants).
 export const revalidate = 21600;
 
 // ── Cached analytics functions (unique stable keys) ─────────────────────────
 const getCachedUnitStats = unstable_cache(
   getUnitDistributionStats,
-  ['intelligence-unit-stats-v6'],
+  ['intelligence-unit-stats-v7-2026'],
   { revalidate: 21600 }
 );
 const getCachedSubjectQuestionsData = unstable_cache(
   getOverallWeightageSubjectData,
-  ['intelligence-subject-questions-v6'],
+  ['intelligence-subject-questions-v7-2026'],
   { revalidate: 21600 }
 );
 

@@ -7,6 +7,15 @@ function getExplanationObject(value: unknown): Record<string, any> | null {
     return null;
   }
 
+  // Direct expert blob: { stream: "mppsc_expert", ... } — do not require a nested "explanation" key
+  if (
+    typeof (value as { stream?: unknown }).stream === 'string' &&
+    ((value as { stream: string }).stream === 'mppsc_expert' ||
+      (value as { stream: string }).stream === 'csat_logic')
+  ) {
+    return value as Record<string, any>;
+  }
+
   if ('explanation' in value) {
     const explanation = value.explanation;
     return isRecord(explanation) ? (explanation as Record<string, any>) : null;

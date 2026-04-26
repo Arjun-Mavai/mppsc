@@ -25,8 +25,9 @@ export function QuizExplanation({ question, language, translations: t }: QuizExp
 
       <div className="text-sm leading-relaxed text-slate-700 sm:text-base">
         <StructuredExplanation
+          key={question.id}
           extendedData={question.extendedData}
-          plainExplanation={question.explanation || 'No explanation available.'}
+          plainExplanation={question.explanation || question.explanation_hi || undefined}
           explanationEn={question.explanationEn}
           explanationHi={question.explanation_hi}
           language={language as 'hi' | 'en'}

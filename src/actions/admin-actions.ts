@@ -4,8 +4,9 @@ import { db } from '@/db';
 import { tests, questions, contentBlogs, paymentExitReasons, guests } from '@/db/schema';
 import { nanoid } from 'nanoid';
 import { revalidatePath } from 'next/cache';
-import { eq, sql, desc } from 'drizzle-orm';
+import { eq, sql, desc, and, count } from 'drizzle-orm';
 import { AdminDashboardResponse } from '@/types/admin';
+import { GUEST_LEAD_SOURCE } from '@/lib/lead-source';
 import { logger } from '@/lib/logger';
 import { parseLenientJSON } from '@/lib/json-utils';
 import { requireAdmin } from '@/lib/auth-admin';
@@ -150,18 +151,40 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
       }
 
       const isExpert = explanationFormat === 'expert';
-      
+      // Match uploadTopicTests: Hindi/En markdown in text columns, expert { stream, ... } only in extendedData
+      const expertBlob: unknown = (() => {
+        if (!isExpert) return null;
+        if (q.extendedData != null) return q.extendedData;
+        if (
+          q.explanation != null &&
+          typeof q.explanation === 'object' &&
+          !Array.isArray(q.explanation)
+        ) {
+          return q.explanation;
+        }
+        return null;
+      })();
+
+      const explanationTextForDb = isExpert
+        ? (q.explanation_hi ??
+            (typeof q.explanation === 'string' ? q.explanation : null) ??
+            null)
+        : typeof q.explanation === 'string'
+          ? q.explanation
+          : (q.explanation_hi ?? null);
+
+      const explanationEnForDb = q.explanationEn ?? q.explanation_en ?? null;
+
       return {
         id: nanoid(),
         testId: testId,
         questionText: qText,
         questionTextEn: q.questionTextEn || null,
         options: JSON.stringify(q.options),
-        correctAnswer: q.correctAnswer,
-        // Branching logic for explanation vs extendedData
-        explanation: isExpert ? (q.explanation_hi || q.explanation_en || null) : q.explanation,
-        explanationEn: q.explanationEn || (isExpert ? q.explanation_en : null),
-        extendedData: isExpert ? q.explanation : null,
+        correctAnswer: String(q.correctAnswer).trim(),
+        explanation: explanationTextForDb,
+        explanationEn: explanationEnForDb,
+        extendedData: expertBlob,
         marks: q.marks || 2,
         negativeMarks: q.negativeMarks || 0,
         idealTime: q.idealTime || 60,
@@ -287,18 +310,64 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
       .from(contentBlogs)
       .where(eq(contentBlogs.examType, 'mppsc'));
 
-    const recentGuests = await db
-      .select({
-        id: guests.id,
-        name: guests.name,
-        email: guests.email,
-        mobile: guests.mobile,
-        createdAt: guests.createdAt,
-      })
-      .from(guests)
-      .where(eq(guests.examType, 'mppsc'))
-      .orderBy(desc(guests.createdAt))
-      .limit(100);
+    let openPyq2026LeadCount = 0;
+    try {
+      const [openPyqCountRow] = await db
+        .select({ c: count() })
+        .from(guests)
+        .where(
+          and(
+            eq(guests.examType, 'mppsc'),
+            eq(guests.leadSource, GUEST_LEAD_SOURCE.OPEN_PYQ_2026)
+          )
+        );
+      openPyq2026LeadCount = openPyqCountRow?.c ?? 0;
+    } catch (guestErr) {
+      logger.error('Dashboard Stats Error (Guest Count):', guestErr, { category: 'admin' });
+    }
+
+    let recentGuests: any[] = [];
+    try {
+      recentGuests = await db
+        .select({
+          id: guests.id,
+          name: guests.name,
+          email: guests.email,
+          mobile: guests.mobile,
+          createdAt: guests.createdAt,
+          leadSource: guests.leadSource,
+        })
+        .from(guests)
+        .where(eq(guests.examType, 'mppsc'))
+        .orderBy(desc(guests.createdAt))
+        .limit(100);
+    } catch (guestErr) {
+      logger.error('Dashboard Stats Error (Recent Guests):', guestErr, { category: 'admin' });
+    }
+
+    let recentOpenPyqLeads: any[] = [];
+    try {
+      recentOpenPyqLeads = await db
+        .select({
+          id: guests.id,
+          name: guests.name,
+          email: guests.email,
+          mobile: guests.mobile,
+          createdAt: guests.createdAt,
+          leadSource: guests.leadSource,
+        })
+        .from(guests)
+        .where(
+          and(
+            eq(guests.examType, 'mppsc'),
+            eq(guests.leadSource, GUEST_LEAD_SOURCE.OPEN_PYQ_2026)
+          )
+        )
+        .orderBy(desc(guests.createdAt))
+        .limit(50);
+    } catch (guestErr) {
+      logger.error('Dashboard Stats Error (Recent Open PYQ Leads):', guestErr, { category: 'admin' });
+    }
 
     const totalTests = testsData.length;
     const totalQuestions = testsData.reduce((acc, t) => acc + (t.totalQuestions || 0), 0);
@@ -355,12 +424,14 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
         totalTests,
         totalQuestions,
         totalBlogs,
+        openPyq2026LeadCount,
         typeCount,
         blogCategoryCount,
       },
       recentUploads,
       recentBlogs,
       recentGuests, // Added recentGuests to return
+      recentOpenPyqLeads,
       topicCoverage: serializedCoverage,
     };
   } catch (e) {

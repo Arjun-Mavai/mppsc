@@ -24,57 +24,67 @@ interface PageProps {
   }>;
 }
 
-// Cached function to get full question details by IDs
-const getQuestionsWithDetails = unstable_cache(
-  async (questionIds: string[]) => {
-    if (questionIds.length === 0) return [];
-    
-    const questionData = await db
-      .select({
-        id: questions.id,
-        text: questions.questionText,
-        textEn: questions.questionTextEn,
-        options: questions.options,
-        type: questions.type,
-        matchPairs: questions.matchPairs,
-        correctAnswer: questions.correctAnswer,
-        explanation: questions.explanation,
-        explanationEn: questions.explanationEn,
-        explanation_hi: questions.explanation,
-        testId: questions.testId,
-        testTitle: tests.title,
-        order: questions.order,
-        subject: questions.subject,
-        extendedData: questions.extendedData,
-      })
-      .from(questions)
-      .innerJoin(tests, eq(questions.testId, tests.id))
-      .where(inArray(questions.id, questionIds));
+/** Next.js `unstable_cache` rejects serialized payloads >2MB — “Subject = All” exceeds that. */
+const MAX_QUESTION_IDS_FOR_DATA_CACHE = 320;
 
-    return questionData.map((q) => {
-      // Use getYearFromTestId for accurate year extraction instead of regex on title
-      const year = getYearFromTestId(q.testId);
-      return {
-        id: q.id,
-        text: q.text,
-        textEn: q.textEn,
-        options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
-        type: q.type || 'standard',
-        matchPairs: typeof q.matchPairs === 'string' ? JSON.parse(q.matchPairs) : q.matchPairs,
-        correctAnswer: q.correctAnswer !== null ? Number(q.correctAnswer) : undefined,
-        explanation: q.explanation,
-        explanationEn: q.explanationEn,
-        explanation_hi: q.explanation,
-        year,
-        qNo: q.order,
-        subject: q.subject,
-        extendedData: q.extendedData,
-      };
-    });
-  },
+async function fetchQuestionsWithDetailsFromDb(questionIds: string[]) {
+  if (questionIds.length === 0) return [];
+
+  const questionData = await db
+    .select({
+      id: questions.id,
+      text: questions.questionText,
+      textEn: questions.questionTextEn,
+      options: questions.options,
+      type: questions.type,
+      matchPairs: questions.matchPairs,
+      correctAnswer: questions.correctAnswer,
+      explanation: questions.explanation,
+      explanationEn: questions.explanationEn,
+      explanation_hi: questions.explanation,
+      testId: questions.testId,
+      testTitle: tests.title,
+      order: questions.order,
+      subject: questions.subject,
+      extendedData: questions.extendedData,
+    })
+    .from(questions)
+    .innerJoin(tests, eq(questions.testId, tests.id))
+    .where(inArray(questions.id, questionIds));
+
+  return questionData.map((q) => {
+    const year = getYearFromTestId(q.testId);
+    return {
+      id: q.id,
+      text: q.text,
+      textEn: q.textEn,
+      options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
+      type: q.type || 'standard',
+      matchPairs: typeof q.matchPairs === 'string' ? JSON.parse(q.matchPairs) : q.matchPairs,
+      correctAnswer: q.correctAnswer !== null ? Number(q.correctAnswer) : undefined,
+      explanation: q.explanation,
+      explanationEn: q.explanationEn,
+      explanation_hi: q.explanation,
+      year,
+      qNo: q.order,
+      subject: q.subject,
+      extendedData: q.extendedData,
+    };
+  });
+}
+
+const getQuestionsWithDetailsCached = unstable_cache(
+  async (questionIds: string[]) => fetchQuestionsWithDetailsFromDb(questionIds),
   ['pyq-questions-details-v3'],
   { revalidate: 3600, tags: ['pyq-questions'] }
 );
+
+async function getQuestionsWithDetails(questionIds: string[]) {
+  if (questionIds.length > MAX_QUESTION_IDS_FOR_DATA_CACHE) {
+    return fetchQuestionsWithDetailsFromDb(questionIds);
+  }
+  return getQuestionsWithDetailsCached(questionIds);
+}
 
 // Cached function to get questions by topic (using topicSlug)
 const getQuestionsByTopic = unstable_cache(
@@ -164,13 +174,13 @@ export default async function ViewAllQuestionsPage({ searchParams }: PageProps) 
     if (subject === 'All') {
       const allQuestionIds = subjectData.flatMap(data => data.questions.map(q => q.id));
       questionList = await getQuestionsWithDetails(allQuestionIds);
-      unitTitle = `All Subjects Questions (2020-2025)`;
+      unitTitle = `All Subjects Questions (2020-2026)`;
     } else {
       const matchingSubject = subjectData.find(data => data.subject === subject);
       if (matchingSubject) {
         // Convert subject questions to the expected format
         questionList = await getQuestionsWithDetails(matchingSubject.questions.map(q => q.id));
-        unitTitle = `${subject} Questions (2020-2025)`;
+        unitTitle = `${subject} Questions (2020-2026)`;
       }
     }
   } else {

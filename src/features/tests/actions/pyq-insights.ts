@@ -17,6 +17,7 @@ import {
   PYQ_SCOPE_END_YEAR,
   PYQ_SCOPE_START_YEAR,
 } from '@/features/tests/utils/pyq-scope';
+import { PYQ_SCOPED_TEST_ID_YEAR } from '@/lib/pyq-constants';
 import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
 import { logger } from '@/lib/logger';
 
@@ -93,7 +94,8 @@ const getScopedPyqTestsImpl = async (
 
   const byYear = new Map<number, ScopedTest>();
   rows.forEach((row) => {
-    const year = getScopedStateServiceYear(row.testTitle);
+    const year =
+      getScopedStateServiceYear(row.testTitle) ?? PYQ_SCOPED_TEST_ID_YEAR[row.testId] ?? null;
     if (year === null || year < fromYear || year > toYear) return;
     const candidate: ScopedTest = {
       testId: row.testId,
@@ -112,7 +114,7 @@ const getScopedPyqTestsImpl = async (
 // Cached version - used heavily across insights (called 8+ times per page)
 export const getScopedPyqTests = unstable_cache(
   getScopedPyqTestsImpl,
-  ['scoped-pyq-tests'],
+  ['scoped-pyq-tests-v2-2026'],
   { revalidate: 3600, tags: ['tests', 'pyq-insights'] }
 );
 

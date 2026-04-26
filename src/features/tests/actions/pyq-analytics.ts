@@ -13,8 +13,7 @@ import { getCanonicalTestIds } from '@/lib/pyq-constants';
 // ------------------------------------------------------------------
 export const getSubjectWisePYQStats = unstable_cache(
   async () => {
-    // 🚀 RESTRICTION: Only use canonical 2020-2025 PYQ tests for analysis
-    // This ensures exactly 600 total questions are tracked (6 tests * 100 Qs).
+    // 🚀 RESTRICTION: Only use canonical PYQ tests (see CANONICAL_TEST_IDS) for analysis.
     const pyqTestIds = getCanonicalTestIds();
 
     if (pyqTestIds.length === 0) return {};
@@ -40,7 +39,7 @@ export const getSubjectWisePYQStats = unstable_cache(
     // Only return categories with > 0 questions
     return stats;
   },
-  ['subject-wise-pyq-stats'],
+  ['subject-wise-pyq-stats-v2-2026'],
   { revalidate: 3600, tags: ['pyq-stats'] } // Revalidate every hour
 );
 

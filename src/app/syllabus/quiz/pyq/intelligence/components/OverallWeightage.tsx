@@ -82,7 +82,7 @@ export function OverallWeightage({
           theme === 'light' ? "bg-indigo-500" : "bg-emerald-500"
         )} />
         <h2 className={cn("text-xl font-black tracking-tight sm:text-2xl", theme === 'light' ? "text-[#1D1D1F]" : "text-white")}>
-          {isHindi ? 'कुल महत्व (2020-2025)' : 'Overall Weightage (2020-2025)'}
+          {isHindi ? 'कुल महत्व (2020-2026)' : 'Overall Weightage (2020-2026)'}
         </h2>
       </div>
 

@@ -1,5 +1,5 @@
 export const PYQ_SCOPE_START_YEAR = 2020;
-export const PYQ_SCOPE_END_YEAR = 2025;
+export const PYQ_SCOPE_END_YEAR = 2026;
 
 const normalizeWhitespace = (value: string): string => value.replace(/\s+/g, ' ').trim();
 
