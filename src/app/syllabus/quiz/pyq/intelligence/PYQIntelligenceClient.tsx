@@ -62,7 +62,7 @@ export default function PYQIntelligenceClient({
         {/* PYQ Analysis Menu - Restored on all screen sizes per User Request */}
         <PYQMenu isHindi={isHindi} currentPage="intelligence" />
 
-        {/* Overall Weightage (Subject-wise 2020-2025) */}
+        {/* Overall Weightage (subject-wise across canonical Prelims papers) */}
         <OverallWeightage
           simpleSubjectStats={simpleSubjectStats}
           subjectQuestionsData={subjectQuestionsData}

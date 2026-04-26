@@ -4,11 +4,13 @@ import React from 'react';
 import { CheckCircle2, Lightbulb, Brain, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { coerceExplanationToString } from '@/lib/explanation-text';
 
 interface PremiumExplanationProps {
-  explanation: string;
-  explanationEn?: string | null;
-  explanationHi?: string | null;
+  /** Plain / default explanation — may be string or bilingual object from API */
+  explanation?: unknown;
+  explanationEn?: unknown;
+  explanationHi?: unknown;
   language?: 'hi' | 'en';
   /** When true, Core Logic renders without a border-box — plain text, more space on small screens */
   compact?: boolean;
@@ -34,9 +36,15 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
       ? 'यह प्रश्न सीधे अवधारणात्मक (Conceptual) है। यदि यह गलत हुआ है, तो कृपया संबंधित विषय के मूल तथ्यों (Basics) को दोहराएं।'
       : 'This question addresses core concepts. If answered incorrectly, please review the fundamental facts of this topic.';
 
+  const coercedEn = coerceExplanationToString(explanationEn, 'en');
+  const coercedHi = coerceExplanationToString(explanationHi, 'hi');
+  const coercedMain = coerceExplanationToString(explanation, finalLanguage);
+
+  /** Never render non-strings in JSX (nested JSON from prod → [object Object]). */
+  const displayExplanation = (v: unknown) => coerceExplanationToString(v, finalLanguage);
+
   const textToParseRaw =
-    (finalLanguage === 'en' ? (explanationEn || explanation) : (explanationHi || explanation)) ||
-    DEFAULT_MSG;
+    (finalLanguage === 'en' ? coercedEn || coercedMain : coercedHi || coercedMain) || DEFAULT_MSG;
 
   // JSON DETECTION & RENDERING
   const renderJSONExplanation = (jsonStr: string) => {
@@ -51,30 +59,38 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
           label: finalLanguage === 'hi' ? 'तर्क एवं विश्लेषण' : 'Core Logic',
           icon: <CheckCircle2 size={16} className="text-emerald-500" />,
           color: 'emerald' as const,
-          content: data.verdict || data.core_logic || data.logic,
+          content: displayExplanation(
+            data.verdict ?? data.core_logic ?? data.logic,
+          ),
         },
         {
           key: 'exam_fact',
           label: finalLanguage === 'hi' ? 'एग्जाम फैक्ट' : 'Exam Fact',
           icon: <Lightbulb size={16} className="text-amber-500" />,
           color: 'amber' as const,
-          content: data.exam_fact || data.fact || data.core_concept,
+          content: displayExplanation(
+            data.exam_fact ?? data.fact ?? data.core_concept,
+          ),
         },
         {
           key: 'memory_tip',
           label: finalLanguage === 'hi' ? 'मेमोरी टिप' : 'Memory Tip',
           icon: <Brain size={16} className="text-indigo-500" />,
           color: 'indigo' as const,
-          content: data.memory_tip || data.tip || data.memory_trick || data.elimination_wisdom,
+          content: displayExplanation(
+            data.memory_tip ?? data.tip ?? data.memory_trick ?? data.elimination_wisdom,
+          ),
         },
         {
           key: 'scam_alert',
           label: finalLanguage === 'hi' ? 'स्कैम अलर्ट' : 'Scam Alert',
           icon: <AlertTriangle size={16} className="text-rose-500" />,
           color: 'rose' as const,
-          content: data.scam_alert || data.scam || data.trap_alert || data.trap_alerts,
+          content: displayExplanation(
+            data.scam_alert ?? data.scam ?? data.trap_alert ?? data.trap_alerts,
+          ),
         },
-      ].filter((item) => item.content);
+      ].filter((item) => item.content.trim().length > 0);
 
       if (analysisItems.length === 0) return null;
 
@@ -125,7 +141,7 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
                   darkMode ? 'text-slate-200' : 'text-slate-800'
                 )}
               >
-                {ai.content}
+                {displayExplanation(ai.content)}
               </p>
             </div>
           ))}
@@ -171,6 +187,14 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
     SCAM: '**स्कैम अलर्ट',
   };
 
+  // Plain-text / prompt-style (no **), including bilingual mixes (e.g. HI body + "Exam Fact:" labels)
+  const PLAIN_MARKERS = {
+    LOGIC: ['सही तर्क:', 'Correct Logic:', 'Core Logic:'] as const,
+    FACT: ['Exam Fact:', '**💡 Exam Fact', 'Exam Fact\n'] as const,
+    TIP: ['Memory Tip:', '**🧠 Memory Tip', 'Memory Tip\n'] as const,
+    SCAM: ['Scam Alert:', '**🚫 Scam Alert', 'Scam Alert\n'] as const,
+  };
+
   // Also check for emoji versions
   const EMOJI_MARKERS = {
     LOGIC: '✅',
@@ -179,40 +203,60 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
     SCAM: '🚫',
   };
 
-  // Find Core Logic section (can start with ✅ or **Correct Logic or **तर्क)
+  /** Every substring that can start a new section (used to bound slices). */
+  const allSectionStartMarkers: string[] = [
+    'सही तर्क:',
+    'Correct Logic:',
+    'Core Logic:',
+    MARKERS.LOGIC,
+    HINDI_MARKERS.LOGIC,
+    '**तर्क',
+    MARKERS.FACT,
+    HINDI_MARKERS.FACT,
+    ...PLAIN_MARKERS.FACT,
+    MARKERS.TIP,
+    HINDI_MARKERS.TIP,
+    ...PLAIN_MARKERS.TIP,
+    MARKERS.SCAM,
+    HINDI_MARKERS.SCAM,
+    ...PLAIN_MARKERS.SCAM,
+    '**💡 Exam Fact',
+    '**🧠 Memory Tip',
+    '**🚫 Scam Alert',
+    EMOJI_MARKERS.LOGIC,
+    EMOJI_MARKERS.FACT,
+    EMOJI_MARKERS.TIP,
+    EMOJI_MARKERS.SCAM,
+  ];
+
+  // Find Core Logic (✅, **, or plain e.g. "सही तर्क:" / "Correct Logic:")
   const extractLogic = (text: string) => {
-    const markers = [EMOJI_MARKERS.LOGIC, MARKERS.LOGIC, '**तर्क', HINDI_MARKERS.LOGIC];
-    const otherMarkers = [
-      MARKERS.FACT,
-      MARKERS.TIP,
-      MARKERS.SCAM,
-      HINDI_MARKERS.FACT,
-      HINDI_MARKERS.TIP,
-      HINDI_MARKERS.SCAM,
-      EMOJI_MARKERS.FACT,
-      EMOJI_MARKERS.TIP,
-      EMOJI_MARKERS.SCAM,
+    const logicStarts = [
+      ...PLAIN_MARKERS.LOGIC,
+      EMOJI_MARKERS.LOGIC,
+      MARKERS.LOGIC,
+      '**तर्क',
+      HINDI_MARKERS.LOGIC,
     ];
-    
-    for (const marker of markers) {
+
+    for (const marker of logicStarts) {
       const idx = text.indexOf(marker);
-      if (idx !== -1) {
-        let content = text.slice(idx);
-        // Find the next marker
-        let minIndex = content.length;
-        otherMarkers.forEach((nm) => {
-          const nextIdx = content.indexOf(nm, 1); // Skip current marker
-          if (nextIdx !== -1 && nextIdx < minIndex) {
-            minIndex = nextIdx;
-          }
-        });
-        return content.slice(0, minIndex).trim();
-      }
+      if (idx === -1) continue;
+      const content = text.slice(idx);
+      let minIndex = content.length;
+      allSectionStartMarkers.forEach((nm) => {
+        if (nm === marker) return;
+        const nextIdx = content.indexOf(nm, 1);
+        if (nextIdx !== -1 && nextIdx < minIndex) {
+          minIndex = nextIdx;
+        }
+      });
+      return content.slice(0, minIndex).trim();
     }
-    
-    // Fallback: take everything before first fact/tip/scam marker
+
+    // Fallback: content before the first any-section marker (incl. plain "Exam Fact:" etc.)
     let minIndex = text.length;
-    otherMarkers.forEach((m) => {
+    allSectionStartMarkers.forEach((m) => {
       const idx = text.indexOf(m);
       if (idx !== -1 && idx < minIndex) {
         minIndex = idx;
@@ -221,67 +265,42 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
     return text.slice(0, minIndex).trim();
   };
 
-  // Extract sections with both text and emoji markers
-  const extractWithMarker = (text: string, textMarker: string, emojiMarker: string, otherMarkers: string[]) => {
-    const markers = [textMarker, emojiMarker];
-    for (const marker of markers) {
-      const section = extractSection(text, marker, otherMarkers);
+  /** Tries **, plain ("Exam Fact:"), Devanagari, and emoji line markers. */
+  const extractWithMarker = (text: string, textMarkers: string[], emojiMarker: string) => {
+    for (const m of textMarkers) {
+      const section = extractSection(text, m, allSectionStartMarkers);
       if (section) return section;
     }
-    return null;
+    return extractSection(text, emojiMarker, allSectionStartMarkers);
   };
 
+  const factPrimaryMarkers = [
+    ...PLAIN_MARKERS.FACT,
+    MARKERS.FACT,
+    HINDI_MARKERS.FACT,
+  ];
+  const tipPrimaryMarkers = [
+    ...PLAIN_MARKERS.TIP,
+    MARKERS.TIP,
+    HINDI_MARKERS.TIP,
+  ];
+  const scamPrimaryMarkers = [
+    ...PLAIN_MARKERS.SCAM,
+    MARKERS.SCAM,
+    HINDI_MARKERS.SCAM,
+  ];
+
   const coreLogic = extractLogic(textToParse);
-  const examFact = extractWithMarker(
-    textToParse,
-    finalLanguage === 'hi' ? HINDI_MARKERS.FACT : MARKERS.FACT,
-    EMOJI_MARKERS.FACT,
-    [
-      MARKERS.TIP,
-      MARKERS.SCAM,
-      MARKERS.LOGIC,
-      HINDI_MARKERS.TIP,
-      HINDI_MARKERS.SCAM,
-      HINDI_MARKERS.LOGIC,
-      EMOJI_MARKERS.TIP,
-      EMOJI_MARKERS.SCAM,
-      EMOJI_MARKERS.LOGIC,
-    ]
-  );
-  const memoryTip = extractWithMarker(
-    textToParse,
-    finalLanguage === 'hi' ? HINDI_MARKERS.TIP : MARKERS.TIP,
-    EMOJI_MARKERS.TIP,
-    [
-      MARKERS.FACT,
-      MARKERS.SCAM,
-      MARKERS.LOGIC,
-      HINDI_MARKERS.FACT,
-      HINDI_MARKERS.SCAM,
-      HINDI_MARKERS.LOGIC,
-      EMOJI_MARKERS.FACT,
-      EMOJI_MARKERS.SCAM,
-      EMOJI_MARKERS.LOGIC,
-    ]
-  );
-  const scamAlert = extractWithMarker(
-    textToParse,
-    finalLanguage === 'hi' ? HINDI_MARKERS.SCAM : MARKERS.SCAM,
-    EMOJI_MARKERS.SCAM,
-    [
-      MARKERS.FACT,
-      MARKERS.TIP,
-      MARKERS.LOGIC,
-      HINDI_MARKERS.FACT,
-      HINDI_MARKERS.TIP,
-      HINDI_MARKERS.LOGIC,
-      EMOJI_MARKERS.FACT,
-      EMOJI_MARKERS.TIP,
-      EMOJI_MARKERS.LOGIC,
-    ]
-  );
+  const examFact = extractWithMarker(textToParse, factPrimaryMarkers, EMOJI_MARKERS.FACT);
+  const memoryTip = extractWithMarker(textToParse, tipPrimaryMarkers, EMOJI_MARKERS.TIP);
+  const scamAlert = extractWithMarker(textToParse, scamPrimaryMarkers, EMOJI_MARKERS.SCAM);
 
   const cleanContent = (s: string | null) => {
+    if (s == null) return null;
+    if (typeof s !== 'string') {
+      const co = displayExplanation(s);
+      return co ? co.trim() : null;
+    }
     if (!s) return null;
     let cleaned = s;
     
@@ -398,9 +417,29 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
       color: 'rose' as const,
       content: sections.scam,
     },
-  ].filter((item) => item.content);
+  ]
+    .map((item) => ({
+      ...item,
+      content: displayExplanation(item.content),
+    }))
+    .filter((item) => item.content.trim().length > 0);
 
-  if (analysisItems.length === 0) return null;
+  if (analysisItems.length === 0) {
+    // Emoji / **Hindi** / ad-hoc formats that don't match our section parsers — show full text (instant mode)
+    const raw = (textToParse || '').trim();
+    if (!raw || raw === DEFAULT_MSG.trim()) return null;
+    return (
+      <div
+        className={cn(
+          'text-sm leading-relaxed font-medium tracking-tight sm:text-[15px]',
+          'whitespace-pre-line',
+          darkMode ? 'text-slate-200' : 'text-slate-800',
+        )}
+      >
+        {raw}
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -454,7 +493,7 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
                 darkMode ? 'text-slate-200' : 'text-slate-800'
               )}
             >
-              {ai.content}
+              {displayExplanation(ai.content)}
             </p>
           </div>
         </motion.div>

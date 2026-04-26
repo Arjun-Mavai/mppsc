@@ -4,14 +4,16 @@ import { db } from '@/db';
 import { tests, questions, contentBlogs, paymentExitReasons, guests } from '@/db/schema';
 import { nanoid } from 'nanoid';
 import { revalidatePath } from 'next/cache';
-import { eq, sql, desc } from 'drizzle-orm';
+import { eq, sql, desc, and, count } from 'drizzle-orm';
 import { AdminDashboardResponse } from '@/types/admin';
+import { GUEST_LEAD_SOURCE } from '@/lib/lead-source';
 import { logger } from '@/lib/logger';
-import { requireAdmin } from '@/lib/auth-admin';
+import { parseLenientJSON } from '@/lib/json-utils';
+import { assertAdmin } from '@/lib/auth';
 
 // Helper to fetch tests for the dropdown
 export async function getExistingTests() {
-  await requireAdmin();
+  await assertAdmin();
   try {
     const result = await db
       .select({
@@ -28,13 +30,13 @@ export async function getExistingTests() {
 
     return result;
   } catch (e) {
-    logger.error('Error fetching tests:', e);
+    logger.error('Error fetching tests:', e, { category: 'admin' });
     return [];
   }
 }
 
 export async function uploadTestFromJSON(prevState: any, formData: FormData) {
-  await requireAdmin();
+  await assertAdmin();
   try {
     const mode = formData.get('mode') as 'new' | 'existing'; // 'new' or 'existing'
     const existingTestId = formData.get('existingTestId') as string;
@@ -65,9 +67,10 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
 
     let parsedQuestions;
     try {
-      parsedQuestions = JSON.parse(jsonInput);
+      parsedQuestions = parseLenientJSON(jsonInput);
     } catch (e) {
-      return { success: false, message: 'Invalid JSON format' };
+      const msg = e instanceof Error ? e.message : 'Invalid JSON format';
+      return { success: false, message: `Invalid JSON: ${msg}` };
     }
 
     if (!Array.isArray(parsedQuestions)) {
@@ -96,8 +99,8 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
         unitId: type === 'UNIT' || type === 'TOPIC' || type === 'MISC' ? unitId : null,
         topicId: type === 'TOPIC' ? topicId : null,
         description: `Imported test: ${title}`,
-        totalMarks: parsedQuestions.length * 2, // Initial marks
-        totalQuestions: parsedQuestions.length,
+        totalMarks: 0, // Computed below
+        totalQuestions: 0, // Computed below
         durationMinutes: 120,
         examType: 'mppsc' as const, // 🔒 Strict isolation
         // MISC type = free quiz → isFreeAccess ON by default
@@ -127,105 +130,157 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
       startOrder = maxOrderResult[0]?.maxOrder || 0;
     }
 
-    // 2. Format Questions
-    // 2. Validate & Format Questions
-    for (const q of parsedQuestions) {
-      if (
-        !q.questionText ||
-        typeof q.questionText !== 'string' ||
-        q.questionText.trim().length === 0
-      ) {
-        return {
-          success: false,
-          message:
-            "Validation Failed: One or more questions are missing 'questionText'. Please check JSON keys.",
-        };
+    const rawExplanationFormat = formData.get('explanationFormat');
+    const explanationFormat: 'expert' | 'classic' =
+      rawExplanationFormat === 'expert' || rawExplanationFormat === 'classic'
+        ? rawExplanationFormat
+        : 'classic';
+
+    // 2. Format & Validate Questions
+    const formattedQuestions = parsedQuestions.map((q: any, idx: number) => {
+      // Validation
+      if (!q.questionText || typeof q.questionText !== 'string') {
+        throw new Error(
+          `Question ${idx + 1} is missing or has invalid "questionText" (must be string)`
+        );
       }
-    }
+      const qText = q.questionText.trim();
 
-    const questionsToInsert = parsedQuestions.map((q: any, idx: number) => ({
-      id: nanoid(),
-      testId: testId,
-      questionText: q.questionText, // No fallback "Missing Text"
-      questionTextEn: q.questionTextEn || null,
-      options: JSON.stringify(q.options), // Store as JSON string
-      correctAnswer: q.correctAnswer,
-      explanation: q.explanation,
-      explanationEn: q.explanationEn || null,
-      marks: q.marks || 2,
-      negativeMarks: q.negativeMarks || 0,
-      idealTime: q.idealTime || 60,
-      order: startOrder + idx + 1, // Continue from last order
-      subject: q.subject || 'General',
-      type: q.type || 'standard',
-      matchPairs: q.matchPairs || null,
-    }));
+      if (!q.options || (typeof q.options !== 'string' && !Array.isArray(q.options))) {
+        throw new Error(`Question ${idx + 1} ("${qText.substring(0, 30)}...") is missing "options"`);
+      }
 
-    // Filter out duplicates (check against existing questions in this test)
+      if (q.correctAnswer === undefined || q.correctAnswer === null || q.correctAnswer === '') {
+        throw new Error(
+          `Question ${idx + 1} ("${qText.substring(0, 30)}...") is missing "correctAnswer"`
+        );
+      }
+
+      const isExpert = explanationFormat === 'expert';
+      // Match uploadTopicTests: Hindi/En markdown in text columns, expert { stream, ... } only in extendedData
+      const expertBlob: unknown = (() => {
+        if (!isExpert) return null;
+        if (q.extendedData != null) return q.extendedData;
+        if (
+          q.explanation != null &&
+          typeof q.explanation === 'object' &&
+          !Array.isArray(q.explanation)
+        ) {
+          return q.explanation;
+        }
+        return null;
+      })();
+
+      const explanationTextForDb = isExpert
+        ? (q.explanation_hi ??
+            (typeof q.explanation === 'string' ? q.explanation : null) ??
+            null)
+        : typeof q.explanation === 'string'
+          ? q.explanation
+          : (q.explanation_hi ?? null);
+
+      const explanationEnForDb = q.explanationEn ?? q.explanation_en ?? null;
+
+      return {
+        id: nanoid(),
+        testId: testId,
+        questionText: qText,
+        questionTextEn: q.questionTextEn || null,
+        options: typeof q.options === 'string' ? q.options : JSON.stringify(q.options),
+        correctAnswer: String(q.correctAnswer).trim(),
+        explanation: explanationTextForDb,
+        explanationEn: explanationEnForDb,
+        extendedData: expertBlob,
+        marks: q.marks || 2,
+        negativeMarks: q.negativeMarks || 0,
+        idealTime: q.idealTime || 60,
+        order: startOrder + idx + 1,
+        subject: q.subject || 'General',
+        type: q.type || 'standard',
+        matchPairs: q.matchPairs || null,
+        examType: 'mppsc' as const,
+      };
+    });
+
+    // Upsert logic: For each question, check if it exists in this test.
+    // Also handle intra-batch duplicates.
+    const questionsToUpdate = [];
+    const questionsToInsertFinal = [];
     let duplicatesCount = 0;
-    // ... (Duplicate logic remains same, skipping for brevity in replacement but preserving context)
-    if (mode === 'existing') {
-      const existingQs = await db
-        .select({ text: questions.questionText })
-        .from(questions)
-        .where(eq(questions.testId, testId || ''));
-      const existingSet = new Set(existingQs.map((q) => q.text?.trim().toLowerCase()));
 
-      const uniqueQuestions = questionsToInsert.filter((newQ: any) => {
-        const isDup = existingSet.has(newQ.questionText.trim().toLowerCase());
-        if (isDup) duplicatesCount++;
-        return !isDup;
-      });
+    const existingQsRows = await db
+      .select({ id: questions.id, text: questions.questionText })
+      .from(questions)
+      .where(eq(questions.testId, testId || ''));
 
-      questionsToInsert.length = 0;
-      questionsToInsert.push(...uniqueQuestions);
+    const existingMap = new Map(existingQsRows.map((q) => [q.text?.trim().toLowerCase(), q.id]));
+    const seenInBatch = new Set<string>();
+
+    for (const qData of formattedQuestions) {
+      const normalizedText = qData.questionText.trim().toLowerCase();
+
+      // Check if we've already seen this in the CURRENT batch
+      if (seenInBatch.has(normalizedText)) {
+        duplicatesCount++;
+        continue; // Skip batch duplicates
+      }
+      seenInBatch.add(normalizedText);
+
+      const existingId = existingMap.get(normalizedText);
+      if (existingId) {
+        questionsToUpdate.push({ id: existingId, data: qData });
+        duplicatesCount++;
+      } else {
+        questionsToInsertFinal.push(qData);
+      }
     }
 
-    // 3. Bulk Insert Questions
+    // 3. Process Updates
+    for (const update of questionsToUpdate) {
+      const { id, data } = update;
+      // Remove ID, testId, and order for update - preserve the existing row's position
+      const { id: _, testId: __, order: ___, ...updateData } = data;
+      await db.update(questions).set(updateData).where(eq(questions.id, id));
+    }
+
+    // 4. Bulk Insert New Questions
+    if (questionsToInsertFinal.length > 0) {
+      await db.insert(questions).values(questionsToInsertFinal);
+    }
+
+    // 5. Update Test Meta (Marks + Count + Timestamp)
     let finalQuestionCount = 0;
+    if (testId) {
+      // Recompute everything from DB to ensure consistency (especially totalMarks after updates)
+      const allQs = await db
+        .select({ marks: questions.marks })
+        .from(questions)
+        .where(eq(questions.testId, testId));
 
-    if (questionsToInsert.length > 0) {
-      await db.insert(questions).values(questionsToInsert);
+      finalQuestionCount = allQs.length;
+      const totalMarks = allQs.reduce((sum, q) => sum + (q.marks || 0), 0);
 
-      // Update Test Meta (Marks + Count + Timestamp)
-      const newMarksToAdd = questionsToInsert.reduce((sum, q) => sum + (q.marks || 0), 0);
-
-      // We need current total questions to add to it, or just set it based on COUNT(*)
-      // Setting based on COUNT(*) is safer for data consistency.
-      if (testId) {
-        const countResult = await db
-          .select({ count: sql<number>`COUNT(*)` })
-          .from(questions)
-          .where(eq(questions.testId, testId));
-        const totalQ = countResult[0]?.count || 0;
-        finalQuestionCount = totalQ;
-
-        await db
-          .update(tests)
-          .set({
-            updatedAt: new Date(),
-            totalMarks: sql`${tests.totalMarks} + ${newMarksToAdd}`,
-            totalQuestions: totalQ,
-          })
-          .where(eq(tests.id, testId));
-      }
-    } else if (mode === 'new') {
-      // If new test but 0 questions inserted (unlikely unless empty JSON), update count
-      finalQuestionCount = parsedQuestions.length;
       await db
         .update(tests)
-        .set({ totalQuestions: finalQuestionCount })
-        .where(eq(tests.id, testId || ''));
+        .set({
+          updatedAt: new Date(),
+          totalMarks: totalMarks,
+          totalQuestions: finalQuestionCount,
+        })
+        .where(eq(tests.id, testId));
+    } else if (mode === 'new') {
+      finalQuestionCount = seenInBatch.size;
     }
 
     revalidatePath('/tests');
-    const dupMsg = duplicatesCount > 0 ? ` (${duplicatesCount} duplicates skipped)` : '';
+    const dupMsg =
+      duplicatesCount > 0 ? ` (${duplicatesCount} duplicates updated/skipped)` : '';
     return {
       success: true,
       message: `Successfully ${mode === 'new' ? 'created' : 'updated'} "${testTitle}". Total Questions: ${finalQuestionCount}${dupMsg}`,
     };
   } catch (error) {
-    logger.error('Upload Error:', error);
+    logger.error('Upload Error:', error, { category: 'admin' });
     return {
       success: false,
       message: `Server Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -236,7 +291,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
 // --- DASHBOARD STATS ---
 // --- DASHBOARD STATS ---
 export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> {
-  await requireAdmin();
+  await assertAdmin();
   try {
     const testsData = await db
       .select({
@@ -262,18 +317,64 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
       .from(contentBlogs)
       .where(eq(contentBlogs.examType, 'mppsc'));
 
-    const recentGuests = await db
-      .select({
-        id: guests.id,
-        name: guests.name,
-        email: guests.email,
-        mobile: guests.mobile,
-        createdAt: guests.createdAt,
-      })
-      .from(guests)
-      .where(eq(guests.examType, 'mppsc'))
-      .orderBy(desc(guests.createdAt))
-      .limit(100);
+    let openPyq2026LeadCount = 0;
+    try {
+      const [openPyqCountRow] = await db
+        .select({ c: count() })
+        .from(guests)
+        .where(
+          and(
+            eq(guests.examType, 'mppsc'),
+            eq(guests.leadSource, GUEST_LEAD_SOURCE.OPEN_PYQ_2026)
+          )
+        );
+      openPyq2026LeadCount = openPyqCountRow?.c ?? 0;
+    } catch (guestErr) {
+      logger.error('Dashboard Stats Error (Guest Count):', guestErr, { category: 'admin' });
+    }
+
+    let recentGuests: any[] = [];
+    try {
+      recentGuests = await db
+        .select({
+          id: guests.id,
+          name: guests.name,
+          email: guests.email,
+          mobile: guests.mobile,
+          createdAt: guests.createdAt,
+          leadSource: guests.leadSource,
+        })
+        .from(guests)
+        .where(eq(guests.examType, 'mppsc'))
+        .orderBy(desc(guests.createdAt))
+        .limit(100);
+    } catch (guestErr) {
+      logger.error('Dashboard Stats Error (Recent Guests):', guestErr, { category: 'admin' });
+    }
+
+    let recentOpenPyqLeads: any[] = [];
+    try {
+      recentOpenPyqLeads = await db
+        .select({
+          id: guests.id,
+          name: guests.name,
+          email: guests.email,
+          mobile: guests.mobile,
+          createdAt: guests.createdAt,
+          leadSource: guests.leadSource,
+        })
+        .from(guests)
+        .where(
+          and(
+            eq(guests.examType, 'mppsc'),
+            eq(guests.leadSource, GUEST_LEAD_SOURCE.OPEN_PYQ_2026)
+          )
+        )
+        .orderBy(desc(guests.createdAt))
+        .limit(50);
+    } catch (guestErr) {
+      logger.error('Dashboard Stats Error (Recent Open PYQ Leads):', guestErr, { category: 'admin' });
+    }
 
     const totalTests = testsData.length;
     const totalQuestions = testsData.reduce((acc, t) => acc + (t.totalQuestions || 0), 0);
@@ -330,22 +431,24 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
         totalTests,
         totalQuestions,
         totalBlogs,
+        openPyq2026LeadCount,
         typeCount,
         blogCategoryCount,
       },
       recentUploads,
       recentBlogs,
       recentGuests, // Added recentGuests to return
+      recentOpenPyqLeads,
       topicCoverage: serializedCoverage,
     };
   } catch (e) {
-    logger.error('Dashboard Stats Error:', e);
+    logger.error('Dashboard Stats Error:', e, { category: 'admin' });
     return { success: false, error: 'Failed to fetch stats' };
   }
 }
 // --- PAYMENT EXIT STATS ---
 export async function getPaymentExitStats() {
-  await requireAdmin();
+  await assertAdmin();
   try {
     const reasons = await db
       .select()
@@ -362,7 +465,7 @@ export async function getPaymentExitStats() {
 
     return { success: true, reasons, breakdown };
   } catch (error) {
-    logger.error('Failed to fetch payment exit stats:', error);
+    logger.error('Failed to fetch payment exit stats:', error, { category: 'admin' });
     return { success: false, error: 'Failed to fetch stats' };
   }
 }

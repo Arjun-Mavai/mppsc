@@ -5,6 +5,36 @@ export const SCORING_CONFIG = {
   NEGATIVE_MARKING: QUIZ_CONSTANTS.NEGATIVE_MARKING,
 } as const;
 
+/**
+ * Normalizes correctAnswer from various formats (number, string index "0", or letter "A"-"D")
+ * to a numeric index (0-3) for safe comparison in UI and submission.
+ */
+export function normalizeCorrectAnswer(answer: string | number | null | undefined): number {
+  if (answer == null || answer === '') return -1;
+  
+  // If already a number, just return it
+  if (typeof answer === 'number') return Math.floor(answer);
+  
+  const trimmed = String(answer).trim().toUpperCase();
+  if (!trimmed) return -1;
+
+  // 1. Handle numeric strings "0", "1", etc.
+  // We use Number() because it handles "0" correctly and returns NaN for "A"
+  const num = Number(trimmed);
+  if (!isNaN(num) && trimmed !== '') return Math.floor(num);
+
+  // 2. Handle labels A, B, C, D...
+  // Use charCode to be generic (A=0, B=1, ...)
+  if (trimmed.length === 1) {
+    const charCode = trimmed.charCodeAt(0);
+    if (charCode >= 65 && charCode <= 90) {
+      return charCode - 65;
+    }
+  }
+
+  return -1;
+}
+
 export function calculateScore(
   totalQuestions: number,
   correctCount: number,

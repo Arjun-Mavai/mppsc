@@ -23,9 +23,7 @@ export const NavbarLogo = memo(function NavbarLogo({ user }: NavbarLogoProps) {
         <span className="text-xs font-bold tracking-tighter">MP</span>
       </div>
       <div className="flex flex-col">
-        <span className="font-display text-lg leading-none font-bold text-slate-900">
-          MPPSC<span className="text-slate-500">26</span>
-        </span>
+        <span className="font-display text-lg leading-none font-bold text-slate-900">MPPSC</span>
         <span className="text-[10px] font-medium tracking-wider text-slate-500 uppercase">
           Mindful Prep
         </span>

@@ -1,7 +1,7 @@
 // ============================================
 // CANONICAL TEST IDS - Verified from PROD DB
-// Only these 6 tests (2020-2025) are used for analysis
-// Each test has exactly 100 questions with order 1-100
+// These papers (2020–2026) drive Intelligence: Overall Weightage + Paper-wise Analysis
+// (and subject totals). Each year should be one primary Prelims Paper 1 test.
 // ============================================
 export const CANONICAL_TEST_IDS: Record<number, string> = {
   2020: '5KRVTgTIw07bWNxu20YNl',
@@ -10,6 +10,12 @@ export const CANONICAL_TEST_IDS: Record<number, string> = {
   2023: 'mQ1a9hZoTdfSRfkz40K5C',
   2024: '3XmZ0l700BJV3j2FLd0XZ',
   2025: 'D0gf6bklgl3RT-sTnue2n',
+  2026: 'n9Zy8u3ytAf1ZPB9W_Rbk',
+};
+
+/** If a PYQ test title does not match `getScopedStateServiceYear`, map test id → year for scoped insights. */
+export const PYQ_SCOPED_TEST_ID_YEAR: Record<string, number> = {
+  n9Zy8u3ytAf1ZPB9W_Rbk: 2026,
 };
 
 // Helper to get canonical test IDs as array

@@ -39,6 +39,7 @@ export default async function RepeatedQuestionDetailPage({ params }: PageProps) 
       correctAnswer: questions.correctAnswer,
       explanation: questions.explanation,
       explanationEn: questions.explanationEn,
+      extendedData: questions.extendedData,
       testId: questions.testId,
     })
     .from(questions)

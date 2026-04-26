@@ -18,6 +18,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { cn } from '@/lib/utils';
 import { QuizHeader } from './quiz/QuizHeader';
 import { ConnectSocials } from '@/components/ConnectSocials';
+import { StructuredExplanation } from '@/components/StructuredExplanation';
 import {
   Table,
   TableBody,
@@ -460,10 +461,15 @@ export function SmartQuizResult({
                       )}
                     </div>
 
-                    {!isLocked && q.explanation && (
-                      <div className="mt-3 border-t pt-2 text-xs text-slate-600">
-                        <span className="mb-1 block font-semibold">Explanation:</span>
-                        {q.explanation}
+                    {!isLocked && (
+                      <div className="mt-4">
+                        <StructuredExplanation
+                          extendedData={q.extendedData}
+                          plainExplanation={q.explanation}
+                          explanationEn={q.explanationEn}
+                          explanationHi={q.explanation_hi}
+                          language={language as 'hi' | 'en'}
+                        />
                       </div>
                     )}
                   </CardContent>

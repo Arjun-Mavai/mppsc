@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Lightbulb } from 'lucide-react';
-import { PremiumExplanation } from '../PremiumExplanation';
+import { StructuredExplanation } from '@/components/StructuredExplanation';
 import { Question } from '@/types/quiz';
 
 interface QuizExplanationProps {
@@ -24,8 +24,10 @@ export function QuizExplanation({ question, language, translations: t }: QuizExp
       </div>
 
       <div className="text-sm leading-relaxed text-slate-700 sm:text-base">
-        <PremiumExplanation
-          explanation={question.explanation || 'No explanation available.'}
+        <StructuredExplanation
+          key={question.id}
+          extendedData={question.extendedData}
+          plainExplanation={question.explanation || question.explanation_hi || undefined}
           explanationEn={question.explanationEn}
           explanationHi={question.explanation_hi}
           language={language as 'hi' | 'en'}

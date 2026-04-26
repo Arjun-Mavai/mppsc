@@ -4,6 +4,7 @@ import { FreeQuizPlayClient } from './FreeQuizPlayClient';
 import { verifyAuth } from '@/lib/auth';
 import { Question } from '@/types/quiz';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
+import { mapRawQuestionToClientQuestion } from '@/lib/quiz-question-normalize';
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { ProductionErrorBoundary } from '@/components/ProductionErrorBoundary';
@@ -45,33 +46,14 @@ async function FreeQuizDataFetcher({ searchParams }: { searchParams: Promise<{ t
     );
   }
 
-  // Questions ko Quiz format me map karo — safe parse with fallback
-  const questions: Question[] = testData.questions
-    .map((q) => {
-      let parsedOptions: string[];
-      try {
-        parsedOptions =
-          typeof q.options === 'string' ? JSON.parse(q.options) : (q.options as string[]);
-      } catch {
-        return null;
-      }
-
-      return {
-        id: q.id,
-        question: q.questionText,
-        questionEn: q.questionTextEn || undefined,
-        correctAnswer: Number(q.correctAnswer),
-        options: parsedOptions,
-        explanation: q.explanation || undefined,
-        explanationEn: q.explanationEn || undefined,
-        subject: q.subject || undefined,
-        type: (q.type as 'standard' | 'matching') || 'standard',
-        matchPairs: (q.matchPairs as any) || undefined,
-        negativeMarks: SCORING_CONFIG.NEGATIVE_MARKING,
-        marks: SCORING_CONFIG.MARKS_PER_QUESTION,
-      };
+  // Questions ko Quiz format me map karo — questionText, explanation_hi/en, left/right matchPairs
+  const questions: Question[] = testData.questions.map((q) =>
+    mapRawQuestionToClientQuestion(q as unknown as Record<string, unknown>, {
+      subject: q.subject || undefined,
+      marks: SCORING_CONFIG.MARKS_PER_QUESTION,
+      negativeMarks: SCORING_CONFIG.NEGATIVE_MARKING,
     })
-    .filter(Boolean) as Question[];
+  );
 
   if (questions.length === 0) {
     return (

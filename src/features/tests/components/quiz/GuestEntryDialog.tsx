@@ -10,7 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Loader2, X, Target } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
+import { isIndianMobileValid, validateIndianMobileMessage } from '@/lib/validate-indian-mobile';
 
 interface GuestEntryDialogProps {
   open: boolean;
@@ -61,26 +62,15 @@ export function GuestEntryDialog({
     return trimmed.length >= 2;
   }, [guestName]);
 
-  const isMobileValid = useMemo(() => {
-    const trimmed = guestMobile.trim();
-    // Indian standards: 10 digits, starts with 6-9
-    if (!/^[6-9]\d{9}$/.test(trimmed)) return false;
+  const isMobileValid = useMemo(
+    () => isIndianMobileValid(guestMobile.trim()),
+    [guestMobile]
+  );
 
-    // Fake number detection: Identical digits (e.g. 9999999999)
-    if (/^(\d)\1{9}$/.test(trimmed)) return false;
-
-    // Fake number detection: Repeating patterns (e.g. 6565656565, 1212121212)
-    if (/^(\d{2})\1{4}$/.test(trimmed)) return false;
-
-    // Fake number detection: Triple repeating patterns (e.g. 1231231231)
-    if (/^(\d{3})\1{2}\d$/.test(trimmed)) return false;
-
-    // Fake number detection: Sequential digits (e.g. 1234567890, 0987654321)
-    const sequential = '012345678909876543210123456789';
-    if (sequential.includes(trimmed)) return false;
-
-    return true;
-  }, [guestMobile]);
+  const mobileErrorMsg = useMemo(
+    () => (guestMobile.trim() ? validateIndianMobileMessage(guestMobile) : null),
+    [guestMobile]
+  );
 
   const isEmailValid = useMemo(() => {
     if (!guestEmail.trim()) return true; // Optional
@@ -180,11 +170,9 @@ export function GuestEntryDialog({
                       }`}
                       autoComplete="tel"
                     />
-                    {guestMobile.length > 0 && !isMobileValid && (
+                    {guestMobile.length > 0 && !isMobileValid && mobileErrorMsg && (
                       <p className="animate-in fade-in-0 slide-in-from-top-1 text-[11px] font-bold text-red-500">
-                        {guestMobile.length < 10 
-                          ? 'Enter a 10-digit mobile number.' 
-                          : 'Please enter a valid, non-fake mobile number.'}
+                        {mobileErrorMsg}
                       </p>
                     )}
                   </div>

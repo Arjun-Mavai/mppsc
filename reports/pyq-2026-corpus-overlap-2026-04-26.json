@@ -1,0 +1,1795 @@
+{
+  "dataSource": "turso",
+  "excludeCorpusSlugLike": "pyq-26-new",
+  "targetTestId": "n9Zy8u3ytAf1ZPB9W_Rbk",
+  "generated": "2026-04-26",
+  "targetQuestionCount": 100,
+  "corpusQuestionCount": 4254,
+  "thresholds": {
+    "jStemStrong": 0.45,
+    "jStemSim": 0.28,
+    "explCover": 0.18
+  },
+  "summary": {
+    "matchedAtLeastOne": 97,
+    "byTestType": {
+      "TOPIC": 35,
+      "PYQ": 41,
+      "FLT": 6,
+      "UNIT": 4,
+      "MISC": 11
+    }
+  },
+  "rows": [
+    {
+      "targetOrder": 1,
+      "targetQId": "LyR1K13kkyYxxePPojhI0",
+      "kind": "explanation_only",
+      "jStem": 0.13043478260869565,
+      "explCover": 0.6190476190476191,
+      "reference": {
+        "questionId": "2bdfebe7-5b1b-435f-8676-096e0d10a324",
+        "testId": "84f43923-f20e-4508-a23f-c3c345cb5536",
+        "testTitle": "Unit 3 — पर्वत (Mountains)",
+        "testTitleStore": "Topic 7e09693c-78cc-4f17-b9ef-832665381a48 Practice Test",
+        "topicTitle": "पर्वत",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 1,
+        "slug": "unit_3-topic-7e09693c-78cc-4f17-b9ef-832665381a48-test"
+      }
+    },
+    {
+      "targetOrder": 2,
+      "targetQId": "5iaInrxRETvSXnXDkxFNH",
+      "kind": "explanation_only",
+      "jStem": 0.2564102564102564,
+      "explCover": 0.5625,
+      "reference": {
+        "questionId": "c8564a1a-9d20-4323-8bcf-5449acc153bc",
+        "testId": "fb972289-af1a-4b18-a380-b34b04e8a852",
+        "testTitle": "Unit 3 — नदियाँ (Rivers)",
+        "testTitleStore": "Topic a8c8bfd2-1d7e-46c4-be94-d13f596be982 Practice Test",
+        "topicTitle": "नदियाँ",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 8,
+        "slug": "unit_3-topic-a8c8bfd2-1d7e-46c4-be94-d13f596be982-test"
+      }
+    },
+    {
+      "targetOrder": 3,
+      "targetQId": "2ma7op-Oha7xhQFsTFdIr",
+      "kind": "stem_medium",
+      "jStem": 0.40384615384615385,
+      "explCover": 0.35555555555555557,
+      "reference": {
+        "questionId": "e1cf79af-bee3-4561-86ca-ad5267dd3e77",
+        "testId": "bec323d8-0560-4160-9daa-75a482200b54",
+        "testTitle": "Unit 3 — प्राकृतिक संसाधन—वन (Natural Resources: Forests)",
+        "testTitleStore": "Topic 880cb60d-e159-4ef1-b0ad-c5ef328a691c Practice Test",
+        "topicTitle": "प्राकृतिक संसाधन—वन",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 2,
+        "slug": "unit_3-topic-880cb60d-e159-4ef1-b0ad-c5ef328a691c-test"
+      }
+    },
+    {
+      "targetOrder": 4,
+      "targetQId": "L_6Jo4QAYCrg6XAa9mGdk",
+      "kind": "explanation_only",
+      "jStem": 0.1875,
+      "explCover": 0.3076923076923077,
+      "reference": {
+        "questionId": "7f8da3a9-80bd-4788-a530-73a92fa44c02",
+        "testId": "2c6a54b8-2334-424e-a607-1abe7bb69806",
+        "testTitle": "Unit 3 — पश्चिमी विक्षोभ (Western Disturbances) (Western Disturbance)",
+        "testTitleStore": "Topic c74d09d0-2af7-4650-beb5-fd4710f49853 Practice Test",
+        "topicTitle": "पश्चिमी विक्षोभ (Western Disturbances)",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 5,
+        "slug": "unit_3-topic-c74d09d0-2af7-4650-beb5-fd4710f49853-test"
+      }
+    },
+    {
+      "targetOrder": 5,
+      "targetQId": "oY-KnYJtMjIwxWLBRhY5_",
+      "kind": "explanation_only",
+      "jStem": 0.27586206896551724,
+      "explCover": 0.375,
+      "reference": {
+        "questionId": "0155301b-52d3-448a-965e-40c0ef6ecc1e",
+        "testId": "9222871b-10f1-4e91-989f-c20de785e0a7",
+        "testTitle": "Unit 3 — झीलें (Lakes)",
+        "testTitleStore": "Topic 69ddbd9a-1d3a-46b4-9d81-613da3524294 Practice Test",
+        "topicTitle": "झीलें",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 6,
+        "slug": "unit_3-topic-69ddbd9a-1d3a-46b4-9d81-613da3524294-test"
+      }
+    },
+    {
+      "targetOrder": 6,
+      "targetQId": "0nUIok3RKqwXFPKjhFWdO",
+      "kind": "explanation_only",
+      "jStem": 0.26,
+      "explCover": 0.3939393939393939,
+      "reference": {
+        "questionId": "_crgF7V7O-tMWgF3XbPCx",
+        "testId": "D0gf6bklgl3RT-sTnue2n",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025  (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025  (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2025,
+        "questionOrder": 89,
+        "slug": "new-pyq-25-7Ztt"
+      }
+    },
+    {
+      "targetOrder": 7,
+      "targetQId": "uebscRw3ZTGy-2C6i2wrt",
+      "kind": "stem_medium",
+      "jStem": 0.29545454545454547,
+      "explCover": 0.45454545454545453,
+      "reference": {
+        "questionId": "HqJ07mnRMH91JSznR_XAH",
+        "testId": "3XmZ0l700BJV3j2FLd0XZ",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2024  (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2024  (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2024,
+        "questionOrder": 76,
+        "slug": "new-pyq-24-xHde"
+      }
+    },
+    {
+      "targetOrder": 8,
+      "targetQId": "YRdzZabUAt6Lo8g5AHlRF",
+      "kind": "explanation_only",
+      "jStem": 0.1875,
+      "explCover": 0.3333333333333333,
+      "reference": {
+        "questionId": "h7k7Sw1REYRV95LEzknAY",
+        "testId": "D0gf6bklgl3RT-sTnue2n",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025  (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025  (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2025,
+        "questionOrder": 18,
+        "slug": "new-pyq-25-7Ztt"
+      }
+    },
+    {
+      "targetOrder": 9,
+      "targetQId": "JLfdk4dIeWOkpkzGo6zRD",
+      "kind": "stem_medium",
+      "jStem": 0.4473684210526316,
+      "explCover": 0.7037037037037037,
+      "reference": {
+        "questionId": "koCFcdlCH78ElpJtXTk3d",
+        "testId": "3XmZ0l700BJV3j2FLd0XZ",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2024  (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2024  (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2024,
+        "questionOrder": 80,
+        "slug": "new-pyq-24-xHde"
+      }
+    },
+    {
+      "targetOrder": 10,
+      "targetQId": "PKRR6SWVp1WB9KVGzMdTa",
+      "kind": "stem_medium",
+      "jStem": 0.38095238095238093,
+      "explCover": 0.5483870967741935,
+      "reference": {
+        "questionId": "_H_rpfVdnYO5gf2JFwn5i",
+        "testId": "D0gf6bklgl3RT-sTnue2n",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025  (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025  (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2025,
+        "questionOrder": 16,
+        "slug": "new-pyq-25-7Ztt"
+      }
+    },
+    {
+      "targetOrder": 11,
+      "targetQId": "lClzzsUVTM6rjmezEA4YM",
+      "kind": "explanation_only",
+      "jStem": 0.14285714285714285,
+      "explCover": 0.425,
+      "reference": {
+        "questionId": "340ffba9-e48b-4455-8f5e-c7de31bd5bbc",
+        "testId": "cbe4474d-b408-4cf2-b996-e2561cf3ad45",
+        "testTitle": "Unit 5 — संविधान सभा (Constituent Assembly)",
+        "testTitleStore": "Topic 23082d7d-5174-41f2-913f-e44d235d48a8 Practice Test",
+        "topicTitle": "संविधान सभा",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 1,
+        "slug": "unit_5-topic-23082d7d-5174-41f2-913f-e44d235d48a8-test"
+      }
+    },
+    {
+      "targetOrder": 12,
+      "targetQId": "rZoHdc-cdEeEI6AmVAtHy",
+      "kind": "explanation_only",
+      "jStem": 0.24324324324324326,
+      "explCover": 0.65,
+      "reference": {
+        "questionId": "e279d6e0-cfe3-4a72-b9cb-92a456d977d2",
+        "testId": "acc88b22-23f2-4cfe-9032-f590c8ea5fb2",
+        "testTitle": "Unit 5 — राष्ट्रीय एवं प्रादेशिक संवैधानिक/सांविधिक आयोग (National and Regional Constitutional/Statutory Commissions)",
+        "testTitleStore": "Topic 752d2705-1a32-404f-ba23-81b4f247d070 Practice Test",
+        "topicTitle": "राष्ट्रीय एवं प्रादेशिक संवैधानिक/सांविधिक आयोग",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 3,
+        "slug": "unit_5-topic-752d2705-1a32-404f-ba23-81b4f247d070-test"
+      }
+    },
+    {
+      "targetOrder": 13,
+      "targetQId": "Z--WXmG9aIA4tIFQPxdXn",
+      "kind": "explanation_only",
+      "jStem": 0.15789473684210525,
+      "explCover": 0.21428571428571427,
+      "reference": {
+        "questionId": "qkdJBZTO1TYr1vXX8Gezp",
+        "testId": "E9wZbI1Iniyy6gh7Qdihb",
+        "testTitle": "MPPSC Prelims - Full Length Mock Test 2",
+        "testTitleStore": "MPPSC Prelims - Full Length Mock Test 2",
+        "topicTitle": null,
+        "testType": "FLT",
+        "pyqYear": null,
+        "questionOrder": 19,
+        "slug": "flt-best-trial-2-1Q5e"
+      }
+    },
+    {
+      "targetOrder": 14,
+      "targetQId": "yIDlp_PyRA79tzwt7Kl9f",
+      "kind": "explanation_only",
+      "jStem": 0.11538461538461539,
+      "explCover": 0.21052631578947367,
+      "reference": {
+        "questionId": "uXYdaSvsBYLzRQbh3r5tT",
+        "testId": "o_rO3J1tSEACKENOLT9QI",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2022 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2022 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2022,
+        "questionOrder": 17,
+        "slug": "new-pyq-22-Y82g"
+      }
+    },
+    {
+      "targetOrder": 15,
+      "targetQId": "MGtALxUfQkZ4LpM9lzpyl",
+      "kind": "explanation_only",
+      "jStem": 0.19444444444444445,
+      "explCover": 0.23076923076923078,
+      "reference": {
+        "questionId": "63492522-6d23-4100-aa4d-c24552148a8b",
+        "testId": "18f3d1ed-33dc-4b48-86d2-0822ecee0137",
+        "testTitle": "Unit 5 — मध्यप्रदेश में त्रिस्तरीय पंचायतीराज (Three-Tier Panchayati Raj)",
+        "testTitleStore": "Topic cd3863c3-ff5c-464e-88a4-6c17ac84d1ea Practice Test",
+        "topicTitle": "मध्यप्रदेश में त्रिस्तरीय पंचायतीराज",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 6,
+        "slug": "unit_5-topic-cd3863c3-ff5c-464e-88a4-6c17ac84d1ea-test"
+      }
+    },
+    {
+      "targetOrder": 16,
+      "targetQId": "Rrkjtsboek8SgX-twHM9V",
+      "kind": "explanation_only",
+      "jStem": 0.24528301886792453,
+      "explCover": 0.4,
+      "reference": {
+        "questionId": "p_Fv6g6KKQ-Rj1sKypmk2",
+        "testId": "ix0FnJV496Rgvw0YHOEFj",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2021 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2021 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2021,
+        "questionOrder": 57,
+        "slug": "new-pyq-21-fKi0"
+      }
+    },
+    {
+      "targetOrder": 17,
+      "targetQId": "MxOiFBSdvjFI18JOdEIIt",
+      "kind": "explanation_only",
+      "jStem": 0.1836734693877551,
+      "explCover": 0.5555555555555556,
+      "reference": {
+        "questionId": "fRnUCWt5SW0TnJcCR7anJ",
+        "testId": "mQ1a9hZoTdfSRfkz40K5C",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2023 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2023 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2023,
+        "questionOrder": 82,
+        "slug": "pyq-2023-latest-on-21-march-CrKc"
+      }
+    },
+    {
+      "targetOrder": 18,
+      "targetQId": "qYJQ7uznAPdvKsodxizrX",
+      "kind": "stem_medium",
+      "jStem": 0.2807017543859649,
+      "explCover": 0.5625,
+      "reference": {
+        "questionId": "-SDxkHCK7gy0qbhwkuGcS",
+        "testId": "D0gf6bklgl3RT-sTnue2n",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025  (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025  (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2025,
+        "questionOrder": 93,
+        "slug": "new-pyq-25-7Ztt"
+      }
+    },
+    {
+      "targetOrder": 19,
+      "targetQId": "dr7HEG4CgmzUcC_RBd_mz",
+      "kind": "explanation_only",
+      "jStem": 0.14754098360655737,
+      "explCover": 0.2857142857142857,
+      "reference": {
+        "questionId": "4230707c-3483-47a7-bd03-a53ca8eb30ef",
+        "testId": "43cc8891-31ab-4280-bf78-232ab04ab113",
+        "testTitle": "Unit 10 — जनजातियों के कल्याण के लिए योजनाएँ (Contribution to the Freedom Movement)",
+        "testTitleStore": "Topic 30a4384e-440d-46c7-9b3f-2dee7e46015e Practice Test",
+        "topicTitle": "जनजातियों के कल्याण के लिए योजनाएँ",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 2,
+        "slug": "unit_10-topic-30a4384e-440d-46c7-9b3f-2dee7e46015e-test"
+      }
+    },
+    {
+      "targetOrder": 20,
+      "targetQId": "qhRrDL5aTX96D69MmsdQO",
+      "kind": "stem_medium",
+      "jStem": 0.3695652173913043,
+      "explCover": 0.4864864864864865,
+      "reference": {
+        "questionId": "oNobjXmnOYmNH7N_PEYXj",
+        "testId": "ix0FnJV496Rgvw0YHOEFj",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2021 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2021 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2021,
+        "questionOrder": 71,
+        "slug": "new-pyq-21-fKi0"
+      }
+    },
+    {
+      "targetOrder": 21,
+      "targetQId": "_Owv1zLsMYcW-m9x-SHcE",
+      "kind": "explanation_only",
+      "jStem": 0.23529411764705882,
+      "explCover": 0.20833333333333334,
+      "reference": {
+        "questionId": "4ee11f1d-9c67-4fe2-88be-fa04955ccc1a",
+        "testId": "c3b8f8db-504c-4d8f-8677-5c03b8bd9ea5",
+        "testTitle": "Unit 7 — स्वास्थ्य नीति एवं कार्यक्रम (Health Policy and Programs)",
+        "testTitleStore": "Topic 6f5a16b3-f792-48e4-bf33-5daae147e6b8 Practice Test",
+        "topicTitle": "स्वास्थ्य नीति एवं कार्यक्रम",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 7,
+        "slug": "unit_7-topic-6f5a16b3-f792-48e4-bf33-5daae147e6b8-test"
+      }
+    },
+    {
+      "targetOrder": 22,
+      "targetQId": "DtQ3l7JCzZYjPDpjyp9fl",
+      "kind": "stem_medium",
+      "jStem": 0.42857142857142855,
+      "explCover": 0.15789473684210525,
+      "reference": {
+        "questionId": "2l8hk8SPna7sVoocgRdd5",
+        "testId": "mwIKog3yro0xdE6WfKasp",
+        "testTitle": "यूनिट - 6 : भारत एवं मध्यप्रदेश की अर्थव्यवस्था",
+        "testTitleStore": "यूनिट - 6 : भारत एवं मध्यप्रदेश की अर्थव्यवस्था",
+        "topicTitle": null,
+        "testType": "UNIT",
+        "pyqYear": null,
+        "questionOrder": 12,
+        "slug": "latest-unit-6-ttWR"
+      }
+    },
+    {
+      "targetOrder": 23,
+      "targetQId": "VfFBzzSiJuvDtiFWn_xZu",
+      "kind": "explanation_only",
+      "jStem": 0.1951219512195122,
+      "explCover": 0.2962962962962963,
+      "reference": {
+        "questionId": "ed71c437-8ce7-40a1-bf98-9c5980879e08",
+        "testId": "ea574b5e-ea6f-47f4-bfaf-1d6c78641f95",
+        "testTitle": "Unit 7 — अनुवांशिक रोग: सिकल सेल एनीमिया (Genetic Diseases: Sickle Cell Anemia)",
+        "testTitleStore": "Topic 4293729d-7766-42f7-a915-923f0245b0ee Practice Test",
+        "topicTitle": "अनुवांशिक रोग: सिकल सेल एनीमिया",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 3,
+        "slug": "unit_7-topic-4293729d-7766-42f7-a915-923f0245b0ee-test"
+      }
+    },
+    {
+      "targetOrder": 24,
+      "targetQId": "HOx81PueXG1KNAXBVXCTQ",
+      "kind": "explanation_only",
+      "jStem": 0.1388888888888889,
+      "explCover": 0.25,
+      "reference": {
+        "questionId": "dfbd976c-a51f-4334-8edc-dbf75fe8a05f",
+        "testId": "e6066c62-ccd2-48e4-9e48-ef250d2caef1",
+        "testTitle": "Unit 2 — मध्यप्रदेश के प्रमुख त्योहार (Major Festivals of MP)",
+        "testTitleStore": "Topic 0c84569b-a245-4ef2-bab6-43bdd137a217 Practice Test",
+        "topicTitle": "मध्यप्रदेश के प्रमुख त्योहार",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 1,
+        "slug": "unit_2-topic-0c84569b-a245-4ef2-bab6-43bdd137a217-test"
+      }
+    },
+    {
+      "targetOrder": 25,
+      "targetQId": "u9CdhJVodkpsa6aI6T9aD",
+      "kind": "stem_medium",
+      "jStem": 0.3142857142857143,
+      "explCover": 0.2916666666666667,
+      "reference": {
+        "questionId": "DUER3ylppDJG4NxIgbR5A",
+        "testId": "mSB6dyiQsmtTmM_bQcGPV",
+        "testTitle": "भारत के प्रमुख वैज्ञानिक अनुसंधान संस्थान",
+        "testTitleStore": "भारत के प्रमुख वैज्ञानिक अनुसंधान संस्थान",
+        "topicTitle": null,
+        "testType": "MISC",
+        "pyqYear": null,
+        "questionOrder": 4,
+        "slug": "-n9Ju"
+      }
+    },
+    {
+      "targetOrder": 26,
+      "targetQId": "WuCssrITufJKucQq1PN91",
+      "kind": "explanation_only",
+      "jStem": 0.09302325581395349,
+      "explCover": 0.3076923076923077,
+      "reference": {
+        "questionId": "8RDdeUCp5k7xP1XHhJWW_",
+        "testId": "mQ1a9hZoTdfSRfkz40K5C",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2023 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2023 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2023,
+        "questionOrder": 56,
+        "slug": "pyq-2023-latest-on-21-march-CrKc"
+      }
+    },
+    {
+      "targetOrder": 27,
+      "targetQId": "A5Ssr-vdTbxt6sAUUaOb1",
+      "kind": "explanation_only",
+      "jStem": 0.21311475409836064,
+      "explCover": 0.18,
+      "reference": {
+        "questionId": "yTwnV9ag2Y37TNWtdzv5r",
+        "testId": "l2cBBsoN7kOYyzmuQpR4p",
+        "testTitle": "MPPSC प्री टारगेट: अंतरिक्ष तकनीक और उपग्रहों पर विजय (यूनिट 7) 🚀",
+        "testTitleStore": "MPPSC प्री टारगेट: अंतरिक्ष तकनीक और उपग्रहों पर विजय (यूनिट 7) 🚀",
+        "topicTitle": null,
+        "testType": "MISC",
+        "pyqYear": null,
+        "questionOrder": 2,
+        "slug": "mppsc-7-QOvx"
+      }
+    },
+    {
+      "targetOrder": 28,
+      "targetQId": "iBl_QLnEMji1SGfyIH5cf",
+      "kind": "explanation_only",
+      "jStem": 0.17346938775510204,
+      "explCover": 0.189873417721519,
+      "reference": {
+        "questionId": "oRTUZqS2yHmYlLBXWlaWT",
+        "testId": "l2cBBsoN7kOYyzmuQpR4p",
+        "testTitle": "MPPSC प्री टारगेट: अंतरिक्ष तकनीक और उपग्रहों पर विजय (यूनिट 7) 🚀",
+        "testTitleStore": "MPPSC प्री टारगेट: अंतरिक्ष तकनीक और उपग्रहों पर विजय (यूनिट 7) 🚀",
+        "topicTitle": null,
+        "testType": "MISC",
+        "pyqYear": null,
+        "questionOrder": 6,
+        "slug": "mppsc-7-QOvx"
+      }
+    },
+    {
+      "targetOrder": 29,
+      "targetQId": "9eeVudHhmjTO--IaNLY2y",
+      "kind": "explanation_only",
+      "jStem": 0.03225806451612903,
+      "explCover": 0.24528301886792453,
+      "reference": {
+        "questionId": "BBBO5vnWFoAXfLIjFPJ9L",
+        "testId": "D0gf6bklgl3RT-sTnue2n",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025  (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025  (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2025,
+        "questionOrder": 66,
+        "slug": "new-pyq-25-7Ztt"
+      }
+    },
+    {
+      "targetOrder": 30,
+      "targetQId": "yqasHFc6j9Rgr9qOza8Q9",
+      "kind": "explanation_only",
+      "jStem": 0.2631578947368421,
+      "explCover": 0.30434782608695654,
+      "reference": {
+        "questionId": "-CTQRn2MFEfBLUAeFfIag",
+        "testId": "9egUY4tEq7qsshk3TigSZ",
+        "testTitle": "शरीर रचना और क्रिया विज्ञान: मानव शरीर की संरचना",
+        "testTitleStore": "शरीर रचना और क्रिया विज्ञान: मानव शरीर की संरचना",
+        "topicTitle": null,
+        "testType": "MISC",
+        "pyqYear": null,
+        "questionOrder": 3,
+        "slug": "-r3l7"
+      }
+    },
+    {
+      "targetOrder": 31,
+      "targetQId": "_QBx8d9vLUxX0-nv1gMv-",
+      "kind": "explanation_only",
+      "jStem": 0.038461538461538464,
+      "explCover": 0.4375,
+      "reference": {
+        "questionId": "ULZVatZQgIe6JGuQfHbgO",
+        "testId": "5KRVTgTIw07bWNxu20YNl",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2020 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2020 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2020,
+        "questionOrder": 92,
+        "slug": "new-pyq-20-CuNO"
+      }
+    },
+    {
+      "targetOrder": 32,
+      "targetQId": "GDokcahOLCUBUTSREXtq5",
+      "kind": "explanation_only",
+      "jStem": 0.25,
+      "explCover": 0.3333333333333333,
+      "reference": {
+        "questionId": "830f2caf-568e-4f71-b857-2a53802141b3",
+        "testId": "0f904fbf-45cc-4965-8ae3-107af61a3e39",
+        "testTitle": "Unit 2 — जनजातियों की बोलियाँ (Dialects of Tribes)",
+        "testTitleStore": "Topic aa73b0c2-9db0-44a1-9d2f-b4bd04728012 Practice Test",
+        "topicTitle": "जनजातियों की बोलियाँ",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 5,
+        "slug": "unit_2-topic-aa73b0c2-9db0-44a1-9d2f-b4bd04728012-test"
+      }
+    },
+    {
+      "targetOrder": 33,
+      "targetQId": "rnYRcSK6D19TXl8cSsGgw",
+      "kind": "explanation_only",
+      "jStem": 0.22580645161290322,
+      "explCover": 0.36363636363636365,
+      "reference": {
+        "questionId": "1db8bfce-082c-4827-92d9-12043c998ae3",
+        "testId": "a4576e62-0798-4be0-be22-ef7450e13cab",
+        "testTitle": "Unit 9 — इलेक्ट्रॉनिकी (Electronics) (Electronics, Information and Communication Technology)",
+        "testTitleStore": "Topic 64ce3f11-7f58-4584-ac5d-ae4faa14e424 Practice Test",
+        "topicTitle": "इलेक्ट्रॉनिकी (Electronics)",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 7,
+        "slug": "unit_9-topic-64ce3f11-7f58-4584-ac5d-ae4faa14e424-test"
+      }
+    },
+    {
+      "targetOrder": 34,
+      "targetQId": "IhIbGC7DwxDChRrVw_Kfn",
+      "kind": "explanation_only",
+      "jStem": 0.12727272727272726,
+      "explCover": 0.22727272727272727,
+      "reference": {
+        "questionId": "U2yS4gBN80tpM3rT63dgW",
+        "testId": "mQ1a9hZoTdfSRfkz40K5C",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2023 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2023 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2023,
+        "questionOrder": 79,
+        "slug": "pyq-2023-latest-on-21-march-CrKc"
+      }
+    },
+    {
+      "targetOrder": 35,
+      "targetQId": "O60O2IcGLj95ld7DYj6bK",
+      "kind": "explanation_only",
+      "jStem": 0.03125,
+      "explCover": 0.5909090909090909,
+      "reference": {
+        "questionId": "ULZVatZQgIe6JGuQfHbgO",
+        "testId": "5KRVTgTIw07bWNxu20YNl",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2020 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2020 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2020,
+        "questionOrder": 92,
+        "slug": "new-pyq-20-CuNO"
+      }
+    },
+    {
+      "targetOrder": 36,
+      "targetQId": "wUcLtwH_VZdLlL15A7RZD",
+      "kind": "explanation_only",
+      "jStem": 0.10810810810810811,
+      "explCover": 0.5,
+      "reference": {
+        "questionId": "5c607ac1-9742-4734-af1d-ae1e25e8284b",
+        "testId": "f99449b4-8ebb-4993-b155-d9f24d5e2f13",
+        "testTitle": "Unit 9 — कंप्यूटर का आधारभूत ज्ञान (Basic Knowledge of Computer)",
+        "testTitleStore": "Topic e6792a2d-f287-425c-93dd-39e2cebc4170 Practice Test",
+        "topicTitle": "कंप्यूटर का आधारभूत ज्ञान",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 3,
+        "slug": "unit_9-topic-e6792a2d-f287-425c-93dd-39e2cebc4170-test"
+      }
+    },
+    {
+      "targetOrder": 37,
+      "targetQId": "Ylc9PZK25bxsstgQ_Bfib",
+      "kind": "explanation_only",
+      "jStem": 0.11320754716981132,
+      "explCover": 0.25806451612903225,
+      "reference": {
+        "questionId": "c82d8680-15be-4cef-b361-15fdb7db6c59",
+        "testId": "eaeb8626-f4ad-4c59-b539-d1e7aeea6190",
+        "testTitle": "Unit 9 — ई-गवर्नेंस (Internet and Social Networking Platforms)",
+        "testTitleStore": "Topic 00587594-26da-4a48-8425-1d23cd57dc6a Practice Test",
+        "topicTitle": "ई-गवर्नेंस",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 6,
+        "slug": "unit_9-topic-00587594-26da-4a48-8425-1d23cd57dc6a-test"
+      }
+    },
+    {
+      "targetOrder": 38,
+      "targetQId": "p3f0KNeMP6ZI2ttNcfNvU",
+      "kind": "explanation_only",
+      "jStem": 0.18181818181818182,
+      "explCover": 0.5454545454545454,
+      "reference": {
+        "questionId": "U8k34kx-wcw0Gu5_Xgy57",
+        "testId": "cG1NgfPC-8xN5jOKRgTFj",
+        "testTitle": "MPPSC Prelims - Full Length Mock Test 10",
+        "testTitleStore": "MPPSC Prelims - Full Length Mock Test 10",
+        "topicTitle": null,
+        "testType": "FLT",
+        "pyqYear": null,
+        "questionOrder": 33,
+        "slug": "mppsc-prelims-flt-4-2026-3dig"
+      }
+    },
+    {
+      "targetOrder": 39,
+      "targetQId": "PqJLN4bPA1aF_p-W14qqt",
+      "kind": "stem_medium",
+      "jStem": 0.3170731707317073,
+      "explCover": 0.1724137931034483,
+      "reference": {
+        "questionId": "zLcdCGLNUJd3QSyUmzvCU",
+        "testId": "cqclNnmKQJilUvhFP2a9p",
+        "testTitle": "यूनिट -9 : सूचना एवं संचार प्रौद्योगिकी",
+        "testTitleStore": "यूनिट -9 : सूचना एवं संचार प्रौद्योगिकी",
+        "topicTitle": null,
+        "testType": "UNIT",
+        "pyqYear": null,
+        "questionOrder": 2,
+        "slug": "latest-unit-9-new-ryaA"
+      }
+    },
+    {
+      "targetOrder": 40,
+      "targetQId": "gmsvjemb6Kx6pSAHyz24r",
+      "kind": "explanation_only",
+      "jStem": 0.07547169811320754,
+      "explCover": 0.37142857142857144,
+      "reference": {
+        "questionId": "YkryXSTXhPGPmqcP4QtZ-",
+        "testId": "mQ1a9hZoTdfSRfkz40K5C",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2023 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2023 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2023,
+        "questionOrder": 42,
+        "slug": "pyq-2023-latest-on-21-march-CrKc"
+      }
+    },
+    {
+      "targetOrder": 41,
+      "targetQId": "iBw1A9wKgGZNuTCIDTYsN",
+      "kind": "explanation_only",
+      "jStem": 0.21153846153846154,
+      "explCover": 0.37142857142857144,
+      "reference": {
+        "questionId": "9oZC7ejuCqoaWqW80_LpQ",
+        "testId": "5KRVTgTIw07bWNxu20YNl",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2020 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2020 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2020,
+        "questionOrder": 14,
+        "slug": "new-pyq-20-CuNO"
+      }
+    },
+    {
+      "targetOrder": 42,
+      "targetQId": "nBxtV7p6SgLUbL-NmdnMN",
+      "kind": "explanation_only",
+      "jStem": 0.1282051282051282,
+      "explCover": 0.21428571428571427,
+      "reference": {
+        "questionId": "Eg4FwVXRs5qkPR5VsuVX8",
+        "testId": "T0EKYlP3fP2zOg7nIGXzX",
+        "testTitle": "MPPSC Prelims - Full Length Mock Test 7",
+        "testTitleStore": "MPPSC Prelims - Full Length Mock Test 7",
+        "topicTitle": null,
+        "testType": "FLT",
+        "pyqYear": null,
+        "questionOrder": 8,
+        "slug": "mppsc-prelims-flt-1-2026-A_kF"
+      }
+    },
+    {
+      "targetOrder": 43,
+      "targetQId": "6mXwvvu1RiP2K7b4SxTkB",
+      "kind": "explanation_only",
+      "jStem": 0.08620689655172414,
+      "explCover": 0.3870967741935484,
+      "reference": {
+        "questionId": "gK0TvmsnE8Oe2c9QT13gz",
+        "testId": "8MZxaB-2tZlvneFVuAH3w",
+        "testTitle": "करेंट अफेयर्स: प्रमुख राष्ट्रीय एवं अंतर्राष्ट्रीय पुरस्कार",
+        "testTitleStore": "करेंट अफेयर्स: प्रमुख राष्ट्रीय एवं अंतर्राष्ट्रीय पुरस्कार",
+        "topicTitle": null,
+        "testType": "MISC",
+        "pyqYear": null,
+        "questionOrder": 8,
+        "slug": "-cu89"
+      }
+    },
+    {
+      "targetOrder": 44,
+      "targetQId": "bAnbqXPZ2A8gYiUoQjOZs",
+      "kind": "explanation_only",
+      "jStem": 0.23809523809523808,
+      "explCover": 0.20588235294117646,
+      "reference": {
+        "questionId": "w309rvabj-iPGrg-jQD3Z",
+        "testId": "CtN-YXOB5fU5Lz7f6HI1G",
+        "testTitle": "MPPSC Prelims - Full Length Mock Test 6",
+        "testTitleStore": "MPPSC Prelims - Full Length Mock Test 6",
+        "topicTitle": null,
+        "testType": "FLT",
+        "pyqYear": null,
+        "questionOrder": 66,
+        "slug": "mppsc-prelims-full-length-mock-test-1-ESWx"
+      }
+    },
+    {
+      "targetOrder": 45,
+      "targetQId": "Tquy-GwTySzvjR3Dqfxsc",
+      "kind": "explanation_only",
+      "jStem": 0.18181818181818182,
+      "explCover": 0.21428571428571427,
+      "reference": {
+        "questionId": "2hYLzai9-zS2Efssl65Gr",
+        "testId": "o_rO3J1tSEACKENOLT9QI",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2022 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2022 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2022,
+        "questionOrder": 36,
+        "slug": "new-pyq-22-Y82g"
+      }
+    },
+    {
+      "targetOrder": 46,
+      "targetQId": "JjrW_WBE_d6q7USEweXdA",
+      "kind": "explanation_only",
+      "jStem": 0.09523809523809523,
+      "explCover": 0.1891891891891892,
+      "reference": {
+        "questionId": "gK0TvmsnE8Oe2c9QT13gz",
+        "testId": "8MZxaB-2tZlvneFVuAH3w",
+        "testTitle": "करेंट अफेयर्स: प्रमुख राष्ट्रीय एवं अंतर्राष्ट्रीय पुरस्कार",
+        "testTitleStore": "करेंट अफेयर्स: प्रमुख राष्ट्रीय एवं अंतर्राष्ट्रीय पुरस्कार",
+        "topicTitle": null,
+        "testType": "MISC",
+        "pyqYear": null,
+        "questionOrder": 8,
+        "slug": "-cu89"
+      }
+    },
+    {
+      "targetOrder": 47,
+      "targetQId": "ha8VSXEJdJoQ6vuPP1egI",
+      "kind": "explanation_only",
+      "jStem": 0.15555555555555556,
+      "explCover": 0.22727272727272727,
+      "reference": {
+        "questionId": "794d070e-6b84-461f-8291-f061b85a0b1c",
+        "testId": "d80363ea-c702-4399-a45a-2e1fd2323c74",
+        "testTitle": "Unit 6 — आत्मनिर्भर मध्यप्रदेश (Self-Reliant Madhya Pradesh (Atmanirbhar MP))",
+        "testTitleStore": "Topic fb2c3e82-3913-4906-b4cf-0714be18de68 Practice Test",
+        "topicTitle": "आत्मनिर्भर मध्यप्रदेश",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 2,
+        "slug": "unit_6-topic-fb2c3e82-3913-4906-b4cf-0714be18de68-test"
+      }
+    },
+    {
+      "targetOrder": 48,
+      "targetQId": "yoR0W711PM8dYaagVyDiC",
+      "kind": "explanation_only",
+      "jStem": 0.06756756756756757,
+      "explCover": 0.23076923076923078,
+      "reference": {
+        "questionId": "6LJi_M4HtwrmplU2KULJQ",
+        "testId": "o_rO3J1tSEACKENOLT9QI",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2022 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2022 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2022,
+        "questionOrder": 91,
+        "slug": "new-pyq-22-Y82g"
+      }
+    },
+    {
+      "targetOrder": 49,
+      "targetQId": "-M_69k3oOyYR08yDLu7ku",
+      "kind": "explanation_only",
+      "jStem": 0.16216216216216217,
+      "explCover": 0.22727272727272727,
+      "reference": {
+        "questionId": "787bd7cb-3844-4975-bfe7-6c39275ecf25",
+        "testId": "1ef8ff8f-9476-406c-b945-5223144476fd",
+        "testTitle": "Unit 8 — अंतर्राष्ट्रीय समसामयिक घटनाएँ (International Current Events)",
+        "testTitleStore": "Topic 626bac0d-f23f-40ac-b491-ede55d40d1e9 Practice Test",
+        "topicTitle": "अंतर्राष्ट्रीय समसामयिक घटनाएँ",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 8,
+        "slug": "unit_8-topic-626bac0d-f23f-40ac-b491-ede55d40d1e9-test"
+      }
+    },
+    {
+      "targetOrder": 50,
+      "targetQId": "AZd7xUGdNdzJmJCW6CTmB",
+      "kind": "stem_strong",
+      "jStem": 0.4838709677419355,
+      "explCover": 0.36,
+      "reference": {
+        "questionId": "787bd7cb-3844-4975-bfe7-6c39275ecf25",
+        "testId": "1ef8ff8f-9476-406c-b945-5223144476fd",
+        "testTitle": "Unit 8 — अंतर्राष्ट्रीय समसामयिक घटनाएँ (International Current Events)",
+        "testTitleStore": "Topic 626bac0d-f23f-40ac-b491-ede55d40d1e9 Practice Test",
+        "topicTitle": "अंतर्राष्ट्रीय समसामयिक घटनाएँ",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 8,
+        "slug": "unit_8-topic-626bac0d-f23f-40ac-b491-ede55d40d1e9-test"
+      }
+    },
+    {
+      "targetOrder": 51,
+      "targetQId": "IEW9mLwiwfD-JjiIiEiLj",
+      "kind": "stem_strong",
+      "jStem": 0.5357142857142857,
+      "explCover": 0.3333333333333333,
+      "reference": {
+        "questionId": "WimoNdtSfpymoqnvRts6r",
+        "testId": "XE6OPtL1xoAjm5GY4yD3a",
+        "testTitle": "यूनिट - 1  :  भारत का इतिहास",
+        "testTitleStore": "यूनिट - 1  :  भारत का इतिहास",
+        "topicTitle": null,
+        "testType": "UNIT",
+        "pyqYear": null,
+        "questionOrder": 4,
+        "slug": "latest-new-unit-1-qKh5"
+      }
+    },
+    {
+      "targetOrder": 52,
+      "targetQId": "_Tmxz2YLpUL6ebfspfwUN",
+      "kind": "explanation_only",
+      "jStem": 0.12195121951219512,
+      "explCover": 0.2608695652173913,
+      "reference": {
+        "questionId": "6UY7BDL7iRv22sCVB0yDg",
+        "testId": "ix0FnJV496Rgvw0YHOEFj",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2021 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2021 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2021,
+        "questionOrder": 17,
+        "slug": "new-pyq-21-fKi0"
+      }
+    },
+    {
+      "targetOrder": 53,
+      "targetQId": "FsuObStt8MgZzxfTbX8FN",
+      "kind": "explanation_only",
+      "jStem": 0.25806451612903225,
+      "explCover": 0.3,
+      "reference": {
+        "questionId": "t4yXeAznaY3YklyUyAxrl",
+        "testId": "XE6OPtL1xoAjm5GY4yD3a",
+        "testTitle": "यूनिट - 1  :  भारत का इतिहास",
+        "testTitleStore": "यूनिट - 1  :  भारत का इतिहास",
+        "topicTitle": null,
+        "testType": "UNIT",
+        "pyqYear": null,
+        "questionOrder": 21,
+        "slug": "latest-new-unit-1-qKh5"
+      }
+    },
+    {
+      "targetOrder": 54,
+      "targetQId": "ieT3nvASamkLZ4PfVILUg",
+      "kind": "none",
+      "jStem": 0,
+      "explCover": 0,
+      "reference": null
+    },
+    {
+      "targetOrder": 55,
+      "targetQId": "kSfsGAL3MsH7ku4INSSST",
+      "kind": "none",
+      "jStem": 0,
+      "explCover": 0,
+      "reference": null
+    },
+    {
+      "targetOrder": 56,
+      "targetQId": "gbYjlBIloM-8MhfKY1l9O",
+      "kind": "explanation_only",
+      "jStem": 0.09302325581395349,
+      "explCover": 0.29411764705882354,
+      "reference": {
+        "questionId": "x9aK7WK5-6aeVW26U0sj4",
+        "testId": "c4rI0m0FoPZMW32N6vN3w",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025 Part-7",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025 Part-7",
+        "topicTitle": null,
+        "testType": "MISC",
+        "pyqYear": null,
+        "questionOrder": 8,
+        "slug": "pyq-part-7-ZAkq"
+      }
+    },
+    {
+      "targetOrder": 57,
+      "targetQId": "O0XSPRC_2wfNnzEvDfjX3",
+      "kind": "explanation_only",
+      "jStem": 0.05405405405405406,
+      "explCover": 0.2222222222222222,
+      "reference": {
+        "questionId": "zZmCrrek454fOvy9h-3bG",
+        "testId": "o_rO3J1tSEACKENOLT9QI",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2022 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2022 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2022,
+        "questionOrder": 68,
+        "slug": "new-pyq-22-Y82g"
+      }
+    },
+    {
+      "targetOrder": 58,
+      "targetQId": "KZ0w5_wXx4z-QjHF8yK3-",
+      "kind": "explanation_only",
+      "jStem": 0.08771929824561403,
+      "explCover": 0.21428571428571427,
+      "reference": {
+        "questionId": "9HIXdF-lgWtFJzOTrhk4L",
+        "testId": "yzmDli1TRCvcAo_8FsAXE",
+        "testTitle": "भारत का इतिहास-Unit-1",
+        "testTitleStore": "भारत का इतिहास-Unit-1",
+        "topicTitle": null,
+        "testType": "MISC",
+        "pyqYear": null,
+        "questionOrder": 6,
+        "slug": "unit-1-lqji"
+      }
+    },
+    {
+      "targetOrder": 59,
+      "targetQId": "os1eLw6qS0t3gsuPc6gM-",
+      "kind": "none",
+      "jStem": 0,
+      "explCover": 0,
+      "reference": null
+    },
+    {
+      "targetOrder": 60,
+      "targetQId": "1mRzlt8Udkw9Cfa8AOCit",
+      "kind": "explanation_only",
+      "jStem": 0.25806451612903225,
+      "explCover": 0.4,
+      "reference": {
+        "questionId": "Sfjn2GlWWT6ULHqDPZvtf",
+        "testId": "5KRVTgTIw07bWNxu20YNl",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2020 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2020 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2020,
+        "questionOrder": 70,
+        "slug": "new-pyq-20-CuNO"
+      }
+    },
+    {
+      "targetOrder": 61,
+      "targetQId": "sDEohS0VcVUUVVRcgFRIh",
+      "kind": "stem_strong",
+      "jStem": 0.56,
+      "explCover": 0.42105263157894735,
+      "reference": {
+        "questionId": "afba8fd7-f9c7-46dd-977c-f0788f6e1003",
+        "testId": "ac84f7bc-37d7-4119-a9a1-07e0dc0b9a22",
+        "testTitle": "Unit 4 — जनसंख्या वृद्धि, वितरण एवं घनत्व (Population Growth, Distribution and Density)",
+        "testTitleStore": "Topic 422161b2-1ac8-4932-ae9d-e6ebc6fc2481 Practice Test",
+        "topicTitle": "जनसंख्या वृद्धि, वितरण एवं घनत्व",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 1,
+        "slug": "unit_4-topic-422161b2-1ac8-4932-ae9d-e6ebc6fc2481-test"
+      }
+    },
+    {
+      "targetOrder": 62,
+      "targetQId": "tYd8OI_b_IPpqsqU-YtSI",
+      "kind": "stem_medium",
+      "jStem": 0.42105263157894735,
+      "explCover": 0.36,
+      "reference": {
+        "questionId": "4d0845d1-a1b0-42bf-bf1f-cc86bd2d9662",
+        "testId": "d6b3c34c-9acf-4358-9aa9-16f6a234a4c2",
+        "testTitle": "Unit 10 — विशेष पिछड़ी जनजातियाँ (PVTG) (Tribal Culture: Customs, Traditions, and Special Arts)",
+        "testTitleStore": "Topic 361d6510-d4b7-42fb-b2ed-712e437d1d72 Practice Test",
+        "topicTitle": "विशेष पिछड़ी जनजातियाँ (PVTG)",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 1,
+        "slug": "unit_10-topic-361d6510-d4b7-42fb-b2ed-712e437d1d72-test"
+      }
+    },
+    {
+      "targetOrder": 63,
+      "targetQId": "AbBvDu-xbqDjzTYfg2wA9",
+      "kind": "stem_medium",
+      "jStem": 0.3548387096774194,
+      "explCover": 0.36363636363636365,
+      "reference": {
+        "questionId": "ef0d7b97-20b7-409d-9955-26782d231c1f",
+        "testId": "8e6ca7af-e29d-4f08-8c43-e11cff441096",
+        "testTitle": "Unit 10 — मध्यप्रदेश की प्रमुख जनजातियाँ (Tribal Welfare Programs)",
+        "testTitleStore": "Topic e4935aec-0d01-4920-96d4-861df04410d1 Practice Test",
+        "topicTitle": "मध्यप्रदेश की प्रमुख जनजातियाँ",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 1,
+        "slug": "unit_10-topic-e4935aec-0d01-4920-96d4-861df04410d1-test"
+      }
+    },
+    {
+      "targetOrder": 64,
+      "targetQId": "nyfyuyyhdxQP7gLb2yQDY",
+      "kind": "explanation_only",
+      "jStem": 0.1346153846153846,
+      "explCover": 0.3548387096774194,
+      "reference": {
+        "questionId": "yb4YdfgBh8Nqo-W5JyjnR",
+        "testId": "3XmZ0l700BJV3j2FLd0XZ",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2024  (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2024  (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2024,
+        "questionOrder": 21,
+        "slug": "new-pyq-24-xHde"
+      }
+    },
+    {
+      "targetOrder": 65,
+      "targetQId": "c0YAlfyBEzbM7FUwRkjme",
+      "kind": "explanation_only",
+      "jStem": 0.07142857142857142,
+      "explCover": 0.25,
+      "reference": {
+        "questionId": "X8SaE3nmTiGo2a56S1Ns9",
+        "testId": "mQ1a9hZoTdfSRfkz40K5C",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2023 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2023 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2023,
+        "questionOrder": 14,
+        "slug": "pyq-2023-latest-on-21-march-CrKc"
+      }
+    },
+    {
+      "targetOrder": 66,
+      "targetQId": "VVIHdfGZMTdpHR1gk432o",
+      "kind": "explanation_only",
+      "jStem": 0.2,
+      "explCover": 0.3333333333333333,
+      "reference": {
+        "questionId": "SQReWb6rRtruI4UJRYRcE",
+        "testId": "o_rO3J1tSEACKENOLT9QI",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2022 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2022 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2022,
+        "questionOrder": 63,
+        "slug": "new-pyq-22-Y82g"
+      }
+    },
+    {
+      "targetOrder": 67,
+      "targetQId": "6N5f8e72Q25J-W9-30Vd2",
+      "kind": "explanation_only",
+      "jStem": 0.23255813953488372,
+      "explCover": 0.32142857142857145,
+      "reference": {
+        "questionId": "ec20fa13-42c4-4a47-a5d4-01d101ab8440",
+        "testId": "a34c6270-3c61-4897-8d98-2463ec124d64",
+        "testTitle": "Unit 10 — जनजातियों से संबंधित संवैधानिक प्रावधान (Particularly Vulnerable Tribal Groups (PVTG))",
+        "testTitleStore": "Topic e279f5a6-fe0d-4e4e-9637-6ab00e70867f Practice Test",
+        "topicTitle": "जनजातियों से संबंधित संवैधानिक प्रावधान",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 4,
+        "slug": "unit_10-topic-e279f5a6-fe0d-4e4e-9637-6ab00e70867f-test"
+      }
+    },
+    {
+      "targetOrder": 68,
+      "targetQId": "GXHj47V_luW1uVfayMF-1",
+      "kind": "stem_strong",
+      "jStem": 0.76,
+      "explCover": 0.45454545454545453,
+      "reference": {
+        "questionId": "a94de0c4-f50d-4840-b1eb-81b6a9131563",
+        "testId": "9420548a-93f1-4eff-b381-df0b90ff42a1",
+        "testTitle": "Unit 10 — मध्यप्रदेश में जनजातियों का भौगोलिक विस्तार (Geographical Distribution and Constitutional Provisions)",
+        "testTitleStore": "Topic 36a2abc5-f758-43e7-8296-b60e0589363b Practice Test",
+        "topicTitle": "मध्यप्रदेश में जनजातियों का भौगोलिक विस्तार",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 1,
+        "slug": "unit_10-topic-36a2abc5-f758-43e7-8296-b60e0589363b-test"
+      }
+    },
+    {
+      "targetOrder": 69,
+      "targetQId": "jj6zIH_9H4S01fwKwSQB1",
+      "kind": "explanation_only",
+      "jStem": 0.19444444444444445,
+      "explCover": 0.36363636363636365,
+      "reference": {
+        "questionId": "6f933f9d-595a-48a8-9594-ce7c0d57f31d",
+        "testId": "9a03dfb5-13f4-45c4-96e0-b432283f234c",
+        "testTitle": "Unit 2 — मध्यप्रदेश की प्रमुख जनजातियाँ (Major Tribes of MP)",
+        "testTitleStore": "Topic d0aa63b0-7c54-4f9d-bac6-1767d1aa5859 Practice Test",
+        "topicTitle": "मध्यप्रदेश की प्रमुख जनजातियाँ",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 2,
+        "slug": "unit_2-topic-d0aa63b0-7c54-4f9d-bac6-1767d1aa5859-test"
+      }
+    },
+    {
+      "targetOrder": 70,
+      "targetQId": "RebjTj5uGqNzcmZSr_Bgs",
+      "kind": "explanation_only",
+      "jStem": 0.14285714285714285,
+      "explCover": 0.3157894736842105,
+      "reference": {
+        "questionId": "6f933f9d-595a-48a8-9594-ce7c0d57f31d",
+        "testId": "9a03dfb5-13f4-45c4-96e0-b432283f234c",
+        "testTitle": "Unit 2 — मध्यप्रदेश की प्रमुख जनजातियाँ (Major Tribes of MP)",
+        "testTitleStore": "Topic d0aa63b0-7c54-4f9d-bac6-1767d1aa5859 Practice Test",
+        "topicTitle": "मध्यप्रदेश की प्रमुख जनजातियाँ",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 2,
+        "slug": "unit_2-topic-d0aa63b0-7c54-4f9d-bac6-1767d1aa5859-test"
+      }
+    },
+    {
+      "targetOrder": 71,
+      "targetQId": "xBf2LycRaRaNvY-MlXiDD",
+      "kind": "explanation_only",
+      "jStem": 0.21621621621621623,
+      "explCover": 0.3548387096774194,
+      "reference": {
+        "questionId": "PAzPwcOquG0QYRHsmc9zU",
+        "testId": "ix0FnJV496Rgvw0YHOEFj",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2021 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2021 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2021,
+        "questionOrder": 1,
+        "slug": "new-pyq-21-fKi0"
+      }
+    },
+    {
+      "targetOrder": 72,
+      "targetQId": "8ic848EctYV_PKwVY85BG",
+      "kind": "explanation_only",
+      "jStem": 0.21052631578947367,
+      "explCover": 0.48,
+      "reference": {
+        "questionId": "9XkJhgSS6nSTFOQwG_Zm4",
+        "testId": "5KRVTgTIw07bWNxu20YNl",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2020 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2020 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2020,
+        "questionOrder": 83,
+        "slug": "new-pyq-20-CuNO"
+      }
+    },
+    {
+      "targetOrder": 73,
+      "targetQId": "QlY-G_3F4dbs6AKOY2yTw",
+      "kind": "stem_medium",
+      "jStem": 0.35714285714285715,
+      "explCover": 0.2727272727272727,
+      "reference": {
+        "questionId": "30aa2344-1048-4e96-98ed-19224778db58",
+        "testId": "36a9b33e-de9c-4723-826b-4bb8623717b3",
+        "testTitle": "Unit 3 — प्राकृतिक संसाधन—खनिज (Natural Resources: Minerals)",
+        "testTitleStore": "Topic 50350549-83a0-46a7-ad63-44c96299c94d Practice Test",
+        "topicTitle": "प्राकृतिक संसाधन—खनिज",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 6,
+        "slug": "unit_3-topic-50350549-83a0-46a7-ad63-44c96299c94d-test"
+      }
+    },
+    {
+      "targetOrder": 74,
+      "targetQId": "XNfBds-zPhlytqEmlzFQt",
+      "kind": "explanation_only",
+      "jStem": 0.13725490196078433,
+      "explCover": 0.24324324324324326,
+      "reference": {
+        "questionId": "4LMrgV4VDvoP8QBermgt4",
+        "testId": "3XmZ0l700BJV3j2FLd0XZ",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2024  (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2024  (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2024,
+        "questionOrder": 60,
+        "slug": "new-pyq-24-xHde"
+      }
+    },
+    {
+      "targetOrder": 75,
+      "targetQId": "UFk2FxQN5vh6M5rB_gEEL",
+      "kind": "stem_medium",
+      "jStem": 0.3055555555555556,
+      "explCover": 0.3333333333333333,
+      "reference": {
+        "questionId": "03d417a5-ede3-4a4b-9c55-73352fedb232",
+        "testId": "78018eef-ac36-4dc9-ad54-b8c6735abe7e",
+        "testTitle": "Unit 5 — नगरीय प्रशासन व्यवस्था (Civil Administration System in MP)",
+        "testTitleStore": "Topic 11295c4f-7cec-49af-805b-30169636f5b2 Practice Test",
+        "topicTitle": "नगरीय प्रशासन व्यवस्था",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 1,
+        "slug": "unit_5-topic-11295c4f-7cec-49af-805b-30169636f5b2-test"
+      }
+    },
+    {
+      "targetOrder": 76,
+      "targetQId": "sKrt549MtjYc8hg7CB9JX",
+      "kind": "explanation_only",
+      "jStem": 0.1568627450980392,
+      "explCover": 0.38461538461538464,
+      "reference": {
+        "questionId": "9KQ949bF5-GI2fazK3PoH",
+        "testId": "3XmZ0l700BJV3j2FLd0XZ",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2024  (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2024  (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2024,
+        "questionOrder": 52,
+        "slug": "new-pyq-24-xHde"
+      }
+    },
+    {
+      "targetOrder": 77,
+      "targetQId": "IJXL50luZK-w2Z2FDxc32",
+      "kind": "stem_strong",
+      "jStem": 0.6451612903225806,
+      "explCover": 0.6538461538461539,
+      "reference": {
+        "questionId": "ojld_PA-CRYEaWyiZ86u1",
+        "testId": "mQ1a9hZoTdfSRfkz40K5C",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2023 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2023 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2023,
+        "questionOrder": 71,
+        "slug": "pyq-2023-latest-on-21-march-CrKc"
+      }
+    },
+    {
+      "targetOrder": 78,
+      "targetQId": "XdyyjtrjGeqODBE3aT1gZ",
+      "kind": "stem_medium",
+      "jStem": 0.30303030303030304,
+      "explCover": 0.25,
+      "reference": {
+        "questionId": "dc85b375-c3e3-4f45-923c-1d9c501d0cf6",
+        "testId": "321e54b4-0d2b-48d7-bfd1-325b8c91be1d",
+        "testTitle": "Unit 4 — प्राकृतिक संसाधन—मिट्टियाँ (Soils of Madhya Pradesh)",
+        "testTitleStore": "Topic f4e5383d-5abe-4a6d-8a3a-f58286718e56 Practice Test",
+        "topicTitle": "प्राकृतिक संसाधन—मिट्टियाँ",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 1,
+        "slug": "unit_4-topic-f4e5383d-5abe-4a6d-8a3a-f58286718e56-test"
+      }
+    },
+    {
+      "targetOrder": 79,
+      "targetQId": "GuzVmljgFi-aO0lp3dyQM",
+      "kind": "explanation_only",
+      "jStem": 0.2647058823529412,
+      "explCover": 0.4782608695652174,
+      "reference": {
+        "questionId": "118805d2-3d8f-44fe-aae1-b9ced8a48cc7",
+        "testId": "958e238b-a3a3-4bec-9827-366186a6a6dd",
+        "testTitle": "Unit 4 — पहाड़ियाँ और पठार (Hills and Plateaus of MP)",
+        "testTitleStore": "Topic 62bf67e9-3f41-4d64-aa71-ed3cd028db3a Practice Test",
+        "topicTitle": "पहाड़ियाँ और पठार",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 7,
+        "slug": "unit_4-topic-62bf67e9-3f41-4d64-aa71-ed3cd028db3a-test"
+      }
+    },
+    {
+      "targetOrder": 80,
+      "targetQId": "UWS7kSWNFv79peE7ifFm2",
+      "kind": "stem_medium",
+      "jStem": 0.38461538461538464,
+      "explCover": 0.6206896551724138,
+      "reference": {
+        "questionId": "zdJC51KxDuqba3FkQRF01",
+        "testId": "D0gf6bklgl3RT-sTnue2n",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025  (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025  (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2025,
+        "questionOrder": 35,
+        "slug": "new-pyq-25-7Ztt"
+      }
+    },
+    {
+      "targetOrder": 81,
+      "targetQId": "midU022d30Hm8Pxwj2qui",
+      "kind": "explanation_only",
+      "jStem": 0.16279069767441862,
+      "explCover": 0.21739130434782608,
+      "reference": {
+        "questionId": "89Sz9S-ErMFvJWFEYE9Tk",
+        "testId": "2DXBWqHiYJFoR0eKfWzav",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025 Part-11",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025 Part-11",
+        "topicTitle": null,
+        "testType": "MISC",
+        "pyqYear": null,
+        "questionOrder": 5,
+        "slug": "pyq-part-11-IyzB"
+      }
+    },
+    {
+      "targetOrder": 82,
+      "targetQId": "c5fnAqbW7F7AMNx3Veeck",
+      "kind": "explanation_only",
+      "jStem": 0.1794871794871795,
+      "explCover": 0.3076923076923077,
+      "reference": {
+        "questionId": "3d0d32d0-e7d9-47ae-ac70-6d425e40f912",
+        "testId": "c2953a8f-68e4-42f9-a42d-fbf71a6055a4",
+        "testTitle": "Unit 4 — ऊर्जा के पारंपरिक और गैर-पारंपरिक स्रोत (Conventional and Non-Conventional Sources of Energy)",
+        "testTitleStore": "Topic e65d79dd-fe6a-4376-b688-2f2f64eb72e1 Practice Test",
+        "topicTitle": "ऊर्जा के पारंपरिक और गैर-पारंपरिक स्रोत",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 4,
+        "slug": "unit_4-topic-e65d79dd-fe6a-4376-b688-2f2f64eb72e1-test"
+      }
+    },
+    {
+      "targetOrder": 83,
+      "targetQId": "wy2t-M6NA9s0sGqyCxpmK",
+      "kind": "explanation_only",
+      "jStem": 0.18,
+      "explCover": 0.3055555555555556,
+      "reference": {
+        "questionId": "1NBWdOokKsAHqlXR56XOb",
+        "testId": "5KRVTgTIw07bWNxu20YNl",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2020 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2020 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2020,
+        "questionOrder": 96,
+        "slug": "new-pyq-20-CuNO"
+      }
+    },
+    {
+      "targetOrder": 84,
+      "targetQId": "DbIHVil5EXAOrq1ZCfGbp",
+      "kind": "explanation_only",
+      "jStem": 0.2222222222222222,
+      "explCover": 0.47058823529411764,
+      "reference": {
+        "questionId": "B8oxAyXPK1vFajAtppV2M",
+        "testId": "5KRVTgTIw07bWNxu20YNl",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2020 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2020 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2020,
+        "questionOrder": 10,
+        "slug": "new-pyq-20-CuNO"
+      }
+    },
+    {
+      "targetOrder": 85,
+      "targetQId": "2EAw34VmF6Zmf6XsptdnX",
+      "kind": "explanation_only",
+      "jStem": 0.19444444444444445,
+      "explCover": 0.3888888888888889,
+      "reference": {
+        "questionId": "9b18b9b6-8f90-4270-9c90-20506fb80044",
+        "testId": "6aa2e35c-124b-4bb9-bdbd-fddf08cb500c",
+        "testTitle": "Unit 6 — भारतीय अर्थव्यवस्था की नवीन प्रवृत्तियाँ (New Trends in Indian Economy)",
+        "testTitleStore": "Topic dcb3a40b-8ce3-4523-b95b-de25e3ff0b6b Practice Test",
+        "topicTitle": "भारतीय अर्थव्यवस्था की नवीन प्रवृत्तियाँ",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 7,
+        "slug": "unit_6-topic-dcb3a40b-8ce3-4523-b95b-de25e3ff0b6b-test"
+      }
+    },
+    {
+      "targetOrder": 86,
+      "targetQId": "5J92NZ-ZDhDDHiMQEoj-A",
+      "kind": "explanation_only",
+      "jStem": 0.17142857142857143,
+      "explCover": 0.25925925925925924,
+      "reference": {
+        "questionId": "W3UH9Nx9TCIzxZ7Lx_68E",
+        "testId": "5KRVTgTIw07bWNxu20YNl",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2020 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2020 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2020,
+        "questionOrder": 97,
+        "slug": "new-pyq-20-CuNO"
+      }
+    },
+    {
+      "targetOrder": 87,
+      "targetQId": "E7_8mKUHTx2k9uHhwXt1O",
+      "kind": "explanation_only",
+      "jStem": 0.22580645161290322,
+      "explCover": 0.5833333333333334,
+      "reference": {
+        "questionId": "W3UH9Nx9TCIzxZ7Lx_68E",
+        "testId": "5KRVTgTIw07bWNxu20YNl",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2020 (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2020 (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2020,
+        "questionOrder": 97,
+        "slug": "new-pyq-20-CuNO"
+      }
+    },
+    {
+      "targetOrder": 88,
+      "targetQId": "uLo8nDKSffjUigKYyMW7j",
+      "kind": "explanation_only",
+      "jStem": 0.16981132075471697,
+      "explCover": 0.2647058823529412,
+      "reference": {
+        "questionId": "G4Y3xvUZ8oRTfzcPgM4Gs",
+        "testId": "D0gf6bklgl3RT-sTnue2n",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025  (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025  (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2025,
+        "questionOrder": 33,
+        "slug": "new-pyq-25-7Ztt"
+      }
+    },
+    {
+      "targetOrder": 89,
+      "targetQId": "V2L9paxrxnG9RmnJ0thKo",
+      "kind": "explanation_only",
+      "jStem": 0.14814814814814814,
+      "explCover": 0.25,
+      "reference": {
+        "questionId": "q1m6QzM5TjKph9iCvKn0N",
+        "testId": "D0gf6bklgl3RT-sTnue2n",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025  (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025  (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2025,
+        "questionOrder": 32,
+        "slug": "new-pyq-25-7Ztt"
+      }
+    },
+    {
+      "targetOrder": 90,
+      "targetQId": "1a8kLKwo_KTpq_Jk847G6",
+      "kind": "explanation_only",
+      "jStem": 0.25806451612903225,
+      "explCover": 0.19047619047619047,
+      "reference": {
+        "questionId": "b3044964-862f-4a8b-a643-4f9c28fea419",
+        "testId": "ac84f7bc-37d7-4119-a9a1-07e0dc0b9a22",
+        "testTitle": "Unit 4 — जनसंख्या वृद्धि, वितरण एवं घनत्व (Population Growth, Distribution and Density)",
+        "testTitleStore": "Topic 422161b2-1ac8-4932-ae9d-e6ebc6fc2481 Practice Test",
+        "topicTitle": "जनसंख्या वृद्धि, वितरण एवं घनत्व",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 3,
+        "slug": "unit_4-topic-422161b2-1ac8-4932-ae9d-e6ebc6fc2481-test"
+      }
+    },
+    {
+      "targetOrder": 91,
+      "targetQId": "zin_zSyLTGWeTpD5778CG",
+      "kind": "explanation_only",
+      "jStem": 0.2553191489361702,
+      "explCover": 0.21212121212121213,
+      "reference": {
+        "questionId": "DZDtc8NdzAFurzWFlxOHK",
+        "testId": "tguAtTHIRDLWv3S0yruEK",
+        "testTitle": "MPPSC Prelims - Full Length Mock Test 9",
+        "testTitleStore": "MPPSC Prelims - Full Length Mock Test 9",
+        "topicTitle": null,
+        "testType": "FLT",
+        "pyqYear": null,
+        "questionOrder": 88,
+        "slug": "mppsc-prelims-flt-3-2026-nxQ7"
+      }
+    },
+    {
+      "targetOrder": 92,
+      "targetQId": "gPn8eBnCYzdSyn68wmw6u",
+      "kind": "explanation_only",
+      "jStem": 0.16,
+      "explCover": 0.19047619047619047,
+      "reference": {
+        "questionId": "a07950c2-a7f0-4703-81ad-47391eb26fc9",
+        "testId": "f4509bfc-abd5-4434-af72-5bb66ba2277a",
+        "testTitle": "Unit 10 — जनजातीय त्योहार, उत्सव, भाषा और बोली (Tribal Institutes, Museums and Publications)",
+        "testTitleStore": "Topic ae9d26f0-f140-42c3-8abe-f55e6fc8c9ed Practice Test",
+        "topicTitle": "जनजातीय त्योहार, उत्सव, भाषा और बोली",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 2,
+        "slug": "unit_10-topic-ae9d26f0-f140-42c3-8abe-f55e6fc8c9ed-test"
+      }
+    },
+    {
+      "targetOrder": 93,
+      "targetQId": "s1O6ZejmQAWqO5j3kKMyM",
+      "kind": "explanation_only",
+      "jStem": 0.20634920634920634,
+      "explCover": 0.2972972972972973,
+      "reference": {
+        "questionId": "8iK5bCsBsBD-olTWXxXaq",
+        "testId": "u0af5wQQviAscTEXUXJOf",
+        "testTitle": "प्रमुख यूनेस्को विश्व धरोहर स्थल: भारत एवं मध्य प्रदेश 🏛️",
+        "testTitleStore": "प्रमुख यूनेस्को विश्व धरोहर स्थल: भारत एवं मध्य प्रदेश 🏛️",
+        "topicTitle": null,
+        "testType": "MISC",
+        "pyqYear": null,
+        "questionOrder": 5,
+        "slug": "-42eJ"
+      }
+    },
+    {
+      "targetOrder": 94,
+      "targetQId": "uUK2J9fAzbuld1fH6pSpn",
+      "kind": "explanation_only",
+      "jStem": 0.08333333333333333,
+      "explCover": 0.22033898305084745,
+      "reference": {
+        "questionId": "rDfgHuMrDbyA-tSATmvyv",
+        "testId": "D0gf6bklgl3RT-sTnue2n",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025  (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2025  (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2025,
+        "questionOrder": 83,
+        "slug": "new-pyq-25-7Ztt"
+      }
+    },
+    {
+      "targetOrder": 95,
+      "targetQId": "w0zXfH2MYOwfBud3_YZNL",
+      "kind": "stem_medium",
+      "jStem": 0.2894736842105263,
+      "explCover": 0.25806451612903225,
+      "reference": {
+        "questionId": "yEnhlqUa47Zm6ZFXvGAwK",
+        "testId": "_XVhV0_0SPRXQ2ImgSAuY",
+        "testTitle": "MPPSC Prelims - Full Length Mock Test 3",
+        "testTitleStore": "MPPSC Prelims - Full Length Mock Test 3",
+        "topicTitle": null,
+        "testType": "FLT",
+        "pyqYear": null,
+        "questionOrder": 39,
+        "slug": "flt-best-trial-3-zcBy"
+      }
+    },
+    {
+      "targetOrder": 96,
+      "targetQId": "ZXXeTCWQ7epODXyJptuV2",
+      "kind": "explanation_only",
+      "jStem": 0.1282051282051282,
+      "explCover": 0.19672131147540983,
+      "reference": {
+        "questionId": "nFUxiFiEUkaHPllbL5SZ2",
+        "testId": "M1XPa_DxEQGDVbKzK6u89",
+        "testTitle": "मध्य प्रदेश के विरासत रत्न (सांस्कृतिक एवं पुरातात्विक)",
+        "testTitleStore": "मध्य प्रदेश के विरासत रत्न (सांस्कृतिक एवं पुरातात्विक)",
+        "topicTitle": null,
+        "testType": "MISC",
+        "pyqYear": null,
+        "questionOrder": 6,
+        "slug": "-ZMTB"
+      }
+    },
+    {
+      "targetOrder": 97,
+      "targetQId": "8Kpp8UnT-vJmzrDHVaGls",
+      "kind": "explanation_only",
+      "jStem": 0.1956521739130435,
+      "explCover": 0.20930232558139536,
+      "reference": {
+        "questionId": "1a4189ef-37db-415d-ab1b-00907927ce71",
+        "testId": "0221761c-8213-44cb-9441-16c3cd6cb8e5",
+        "testTitle": "Unit 2 — मध्यप्रदेश के प्रमुख साहित्यकार एवं उनकी कृतियाँ (Important Literary Creators and their Creations)",
+        "testTitleStore": "Topic d40d88ec-ef52-4366-9881-ae1be9d7300b Practice Test",
+        "topicTitle": "मध्यप्रदेश के प्रमुख साहित्यकार एवं उनकी कृतियाँ",
+        "testType": "TOPIC",
+        "pyqYear": null,
+        "questionOrder": 5,
+        "slug": "unit_2-topic-d40d88ec-ef52-4366-9881-ae1be9d7300b-test"
+      }
+    },
+    {
+      "targetOrder": 98,
+      "targetQId": "hS7ZROJVgd1ZkXAWYonUg",
+      "kind": "explanation_only",
+      "jStem": 0.07142857142857142,
+      "explCover": 0.23076923076923078,
+      "reference": {
+        "questionId": "8_j3rUz_rXGP4Gl7leJF1",
+        "testId": "3XmZ0l700BJV3j2FLd0XZ",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2024  (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2024  (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2024,
+        "questionOrder": 27,
+        "slug": "new-pyq-24-xHde"
+      }
+    },
+    {
+      "targetOrder": 99,
+      "targetQId": "-UlWbBhTMDdSaUSHPw429",
+      "kind": "explanation_only",
+      "jStem": 0.125,
+      "explCover": 0.4166666666666667,
+      "reference": {
+        "questionId": "N5So0fFt6VEsS-sMRcqxN",
+        "testId": "3XmZ0l700BJV3j2FLd0XZ",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2024  (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2024  (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2024,
+        "questionOrder": 61,
+        "slug": "new-pyq-24-xHde"
+      }
+    },
+    {
+      "targetOrder": 100,
+      "targetQId": "lv6BjdbTEE5tNZow48Psk",
+      "kind": "explanation_only",
+      "jStem": 0.06896551724137931,
+      "explCover": 0.29411764705882354,
+      "reference": {
+        "questionId": "kX1cZ836eD501EUg9hVhO",
+        "testId": "3XmZ0l700BJV3j2FLd0XZ",
+        "testTitle": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2024  (पेपर 1 - सामान्य अध्ययन)",
+        "testTitleStore": "MPPSC राज्य सेवा प्रारंभिक परीक्षा 2024  (पेपर 1 - सामान्य अध्ययन)",
+        "topicTitle": null,
+        "testType": "PYQ",
+        "pyqYear": 2024,
+        "questionOrder": 84,
+        "slug": "new-pyq-24-xHde"
+      }
+    }
+  ]
+}

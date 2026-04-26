@@ -452,14 +452,7 @@ function jaccardSimilarity(text1: string, text2: string): number {
 
 // ============================================
 // Get Repeated Questions
-// Uses only the 6 canonical tests (2020-2025)
-// High Jaccard threshold (0.6) for accuracy
-// ============================================
-
-// ============================================
-// Get Repeated Questions
-// Uses only the 6 canonical tests (2020-2025)
-// High Jaccard threshold (0.6) for accuracy
+// Uses canonical Prelims tests (CANONICAL_TEST_IDS). High Jaccard threshold (0.6) for accuracy.
 // ============================================
 
 export const getRepeatedQuestions = unstable_cache(
@@ -639,24 +632,19 @@ export const getRepeatedQuestions = unstable_cache(
       return [];
     }
   },
-  ['pyq-repeated-questions-v13'], // Bumped version
+  ['pyq-repeated-questions-v14-2026'],
   { revalidate: 3600, tags: ['pyq-insights', 'questions'] }
 );
 
 export const getUnifiedSubjectStatsCached = unstable_cache(
   getUnifiedSubjectStats,
-  ['pyq-unified-stats-v13'],
+  ['pyq-unified-stats-v14-2026'],
   { revalidate: 3600, tags: ['pyq-insights', 'questions'] }
 );
 
 // ============================================
 // Get Unit Distribution Stats
-// Uses only the 6 canonical tests (2020-2025)
-// ============================================
-
-// ============================================
-// Get Unit Distribution Stats
-// Uses only the 6 canonical tests (2020-2025)
+// Uses canonical Prelims tests (see CANONICAL_TEST_IDS in pyq-constants).
 // ============================================
 
 export async function getUnitDistributionStats(limit?: number): Promise<UnitDistributionStats[]> {

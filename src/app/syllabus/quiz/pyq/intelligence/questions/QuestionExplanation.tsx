@@ -5,6 +5,8 @@ import { CheckCircle2, Lightbulb, Brain, AlertTriangle } from 'lucide-react';
 
 interface QuestionExplanationProps {
   explanation?: string;
+  /** Hindi / primary (DB `explanation` or `explanation_hi`) */
+  explanationHi?: string;
   explanationEn?: string;
   isHindi: boolean;
   compact?: boolean;
@@ -12,56 +14,91 @@ interface QuestionExplanationProps {
 
 export default function QuestionExplanation({
   explanation,
+  explanationHi,
   explanationEn,
   isHindi,
   compact = false,
 }: QuestionExplanationProps) {
-  const rawText = isHindi ? explanation : explanationEn || explanation;
+  const hi = explanationHi ?? explanation;
+  const rawText = isHindi ? hi : explanationEn || hi || explanation;
 
   if (!rawText) return null;
 
   const textToParse = rawText;
 
-  // Extract sections based on markers
-  const extractSection = (content: string, marker: string, otherMarkers: string[]) => {
-    const markerIndex = content.indexOf(marker);
-    if (markerIndex === -1) return null;
-
-    let endIndex = content.length;
-    otherMarkers.forEach((m) => {
-      const idx = content.indexOf(m, markerIndex + marker.length);
-      if (idx !== -1 && idx < endIndex) {
-        endIndex = idx;
-      }
-    });
-
-    const extracted = content.slice(markerIndex + marker.length, endIndex).trim();
-    return extracted || null;
-  };
-
-  const MARKERS = {
+  const OGI = {
     FACT: '**💡 Exam Fact',
     TIP: '**🧠 Memory Tip',
     SCAM: '**🚫 Scam Alert',
   };
+  // Plain (prompt-style) + ** variants — same as PremiumExplanation
+  const PLAIN = {
+    LOGIC: ['सही तर्क:', 'Correct Logic:', 'Core Logic:'] as const,
+    FACT: ['**Exam Fact', 'Exam Fact:', '**💡 Exam Fact'] as const,
+    TIP: ['**Memory Tip', 'Memory Tip:', '**🧠 Memory Tip'] as const,
+    SCAM: ['**Scam Alert', 'Scam Alert:', '**🚫 Scam Alert'] as const,
+  };
+  const allSplitMarkers: string[] = [
+    '**तर्क',
+    '**एग्जाम फैक्ट',
+    '**मेमोरी टिप',
+    '**स्कैम अलर्ट',
+    ...PLAIN.LOGIC,
+    ...PLAIN.FACT,
+    ...PLAIN.TIP,
+    ...PLAIN.SCAM,
+    OGI.FACT,
+    OGI.TIP,
+    OGI.SCAM,
+  ];
 
-  const examFact = extractSection(textToParse, MARKERS.FACT, [MARKERS.TIP, MARKERS.SCAM]);
-  const memoryTip = extractSection(textToParse, MARKERS.TIP, [MARKERS.FACT, MARKERS.SCAM]);
-  const scamAlert = extractSection(textToParse, MARKERS.SCAM, [MARKERS.FACT, MARKERS.TIP]);
-
-  // Extract core logic (everything before first marker)
-  let coreLogic = textToParse;
-  const allMarkers = [MARKERS.FACT, MARKERS.TIP, MARKERS.SCAM];
-  let firstMarkerIndex = coreLogic.length;
-
-  allMarkers.forEach((m) => {
-    const idx = coreLogic.indexOf(m);
-    if (idx !== -1 && idx < firstMarkerIndex) {
-      firstMarkerIndex = idx;
+  const tryFirstMatch = (starts: readonly string[], ends: string[]) => {
+    for (const start of starts) {
+      const i = textToParse.indexOf(start);
+      if (i === -1) continue;
+      const after = textToParse.slice(i + start.length);
+      let end = after.length;
+      for (const e of ends) {
+        const j = after.indexOf(e);
+        if (j !== -1 && j < end) end = j;
+      }
+      return after.slice(0, end).trim() || null;
     }
-  });
+    return null;
+  };
 
-  coreLogic = coreLogic.slice(0, firstMarkerIndex).trim();
+  const examFact = tryFirstMatch(PLAIN.FACT, [
+    OGI.TIP,
+    OGI.SCAM,
+    ...PLAIN.TIP,
+    ...PLAIN.SCAM,
+  ]);
+  const memoryTip = tryFirstMatch(PLAIN.TIP, [OGI.FACT, OGI.SCAM, ...PLAIN.FACT, ...PLAIN.SCAM]);
+  const scamAlert = tryFirstMatch(PLAIN.SCAM, [OGI.FACT, OGI.TIP, ...PLAIN.FACT, ...PLAIN.TIP]);
+
+  // Core logic: text before any section marker, or after explicit logic prefix
+  let coreLogic = textToParse;
+  for (const start of ['सही तर्क:', 'Correct Logic:', 'Core Logic:', '**Correct Logic', '**सही तर्क']) {
+    const i = textToParse.indexOf(start);
+    if (i === -1) continue;
+    const after = textToParse.slice(i + start.length);
+    let end = after.length;
+    for (const m of allSplitMarkers) {
+      if (m === start) continue;
+      const j = after.indexOf(m);
+      if (j !== -1 && j < end) end = j;
+    }
+    coreLogic = after.slice(0, end).trim();
+    break;
+  }
+  if (coreLogic === textToParse) {
+    let firstMarkerIndex = coreLogic.length;
+    allSplitMarkers.forEach((m) => {
+      const idx = coreLogic.indexOf(m);
+      if (idx !== -1 && idx < firstMarkerIndex) firstMarkerIndex = idx;
+    });
+    coreLogic = coreLogic.slice(0, firstMarkerIndex).trim();
+  }
 
   const cleanContent = (s: string | null) => {
     if (!s) return null;

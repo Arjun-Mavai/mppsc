@@ -3,7 +3,7 @@
 import { db } from '@/db';
 import { freeQuizAttempts, tests, feedbacks, supportTickets, mppscUsers, userAttempts, guests } from '@/db/schema';
 import { desc, sql, eq } from 'drizzle-orm';
-import { requireAdmin } from '@/lib/auth-admin';
+import { assertAdmin } from '@/lib/auth';
 
 export interface ActivityEvent {
   id: string;
@@ -15,7 +15,7 @@ export interface ActivityEvent {
 }
 
 export async function getLiveActivity(): Promise<ActivityEvent[]> {
-  await requireAdmin();
+  await assertAdmin();
 
   try {
     // 1. Fetch Guest Test Attempts

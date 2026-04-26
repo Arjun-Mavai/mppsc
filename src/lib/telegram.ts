@@ -15,6 +15,11 @@ export async function sendTelegramNotification(message: string) {
   const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
   if (!BOT_TOKEN || !CHAT_ID) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(
+        '[Telegram] TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID missing; notification skipped'
+      );
+    }
     return;
   }
 

@@ -15,8 +15,9 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PremiumExplanation } from '@/features/tests/components/PremiumExplanation';
-import { RenderTableQuestion, mapCorrectAnswerToIndex } from '@/features/tests/utils/questionFormatter';
+import { StructuredExplanation } from '@/components/StructuredExplanation';
+import { RenderTableQuestion } from '@/features/tests/utils/questionFormatter';
+import { normalizeCorrectAnswer } from '@/lib/quiz-scoring';
 import type { YearlySubjectQuestions } from '@/features/tests/actions/pyq-insights';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { cn } from '@/lib/utils';
@@ -200,7 +201,7 @@ export default function YearlyProofClient({ data }: { data: YearlySubjectQuestio
                         {/* Options Display - 2 Column Grid from Reference */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
                           {getParsedOptions(q.options).map((opt: any, idx: number) => {
-                            const correctIdx = mapCorrectAnswerToIndex(q.correctAnswer);
+                            const correctIdx = normalizeCorrectAnswer(q.correctAnswer);
                             const isCorrect = correctIdx !== -1 && correctIdx === idx;
                             
                             let optionText = opt;
@@ -246,14 +247,14 @@ export default function YearlyProofClient({ data }: { data: YearlySubjectQuestio
                           })}
                         </div>
 
-                        { (q.explanation || q.explanationEn) && (
+                        {(q.explanation || q.explanationEn || !!q.extendedData) && (
                           <div className="mt-4 pt-6 border-t border-white/5">
-                             <PremiumExplanation 
-                               explanation={isHindi ? (q.explanation || '') : (q.explanationEn || q.explanation || '')} 
+                             <StructuredExplanation 
+                               extendedData={q.extendedData}
+                               plainExplanation={isHindi ? (q.explanation || '') : (q.explanationEn || q.explanation || '')} 
                                explanationEn={q.explanationEn} 
+                               explanationHi={q.explanation}
                                language={isHindi ? 'hi' : 'en'}
-                               compact={false}
-                               darkMode={true}
                              />
                           </div>
                         )}

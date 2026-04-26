@@ -596,10 +596,13 @@ export const guests = sqliteTable(
     examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all', 'mppolice'] })
       .default('mppsc')  // Preserve existing guests as MPPSC
       .notNull(),
+    /** Where the lead was captured, e.g. free_quiz, open_pyq_2026 */
+    leadSource: text('lead_source'),
   },
   (table) => [
     index('idx_guests_email').on(table.email),
     uniqueIndex('idx_guests_mobile_unique').on(table.mobile), // Unique for upsert logic
+    index('idx_guests_lead_source').on(table.leadSource),
   ]
 );
 

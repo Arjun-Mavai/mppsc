@@ -17,6 +17,7 @@ import {
   PYQ_SCOPE_END_YEAR,
   PYQ_SCOPE_START_YEAR,
 } from '@/features/tests/utils/pyq-scope';
+import { PYQ_SCOPED_TEST_ID_YEAR } from '@/lib/pyq-constants';
 import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
 import { logger } from '@/lib/logger';
 
@@ -93,7 +94,8 @@ const getScopedPyqTestsImpl = async (
 
   const byYear = new Map<number, ScopedTest>();
   rows.forEach((row) => {
-    const year = getScopedStateServiceYear(row.testTitle);
+    const year =
+      getScopedStateServiceYear(row.testTitle) ?? PYQ_SCOPED_TEST_ID_YEAR[row.testId] ?? null;
     if (year === null || year < fromYear || year > toYear) return;
     const candidate: ScopedTest = {
       testId: row.testId,
@@ -112,7 +114,7 @@ const getScopedPyqTestsImpl = async (
 // Cached version - used heavily across insights (called 8+ times per page)
 export const getScopedPyqTests = unstable_cache(
   getScopedPyqTestsImpl,
-  ['scoped-pyq-tests'],
+  ['scoped-pyq-tests-v2-2026'],
   { revalidate: 3600, tags: ['tests', 'pyq-insights'] }
 );
 
@@ -167,25 +169,27 @@ export interface TopicTrendProof {
     id: string; 
     questionText: string; 
     questionTextEn: string | null; 
-    options: any; // JSON array of options
+    options: unknown; // JSON array of options
     correctAnswer: string; // Option ID or text
     testTitle: string; 
     testTitleEn: string | null;
     questionOrder: number;
     explanation: string | null;
     explanationEn: string | null;
+    extendedData: unknown;
   }[];
   prevQuestions: { 
     id: string; 
     questionText: string; 
     questionTextEn: string | null; 
-    options: any; // JSON array of options
+    options: unknown; // JSON array of options
     correctAnswer: string; // Option ID or text
     testTitle: string; 
     testTitleEn: string | null;
     questionOrder: number;
     explanation: string | null;
     explanationEn: string | null;
+    extendedData: unknown;
   }[];
 }
 
@@ -196,16 +200,17 @@ export interface YearlySubjectQuestions {
     id: string; 
     questionText: string; 
     questionTextEn: string | null; 
-    options: any;
+    options: unknown;
     correctAnswer: string;
     type?: string | null; // standard or matching
-    matchPairs?: any; // For matching type questions
+    matchPairs?: unknown; // For matching type questions
     topicTitle: string; 
     topicTitleEn: string | null; 
     questionOrder: number; 
     testTitle: string;
     explanation: string | null;
     explanationEn: string | null;
+    extendedData: unknown;
   }[];
 }
 
@@ -1135,6 +1140,7 @@ export const getTopicTrendProof = unstable_cache(
         correctAnswer: questions.correctAnswer,
         explanation: questions.explanation,
         explanationEn: questions.explanationEn,
+        extendedData: questions.extendedData,
         questionOrder: questions.order,
         testTitle: tests.title,
         testTitleEn: tests.titleEn,
@@ -1211,6 +1217,7 @@ export const getYearlySubjectQuestions = unstable_cache(
         matchPairs: questions.matchPairs,
         explanation: questions.explanation,
         explanationEn: questions.explanationEn,
+        extendedData: questions.extendedData,
         questionOrder: questions.order,
         topicTitle: pyqTopics.topicTitle,
         topicTitleEn: pyqTopics.topicTitleEn,
@@ -1251,6 +1258,7 @@ export const getYearlySubjectQuestions = unstable_cache(
         matchPairs: r.matchPairs,
         explanation: r.explanation,
         explanationEn: r.explanationEn,
+        extendedData: r.extendedData,
         topicTitle: r.topicTitle,
         topicTitleEn: r.topicTitleEn,
         questionOrder: r.questionOrder,

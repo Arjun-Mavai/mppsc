@@ -6,7 +6,7 @@ import { eq, inArray, and, isNotNull, isNull } from 'drizzle-orm';
 import { verifyAuth } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 import { cachedData } from '@/lib/cache';
-import { SCORING_CONFIG } from '@/lib/quiz-scoring';
+import { SCORING_CONFIG, normalizeCorrectAnswer } from '@/lib/quiz-scoring';
 
 // 🎯 MPPSC Expected Cutoff (based on historical data)
 const EXPECTED_CUTOFF_PERCENTAGE = 80;
@@ -636,13 +636,7 @@ export const getAttemptDetails = cachedData(
         }
 
         // correctAnswer ko bhi number mein convert karo
-        let correctAnswerNum = 0;
-        if (q.correctAnswer !== null && q.correctAnswer !== undefined) {
-          const parsed = parseInt(String(q.correctAnswer));
-          if (!isNaN(parsed)) {
-            correctAnswerNum = parsed;
-          }
-        }
+        const correctAnswerNum = normalizeCorrectAnswer(q.correctAnswer);
 
         return {
           id: ua?.id || crypto.randomUUID(),

@@ -34,6 +34,10 @@ interface GuestQuizInterfaceProps {
   disablePalette?: boolean;
   disableInstantMode?: boolean; // Pro feature — free quiz me OFF rahega
   user?: { name: string; email: string; mobile?: string | null } | null;
+  /** When true, explanations show on answer (e.g. open PYQ marketing page). */
+  initialInstantMode?: boolean;
+  /** Skip auto-fullscreen on mount (e.g. public lead-gen pages). */
+  skipAutoFullscreen?: boolean;
 }
 
 export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
@@ -47,6 +51,8 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     disableInstantMode = false,
     testId,
     user,
+    initialInstantMode = false,
+    skipAutoFullscreen = false,
   } = props;
 
   // No user ID props here as this IS for guests only.
@@ -75,7 +81,11 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     totalQuestions,
     questionTimes,
     activeQuestionTime,
-  } = useQuizLogic({ ...props, userId: null }); // Force userId null
+  } = useQuizLogic({
+    ...props,
+    userId: null,
+    isInstantMode: initialInstantMode,
+  }); // Force userId null
 
   // Effective instant mode — disableInstantMode true h to force OFF
   const effectiveInstantMode = !disableInstantMode && instantModeEnabled;
@@ -206,6 +216,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
 
   // ── Auto-fullscreen on mount ──
   useEffect(() => {
+    if (skipAutoFullscreen) return;
     if (!hasAutoFullscreened && !isSubmitted) {
       const timer = setTimeout(() => {
         requestFullscreen();
@@ -213,7 +224,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [hasAutoFullscreened, isSubmitted, requestFullscreen]);
+  }, [hasAutoFullscreened, isSubmitted, requestFullscreen, skipAutoFullscreen]);
 
   // ── Fullscreen change listener ──
   useEffect(() => {

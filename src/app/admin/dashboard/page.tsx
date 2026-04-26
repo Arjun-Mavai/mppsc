@@ -17,8 +17,10 @@ import {
   TrendingUp,
   CreditCard,
   Sparkles,
+  FileQuestion,
 } from 'lucide-react';
 import { AdminDashboardResponse } from '@/types/admin';
+import { getGuestLeadSourceLabel } from '@/lib/lead-source';
 import dynamic from 'next/dynamic';
 
 // Lazy Load Admin Components
@@ -92,6 +94,7 @@ export default function AdminDashboardPage() {
     matrix: true,
     feedback: true,
     tickets: true,
+    pyqLeads: false,
   });
 
   const toggle = (key: string) => setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -115,8 +118,8 @@ export default function AdminDashboardPage() {
 
   if (!stats || !stats.stats) return <div>Error loading dashboard.</div>;
 
-  const { stats: metrics, recentUploads = [], recentGuests = [] } = stats;
-  const { typeCount } = metrics;
+  const { stats: metrics, recentUploads = [], recentGuests = [], recentOpenPyqLeads = [] } = stats;
+  const { typeCount, openPyq2026LeadCount = 0 } = metrics;
 
   return (
     <div className="min-h-screen bg-slate-50/50 p-4 font-sans md:p-8 lg:p-12">
@@ -181,6 +184,12 @@ export default function AdminDashboardPage() {
             value={typeCount?.MISC || 0}
             color="teal"
           />
+          <StatCard
+            icon={<FileQuestion />}
+            title="Open PYQ 2026 leads"
+            value={openPyq2026LeadCount}
+            color="violet"
+          />
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:gap-8 lg:grid-cols-3">
@@ -239,7 +248,66 @@ export default function AdminDashboardPage() {
               )}
             </Card>
 
-            {/* Collapsible Guest Users */}
+            {/* Open PYQ 2026 public page — dedicated lead list */}
+            <Card className="overflow-hidden border-violet-200/80 bg-violet-50/30 shadow-sm">
+              <CardHeader
+                className="cursor-pointer py-4 transition-colors hover:bg-violet-50/60"
+                onClick={() => toggle('pyqLeads')}
+              >
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-sm font-bold">
+                    <FileQuestion className="h-4 w-4 text-violet-600" />
+                    Open PYQ 2026 page
+                    <Badge variant="secondary" className="h-5 text-[10px]">
+                      {openPyq2026LeadCount} total
+                    </Badge>
+                  </CardTitle>
+                  {collapsed.pyqLeads ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronUp className="h-4 w-4" />
+                  )}
+                </div>
+                <p className="text-[10px] font-medium text-violet-800/80">
+                  Leads from <code className="rounded bg-violet-100 px-0.5">/open/2026-mppsc-prelims</code> — also
+                  posted to Telegram.
+                </p>
+              </CardHeader>
+              {!collapsed.pyqLeads && (
+                <CardContent className="scrollbar-hide max-h-[320px] space-y-3 overflow-y-auto pt-0 pr-2">
+                  {recentOpenPyqLeads.length === 0 ? (
+                    <p className="text-xs text-slate-500">No leads from the open PYQ page yet.</p>
+                  ) : (
+                    recentOpenPyqLeads.map((g) => (
+                      <div
+                        key={g.id}
+                        className="flex items-start justify-between border-b border-violet-100/80 pb-2 last:border-0"
+                      >
+                        <div className="min-w-0 space-y-0.5">
+                          <p className="line-clamp-1 text-xs font-semibold text-slate-800">{g.name}</p>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[9px] text-slate-500">
+                            <span className="shrink-0 font-mono">{g.mobile || '—'}</span>
+                            {g.email ? (
+                              <span className="max-w-[140px] truncate">{g.email}</span>
+                            ) : null}
+                          </div>
+                        </div>
+                        <span className="shrink-0 text-[9px] font-bold text-slate-500">
+                          {g.createdAt
+                            ? new Date(g.createdAt).toLocaleDateString('en-IN', {
+                                day: 'numeric',
+                                month: 'short',
+                              })
+                            : '—'}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </CardContent>
+              )}
+            </Card>
+
+            {/* Collapsible Guest Users — all funnels, with source badge */}
             <Card className="overflow-hidden border-slate-200 shadow-sm">
               <CardHeader
                 className="cursor-pointer py-4 transition-colors hover:bg-slate-50"
@@ -248,7 +316,7 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-sm font-bold">
                     <Activity className="h-4 w-4 text-slate-400" />
-                    Guest Users ({recentGuests.length})
+                    All guest leads ({recentGuests.length})
                   </CardTitle>
                   {collapsed.guests ? (
                     <ChevronDown className="h-4 w-4" />
@@ -267,19 +335,26 @@ export default function AdminDashboardPage() {
                         key={g.id}
                         className="flex items-start justify-between border-b border-slate-50 pb-3 last:border-0"
                       >
-                        <div className="space-y-1">
-                          <p className="text-xs font-semibold text-slate-800">{g.name}</p>
+                        <div className="min-w-0 space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-xs font-semibold text-slate-800">{g.name}</p>
+                            <Badge variant="outline" className="h-5 text-[8px] font-bold">
+                              {getGuestLeadSourceLabel(g.leadSource)}
+                            </Badge>
+                          </div>
                           <div className="flex gap-2 text-[9px] text-slate-400">
                             <span className="max-w-[100px] truncate">{g.email || 'No Email'}</span>
                             <span>•</span>
                             <span>{g.mobile || 'No Mobile'}</span>
                           </div>
                         </div>
-                        <span className="text-[9px] font-bold text-slate-500">
-                          {new Date(g.createdAt!).toLocaleDateString('en-IN', {
-                            day: 'numeric',
-                            month: 'short',
-                          })}
+                        <span className="shrink-0 text-[9px] font-bold text-slate-500">
+                          {g.createdAt
+                            ? new Date(g.createdAt).toLocaleDateString('en-IN', {
+                                day: 'numeric',
+                                month: 'short',
+                              })
+                            : '—'}
                         </span>
                       </div>
                     ))

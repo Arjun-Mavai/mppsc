@@ -3,6 +3,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { Question } from '@/types/quiz';
 import { logger } from '@/lib/logger';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
+import { parseQuestionOptions } from '@/features/tests/utils/questionFormatter';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🎯 QUIZ LOGIC HOOK (useQuizLogic)
@@ -150,19 +151,7 @@ export function useQuizLogic({
    * - Component ko array chahiye
    * - Agar invalid ho to empty array return (crash nahi hoga)
    */
-  const getParsedOptions = useCallback((opts: any) => {
-    if (!opts) return [];
-    if (Array.isArray(opts)) return opts;
-    if (typeof opts === 'string') {
-      try {
-        const parsed = JSON.parse(opts);
-        return Array.isArray(parsed) ? parsed : [];
-      } catch (e) {
-        return [];
-      }
-    }
-    return [];
-  }, []);
+  const getParsedOptions = useCallback((opts: unknown) => parseQuestionOptions(opts), []);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 🎬 ACTION HANDLERS (User interactions)

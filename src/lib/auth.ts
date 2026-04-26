@@ -64,3 +64,16 @@ export const verifyAuth = cache(async () => {
     return null;
   }
 });
+
+/**
+ * 🛡️ ASSERT ADMIN — Server Action protection
+ * Verifies user is logged in AND has 'admin' role.
+ * Throws error if not authorized.
+ */
+export async function assertAdmin() {
+  const user = await verifyAuth();
+  if (!user || user.role !== 'admin') {
+    throw new Error('Unauthorized: Admin access required');
+  }
+  return user;
+}
