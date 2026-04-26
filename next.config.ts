@@ -131,6 +131,25 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: '/2026paper',
+        destination: '/open/2026-mppsc-prelims',
+        permanent: false, // 307 Temporary Redirect
+      },
+      {
+        source: '/check-score',
+        destination: '/open/2026-mppsc-prelims',
+        permanent: false,
+      },
+      {
+        source: '/paper-solution',
+        destination: '/open/2026-mppsc-prelims',
+        permanent: false,
+      },
+    ];
+  },
   allowedDevOrigins: ['192.168.1.2', '192.168.1.4','192.168.1.3'],
   logging: {
     browserToTerminal: true,
