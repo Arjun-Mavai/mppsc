@@ -266,7 +266,13 @@ export function AppInstallGuide() {
                       >
                         <div className="flex items-center gap-4 rounded-2xl bg-[#0d1117] p-4 border border-white/5">
                           <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl shadow-lg border border-white/10">
-                            <Image src="/icon.png" alt="Mindful Logo" fill className="object-cover" />
+                            <Image 
+                              src="/icon.png" 
+                              alt="Mindful Logo" 
+                              fill 
+                              sizes="48px"
+                              className="object-cover" 
+                            />
                           </div>
                           <div className="flex-1">
                             <h4 className="font-black text-sm text-white tracking-tight">Mindful MPPSC</h4>
@@ -329,7 +335,13 @@ export function AppInstallGuide() {
                       >
                         <div className="mb-6 flex items-start gap-5">
                           <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl shadow-xl shadow-amber-500/10 border border-white/10">
-                            <Image src="/icon.png" alt="Mindful Logo" fill className="object-cover" />
+                            <Image 
+                              src="/icon.png" 
+                              alt="Mindful Logo" 
+                              fill 
+                              sizes="56px"
+                              className="object-cover" 
+                            />
                           </div>
                           <div className="flex-1">
                             <h4 className="text-base font-black tracking-tight text-white">

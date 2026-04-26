@@ -177,7 +177,10 @@ export async function POST(req: Request) {
         .update(mppscUsers)
         .set({
           planTier: planTier as 'lite' | 'pro',
+          isSubscribed: true,
+          isActive: true,
           accessExpiresAt,
+          deletedAt: null,
         })
         .where(eq(mppscUsers.id, userId));
     });

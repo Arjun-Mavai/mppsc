@@ -162,7 +162,7 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
     const startIndex = text.indexOf(marker);
     if (startIndex === -1) return null;
 
-    let content = text.slice(startIndex + marker.length);
+    const content = text.slice(startIndex + marker.length);
     let minIndex = content.length;
     nextMarkers.forEach((nm) => {
       const idx = content.indexOf(nm);

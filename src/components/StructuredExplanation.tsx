@@ -20,6 +20,7 @@ import {
 import { parseExtendedData } from '@/lib/explanation-parser';
 import { coerceExplanationToString } from '@/lib/explanation-text';
 import { PremiumExplanation } from '@/features/tests/components/PremiumExplanation';
+import { QuickFeedback } from '@/features/tests/components/QuickFeedback';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -39,6 +40,11 @@ interface StructuredExplanationProps {
    * can keep the default (expert first) by omitting this.
    */
   defaultToClassic?: boolean;
+  questionId?: string;
+  questionText?: string;
+  guestMobile?: string;
+  testId?: string;
+  source?: string; // 'expert_analysis', 'open_paper_view', etc.
 }
 
 /** Strips empty + UI placeholder copy so we don't hide the Expert panel when only extendedData is real */
@@ -51,6 +57,32 @@ function isSubstantiveExplanationString(s: string | undefined | null): boolean {
   return true;
 }
 
+/** Parses expert wisdom text to add line breaks at periods, Hindi full stops, and pipes */
+function parseExpertText(text: string, language: 'hi' | 'en') {
+  if (!text) return null;
+  // Split by English period, Hindi full stop, or pipe followed by space or end of string
+  const sentences = text.split(/([।.|] )/);
+  return sentences.map((s, i) => {
+    // If it's a separator, don't wrap it in a block
+    if (s === '। ' || s === '. ' || s === '| ') return null;
+    
+    // Add the separator back to the sentence if it was split
+    let content = s;
+    if (i + 1 < sentences.length) {
+      const next = sentences[i+1];
+      if (next === '। ' || next === '. ' || next === '| ') {
+        content += next.trim();
+      }
+    }
+
+    return (
+      <span key={i} className="mb-2 block last:mb-0">
+        {content}
+      </span>
+    );
+  }).filter(Boolean);
+}
+
 export function StructuredExplanation({
   extendedData,
   plainExplanation,
@@ -60,6 +92,11 @@ export function StructuredExplanation({
   darkMode = false,
   className,
   defaultToClassic = false,
+  questionId,
+  questionText,
+  guestMobile,
+  testId,
+  source,
 }: StructuredExplanationProps) {
   const explanation = parseExtendedData(extendedData);
 
@@ -247,7 +284,9 @@ const renderClassic = () => {
               <Check className="h-3.5 w-3.5 text-emerald-600" />
               {contentLang === 'hi' ? 'संकल्पनात्मक केंद्र' : 'Conceptual Core'}
             </h5>
-            <p className="text-sm leading-relaxed text-slate-800">{conceptual}</p>
+            <div className="text-sm leading-relaxed text-slate-800">
+              {parseExpertText(conceptual, contentLang)}
+            </div>
           </section>
         ) : null}
 
@@ -262,7 +301,9 @@ const renderClassic = () => {
               <RefreshCw className="h-3.5 w-3.5 text-amber-600" />
               {contentLang === 'hi' ? 'अंतःविषय कड़ी' : 'Inter-disciplinary Link'}
             </h5>
-            <p className="relative text-sm italic leading-relaxed text-slate-800">{inter}</p>
+            <div className="relative text-sm italic leading-relaxed text-slate-800">
+              {parseExpertText(inter, contentLang)}
+            </div>
           </section>
         ) : null}
 
@@ -285,7 +326,9 @@ const renderClassic = () => {
                   <Brain className="h-3.5 w-3.5 text-rose-400" />
                   {contentLang === 'hi' ? 'अनुभवी की सूझ' : "Veteran's Wisdom"}
                 </h5>
-                <p className="text-[13px] leading-relaxed text-slate-800">{veteran}</p>
+                <div className="text-[13px] leading-relaxed text-slate-800">
+                  {parseExpertText(veteran, contentLang)}
+                </div>
               </div>
             ) : null}
           </div>
@@ -300,7 +343,7 @@ const renderClassic = () => {
               {contentLang === 'hi' ? 'स्मरण भंडार (निमोनिक)' : 'Memory Vault (Mnemonic)'}
             </h5>
             <div className="relative rounded-xl border border-emerald-100/80 bg-white/90 p-3 text-[13px] font-semibold italic text-emerald-950 shadow-inner">
-              {mnemonic}
+              {parseExpertText(mnemonic, contentLang)}
             </div>
           </section>
         ) : null}
@@ -359,13 +402,22 @@ const renderClassic = () => {
       <div className={cn('animate-in fade-in mt-4 duration-500', className)}>
         <div
           className={cn(
-            'rounded-2xl border border-slate-200 bg-gradient-to-b from-slate-50 to-slate-100/90 p-4 shadow-md sm:p-6',
+            'relative rounded-2xl border border-slate-200 bg-gradient-to-b from-slate-50 to-slate-100/90 p-3 shadow-md sm:p-4',
             darkMode && 'border-slate-300/80 from-slate-50 to-white shadow-lg ring-1 ring-white/20'
           )}
         >
           {expertBody}
+          {questionId && questionText && (
+            <QuickFeedback
+              questionId={questionId}
+              questionText={questionText}
+              guestMobile={guestMobile}
+              testId={testId}
+              source={source}
+            />
+          )}
         </div>
-        {hasBoth && renderClassic()}
+        {hasBoth && !showExpert && renderClassic()}
       </div>
     );
   }

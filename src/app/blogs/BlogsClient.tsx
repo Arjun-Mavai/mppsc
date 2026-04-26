@@ -235,7 +235,7 @@ export default function BlogsClient({
 
   // ✅ OPTIMIZED: Stable callback to enable React.memo optimization in BlogCard
   // This prevents all cards from re-rendering when one is clicked or other state changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   const handleNavigate = useState(() => (id: string) => setNavigatingId(id))[0];
 
   // Persist selected filters in URL so browser back restores exact selection

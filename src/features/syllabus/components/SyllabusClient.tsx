@@ -25,11 +25,13 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
 
   // Hydration fix for Persist middleware
   useEffect(() => {
-    setIsMounted(true);
-    const urlLang = searchParams.get('lang');
-    if (urlLang === 'en' || urlLang === 'hi') {
-      if (urlLang !== language) setLanguage(urlLang);
-    }
+    setTimeout(() => {
+      setIsMounted(true);
+      const urlLang = searchParams.get('lang');
+      if (urlLang === 'en' || urlLang === 'hi') {
+        if (urlLang !== language) setLanguage(urlLang);
+      }
+    }, 0);
   }, []);
 
   // Keyboard shortcut for Command Palette

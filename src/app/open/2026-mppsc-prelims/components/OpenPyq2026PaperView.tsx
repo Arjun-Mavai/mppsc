@@ -8,7 +8,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, ChevronDown, Filter, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Filter, Eye, EyeOff, Star, Trophy, Loader2, Check, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,8 @@ import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { ConnectSocials } from '@/components/ConnectSocials';
 import { StructuredExplanation } from '@/components/StructuredExplanation';
+import { submitZenFeedback } from '@/actions/intelligence-actions';
+import { toast } from 'sonner';
 import {
   FormattedQuestionText,
   RenderTableQuestion,
@@ -54,6 +56,7 @@ export function OpenPyq2026PaperView({
   formalTitleEn,
   unitId = 'unmapped',
   backHref = '/',
+  guestMobile,
 }: {
   questions: OpenPaperViewQuestion[];
   pageTitle: string;
@@ -63,6 +66,7 @@ export function OpenPyq2026PaperView({
   /** Used for header accent; defaults to unmapped. */
   unitId?: string;
   backHref?: string;
+  guestMobile?: string;
 }) {
   const router = useRouter();
   const { language } = useSettingsStore();
@@ -170,7 +174,7 @@ export function OpenPyq2026PaperView({
         </div>
       </div>
 
-      <div className="sticky top-24 z-40 border-b border-white/[0.03] bg-slate-950/60 backdrop-blur-xl sm:top-20 md:top-16">
+      <div className="border-b border-white/[0.03] bg-slate-950/20">
         <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-3">
@@ -448,6 +452,10 @@ export function OpenPyq2026PaperView({
                               explanationHi={q.explanation_hi || q.explanation}
                               language={isHindi ? 'hi' : 'en'}
                               darkMode={true}
+                              questionId={q.id}
+                              questionText={rawStem}
+                              guestMobile={guestMobile}
+                              source="open_paper_view"
                             />
                           )}
                         </div>
@@ -475,7 +483,244 @@ export function OpenPyq2026PaperView({
             </p>
           </div>
         )}
+
+        {/* --- ZEN COMPLETION CARD --- */}
+        {filteredQuestions.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="group relative mt-20"
+          >
+            <div className="absolute -inset-1 rounded-[2.5rem] bg-gradient-to-r from-violet-500 via-amber-500 to-emerald-500 opacity-20 blur-xl transition-all duration-500 group-hover:opacity-40" />
+            
+            <Card className="relative z-10 overflow-hidden rounded-[2.5rem] border-white/[0.05] bg-slate-900/60 p-8 text-center backdrop-blur-xl sm:p-12">
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800 shadow-inner ring-1 ring-white/10">
+                <motion.div
+                  animate={{ 
+                    rotate: [0, 10, -10, 10, 0],
+                    scale: [1, 1.1, 1, 1.1, 1]
+                  }}
+                  transition={{ 
+                    duration: 5, 
+                    repeat: Infinity,
+                    ease: "easeInOut" 
+                  }}
+                >
+                  <Trophy className="h-10 w-10 text-amber-500" />
+                </motion.div>
+              </div>
+
+              <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-4xl">
+                {isHindi ? 'शानदार! आपने पूरा पेपर देख लिया' : 'Congratulations! You read them all'}
+              </h2>
+              
+              <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-slate-400 sm:text-lg">
+                {isHindi 
+                  ? 'हमें उम्मीद है कि ये premium explanations आपकी तैयारी में मदद करेंगी।' 
+                  : 'We hope these premium explanations help you master the MPPSC syllabus.'}
+              </p>
+
+              <ZenFeedbackForm guestMobile={guestMobile} isHindi={isHindi} />
+
+              <div className="mt-10 flex flex-wrap justify-center gap-4">
+                <Button
+                  onClick={() => router.push('/')}
+                  variant="outline"
+                  className="h-12 rounded-2xl border-white/10 bg-white/5 px-8 font-bold text-white hover:bg-white/10"
+                >
+                  {isHindi ? 'होम पर जाएं' : 'Back to Home'}
+                </Button>
+                <Button
+                  onClick={() => window.open('https://t.me/MPPSC2026_Mission', '_blank')}
+                  className="h-12 rounded-2xl bg-sky-600 px-8 font-bold text-white hover:bg-sky-700 shadow-[0_0_20px_rgba(2,132,199,0.3)]"
+                >
+                  {isHindi ? 'टेलीग्राम जॉइन करें' : 'Join Telegram'}
+                </Button>
+              </div>
+            </Card>
+          </motion.div>
+        )}
       </div>
+    </div>
+  );
+}
+
+function ZenFeedbackForm({ guestMobile, isHindi }: { guestMobile?: string; isHindi: boolean }) {
+  const [rating, setRating] = useState(0);
+  const [tags, setTags] = useState<string[]>([]);
+  const [comment, setComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDone, setIsDone] = useState(false);
+
+  const availableTags = isHindi 
+    ? ['Concept Clear', 'Bilingual Help', 'Time Saver', 'Premium UI'] 
+    : ['Concept Clear', 'Bilingual Help', 'Time Saver', 'Premium UI'];
+
+  const toggleTag = (tag: string) => {
+    setTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+  };
+
+  const handleSubmit = async () => {
+    if (rating === 0) return;
+    setIsSubmitting(true);
+    try {
+      await submitZenFeedback({
+        guestMobile,
+        rating,
+        tags,
+        comment
+      });
+      setIsDone(true);
+      toast.success(isHindi ? 'फीडबैक के लिए धन्यवाद!' : 'Thank you for your feedback!');
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to submit feedback');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const getRatingInfo = (r: number) => {
+    switch (r) {
+      case 1: return { emoji: '😞', color: 'bg-rose-400', label: 'Needs Work' };
+      case 2: return { emoji: '😐', color: 'bg-amber-400', label: 'Average' };
+      case 3: return { emoji: '😊', color: 'bg-emerald-400', label: 'Good' };
+      case 4: return { emoji: '🌟', color: 'bg-blue-400', label: 'Excellent' };
+      case 5: return { emoji: '🔥', color: 'bg-orange-400', label: 'Amazing!' };
+      default: return { emoji: '✨', color: 'bg-slate-400', label: '' };
+    }
+  };
+
+  if (isDone) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mt-10 rounded-3xl bg-emerald-500/10 p-6 border border-emerald-500/20"
+      >
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-black">
+            <Check className="h-6 w-6" />
+          </div>
+          <p className="font-bold text-emerald-400">
+            {isHindi ? 'आपका फीडबैक मिल गया! धन्यवाद' : 'Feedback received! Thank you'}
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
+
+  const ratingInfo = getRatingInfo(rating);
+
+  return (
+    <div className="relative mt-10 flex flex-col gap-8">
+      {/* Floating Indicator with Emojis - Responsive */}
+      <AnimatePresence>
+        {rating > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5, x: 20 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            className="absolute -top-16 -right-2 z-20 sm:-top-20 sm:-right-6"
+          >
+            <div className="flex flex-col items-center">
+              <div className="flex items-center gap-4 rounded-[2rem] bg-slate-800/95 px-6 py-3 shadow-2xl ring-1 ring-white/20 backdrop-blur-xl">
+                <span className="text-4xl sm:text-5xl filter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                  {ratingInfo.emoji}
+                </span>
+                <div className="flex flex-col">
+                  <span className={cn("text-xs font-black uppercase leading-none tracking-wider", ratingInfo.color.replace('bg-', 'text-'))}>
+                    {rating} Stars
+                  </span>
+                  <span className="mt-1 text-[10px] font-black text-slate-400 uppercase tracking-tighter">
+                    {ratingInfo.label}
+                  </span>
+                </div>
+              </div>
+              {/* Animated Underline */}
+              <motion.div 
+                animate={{ scale: [1, 1.4, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+                className={cn("mt-2 h-1.5 w-12 rounded-full blur-[3px] shadow-[0_0_10px_rgba(0,0,0,0.5)]", ratingInfo.color)}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex flex-col gap-3">
+        <p className="text-[10px] font-black tracking-[0.2em] text-slate-500 uppercase">
+          {isHindi ? 'रेटिंग दें' : 'Rate your experience'}
+        </p>
+        <div className="flex justify-center gap-2">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              onClick={() => setRating(star)}
+              className={cn(
+                "group relative flex h-12 w-12 items-center justify-center rounded-2xl transition-all active:scale-90",
+                rating >= star ? "bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]" : "bg-white/5 text-slate-500 hover:bg-white/10"
+              )}
+            >
+              <Star className={cn("h-6 w-6", rating >= star ? "fill-black" : "group-hover:text-amber-500")} />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {rating > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="flex flex-col gap-6 overflow-hidden"
+          >
+            <div className="flex flex-col gap-3">
+              <p className="text-[10px] font-black tracking-[0.2em] text-slate-500 uppercase">
+                {isHindi ? 'क्या अच्छा लगा?' : 'What did you like?'}
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {availableTags.map(tag => (
+                  <button
+                    key={tag}
+                    onClick={() => toggleTag(tag)}
+                    className={cn(
+                      "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
+                      tags.includes(tag) 
+                        ? "bg-sky-500 text-white shadow-lg shadow-sky-500/20" 
+                        : "bg-white/5 text-slate-400 hover:bg-white/10"
+                    )}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <p className="text-[10px] font-black tracking-[0.2em] text-slate-500 uppercase text-left sm:text-center">
+                {isHindi ? 'कोई सुझाव? (Optional)' : 'Any comments? (Optional)'}
+              </p>
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder={isHindi ? 'यहाँ लिखें...' : 'Type here...'}
+                className="w-full min-h-[100px] rounded-2xl bg-white/5 border border-white/10 p-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+              />
+            </div>
+
+            <Button
+              disabled={isSubmitting}
+              onClick={handleSubmit}
+              className="h-12 w-full rounded-2xl bg-amber-500 text-[11px] font-black uppercase tracking-widest text-black hover:bg-amber-400 shadow-xl shadow-amber-500/20"
+            >
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {isHindi ? 'फीडबैक भेजें' : 'Send Feedback'}
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

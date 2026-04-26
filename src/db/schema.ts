@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, index, uniqueIndex, numeric, blob, primaryKey } from 'drizzle-orm/sqlite-core';
 import { sql, relations } from 'drizzle-orm';
 
 // MPPSC Users Table
@@ -591,7 +591,7 @@ export const guests = sqliteTable(
     email: text('email'),
     mobile: text('mobile'), // Primary identifier for upsert (last 10 digits stored)
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
-    // updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
     // Exam type segregation - UPSC/MPPSC isolation  
     examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all', 'mppolice'] })
       .default('mppsc')  // Preserve existing guests as MPPSC
@@ -605,6 +605,126 @@ export const guests = sqliteTable(
     index('idx_guests_lead_source').on(table.leadSource),
   ]
 );
+
+// Intelligence Feedback Table (for emoji reactions on solutions)
+export const intelligenceFeedback = sqliteTable(
+  'intelligence_feedback',
+  {
+    id: text('id').primaryKey(),
+    guestId: text('guest_id').references(() => guests.id),
+    questionId: text('question_id').notNull(),
+    questionText: text('question_text'), // Cache of the question stem for admin display
+    testId: text('test_id'),
+    reaction: text('reaction', { enum: ['helpful', 'insightful', 'unhelpful', 'doubt'] }).notNull(),
+    message: text('message'), // For doubt details
+    isPro: integer('is_pro', { mode: 'boolean' }).default(false),
+    source: text('source'), // e.g., 'intelligence_page', 'paper_solution'
+    userId: text('user_id'), // For logged-in users
+    userName: text('user_name'),
+    userMobile: text('user_mobile'),
+    userEmail: text('user_email'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all', 'mppolice'] })
+      .default('mppsc')
+      .notNull(),
+  },
+  (table) => [
+    index('idx_intel_feedback_guest').on(table.guestId),
+    index('idx_intel_feedback_question').on(table.questionId),
+    index('idx_intel_feedback_reaction').on(table.reaction),
+  ]
+);
+
+// --- Missing Tables from Remote Turso (Added to prevent accidental deletion) ---
+
+export const questionsFts = sqliteTable("questions_fts", {
+	id: numeric(),
+	testId: numeric(),
+	questionText: numeric(),
+	questionsFts: numeric("questions_fts"),
+	rank: numeric(),
+});
+
+export const questionsFtsData = sqliteTable("questions_fts_data", {
+	id: integer().primaryKey(),
+	block: blob(),
+});
+
+export const questionsFtsIdx = sqliteTable("questions_fts_idx", {
+	segid: numeric().notNull(),
+	term: numeric().notNull(),
+	pgno: numeric(),
+},
+(table) => [
+	primaryKey({ columns: [table.segid, table.term], name: "questions_fts_idx_segid_term_pk"})
+]);
+
+export const questionsFtsContent = sqliteTable("questions_fts_content", {
+	id: integer().primaryKey(),
+	c0: numeric(),
+	c1: numeric(),
+	c2: numeric(),
+});
+
+export const questionsFtsDocsize = sqliteTable("questions_fts_docsize", {
+	id: integer().primaryKey(),
+	sz: blob(),
+});
+
+export const questionsFtsConfig = sqliteTable("questions_fts_config", {
+	k: numeric().primaryKey().notNull(),
+	v: numeric(),
+});
+
+export const mppoliceOneLinerFacts = sqliteTable("mppolice_one_liner_facts", {
+	id: text().primaryKey().notNull(),
+	subjectTag: text("subject_tag").notNull(),
+	stemHi: text("stem_hi").notNull(),
+	stemEn: text("stem_en"),
+	answerHi: text("answer_hi").notNull(),
+	answerEn: text("answer_en"),
+	importanceScore: real("importance_score"),
+	sortOrder: integer("sort_order").default(0),
+	extendedData: text("extended_data"),
+	status: text().default("draft"),
+	createdAt: integer("created_at").default(sql`(strftime('%s', 'now'))`),
+	updatedAt: integer("updated_at").default(sql`(strftime('%s', 'now'))`),
+},
+(table) => [
+	index("idx_mppol_ol_importance").on(table.status, table.importanceScore),
+	index("idx_mppol_ol_subject_status").on(table.subjectTag, table.status),
+]);
+
+export const mppoliceOneLinerRevisions = sqliteTable("mppolice_one_liner_revisions", {
+	id: text().primaryKey().notNull(),
+	userId: text("user_id").notNull().references(() => mppscUsers.id, { onDelete: "cascade" } ),
+	factId: text("fact_id").notNull().references(() => mppoliceOneLinerFacts.id, { onDelete: "cascade" } ),
+	revisionCount: integer("revision_count").default(0),
+	lastRevisedAt: integer("last_revised_at").default(sql`(strftime('%s', 'now'))`),
+},
+(table) => [
+	uniqueIndex("idx_mppol_rel_user_fact").on(table.userId, table.factId),
+	index("idx_mppol_rel_fact").on(table.factId),
+	index("idx_mppol_rel_user").on(table.userId),
+]);
+
+export const pricingConfigOld = sqliteTable("pricing_config_old", {
+	examType: text("exam_type").primaryKey(),
+	litePrice: integer("lite_price").default(99),
+	liteOriginalPrice: integer("lite_original_price").default(299),
+	liteValidityText: text("lite_validity_text").default("Valid till Exam"),
+	liteMonths: integer("lite_months").default(8),
+	proPrice: integer("pro_price").default(299),
+	proOriginalPrice: integer("pro_original_price").default(999),
+	proValidityText: text("pro_validity_text").default("Valid for 1 Year"),
+	proMonths: integer("pro_months").default(12),
+	upgradePrice: integer("upgrade_price").default(199),
+	upgradeOriginalPrice: integer("upgrade_original_price").default(299),
+	urgencyText: text("urgency_text").default("Special Offer"),
+	urgencyTextHi: text("urgency_text_hi").default("विशेष ऑफर"),
+	studentsBought: integer("students_bought").default(23),
+	updatedAt: integer("updated_at").default(sql`(strftime('%s', 'now'))`),
+});
 
 // User Activity Logs (Audit Trail)
 export const mppscUserActivities = sqliteTable(
@@ -745,5 +865,16 @@ export const testFeedbackRelations = relations(testFeedback, ({ one }) => ({
   test: one(tests, {
     fields: [testFeedback.testId],
     references: [tests.id],
+  }),
+}));
+
+export const intelligenceFeedbackRelations = relations(intelligenceFeedback, ({ one }) => ({
+  guest: one(guests, {
+    fields: [intelligenceFeedback.guestId],
+    references: [guests.id],
+  }),
+  question: one(questions, {
+    fields: [intelligenceFeedback.questionId],
+    references: [questions.id],
   }),
 }));

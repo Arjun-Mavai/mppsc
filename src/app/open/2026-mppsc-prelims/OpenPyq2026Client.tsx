@@ -171,6 +171,7 @@ export default function OpenPyq2026Client({ questions, testTitle }: OpenPyq2026C
           pageTitle={testTitle}
           formalTitleHi={FORMAL_TITLE_HI}
           formalTitleEn={FORMAL_TITLE_EN}
+          guestMobile={savedUser.mobile}
           backHref="/"
         />
       </Suspense>

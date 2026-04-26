@@ -85,6 +85,18 @@ const LiveActivityFeed = dynamic(
   }
 );
 
+const IntelligenceLeadsList = dynamic(
+  () => import('@/features/admin/components/IntelligenceLeadsList').then((mod) => mod.IntelligenceLeadsList),
+  {
+    loading: () => (
+      <div className="flex h-40 items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+      </div>
+    ),
+    ssr: false,
+  }
+);
+
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminDashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -94,7 +106,8 @@ export default function AdminDashboardPage() {
     matrix: true,
     feedback: true,
     tickets: true,
-    pyqLeads: false,
+    pyqLeads: true,
+    intelLeads: true,
   });
 
   const toggle = (key: string) => setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -292,14 +305,26 @@ export default function AdminDashboardPage() {
                             ) : null}
                           </div>
                         </div>
-                        <span className="shrink-0 text-[9px] font-bold text-slate-500">
-                          {g.createdAt
-                            ? new Date(g.createdAt).toLocaleDateString('en-IN', {
-                                day: 'numeric',
-                                month: 'short',
-                              })
-                            : '—'}
-                        </span>
+                        <div className="shrink-0 flex flex-col items-end gap-0.5">
+                          <span className="text-[9px] font-black text-slate-800 uppercase tracking-tighter">
+                            {g.createdAt
+                              ? new Date(g.createdAt).toLocaleDateString('en-IN', {
+                                  weekday: 'short',
+                                  day: 'numeric',
+                                  month: 'short',
+                                })
+                              : '—'}
+                          </span>
+                          <span className="text-[8px] font-bold text-slate-400">
+                            {g.createdAt
+                              ? new Date(g.createdAt).toLocaleTimeString('en-IN', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  hour12: true,
+                                })
+                              : ''}
+                          </span>
+                        </div>
                       </div>
                     ))
                   )}
@@ -391,6 +416,34 @@ export default function AdminDashboardPage() {
             </Card>
           </div>
         </div>
+
+        {/* Intelligence Leads & Micro-Interactions */}
+        <Card className="overflow-hidden border-slate-200 shadow-sm">
+          <CardHeader
+            className="cursor-pointer border-b border-slate-100 bg-white py-4 transition-colors hover:bg-slate-50"
+            onClick={() => toggle('intelLeads')}
+          >
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Sparkles className="h-4 w-4 text-amber-500" />
+                Intelligence Leads & Solution Interactions
+                <Badge variant="secondary" className="h-5 text-[10px] bg-amber-50 text-amber-700">
+                  New Activity
+                </Badge>
+              </CardTitle>
+              {collapsed.intelLeads ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronUp className="h-4 w-4" />
+              )}
+            </div>
+          </CardHeader>
+          {!collapsed.intelLeads && (
+            <CardContent className="bg-white p-6">
+              <IntelligenceLeadsList />
+            </CardContent>
+          )}
+        </Card>
 
         {/* Support Tickets & Feedback Section */}
         <div className="grid grid-cols-1 gap-6 md:gap-8 lg:grid-cols-2">

@@ -154,10 +154,10 @@ export async function POST(request: Request) {
       user: {
         email: user.email,
         name: user.name,
-        is_subscribed: currentIsSubscribed,
-        plan_tier: currentPlanTier,
+        isSubscribed: currentIsSubscribed,
+        planTier: currentPlanTier,
         role: user.role,
-        access_expires_at: user.accessExpiresAt,
+        accessExpiresAt: user.accessExpiresAt,
       },
     });
   } catch (error) {

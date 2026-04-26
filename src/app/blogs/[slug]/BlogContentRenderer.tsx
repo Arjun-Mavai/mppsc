@@ -50,7 +50,7 @@ function formatText(text: string, highlightClassName: string = 'text-slate-900')
   }
 
   // Remove remaining stars
-  let cleaned = text.replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1');
+  const cleaned = text.replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1');
 
   // Bold quoted text
   const parts = cleaned.split(/(["'][^"']+["'])/g);

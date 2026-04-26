@@ -219,8 +219,8 @@ interface VerifyPaymentInput {
 export async function verifyPayment(input: VerifyPaymentInput) {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = input;
   let userId: string | undefined;
-  let orderId: string = razorpay_order_id; // Map to local name if preferred, or just use razorpay_order_id
-  let paymentId: string | undefined = razorpay_payment_id;
+  const orderId: string = razorpay_order_id; // Map to local name if preferred, or just use razorpay_order_id
+  const paymentId: string | undefined = razorpay_payment_id;
 
   try {
     // 🔒 Step 1: Get userId — JWT first, fallback to input (for new users)
@@ -371,6 +371,14 @@ export async function verifyPayment(input: VerifyPaymentInput) {
       return { error: 'Payment amount does not match any valid plan' };
     }
 
+    // 📅 Step 5: Calculate Expiry Date
+    const months =
+      planTier === 'pro'
+        ? p.proMonths ?? PRICING_DEFAULTS.proMonths
+        : p.liteMonths ?? PRICING_DEFAULTS.liteMonths;
+    const accessExpiresAt = new Date();
+    accessExpiresAt.setMonth(accessExpiresAt.getMonth() + months);
+
     // 💾 Step 6: Atomic Transaction (Payment + User Update)
     await db.transaction(async (tx) => {
       await tx.insert(payments).values({
@@ -382,7 +390,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         amount: amountInPaise,
         planTier,
         status: 'captured',
-        examType, // 👈 FIXED: Add missing field
+        examType,
       });
 
       await tx
@@ -391,6 +399,8 @@ export async function verifyPayment(input: VerifyPaymentInput) {
           planTier,
           isSubscribed: true,
           isActive: true,
+          accessExpiresAt,
+          deletedAt: null,
         })
         .where(eq(mppscUsers.id, userId!));
     });
