@@ -37,6 +37,7 @@ export default async function QuestionDetailPage({ params }: PageProps) {
       correctAnswer: questions.correctAnswer,
       explanation: questions.explanation,
       explanationEn: questions.explanationEn,
+      extendedData: questions.extendedData,
       testId: questions.testId,
     })
     .from(questions)

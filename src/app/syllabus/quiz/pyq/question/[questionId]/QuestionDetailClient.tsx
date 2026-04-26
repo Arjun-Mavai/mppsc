@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { PremiumExplanation } from '@/features/tests/components/PremiumExplanation';
+import { StructuredExplanation } from '@/components/StructuredExplanation';
 import { cn } from '@/lib/utils';
 
 interface QuestionDetailClientProps {
@@ -18,6 +18,7 @@ interface QuestionDetailClientProps {
     correctAnswer: string;
     explanation: string | null;
     explanationEn: string | null;
+    extendedData?: any | null;
     testId: string;
   };
   year?: number;
@@ -200,11 +201,12 @@ export default function QuestionDetailClient({
                 </div>
                 </div>
                 <CardContent className="p-6 sm:p-8 text-slate-300">
-                <PremiumExplanation
-                    explanation={question.explanation || ''}
-                    explanationEn={question.explanationEn}
-                    language={isHindi ? 'hi' : 'en'}
-                    darkMode={true}
+                <StructuredExplanation
+                  extendedData={question.extendedData}
+                  plainExplanation={question.explanation || ''}
+                  explanationEn={question.explanationEn}
+                  explanationHi={question.explanation}
+                  language={isHindi ? 'hi' : 'en'}
                 />
                 </CardContent>
             </Card>

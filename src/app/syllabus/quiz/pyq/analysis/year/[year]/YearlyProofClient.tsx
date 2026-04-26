@@ -15,7 +15,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PremiumExplanation } from '@/features/tests/components/PremiumExplanation';
+import { StructuredExplanation } from '@/components/StructuredExplanation';
 import { RenderTableQuestion, mapCorrectAnswerToIndex } from '@/features/tests/utils/questionFormatter';
 import type { YearlySubjectQuestions } from '@/features/tests/actions/pyq-insights';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -246,14 +246,14 @@ export default function YearlyProofClient({ data }: { data: YearlySubjectQuestio
                           })}
                         </div>
 
-                        { (q.explanation || q.explanationEn) && (
+                        {(q.explanation || q.explanationEn || q.extendedData) && (
                           <div className="mt-4 pt-6 border-t border-white/5">
-                             <PremiumExplanation 
-                               explanation={isHindi ? (q.explanation || '') : (q.explanationEn || q.explanation || '')} 
+                             <StructuredExplanation 
+                               extendedData={q.extendedData}
+                               plainExplanation={isHindi ? (q.explanation || '') : (q.explanationEn || q.explanation || '')} 
                                explanationEn={q.explanationEn} 
+                               explanationHi={q.explanation}
                                language={isHindi ? 'hi' : 'en'}
-                               compact={false}
-                               darkMode={true}
                              />
                           </div>
                         )}

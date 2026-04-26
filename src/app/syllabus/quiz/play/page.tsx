@@ -113,10 +113,12 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
         options: parsedOptions as string[],
         explanation: q.explanation || undefined,
         explanationEn: q.explanationEn || undefined,
+        explanation_hi: q.explanation || undefined,
         // 🏷️ INJECT YEAR INTO SUBJECT FIELD FOR DISPLAY
         subject: `PYQ ${q.year}`,
         type: q.type || 'standard',
         matchPairs: q.matchPairs, // Fixed typo matchPairs
+        extendedData: q.extendedData,
         negativeMarks: SCORING_CONFIG.NEGATIVE_MARKING,
         marks: SCORING_CONFIG.MARKS_PER_QUESTION,
       };
@@ -202,9 +204,11 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
       options: parsedOptions as string[], // Cast assumes standard string[] options for now
       explanation: q.explanation || undefined,
       explanationEn: q.explanationEn || undefined,
+      explanation_hi: q.explanation || undefined,
       subject: q.subject || undefined,
       type: (q.type as 'standard' | 'matching') || 'standard',
       matchPairs: (q.matchPairs as any) || undefined,
+      extendedData: q.extendedData,
       negativeMarks: SCORING_CONFIG.NEGATIVE_MARKING, // Force Global Config (1)
       marks: SCORING_CONFIG.MARKS_PER_QUESTION, // Force Global Config (3)
     };

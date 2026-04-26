@@ -40,10 +40,12 @@ const getQuestionsWithDetails = unstable_cache(
         correctAnswer: questions.correctAnswer,
         explanation: questions.explanation,
         explanationEn: questions.explanationEn,
+        explanation_hi: questions.explanation,
         testId: questions.testId,
         testTitle: tests.title,
         order: questions.order,
         subject: questions.subject,
+        extendedData: questions.extendedData,
       })
       .from(questions)
       .innerJoin(tests, eq(questions.testId, tests.id))
@@ -62,9 +64,11 @@ const getQuestionsWithDetails = unstable_cache(
         correctAnswer: q.correctAnswer !== null ? Number(q.correctAnswer) : undefined,
         explanation: q.explanation,
         explanationEn: q.explanationEn,
+        explanation_hi: q.explanation,
         year,
         qNo: q.order,
         subject: q.subject,
+        extendedData: q.extendedData,
       };
     });
   },

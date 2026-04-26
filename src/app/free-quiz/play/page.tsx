@@ -64,6 +64,8 @@ async function FreeQuizDataFetcher({ searchParams }: { searchParams: Promise<{ t
         options: parsedOptions,
         explanation: q.explanation || undefined,
         explanationEn: q.explanationEn || undefined,
+        explanation_hi: q.explanation || undefined,
+        extendedData: q.extendedData,
         subject: q.subject || undefined,
         type: (q.type as 'standard' | 'matching') || 'standard',
         matchPairs: (q.matchPairs as any) || undefined,

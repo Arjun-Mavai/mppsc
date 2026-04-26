@@ -18,6 +18,7 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { StructuredExplanation } from '@/components/StructuredExplanation';
 
 interface AnalysisViewProps {
   result: any; // Type from getAttemptResult
@@ -289,91 +290,13 @@ export default function AnalysisView({ result }: AnalysisViewProps) {
                 </div>
 
                 {/* Explanation */}
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-6">
-                  <div className="mb-4 flex items-center gap-2">
-                    <div className="rounded-lg bg-indigo-100 p-1.5">
-                      <Check className="h-4 w-4 text-indigo-600" />
-                    </div>
-                    <span className="text-xs font-black tracking-widest text-indigo-900 uppercase">
-                      Explanation & Concept
-                    </span>
-                  </div>
-
-                  <div className="space-y-4">
-                    {explanation ? (
-                      explanation.split('\n').map((line: string, i: number) => {
-                        const trimmed = line.trim();
-                        if (!trimmed) return null;
-
-                        // 💡 Exam Fact (High Value)
-                        if (trimmed.includes('💡') || trimmed.toLowerCase().includes('exam fact')) {
-                          return (
-                            <div
-                              key={i}
-                              className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-medium text-amber-900"
-                            >
-                              <span className="text-lg">💡</span>
-                              <span className="pt-0.5">
-                                {trimmed.replace(/💡|Exam Fact:/gi, '').trim()}
-                              </span>
-                            </div>
-                          );
-                        }
-
-                        // 🧠 Memory Tip (Mnemonic)
-                        if (
-                          trimmed.includes('🧠') ||
-                          trimmed.toLowerCase().includes('memory tip')
-                        ) {
-                          return (
-                            <div
-                              key={i}
-                              className="flex gap-3 rounded-xl border border-purple-200 bg-purple-50 p-3 text-sm font-medium text-purple-900"
-                            >
-                              <span className="text-lg">🧠</span>
-                              <div className="flex flex-col">
-                                <span className="mb-0.5 text-xs font-bold tracking-wider text-purple-400 uppercase">
-                                  Memory Strategy
-                                </span>
-                                <span>{trimmed.replace(/🧠|Memory Tip:/gi, '').trim()}</span>
-                              </div>
-                            </div>
-                          );
-                        }
-
-                        // 🚫 Scam Alert (Elimination)
-                        if (
-                          trimmed.includes('🚫') ||
-                          trimmed.toLowerCase().includes('scam alert') ||
-                          trimmed.toLowerCase().includes('elimination')
-                        ) {
-                          return (
-                            <div
-                              key={i}
-                              className="flex gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-medium text-rose-900"
-                            >
-                              <span className="text-lg">🚫</span>
-                              <div className="flex flex-col">
-                                <span className="mb-0.5 text-xs font-bold tracking-wider text-rose-400 uppercase">
-                                  Don't Get Confused
-                                </span>
-                                <span>{trimmed.replace(/🚫|Scam Alert:/gi, '').trim()}</span>
-                              </div>
-                            </div>
-                          );
-                        }
-
-                        // ✅ Correct Logic / Standard Text
-                        return (
-                          <p key={i} className="text-sm leading-relaxed text-slate-600">
-                            {trimmed.replace(/✅|Correct Answer:|Detailed Analysis:/gi, '').trim()}
-                          </p>
-                        );
-                      })
-                    ) : (
-                      <p className="text-slate-400 italic">No explanation provided.</p>
-                    )}
-                  </div>
+                <div className="mt-4">
+                  <StructuredExplanation 
+                    extendedData={q.extendedData} 
+                    plainExplanation={q.explanation}
+                    explanationEn={q.explanationEn}
+                    language={language}
+                  />
                 </div>
               </div>
             );

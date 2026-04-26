@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { PremiumExplanation } from '@/features/tests/components/PremiumExplanation';
+import { StructuredExplanation } from '@/components/StructuredExplanation';
 import { RepeatedQuestion } from '@/actions/pyq-analytics';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -20,6 +20,7 @@ interface RepeatedQuestionDetailClientProps {
     correctAnswer: string;
     explanation: string | null;
     explanationEn: string | null;
+    extendedData?: any | null;
     testId: string;
   };
   stats?: RepeatedQuestion;
@@ -203,11 +204,15 @@ export default function RepeatedQuestionDetailClient({
               </div>
             </div>
             <CardContent className="p-6 sm:p-8">
-              <PremiumExplanation
-                explanation={question.explanation || ''}
-                explanationEn={question.explanationEn}
-                language={isHindi ? 'hi' : 'en'}
-              />
+              {(question.explanation || question.explanationEn || question.extendedData) && (
+                <StructuredExplanation
+                  extendedData={question.extendedData}
+                  plainExplanation={question.explanation || ''}
+                  explanationEn={question.explanationEn}
+                  explanationHi={question.explanation}
+                  language={isHindi ? 'hi' : 'en'}
+                />
+              )}
             </CardContent>
           </Card>
         </div>

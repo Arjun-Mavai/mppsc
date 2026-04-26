@@ -38,7 +38,7 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
-import { PremiumExplanation } from './PremiumExplanation';
+import { StructuredExplanation } from '@/components/StructuredExplanation';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 import { getTestLeaderboard } from '@/actions/leaderboard-actions';
 import { revalidateAnalyticsAction } from '@/features/analytics/actions';
@@ -618,10 +618,12 @@ export function QuizResult({
                 </div>
 
                 <div className="px-1">
-                  <PremiumExplanation
-                    explanation={q.explanation || 'No explanation available.'}
+                  <StructuredExplanation
+                    extendedData={q.extendedData}
+                    plainExplanation={q.explanation || 'No explanation available.'}
                     explanationEn={q.explanationEn}
                     explanationHi={q.explanation_hi}
+                    language={language}
                   />
                 </div>
               </div>

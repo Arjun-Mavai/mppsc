@@ -174,6 +174,7 @@ export interface TopicTrendProof {
     questionOrder: number;
     explanation: string | null;
     explanationEn: string | null;
+    extendedData: any | null;
   }[];
   prevQuestions: { 
     id: string; 
@@ -186,6 +187,7 @@ export interface TopicTrendProof {
     questionOrder: number;
     explanation: string | null;
     explanationEn: string | null;
+    extendedData: any | null;
   }[];
 }
 
@@ -206,6 +208,7 @@ export interface YearlySubjectQuestions {
     testTitle: string;
     explanation: string | null;
     explanationEn: string | null;
+    extendedData: any | null;
   }[];
 }
 
@@ -1135,6 +1138,7 @@ export const getTopicTrendProof = unstable_cache(
         correctAnswer: questions.correctAnswer,
         explanation: questions.explanation,
         explanationEn: questions.explanationEn,
+        extendedData: questions.extendedData,
         questionOrder: questions.order,
         testTitle: tests.title,
         testTitleEn: tests.titleEn,
@@ -1211,6 +1215,7 @@ export const getYearlySubjectQuestions = unstable_cache(
         matchPairs: questions.matchPairs,
         explanation: questions.explanation,
         explanationEn: questions.explanationEn,
+        extendedData: questions.extendedData,
         questionOrder: questions.order,
         topicTitle: pyqTopics.topicTitle,
         topicTitleEn: pyqTopics.topicTitleEn,
@@ -1251,6 +1256,7 @@ export const getYearlySubjectQuestions = unstable_cache(
         matchPairs: r.matchPairs,
         explanation: r.explanation,
         explanationEn: r.explanationEn,
+        extendedData: r.extendedData,
         topicTitle: r.topicTitle,
         topicTitleEn: r.topicTitleEn,
         questionOrder: r.questionOrder,
