@@ -78,7 +78,13 @@ export function InstallPrompt() {
         <div className="space-y-6">
           <div className="flex items-center gap-4">
             <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl shadow-xl shadow-amber-500/20 border border-white/10">
-              <Image src="/icon.png" alt="Mindful Logo" fill className="object-cover" />
+            <Image 
+              src="/icon.png" 
+              alt="Mindful Logo" 
+              fill 
+              sizes="56px"
+              className="object-cover" 
+            />
               <div className="absolute -top-1 -right-1 z-10 h-3 w-3 animate-ping rounded-full bg-amber-400 opacity-75"></div>
             </div>
             <div>
@@ -153,7 +159,7 @@ export function InstallPrompt() {
         
         <div className="flex items-center gap-5">
           <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl shadow-xl shadow-amber-500/20 border border-white/10">
-            <Image src="/icon.png" alt="Mindful Logo" fill className="object-cover" />
+            <Image src="/icon.png" alt="Mindful Logo" fill sizes="56px" className="object-cover" />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-lg font-black tracking-tight text-white">App Experience</h3>

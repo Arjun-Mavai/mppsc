@@ -300,7 +300,7 @@ async function fetchAnalyticsInternal(userId: string) {
 
     // 3. Granular Analysis by Subject (Question Level)
 
-    let subjectStats: Record<
+    const subjectStats: Record<
       string,
       { totalScore: number; totalMax: number; count: number; name: string; nameEn: string }
     > = {};
@@ -488,7 +488,7 @@ async function fetchAnalyticsInternal(userId: string) {
 
       // 3. Time Calculations
       let timeTakenFormatted = '0m';
-      let totalDurationFormatted = `${activity.durationMinutes || 0}m`;
+      const totalDurationFormatted = `${activity.durationMinutes || 0}m`;
 
       if (activity.startTime && activity.endTime) {
         const start = new Date(activity.startTime).getTime();

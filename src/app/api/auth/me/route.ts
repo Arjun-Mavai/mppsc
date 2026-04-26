@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 👤 ME ENDPOINT — Frontend calls this to check current session
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Returns user data including access_expires_at so frontend
+// Returns user data including accessExpiresAt so frontend
 // can show expiry warnings. Cache-Control: no-store ensures
 // browsers never cache this response.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -34,9 +34,9 @@ export async function GET() {
           email: user.email,
           phone: user.phone ?? undefined,
           role: user.role,
-          is_subscribed: user.isSubscribed,
-          plan_tier: user.planTier,
-          access_expires_at: user.accessExpiresAt,
+          isSubscribed: user.isSubscribed,
+          planTier: user.planTier,
+          accessExpiresAt: user.accessExpiresAt,
         },
       },
       {

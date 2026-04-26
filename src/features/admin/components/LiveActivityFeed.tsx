@@ -33,7 +33,8 @@ export function LiveActivityFeed() {
   };
 
   useEffect(() => {
-    fetchActivity();
+    const timeoutId = setTimeout(() => fetchActivity(), 0);
+    return () => clearTimeout(timeoutId);
     // Auto-refresh removed per user request for efficiency
   }, []);
 

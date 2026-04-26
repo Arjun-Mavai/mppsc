@@ -185,7 +185,9 @@ export async function POST(req: Request) {
         .set({
           planTier: planTier as 'lite' | 'pro',
           isSubscribed: true,
+          isActive: true,
           accessExpiresAt,
+          deletedAt: null,
         })
         .where(eq(mppscUsers.id, userId));
     });

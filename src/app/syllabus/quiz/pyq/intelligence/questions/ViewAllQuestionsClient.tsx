@@ -474,6 +474,9 @@ export default function ViewAllQuestionsClient({
                               explanationHi={q.explanation_hi || q.explanation}
                               language={isHindi ? 'hi' : 'en'}
                               darkMode={true}
+                              questionId={q.id}
+                              questionText={rawStem}
+                              source="expert_analysis"
                             />
                           )}
 
