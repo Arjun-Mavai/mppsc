@@ -635,7 +635,11 @@ export const intelligenceFeedback = sqliteTable(
   ]
 );
 
-// --- Missing Tables from Remote Turso (Added to prevent accidental deletion) ---
+//
+// These tables must be handled by schema introspection / snapshot synchronization or
+// by baselining them in migrations outside this file, not by normal sqliteTable()
+// declarations in the application schema.
+//
 
 export const questionsFts = sqliteTable("questions_fts", {
 	id: numeric(),

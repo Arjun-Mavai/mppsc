@@ -10,10 +10,29 @@ export function IntelligenceLeadsList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getIntelligenceFeedback().then((res) => {
-      setData(res);
-      setLoading(false);
-    });
+    let isMounted = true;
+
+    (async () => {
+      try {
+        const res = await getIntelligenceFeedback();
+        if (isMounted) {
+          setData(res);
+        }
+      } catch (error) {
+        console.error('Failed to fetch intelligence feedback:', error);
+        if (isMounted) {
+          setData(null);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   if (loading) {
