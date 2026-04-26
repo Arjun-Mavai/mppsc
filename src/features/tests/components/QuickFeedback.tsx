@@ -54,7 +54,6 @@ export function QuickFeedback({
       const res = await submitIntelligenceFeedback({
         questionId,
         questionText,
-        guestMobile,
         testId,
         reaction: type,
         isPro: isSubscribed,
@@ -87,7 +86,6 @@ export function QuickFeedback({
       const res = await submitIntelligenceFeedback({
         questionId,
         questionText,
-        guestMobile,
         testId,
         reaction: reaction || 'doubt',
         message: feedbackMsg,

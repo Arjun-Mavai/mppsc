@@ -7,7 +7,7 @@ import { sendTelegramNotification } from '@/lib/telegram';
 import { eq } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 
-import { assertAdmin } from './auth';
+import { assertAdmin } from '@/lib/auth';
 
 export type IntelligenceReaction = 'helpful' | 'insightful' | 'unhelpful' | 'doubt';
 
