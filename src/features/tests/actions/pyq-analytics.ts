@@ -63,7 +63,7 @@ export interface MixedQuestion {
   subject: string | null;
   type: 'standard' | 'matching' | null;
   matchPairs: unknown; // JSON
-  extendedData: any;
+  extendedData: unknown;
   // Extra fields for context
   testId: string;
   year: string;

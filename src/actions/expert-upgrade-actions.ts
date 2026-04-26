@@ -5,8 +5,10 @@ import { questions, tests, syllabusTopics } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { parseLenientJSON, minimalClean } from '@/lib/json-utils';
+import { requireAdmin } from '@/lib/auth';
 
 export async function getDetailedUpgradeStats() {
+  await requireAdmin();
   try {
     const statsQuery = await db
       .select({
@@ -72,6 +74,7 @@ interface UpgradedQuestion {
 }
 
 export async function processManualGeminiJSON(jsonString: string) {
+  await requireAdmin();
   try {
     const root = parseLenientJSON(jsonString) as
       | { questions?: UpgradedQuestion[]; Questions?: UpgradedQuestion[] }
@@ -130,6 +133,7 @@ export async function processManualGeminiJSON(jsonString: string) {
 
 export async function getGeminiPromptForTest(limit: number, testId: string, testType: string, testTitle: string) {
   try {
+    await requireAdmin();
     const pending = await db
       .select({
         id: questions.id,
@@ -148,7 +152,11 @@ export async function getGeminiPromptForTest(limit: number, testId: string, test
       ))
       .limit(limit);
 
-    console.log(`[getGeminiPromptForTest] TestId: ${testId}, BatchSize: ${limit}, Found: ${pending.length} pending questions.`);
+    logger.info('[getGeminiPromptForTest] Retrieved pending questions for expert upgrade batch', {
+      testId,
+      limit,
+      pendingCount: pending.length,
+    });
 
     if (pending.length === 0) {
       return { success: true, message: 'All questions in this test have been upgraded!', prompt: null };

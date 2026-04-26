@@ -17,7 +17,8 @@ export interface QuestionData {
   qNo?: number;
   subject?: string;
   testTitle?: string;
-  options?: any; // Can be string[] or DB JSON [{id, text, text_en}]
+  /** Can be string[], DB JSON objects, or a JSON string */
+  options?: unknown;
   optionsEn?: string[];
   correctAnswer?: number | string;
 }
@@ -51,6 +52,8 @@ export function QuestionItem({
   const normalizedOptions = useMemo(() => {
     if (!question.options) return [];
 
+    type OptionObj = { id?: unknown; text?: unknown; text_en?: unknown; textEn?: unknown };
+
     try {
       // If it's already an array, check if it's strings or objects
       if (Array.isArray(question.options)) {
@@ -65,22 +68,28 @@ export function QuestionItem({
         }
 
         // Handle DB JSON format: [{id, text, text_en}]
-        return (question.options as any[]).map((opt) => ({
-          id: opt.id || '',
-          text: opt.text || '',
-          textEn: opt.text_en || opt.text || opt.textEn || '',
-        }));
+        return (question.options as unknown[]).map((opt) => {
+          const o = (opt ?? {}) as OptionObj;
+          return {
+            id: String(o.id ?? ''),
+            text: String(o.text ?? ''),
+            textEn: String(o.text_en ?? o.textEn ?? o.text ?? ''),
+          };
+        });
       }
 
       // If it's a string, try parsing
       if (typeof question.options === 'string') {
-        const opts = JSON.parse(question.options);
+        const opts = JSON.parse(question.options) as unknown;
         if (Array.isArray(opts)) {
-          return opts.map((opt) => ({
-            id: opt.id || '',
-            text: opt.text || '',
-            textEn: opt.text_en || opt.text || opt.textEn || '',
-          }));
+          return (opts as unknown[]).map((opt) => {
+            const o = (opt ?? {}) as OptionObj;
+            return {
+              id: String(o.id ?? ''),
+              text: String(o.text ?? ''),
+              textEn: String(o.text_en ?? o.textEn ?? o.text ?? ''),
+            };
+          });
         }
       }
     } catch (e) {
@@ -106,7 +115,7 @@ export function QuestionItem({
     return (
       <div
         className={cn(
-          'rounded-xl border transition-all',
+          'rounded-2xl border transition-all',
           theme === 'light' 
             ? 'border-[#E5E5EA] bg-white hover:bg-[#F5F5F7]' 
             : 'border-white/[0.03] bg-black/20 hover:bg-black/30',
@@ -114,7 +123,7 @@ export function QuestionItem({
         )}
       >
         <div
-          className="flex cursor-pointer items-start gap-3"
+          className="flex cursor-pointer items-start gap-4 p-4 sm:p-5"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           {/* Question Number */}
@@ -131,15 +140,15 @@ export function QuestionItem({
           <div className="min-w-0 flex-1">
             <p
               className={cn(
-                'mb-2 text-xs leading-relaxed font-medium transition-colors',
+                'mb-2 text-sm leading-relaxed font-semibold transition-colors sm:text-[15px]',
                 theme === 'light'
                   ? (isExpanded ? 'text-[#1D1D1F]' : 'text-[#86868B]')
-                  : (isExpanded ? 'text-white' : 'text-slate-300')
+                  : (isExpanded ? 'text-white' : 'text-slate-200')
               )}
             >
               {displayText}
             </p>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[9px] font-black tracking-widest text-slate-500 uppercase">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[10px] font-black tracking-wider text-slate-500/90 uppercase">
               <span className="text-emerald-500/80">{question.year}</span>
               <span className="h-1 w-1 rounded-full bg-slate-800" />
               <span className="truncate">
@@ -176,10 +185,10 @@ export function QuestionItem({
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <div className="mt-4 space-y-4 border-t border-white/[0.05] pt-4">
+              <div className="space-y-4 border-t border-white/[0.05] p-4 pt-4 sm:p-5">
                 {/* Full question text */}
                 {altText && altText !== displayText && (
-                  <p className="text-[11px] leading-relaxed text-slate-500 italic">{altText}</p>
+                  <p className="text-[12px] leading-relaxed text-slate-400 italic">{altText}</p>
                 )}
 
                 {/* Options if available */}
@@ -191,10 +200,10 @@ export function QuestionItem({
                         <div
                           key={i}
                           className={cn(
-                            'rounded-lg border px-3 py-2 text-[11px]',
+                            'rounded-xl border px-3 py-2 text-[12px] leading-relaxed',
                             isCorrect
                               ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
-                              : 'border-white/[0.03] bg-white/[0.02] text-slate-400'
+                              : 'border-white/[0.04] bg-white/[0.02] text-slate-300'
                           )}
                         >
                           <span className="mr-2 font-black text-slate-500">{opt.id}</span>
@@ -471,11 +480,11 @@ export function QuestionList({
   const hasMore = maxVisible && questions.length > maxVisible;
 
   return (
-    <div className={cn(variant === 'card' && 'grid gap-3 p-4')}>
+    <div className={cn(variant === 'card' && 'grid gap-4 p-4 sm:p-5')}>
       <div
         className={cn(
           'divide-y divide-slate-800/30',
-          variant === 'card' && 'grid gap-3 divide-none'
+          variant === 'card' && 'grid gap-4 divide-none'
         )}
       >
         {visibleQuestions.map((q, idx) => (

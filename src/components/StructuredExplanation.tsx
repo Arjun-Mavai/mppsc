@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface StructuredExplanationProps {
-  extendedData?: string | object | null;
+  extendedData?: unknown;
   plainExplanation?: string;
   explanationEn?: string | null;
   explanationHi?: string | null;
@@ -106,12 +106,14 @@ export function StructuredExplanation({
           <div className="flex items-center gap-2">
             <div className="flex h-7 items-center gap-1 rounded-full bg-slate-100 p-1">
                 <button
+                  type="button"
                   onClick={() => setShowExpert(true)}
                   className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[9px] font-black uppercase transition-all ${showExpert ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
                 >
                   <Zap className={`h-3 w-3 ${showExpert ? 'fill-white' : ''}`} /> Expert
                 </button>
                 <button
+                  type="button"
                   onClick={() => setShowExpert(false)}
                   className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[9px] font-black uppercase transition-all ${!showExpert ? 'bg-slate-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
                 >
@@ -123,12 +125,14 @@ export function StructuredExplanation({
           <div className="flex items-center gap-2">
             <div className="flex h-7 items-center gap-1 rounded-full bg-indigo-50 p-1 border border-indigo-100">
                 <button
+                  type="button"
                   onClick={() => setContentLang('hi')}
                   className={`rounded-full px-2.5 py-1 text-[9px] font-black transition-all ${contentLang === 'hi' ? 'bg-white text-indigo-600 shadow-sm' : 'text-indigo-400 hover:text-indigo-600'}`}
                 >
                   हिंदी
                 </button>
                 <button
+                  type="button"
                   onClick={() => setContentLang('en')}
                   className={`rounded-full px-2.5 py-1 text-[9px] font-black transition-all ${contentLang === 'en' ? 'bg-white text-indigo-600 shadow-sm' : 'text-indigo-400 hover:text-indigo-600'}`}
                 >
@@ -293,8 +297,8 @@ export function StructuredExplanation({
                     {contentLang === 'hi' ? 'CSAT लॉजिक मैप' : 'CSAT Logic Map'}
                 </strong>
                 <div className="flex gap-1 bg-slate-100 p-0.5 rounded-md h-7">
-                    <button onClick={() => setShowExpert(false)} className="px-2 text-[9px] font-bold text-slate-400 hover:text-slate-600">CLASSIC</button>
-                    <button onClick={() => setContentLang(contentLang === 'hi' ? 'en' : 'hi')} className="px-2 bg-white rounded shadow-sm text-[9px] font-black text-violet-600">
+                    <button type="button" onClick={() => setShowExpert(false)} className="px-2 text-[9px] font-bold text-slate-400 hover:text-slate-600">CLASSIC</button>
+                    <button type="button" onClick={() => setContentLang(contentLang === 'hi' ? 'en' : 'hi')} className="px-2 bg-white rounded shadow-sm text-[9px] font-black text-violet-600">
                         {contentLang === 'hi' ? 'हिंदी' : 'ENG'}
                     </button>
                 </div>

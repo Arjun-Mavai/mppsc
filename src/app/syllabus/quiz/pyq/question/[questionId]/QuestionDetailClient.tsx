@@ -14,11 +14,11 @@ interface QuestionDetailClientProps {
     id: string;
     text: string;
     textEn: string | null;
-    options: any;
+    options: unknown;
     correctAnswer: string;
     explanation: string | null;
     explanationEn: string | null;
-    extendedData?: any | null;
+    extendedData?: unknown;
     testId: string;
   };
   year?: number;

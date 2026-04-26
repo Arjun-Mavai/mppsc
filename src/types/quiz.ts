@@ -1,6 +1,6 @@
 export type BilingualOption =
   | string
-  | { text: string; textEn?: string; text_en?: string; [key: string]: any };
+  | { text: string; textEn?: string; text_en?: string; [key: string]: unknown };
 
 export interface Question {
   id: string;
@@ -11,7 +11,7 @@ export interface Question {
   explanation?: string;
   explanationEn?: string | null;
   explanation_hi?: string | null; // Optional override handling if needed
-  extendedData?: any; // Structured expert JSON data
+  extendedData?: unknown; // Structured expert JSON data
   marks?: number;
   negativeMarks?: number;
   type?: 'standard' | 'matching';

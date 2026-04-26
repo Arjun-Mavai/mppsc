@@ -129,13 +129,23 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
       startOrder = maxOrderResult[0]?.maxOrder || 0;
     }
 
-    const explanationFormat = formData.get('explanationFormat') as 'expert' | 'classic';
+    const rawExplanationFormat = formData.get('explanationFormat');
+    const explanationFormat: 'expert' | 'classic' =
+      rawExplanationFormat === 'expert' || rawExplanationFormat === 'classic'
+        ? rawExplanationFormat
+        : 'classic';
 
     // 2. Format Questions
     const formattedQuestions = parsedQuestions.map((q: any, idx: number) => {
       // Validation
       if (!q.questionText) {
          throw new Error(`Question ${idx + 1} is missing "questionText"`);
+      }
+      if (!q.options) {
+        throw new Error(`Question ${idx + 1} ("${q.questionText.substring(0, 30)}...") is missing "options"`);
+      }
+      if (q.correctAnswer === undefined || q.correctAnswer === null) {
+        throw new Error(`Question ${idx + 1} ("${q.questionText.substring(0, 30)}...") is missing "correctAnswer"`);
       }
 
       const isExpert = explanationFormat === 'expert';
@@ -188,8 +198,8 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
     // 3. Process Updates
     for (const update of questionsToUpdate) {
       const { id, data } = update;
-      // Remove ID and testId for update - we use the existing ones
-      const { id: _, testId: __, ...updateData } = data;
+      // Remove ID, testId, and order for update - preserve the existing row's position
+      const { id: _, testId: __, order: ___, ...updateData } = data;
       await db.update(questions).set(updateData).where(eq(questions.id, id));
     }
 
@@ -227,7 +237,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
     }
 
     revalidatePath('/tests');
-    const dupMsg = duplicatesCount > 0 ? ` (${duplicatesCount} duplicates skipped)` : '';
+    const dupMsg = duplicatesCount > 0 ? ` (${duplicatesCount} duplicates updated)` : '';
     return {
       success: true,
       message: `Successfully ${mode === 'new' ? 'created' : 'updated'} "${testTitle}". Total Questions: ${finalQuestionCount}${dupMsg}`,

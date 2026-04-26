@@ -167,27 +167,27 @@ export interface TopicTrendProof {
     id: string; 
     questionText: string; 
     questionTextEn: string | null; 
-    options: any; // JSON array of options
+    options: unknown; // JSON array of options
     correctAnswer: string; // Option ID or text
     testTitle: string; 
     testTitleEn: string | null;
     questionOrder: number;
     explanation: string | null;
     explanationEn: string | null;
-    extendedData: any | null;
+    extendedData: unknown;
   }[];
   prevQuestions: { 
     id: string; 
     questionText: string; 
     questionTextEn: string | null; 
-    options: any; // JSON array of options
+    options: unknown; // JSON array of options
     correctAnswer: string; // Option ID or text
     testTitle: string; 
     testTitleEn: string | null;
     questionOrder: number;
     explanation: string | null;
     explanationEn: string | null;
-    extendedData: any | null;
+    extendedData: unknown;
   }[];
 }
 
@@ -198,17 +198,17 @@ export interface YearlySubjectQuestions {
     id: string; 
     questionText: string; 
     questionTextEn: string | null; 
-    options: any;
+    options: unknown;
     correctAnswer: string;
     type?: string | null; // standard or matching
-    matchPairs?: any; // For matching type questions
+    matchPairs?: unknown; // For matching type questions
     topicTitle: string; 
     topicTitleEn: string | null; 
     questionOrder: number; 
     testTitle: string;
     explanation: string | null;
     explanationEn: string | null;
-    extendedData: any | null;
+    extendedData: unknown;
   }[];
 }
 

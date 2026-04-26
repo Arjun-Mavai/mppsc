@@ -42,6 +42,9 @@ import { syllabusData } from '@/data/syllabusData';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { logger } from '@/lib/logger';
 import { parseLenientJSON } from '@/lib/json-utils';
+import { CANONICAL_TEST_IDS } from '@/lib/pyq-constants';
+
+const CANONICAL_IDS_LIST = Object.values(CANONICAL_TEST_IDS);
 
 const UNITS = Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`);
 
@@ -58,16 +61,6 @@ const BLOG_CATEGORIES = [
   { value: 'mp_polity', label: 'Madhya Pradesh Polity' },
   { value: 'mp_current_affairs', label: 'Madhya Pradesh Current Affairs' },
 ];
-
-const CANONICAL_TEST_IDS: Record<number, string> = {
-  2020: '5KRVTgTIw07bWNxu20YNl',
-  2021: 'ix0FnJV496Rgvw0YHOEFj',
-  2022: 'o_rO3J1tSEACKENOLT9QI',
-  2023: 'mQ1a9hZoTdfSRfkz40K5C',
-  2024: '3XmZ0l700BJV3j2FLd0XZ',
-  2025: 'D0gf6bklgl3RT-sTnue2n',
-};
-const CANONICAL_IDS_LIST = Object.values(CANONICAL_TEST_IDS);
 
 export default function AdminUploadPage() {
   const [isLoading, setIsLoading] = useState(false);
