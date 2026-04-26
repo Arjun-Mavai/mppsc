@@ -291,7 +291,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
 // --- DASHBOARD STATS ---
 // --- DASHBOARD STATS ---
 export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> {
-  await requireAdmin();
+  await assertAdmin();
   try {
     const testsData = await db
       .select({
@@ -448,7 +448,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
 }
 // --- PAYMENT EXIT STATS ---
 export async function getPaymentExitStats() {
-  await requireAdmin();
+  await assertAdmin();
   try {
     const reasons = await db
       .select()
