@@ -22,7 +22,7 @@ import {
   Key,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { generateManualPasswordLink } from '@/actions/admin-actions';
+import { generateManualPasswordLink, testResendEmail } from '@/actions/admin-actions';
 
 interface User {
   id: string;
@@ -304,6 +304,25 @@ export default function UsersClient() {
     }
   };
 
+  // ── Test Resend ──
+  const handleTestEmail = async () => {
+    const email = prompt('Enter email to receive test message:');
+    if (!email) return;
+
+    const id = toast.loading('Sending test email via Resend...');
+    try {
+      const res = await testResendEmail(email);
+      if (res.success) {
+        toast.success('Test email sent! Check your inbox.', { id });
+      } else {
+        toast.error(`Error: ${res.error}`, { id, duration: 6000 });
+        console.error('Email Debug Details:', res.details);
+      }
+    } catch (err: any) {
+      toast.error('Failed to execute test', { id });
+    }
+  };
+
   // ── Filter ──
   const now = new Date();
   const filteredUsers = users.filter((user) => {
@@ -465,6 +484,17 @@ export default function UsersClient() {
           ))}
         </div>
       )}
+
+      {/* 🛠️ Debug Tools */}
+      <div className="flex justify-end">
+        <button
+          onClick={handleTestEmail}
+          className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-indigo-600"
+        >
+          <Mail className="h-3.5 w-3.5" />
+          Test Mail Settings (Debug Resend)
+        </button>
+      </div>
 
       {/* Search + Tabs */}
       <div className="flex flex-col gap-2 sm:flex-row">

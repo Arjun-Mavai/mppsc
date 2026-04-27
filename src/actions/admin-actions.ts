@@ -497,3 +497,52 @@ export async function generateManualPasswordLink(userId: string) {
     return { success: false, error: 'Failed to generate link' };
   }
 }
+
+// --- EMAIL DEBUGGER ---
+export async function testResendEmail(targetEmail: string) {
+  await assertAdmin();
+  try {
+    const { Resend } = await import('resend');
+    const apiKey = process.env.RESEND_API_KEY;
+
+    if (!apiKey) {
+      return { success: false, error: 'RESEND_API_KEY is missing in .env' };
+    }
+
+    const resend = new Resend(apiKey);
+    const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC ZEN';
+    const fromAddress = process.env.RESEND_FROM_EMAIL || 'mppsc@zenscroll.app';
+    const fromEmail = `${fromName} <${fromAddress}>`;
+
+    const { data, error } = await resend.emails.send({
+      from: fromEmail,
+      to: [targetEmail],
+      subject: '🛠️ Test Email - MPPSC ZEN Debugger',
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+          <h2 style="color: #10b981;">Resend is Working! ✅</h2>
+          <p>If you are reading this, your Resend configuration is correct.</p>
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+          <p style="font-size: 12px; color: #666;">
+            <strong>From:</strong> ${fromEmail}<br>
+            <strong>Time:</strong> ${new Date().toLocaleString('en-IN')}
+          </p>
+        </div>
+      `,
+    });
+
+    if (error) {
+      logger.error('Resend Debug Test Failed:', error);
+      return {
+        success: false,
+        error: error.message || 'Resend returned an error',
+        details: error,
+      };
+    }
+
+    return { success: true, data };
+  } catch (error: any) {
+    logger.error('Test email execution error:', error);
+    return { success: false, error: error.message || 'Execution failed' };
+  }
+}
