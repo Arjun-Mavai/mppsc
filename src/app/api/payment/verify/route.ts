@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { addHours } from 'date-fns';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { appPath } from '@/lib/app-url';
+import { renderWelcomeSetPasswordEmailHtml } from '@/lib/render-welcome-set-password-email';
 import { PRICING_DEFAULTS } from '@/config/pricing';
 import {
   notifyAdminOnPayment,
@@ -218,27 +219,11 @@ export async function POST(req: Request) {
 
     const actionUrl = `${appPath('auth/set-password')}?token=${token}`;
 
-    const planLabel = planTier === 'pro' ? 'Pro Plan' : 'Lite Plan';
-
-    const emailHtml = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e5e7eb; border-radius: 12px;">
-        <h2 style="color: #111; margin-bottom: 20px;">Welcome to MPPSC ZEN! 🎉</h2>
-        <p>Hi ${user.name || 'Student'},</p>
-        <p>Your <strong>${planLabel}</strong> is now active. You have taken a great step towards your MPPSC goal!</p>
-        <p>Please click the button below to set your password and start practicing:</p>
-        
-        <div style="margin: 35px 0; text-align: center;">
-          <a href="${actionUrl}" style="background: #0a0a0a; color: #00F0FF; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">Set Your Password →</a>
-        </div>
-        
-        <p style="font-size: 13px; color: #ef4444; background: #fef2f2; padding: 10px; border-radius: 6px;">
-          <strong>Note:</strong> This link is valid for 1 hour. If it expires, you can use the "Forgot Password" option on the login page.
-        </p>
-        
-        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
-        <p style="font-size: 12px; color: #9ca3af; text-align: center;">Mindful MPPSC ZEN — Smart Test Series</p>
-      </div>
-    `;
+    const emailHtml = await renderWelcomeSetPasswordEmailHtml({
+      name: user.name || 'Student',
+      actionUrl,
+      planTier: planTier as 'lite' | 'pro',
+    });
 
     if (!resendApiKey) {
       logger.error('RESEND_API_KEY missing — welcome email skipped after payment', {

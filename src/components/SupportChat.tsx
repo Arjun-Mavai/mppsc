@@ -65,8 +65,8 @@ const FAQS: QA[] = [
       hi: 'टेस्ट सीरीज़ में क्या-क्या शामिल है?',
     },
     answer: {
-      en: 'Topic-wise tests, Unit tests, Full Length Tests (100Q), CSAT papers, PYQ papers (2020-2025), smart explanations, and Analytics dashboard.',
-      hi: 'टॉपिक वाइज़ टेस्ट, यूनिट टेस्ट, फुल लेंथ टेस्ट (100 प्रश्न), CSAT पेपर, PYQ पेपर (2020-2025), स्मार्ट एक्सप्लेनेशन और एनालिटिक्स डैशबोर्ड।',
+      en: 'Topic-wise tests, Unit tests, Full Length Tests (100Q), CSAT papers, PYQ papers (2020-2026), smart explanations, and Analytics dashboard.',
+      hi: 'टॉपिक वाइज़ टेस्ट, यूनिट टेस्ट, फुल लेंथ टेस्ट (100 प्रश्न), CSAT पेपर, PYQ पेपर (2020-2026), स्मार्ट एक्सप्लेनेशन और एनालिटिक्स डैशबोर्ड।',
     },
   },
 ];
