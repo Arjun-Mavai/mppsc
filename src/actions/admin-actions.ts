@@ -469,3 +469,31 @@ export async function getPaymentExitStats() {
     return { success: false, error: 'Failed to fetch stats' };
   }
 }
+
+// --- MANUAL PASSWORD LINK GENERATOR ---
+export async function generateManualPasswordLink(userId: string) {
+  await assertAdmin();
+  try {
+    const { verificationTokens } = await import('@/db/schema');
+    const { v4: uuidv4 } = await import('uuid');
+    const { addHours } = await import('date-fns');
+
+    const token = uuidv4();
+    const expires = addHours(new Date(), 24); // Manual links last longer (24h)
+
+    await db.insert(verificationTokens).values({
+      identifier: userId,
+      token,
+      expires,
+    });
+
+    const { appPath } = await import('@/lib/app-url');
+    const url = `${appPath('auth/set-password')}?token=${token}`;
+
+    logger.info(`Manual password link generated for user: ${userId}`);
+    return { success: true, url };
+  } catch (error) {
+    logger.error('Failed to generate manual link:', error);
+    return { success: false, error: 'Failed to generate link' };
+  }
+}

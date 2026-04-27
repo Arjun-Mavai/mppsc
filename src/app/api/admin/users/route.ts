@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { cookies } from 'next/headers';
-import { sql } from 'drizzle-orm';
+import { sql, eq } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -58,8 +58,10 @@ export async function GET() {
         phone: mppscUsers.phone,
         metadata: mppscUsers.metadata,
         previousUserId: mppscUsers.previousUserId,
+        examType: mppscUsers.examType,
       })
       .from(mppscUsers)
+      .where(eq(mppscUsers.examType, 'mppsc'))
       .orderBy(sql`created_at DESC`);
 
     // ── Calculate Stats ─────────────────────────────────────────
