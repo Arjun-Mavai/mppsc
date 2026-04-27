@@ -6,13 +6,16 @@ import { db } from '@/db';
 import { payments, verificationTokens, mppscUsers, pricingConfig } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { Resend } from 'resend';
-import EmailTemplate from '@/components/email-template';
 import { v4 as uuidv4 } from 'uuid';
 import { addHours } from 'date-fns';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { appPath } from '@/lib/app-url';
 import { PRICING_DEFAULTS } from '@/config/pricing';
-import { notifyAdminOnPayment, notifyAdminOnEmailFailure, notifyAdminOnVerificationFailure } from '@/lib/admin-notify';
+import {
+  notifyAdminOnPayment,
+  notifyAdminOnEmailFailure,
+  notifyAdminOnVerificationFailure,
+} from '@/lib/admin-notify';
 
 /**
  * Payment Verification API - The Trust Center 🏦
@@ -161,8 +164,8 @@ export async function POST(req: Request) {
     // 📅 Calculate Expiry Date
     const months =
       planTier === 'pro'
-        ? p.proMonths ?? PRICING_DEFAULTS.proMonths
-        : p.liteMonths ?? PRICING_DEFAULTS.liteMonths;
+        ? (p.proMonths ?? PRICING_DEFAULTS.proMonths)
+        : (p.liteMonths ?? PRICING_DEFAULTS.liteMonths);
     const accessExpiresAt = new Date();
     accessExpiresAt.setMonth(accessExpiresAt.getMonth() + months);
 
@@ -204,19 +207,19 @@ export async function POST(req: Request) {
     });
 
     // 📧 Step 8: Send Welcome Email (The "Wow" Moment)
-    // Resend API se beautiful email bhejo jisme Magic Link ho.
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    const resendApiKey = process.env.RESEND_API_KEY;
 
     const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC ZEN';
     const fromAddress =
-      process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'no-reply@mppsc.zenscroll.app';
+      process.env.RESEND_FROM_EMAIL ||
+      process.env.EMAIL_FROM_ADDRESS ||
+      'no-reply@mppsc.zenscroll.app';
     const fromEmail = `${fromName} <${fromAddress}>`;
 
     const actionUrl = `${appPath('auth/set-password')}?token=${token}`;
 
     const planLabel = planTier === 'pro' ? 'Pro Plan' : 'Lite Plan';
 
-    // 📧 Simple & Robust HTML Email (Safer for .ts routes to prevent crashes)
     const emailHtml = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e5e7eb; border-radius: 12px;">
         <h2 style="color: #111; margin-bottom: 20px;">Welcome to MPPSC ZEN! 🎉</h2>
@@ -237,32 +240,45 @@ export async function POST(req: Request) {
       </div>
     `;
 
-    const { data: emailData, error: emailError } = await resend.emails.send({
-      from: fromEmail,
-      to: [user.email!],
-      subject: '🎉 Welcome to MPPSC ZEN — Set Your Password',
-      html: emailHtml,
-    });
-
-    if (emailError) {
-      // 🚨 User email failed! Log error + notify admin immediately
-      logger.error('Failed to send welcome email via Resend', {
-        error: emailError,
+    if (!resendApiKey) {
+      logger.error('RESEND_API_KEY missing — welcome email skipped after payment', {
         category: 'email',
         userId,
-        metadata: { to: user.email!, fromEmail },
+        metadata: { to: user.email },
       });
-      
-      // 📧 CRITICAL: Admin ko batao ki user ko email nahi gaya
-      // Taaki manually contact kar sake!
       notifyAdminOnEmailFailure({
         userName: user.name || 'Unknown',
         userEmail: user.email!,
-        errorMessage: typeof emailError === 'object' && emailError !== null && 'message' in emailError 
-          ? String(emailError.message) 
-          : JSON.stringify(emailError),
+        errorMessage: 'RESEND_API_KEY is not configured on the server',
         paymentId: razorpay_payment_id,
       }).catch(() => {});
+    } else {
+      const resend = new Resend(resendApiKey);
+      const { error: emailError } = await resend.emails.send({
+        from: fromEmail,
+        to: [user.email!],
+        subject: '🎉 Welcome to MPPSC ZEN — Set Your Password',
+        html: emailHtml,
+      });
+
+      if (emailError) {
+        logger.error('Failed to send welcome email via Resend', {
+          error: emailError,
+          category: 'email',
+          userId,
+          metadata: { to: user.email!, fromEmail },
+        });
+
+        notifyAdminOnEmailFailure({
+          userName: user.name || 'Unknown',
+          userEmail: user.email!,
+          errorMessage:
+            typeof emailError === 'object' && emailError !== null && 'message' in emailError
+              ? String(emailError.message)
+              : JSON.stringify(emailError),
+          paymentId: razorpay_payment_id,
+        }).catch(() => {});
+      }
     }
 
     // 📧 Step 9: Notify Admin (Non-blocking)
@@ -313,7 +329,10 @@ export async function POST(req: Request) {
       userId: requestUserId || 'unknown',
       orderId: requestOrderId || 'unknown',
       paymentId: requestPaymentId,
-      error: error instanceof Error ? error.message : 'Unexpected verification error in verify API route',
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Unexpected verification error in verify API route',
     }).catch(() => {});
     return NextResponse.json({ error: 'Payment verification failed' }, { status: 500 });
   }

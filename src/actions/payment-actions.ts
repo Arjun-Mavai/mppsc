@@ -1,8 +1,11 @@
 'use server';
 
 import { db } from '@/db';
-import { mppscUsers, pricingConfig, payments } from '@/db/schema';
+import { mppscUsers, pricingConfig, payments, verificationTokens } from '@/db/schema';
 import { eq, sql, and } from 'drizzle-orm';
+import { addHours } from 'date-fns';
+import { Resend } from 'resend';
+import { appPath } from '@/lib/app-url';
 import { PRICING_DEFAULTS } from '@/config/pricing';
 import { verifyAuth } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
@@ -12,7 +15,11 @@ import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import { z } from 'zod';
 import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
-import { notifyAdminOnVerificationFailure } from '@/lib/admin-notify';
+import {
+  notifyAdminOnVerificationFailure,
+  notifyAdminOnEmailFailure,
+  notifyAdminOnPayment,
+} from '@/lib/admin-notify';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 💳 START PAYMENT (Register + Create Order)
@@ -405,7 +412,106 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         .where(eq(mppscUsers.id, userId!));
     });
 
-    // 🚀 Step 6: Notify via Telegram
+    // 🎫 + 📧 Set-password token + welcome email
+    // PaymentModal calls this server action — NOT /api/payment/verify — so this block is required
+    // for first-time payers to receive mail and use /auth/set-password. Upgrade skips (already has password).
+    const isUpgradePurchase = (order.notes?.planType as string | undefined) === 'upgrade';
+    if (!isUpgradePurchase) {
+      const paidUser = await db.query.mppscUsers.findFirst({
+        where: eq(mppscUsers.id, userId!),
+        columns: { name: true, email: true },
+      });
+
+      if (paidUser?.email) {
+        const token = uuidv4();
+        const expires = addHours(new Date(), 1);
+
+        await db.insert(verificationTokens).values({
+          identifier: userId!,
+          token,
+          expires,
+        });
+
+        const resendApiKey = process.env.RESEND_API_KEY;
+        const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC ZEN';
+        const fromAddress =
+          process.env.RESEND_FROM_EMAIL ||
+          process.env.EMAIL_FROM_ADDRESS ||
+          'no-reply@mppsc.zenscroll.app';
+        const fromEmail = `${fromName} <${fromAddress}>`;
+        const actionUrl = `${appPath('auth/set-password')}?token=${token}`;
+        const planLabel = planTier === 'pro' ? 'Pro Plan' : 'Lite Plan';
+
+        const emailHtml = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e5e7eb; border-radius: 12px;">
+        <h2 style="color: #111; margin-bottom: 20px;">Welcome to MPPSC ZEN! 🎉</h2>
+        <p>Hi ${paidUser.name || 'Student'},</p>
+        <p>Your <strong>${planLabel}</strong> is now active. You have taken a great step towards your MPPSC goal!</p>
+        <p>Please click the button below to set your password and start practicing:</p>
+        <div style="margin: 35px 0; text-align: center;">
+          <a href="${actionUrl}" style="background: #0a0a0a; color: #00F0FF; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">Set Your Password →</a>
+        </div>
+        <p style="font-size: 13px; color: #ef4444; background: #fef2f2; padding: 10px; border-radius: 6px;">
+          <strong>Note:</strong> This link is valid for 1 hour. If it expires, you can use the "Forgot Password" option on the login page.
+        </p>
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+        <p style="font-size: 12px; color: #9ca3af; text-align: center;">Mindful MPPSC ZEN — Smart Test Series</p>
+      </div>
+    `;
+
+        if (!resendApiKey) {
+          logger.error('RESEND_API_KEY missing — welcome email skipped after payment', {
+            category: 'email',
+            userId,
+            metadata: { to: paidUser.email },
+          });
+          notifyAdminOnEmailFailure({
+            userName: paidUser.name || 'Unknown',
+            userEmail: paidUser.email,
+            errorMessage: 'RESEND_API_KEY is not configured on the server',
+            paymentId: razorpay_payment_id,
+          }).catch(() => {});
+        } else {
+          const resend = new Resend(resendApiKey);
+          const { error: emailError } = await resend.emails.send({
+            from: fromEmail,
+            to: [paidUser.email],
+            subject: '🎉 Welcome to MPPSC ZEN — Set Your Password',
+            html: emailHtml,
+          });
+
+          if (emailError) {
+            logger.error('Failed to send welcome email via Resend', {
+              error: emailError,
+              category: 'email',
+              userId,
+              metadata: { to: paidUser.email, fromEmail },
+            });
+            notifyAdminOnEmailFailure({
+              userName: paidUser.name || 'Unknown',
+              userEmail: paidUser.email,
+              errorMessage:
+                typeof emailError === 'object' && emailError !== null && 'message' in emailError
+                  ? String(emailError.message)
+                  : JSON.stringify(emailError),
+              paymentId: razorpay_payment_id,
+            }).catch(() => {});
+          }
+        }
+
+        notifyAdminOnPayment({
+          type: 'new_payment',
+          userName: paidUser.name || 'Unknown',
+          userEmail: paidUser.email,
+          planTier,
+          amountInRupees: amountInPaise / 100,
+          orderId: razorpay_order_id,
+          paymentId: razorpay_payment_id,
+        }).catch(() => {});
+      }
+    }
+
+    // 🚀 Step 7: Notify via Telegram
     try {
       const amountInRupees = amountInPaise / 100;
       const userResult = await db.query.mppscUsers.findFirst({
