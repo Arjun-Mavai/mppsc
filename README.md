@@ -33,6 +33,19 @@ _(Note: Replace with actual screenshot)_
 - Node.js 18+
 - Supabase Account
 
+## 💳 Payment → Welcome Email (MPPSC flow note)
+
+If a user pays and reaches `/thank-you` but **doesn’t receive the “Set Password” email**, the common cause is that the checkout flow verifies payment via a **server action** (e.g. `verifyPayment`) while the welcome email + token logic exists only in an API route.
+
+To ensure first-time payers can set password:
+
+- **verification entry-point**: confirm the frontend calls `verifyPayment` (server action) after Razorpay success.
+- **token insert**: on successful capture, insert into `verification_tokens` with `identifier=userId`, `token=uuid`, `expires=+1h`.
+- **email send**: send Resend email with link `appPath('auth/set-password')?token=...`.
+- **upgrade guard**: if `order.notes.planType === 'upgrade'`, skip set-password email (existing users already have password).
+- **logging**: logger signature is `logger.error(message, error?, context?)` — pass structured context as the 3rd argument.
+- **admin fallback**: ensure admin is notified via Telegram even if `RESEND_API_KEY` is missing.
+
 ### Installation
 
 1.  **Clone the repository**
