@@ -19,8 +19,11 @@ import {
   ChevronDown,
   ChevronUp,
   Copy,
+  Key,
+  Mail,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { generateManualPasswordLink, testResendEmail } from '@/actions/admin-actions';
 
 interface User {
   id: string;
@@ -36,6 +39,7 @@ interface User {
   phone: string | null;
   metadata: any;
   previousUserId: string | null;
+  examType: 'upsc' | 'mppsc' | 'all' | 'mppolice';
 }
 
 interface Stats {
@@ -286,6 +290,52 @@ export default function UsersClient() {
     }
   };
 
+  // ── Generate Manual Link ──
+  const handleManualLink = async (userId: string) => {
+    try {
+      const res = await generateManualPasswordLink(userId);
+      if (res.success && res.url) {
+        if (!navigator.clipboard) {
+          toast.error('Clipboard is unavailable. Copy the password link manually.');
+          console.log('Manual URL:', res.url);
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(res.url);
+          toast.success('Password link copied! Share it with the user.');
+        } catch (err) {
+          toast.error('Failed to copy password link');
+          console.error('Clipboard error:', err);
+        }
+      } else {
+        toast.error(res.error || 'Failed to generate link');
+      }
+    } catch (error) {
+      toast.error('Error generating link');
+      console.error('Action error:', error);
+    }
+  };
+
+  // ── Test Resend ──
+  const handleTestEmail = async () => {
+    const email = prompt('Enter email to receive test message:');
+    if (!email) return;
+
+    const id = toast.loading('Sending test email via Resend...');
+    try {
+      const res = await testResendEmail(email);
+      if (res.success) {
+        toast.success('Test email sent! Check your inbox.', { id });
+      } else {
+        toast.error(`Error: ${res.error}`, { id, duration: 6000 });
+        console.error('Email Debug Details:', res.details);
+      }
+    } catch (err: any) {
+      toast.error('Failed to execute test', { id });
+    }
+  };
+
   // ── Filter ──
   const now = new Date();
   const filteredUsers = users.filter((user) => {
@@ -447,6 +497,17 @@ export default function UsersClient() {
           ))}
         </div>
       )}
+
+      {/* 🛠️ Debug Tools */}
+      <div className="flex justify-end">
+        <button
+          onClick={handleTestEmail}
+          className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-indigo-600"
+        >
+          <Mail className="h-3.5 w-3.5" />
+          Test Mail Settings (Debug Resend)
+        </button>
+      </div>
 
       {/* Search + Tabs */}
       <div className="flex flex-col gap-2 sm:flex-row">
@@ -650,6 +711,25 @@ export default function UsersClient() {
                             >
                               {status.label}
                             </span>
+                            {/* 🔑 Password Status */}
+                            {user.deletedAt ? null : (
+                              <span
+                                className={`rounded-full border px-1.5 py-0.5 text-[10px] font-bold ${
+                                  user.isActive
+                                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                                    : user.planTier !== 'free'
+                                      ? 'animate-pulse border-amber-200 bg-amber-50 text-amber-700'
+                                      : 'border-slate-200 bg-slate-50 text-slate-500'
+                                }`}
+                              >
+                                🔑{' '}
+                                {user.isActive
+                                  ? 'Password Set'
+                                  : user.planTier !== 'free'
+                                    ? 'Password PENDING'
+                                    : 'No Password'}
+                              </span>
+                            )}
                             {user.role === 'admin' && (
                               <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-700">
                                 ADMIN
@@ -664,6 +744,56 @@ export default function UsersClient() {
                               <Clock className="h-3 w-3" />
                               {formatExpiry(user.accessExpiresAt)}
                             </span>
+                          </div>
+
+                          {/* 🕒 Creation Proof & Metadata */}
+                          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] sm:text-[11px]">
+                            <span className="flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-100/50 px-2 py-0.5 font-semibold text-slate-600">
+                              <Clock className="h-3 w-3 text-indigo-500" />
+                              {user.createdAt ? (
+                                <span title={new Date(user.createdAt).toISOString()}>
+                                  Created:{' '}
+                                  {new Date(user.createdAt).toLocaleString('en-IN', {
+                                    weekday: 'short',
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: true,
+                                  })}
+                                </span>
+                              ) : (
+                                'Created: N/A'
+                              )}
+                            </span>
+
+                            <span className="flex items-center gap-1 text-slate-400">
+                              <Shield className="h-3 w-3 text-slate-300" />
+                              <code className="rounded border border-slate-100 bg-slate-50 px-1.5 py-0.5 font-mono text-[9px] select-all">
+                                ID: {user.id}
+                              </code>
+                            </span>
+
+                            {/* 🎯 Exam & Source Badges */}
+                            <span className="flex items-center gap-1 rounded-full bg-slate-900 px-2 py-0.5 text-[9px] font-bold tracking-wider text-white uppercase">
+                              Exam: {user.examType || 'mppsc'}
+                            </span>
+
+                            {user.metadata?.source && (
+                              <span className="flex items-center gap-1 rounded-full border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[9px] font-bold text-indigo-600 uppercase">
+                                Source: {user.metadata.source}
+                              </span>
+                            )}
+
+                            {user.metadata?.ip && (
+                              <span className="flex items-center gap-1 border-l border-slate-200 pl-3 text-slate-400">
+                                <span className="text-[9px] font-medium text-slate-300 uppercase">
+                                  IP:
+                                </span>
+                                {user.metadata.ip}
+                              </span>
+                            )}
                           </div>
                         </div>
                         {/* Actions */}
@@ -716,6 +846,16 @@ export default function UsersClient() {
                                 <ChevronDown className="h-3 w-3" />
                               )}
                             </button>
+                            {/* Manual Password Link */}
+                            {!user.isActive && !user.deletedAt && (
+                              <button
+                                onClick={() => handleManualLink(user.id)}
+                                className="flex h-7 items-center gap-0.5 rounded-md border border-purple-200 bg-purple-50 px-2 text-[10px] font-bold text-purple-600 hover:bg-purple-100"
+                                title="Copy Set Password Link"
+                              >
+                                <Key className="h-3 w-3" /> Link
+                              </button>
+                            )}
                             {/* Delete Button */}
                             <button
                               onClick={() => handleDeleteUser(user.id)}

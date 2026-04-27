@@ -469,3 +469,106 @@ export async function getPaymentExitStats() {
     return { success: false, error: 'Failed to fetch stats' };
   }
 }
+
+// --- MANUAL PASSWORD LINK GENERATOR ---
+export async function generateManualPasswordLink(userId: string) {
+  await assertAdmin();
+  try {
+    const { mppscUsers, payments, verificationTokens } = await import('@/db/schema');
+    const { v4: uuidv4 } = await import('uuid');
+    const { addHours } = await import('date-fns');
+
+    // 1. Verify user exists and is not deleted
+    const [user] = await db
+      .select()
+      .from(mppscUsers)
+      .where(and(eq(mppscUsers.id, userId), sql`${mppscUsers.deletedAt} IS NULL`));
+
+    if (!user) {
+      return { success: false, error: 'User not found or has been deleted' };
+    }
+
+    // 2. Guard: Only for users with a captured payment or non-free plan
+    // This prevents unintentional Pro access for free users if the set-password flow defaults to Pro.
+    const [latestPayment] = await db
+      .select()
+      .from(payments)
+      .where(and(eq(payments.userId, userId), eq(payments.status, 'captured')))
+      .orderBy(desc(payments.createdAt))
+      .limit(1);
+
+    if (!latestPayment && user.planTier === 'free') {
+      return { 
+        success: false, 
+        error: 'Manual links are restricted to users with a captured payment or active paid plan.' 
+      };
+    }
+
+    const token = uuidv4();
+    const expires = addHours(new Date(), 24); // Manual links last longer (24h)
+
+    await db.insert(verificationTokens).values({
+      identifier: userId,
+      token,
+      expires,
+    });
+
+    const { appPath } = await import('@/lib/app-url');
+    const url = `${appPath('auth/set-password')}?token=${token}`;
+
+    logger.info(`Manual password link generated for user: ${userId} by admin`);
+    return { success: true, url };
+  } catch (error) {
+    logger.error('Failed to generate manual link:', error);
+    return { success: false, error: 'Failed to generate link' };
+  }
+}
+
+// --- EMAIL DEBUGGER ---
+export async function testResendEmail(targetEmail: string) {
+  await assertAdmin();
+  try {
+    const { Resend } = await import('resend');
+    const apiKey = process.env.RESEND_API_KEY;
+
+    if (!apiKey) {
+      return { success: false, error: 'RESEND_API_KEY is missing in .env' };
+    }
+
+    const resend = new Resend(apiKey);
+    const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC ZEN';
+    const fromAddress = process.env.RESEND_FROM_EMAIL || 'mppsc@zenscroll.app';
+    const fromEmail = `${fromName} <${fromAddress}>`;
+
+    const { data, error } = await resend.emails.send({
+      from: fromEmail,
+      to: [targetEmail],
+      subject: '🛠️ Test Email - MPPSC ZEN Debugger',
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+          <h2 style="color: #10b981;">Resend is Working! ✅</h2>
+          <p>If you are reading this, your Resend configuration is correct.</p>
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+          <p style="font-size: 12px; color: #666;">
+            <strong>From:</strong> ${fromEmail}<br>
+            <strong>Time:</strong> ${new Date().toLocaleString('en-IN')}
+          </p>
+        </div>
+      `,
+    });
+
+    if (error) {
+      logger.error('Resend Debug Test Failed:', error);
+      return {
+        success: false,
+        error: error.message || 'Resend returned an error',
+        details: error,
+      };
+    }
+
+    return { success: true, data };
+  } catch (error: any) {
+    logger.error('Test email execution error:', error);
+    return { success: false, error: error.message || 'Execution failed' };
+  }
+}
