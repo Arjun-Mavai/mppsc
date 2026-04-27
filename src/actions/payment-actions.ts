@@ -1,8 +1,11 @@
 'use server';
 
 import { db } from '@/db';
-import { mppscUsers, pricingConfig, payments } from '@/db/schema';
+import { mppscUsers, pricingConfig, payments, verificationTokens } from '@/db/schema';
 import { eq, sql, and } from 'drizzle-orm';
+import { addHours } from 'date-fns';
+import { Resend } from 'resend';
+import { appPath } from '@/lib/app-url';
 import { PRICING_DEFAULTS } from '@/config/pricing';
 import { verifyAuth } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
@@ -12,7 +15,12 @@ import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import { z } from 'zod';
 import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
-import { notifyAdminOnVerificationFailure } from '@/lib/admin-notify';
+import {
+  notifyAdminOnVerificationFailure,
+  notifyAdminOnEmailFailure,
+  notifyAdminOnPayment,
+} from '@/lib/admin-notify';
+import { renderWelcomeSetPasswordEmailHtml } from '@/lib/render-welcome-set-password-email';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 💳 START PAYMENT (Register + Create Order)
@@ -27,7 +35,7 @@ const startPaymentSchema = z.object({
   examType: z.enum(['upsc', 'mppsc', 'mppolice']).default('mppsc'),
 });
 
-interface StartPaymentInput extends z.infer<typeof startPaymentSchema> {}
+type StartPaymentInput = z.infer<typeof startPaymentSchema>;
 
 /**
  * 💳 Start Payment (Server Action)
@@ -219,8 +227,6 @@ interface VerifyPaymentInput {
 export async function verifyPayment(input: VerifyPaymentInput) {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = input;
   let userId: string | undefined;
-  const orderId: string = razorpay_order_id; // Map to local name if preferred, or just use razorpay_order_id
-  const paymentId: string | undefined = razorpay_payment_id;
 
   try {
     // 🔒 Step 1: Get userId — JWT first, fallback to input (for new users)
@@ -405,7 +411,93 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         .where(eq(mppscUsers.id, userId!));
     });
 
-    // 🚀 Step 6: Notify via Telegram
+    // 🎫 + 📧 Set-password token + welcome email
+    // PaymentModal calls this server action — NOT /api/payment/verify — so this block is required
+    // for first-time payers to receive mail and use /auth/set-password. Upgrade skips (already has password).
+    const isUpgradePurchase = (order.notes?.planType as string | undefined) === 'upgrade';
+    if (!isUpgradePurchase) {
+      const paidUser = await db.query.mppscUsers.findFirst({
+        where: eq(mppscUsers.id, userId!),
+        columns: { name: true, email: true },
+      });
+
+      if (paidUser?.email) {
+        const token = uuidv4();
+        const expires = addHours(new Date(), 1);
+
+        await db.insert(verificationTokens).values({
+          identifier: userId!,
+          token,
+          expires,
+        });
+
+        const resendApiKey = process.env.RESEND_API_KEY;
+        const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC ZEN';
+        const fromAddress =
+          process.env.RESEND_FROM_EMAIL ||
+          process.env.EMAIL_FROM_ADDRESS ||
+          'no-reply@mppsc.zenscroll.app';
+        const fromEmail = `${fromName} <${fromAddress}>`;
+        const actionUrl = `${appPath('auth/set-password')}?token=${token}`;
+
+        const emailHtml = await renderWelcomeSetPasswordEmailHtml({
+          name: paidUser.name || 'Student',
+          actionUrl,
+          planTier: planTier,
+        });
+
+        if (!resendApiKey) {
+          logger.error('RESEND_API_KEY missing — welcome email skipped after payment', undefined, {
+            category: 'email',
+            userId,
+            metadata: { to: paidUser.email },
+          });
+          notifyAdminOnEmailFailure({
+            userName: paidUser.name || 'Unknown',
+            userEmail: paidUser.email,
+            errorMessage: 'RESEND_API_KEY is not configured on the server',
+            paymentId: razorpay_payment_id,
+          }).catch(() => {});
+        } else {
+          const resend = new Resend(resendApiKey);
+          const { error: emailError } = await resend.emails.send({
+            from: fromEmail,
+            to: [paidUser.email],
+            subject: '🎉 Welcome to MPPSC ZEN — Set Your Password',
+            html: emailHtml,
+          });
+
+          if (emailError) {
+            logger.error('Failed to send welcome email via Resend', emailError, {
+              category: 'email',
+              userId,
+              metadata: { to: paidUser.email, fromEmail },
+            });
+            notifyAdminOnEmailFailure({
+              userName: paidUser.name || 'Unknown',
+              userEmail: paidUser.email,
+              errorMessage:
+                typeof emailError === 'object' && emailError !== null && 'message' in emailError
+                  ? String(emailError.message)
+                  : JSON.stringify(emailError),
+              paymentId: razorpay_payment_id,
+            }).catch(() => {});
+          }
+        }
+
+        notifyAdminOnPayment({
+          type: 'new_payment',
+          userName: paidUser.name || 'Unknown',
+          userEmail: paidUser.email,
+          planTier,
+          amountInRupees: amountInPaise / 100,
+          orderId: razorpay_order_id,
+          paymentId: razorpay_payment_id,
+        }).catch(() => {});
+      }
+    }
+
+    // 🚀 Step 7: Notify via Telegram
     try {
       const amountInRupees = amountInPaise / 100;
       const userResult = await db.query.mppscUsers.findFirst({

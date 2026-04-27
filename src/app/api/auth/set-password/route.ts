@@ -47,7 +47,7 @@ export async function POST(req: Request) {
       // Clean up expired token
       await db.delete(verificationTokens).where(eq(verificationTokens.token, token));
       return NextResponse.json(
-        { error: 'Token expired. Please contact support.' },
+        { error: 'This link has expired. Use Forgot Password on the login page to get a new one.' },
         { status: 400 }
       );
     }

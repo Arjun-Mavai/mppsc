@@ -72,7 +72,7 @@ export const PRO_FEATURES: PlanFeatureWithIcon[] = [
   { en: 'Unlimited Topic & Unit Tests', hi: 'अनलिमिटेड टॉपिक और यूनिट टेस्ट', icon: 'Target' },
   { en: 'Full Length Mock Tests (100Q)', hi: 'फुल लेंथ मॉक टेस्ट (100 प्रश्न)', icon: 'FileText' },
   { en: 'CSAT Mock Papers', hi: 'CSAT मॉक पेपर', icon: 'BookOpen' },
-  { en: 'PYQ Papers (2020-2025)', hi: 'PYQ पेपर (2020-2025)', icon: 'BookOpen' },
+  { en: 'PYQ Papers (2020-2026)', hi: 'PYQ पेपर (2020-2026)', icon: 'BookOpen' },
   {
     en: 'PYQ Intelligence: Topic Trends, Weightage & Exam DNA',
     hi: 'PYQ इंटेलिजेंस: टॉपिक ट्रेंड, वेटेज और एग्जाम DNA',
