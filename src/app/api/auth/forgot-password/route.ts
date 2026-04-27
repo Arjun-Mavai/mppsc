@@ -9,7 +9,6 @@ import { Resend } from 'resend';
 import { appPath } from '@/lib/app-url';
 import { notifyAdminOnEmailFailure } from '@/lib/admin-notify';
 import { escapeHTML } from '@/lib/telegram';
-import { escapeHTML } from '@/lib/telegram';
 
 export async function POST(request: Request) {
   try {
