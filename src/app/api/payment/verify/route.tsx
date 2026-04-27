@@ -216,19 +216,20 @@ export async function POST(req: Request) {
 
     const planLabel = planTier === 'pro' ? 'Pro Plan' : 'Lite Plan';
 
-    const { error: emailError } = await resend.emails.send({
+    const { data: emailData, error: emailError } = await resend.emails.send({
       from: fromEmail,
       to: [user.email!],
       subject: '🎉 Welcome to MPPSC ZEN — Set Your Password',
-      react: EmailTemplate({ name: user.name || 'Student', actionUrl, planName: planLabel }),
+      react: <EmailTemplate name={user.name || 'Student'} actionUrl={actionUrl} planName={planLabel} />,
     });
 
     if (emailError) {
       // 🚨 User email failed! Log error + notify admin immediately
-      logger.error('Failed to send welcome email via Resend', emailError, {
+      logger.error('Failed to send welcome email via Resend', {
+        error: emailError,
         category: 'email',
         userId,
-        metadata: { to: user.email! },
+        metadata: { to: user.email!, fromEmail },
       });
       
       // 📧 CRITICAL: Admin ko batao ki user ko email nahi gaya

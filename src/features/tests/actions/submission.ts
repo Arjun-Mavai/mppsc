@@ -411,10 +411,7 @@ export async function submitTestAttempt(
     // Bhai, ye sab kaam parallel mein honge to user ko result 200-300ms jaldi dikhega
     const postSubmissionTasks = [];
 
-    const totalTestMarks = testQuestions.reduce(
-      (sum, q) => sum + (q.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION),
-      0
-    );
+    const totalTestMarks = testQuestions.length * SCORING_CONFIG.MARKS_PER_QUESTION;
 
     if (session && session.name) {
 
@@ -440,8 +437,8 @@ export async function submitTestAttempt(
     const telegramMessage = `🏆 <b>Test Completed</b>\n\n` +
       `<b>Test:</b> ${escapeHTML(testTitle || test?.title || 'N/A')}\n` +
       `<b>User:</b> ${escapeHTML(session?.name || 'Student')}\n` +
-      `<b>Score:</b> ${totalScore}/${totalTestMarks} (${accuracy}% accuracy)\n` +
-      `<b>Stats:</b> ✅${correctCount} | ❌${incorrectCount} | ⏱️${Math.floor(validDuration / 60)}m`;
+      `<b>Score:</b> <code>${totalScore}/${totalTestMarks}</code> (${accuracy}% accuracy)\n` +
+      `<b>Stats:</b> ✅${correctCount} (+${correctCount * SCORING_CONFIG.MARKS_PER_QUESTION}) | ❌${incorrectCount} (-${incorrectCount * SCORING_CONFIG.NEGATIVE_MARKING}) | ⏱️${Math.floor(validDuration / 60)}m`;
 
     postSubmissionTasks.push(sendTelegramNotification(telegramMessage));
 
