@@ -17,7 +17,7 @@ import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     // ── Admin Auth ──────────────────────────────────────────────
     const cookieStore = await cookies();
@@ -42,6 +42,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
+    // ── Get Exam Type Filter ──
+    const { searchParams } = new URL(req.url);
+    const examTypeFilter = searchParams.get('examType') || 'mppsc';
+
     // ── Fetch All Users (password excluded for security) ────────
     const allUsers = await db
       .select({
@@ -61,7 +65,7 @@ export async function GET() {
         examType: mppscUsers.examType,
       })
       .from(mppscUsers)
-      .where(eq(mppscUsers.examType, 'mppsc'))
+      .where(eq(mppscUsers.examType, examTypeFilter as any))
       .orderBy(sql`created_at DESC`);
 
     // ── Calculate Stats ─────────────────────────────────────────

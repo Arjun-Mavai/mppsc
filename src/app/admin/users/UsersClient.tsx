@@ -20,6 +20,7 @@ import {
   ChevronUp,
   Copy,
   Key,
+  Mail,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { generateManualPasswordLink, testResendEmail } from '@/actions/admin-actions';
@@ -294,13 +295,25 @@ export default function UsersClient() {
     try {
       const res = await generateManualPasswordLink(userId);
       if (res.success && res.url) {
-        navigator.clipboard.writeText(res.url);
-        toast.success('Password link copied! Share it with the user.');
+        if (!navigator.clipboard) {
+          toast.error('Clipboard is unavailable. Copy the password link manually.');
+          console.log('Manual URL:', res.url);
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(res.url);
+          toast.success('Password link copied! Share it with the user.');
+        } catch (err) {
+          toast.error('Failed to copy password link');
+          console.error('Clipboard error:', err);
+        }
       } else {
         toast.error(res.error || 'Failed to generate link');
       }
-    } catch {
+    } catch (error) {
       toast.error('Error generating link');
+      console.error('Action error:', error);
     }
   };
 
@@ -693,21 +706,28 @@ export default function UsersClient() {
                             >
                               {user.planTier || 'free'}
                             </span>
-                            <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${status.cls}`}>
+                            <span
+                              className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${status.cls}`}
+                            >
                               {status.label}
                             </span>
                             {/* 🔑 Password Status */}
                             {user.deletedAt ? null : (
                               <span
-                                className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold border ${
+                                className={`rounded-full border px-1.5 py-0.5 text-[10px] font-bold ${
                                   user.isActive
-                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                                     : user.planTier !== 'free'
-                                      ? 'bg-amber-50 border-amber-200 text-amber-700 animate-pulse'
-                                      : 'bg-slate-50 border-slate-200 text-slate-500'
+                                      ? 'animate-pulse border-amber-200 bg-amber-50 text-amber-700'
+                                      : 'border-slate-200 bg-slate-50 text-slate-500'
                                 }`}
                               >
-                                🔑 {user.isActive ? 'Password Set' : user.planTier !== 'free' ? 'Password PENDING' : 'No Password'}
+                                🔑{' '}
+                                {user.isActive
+                                  ? 'Password Set'
+                                  : user.planTier !== 'free'
+                                    ? 'Password PENDING'
+                                    : 'No Password'}
                               </span>
                             )}
                             {user.role === 'admin' && (
@@ -728,11 +748,12 @@ export default function UsersClient() {
 
                           {/* 🕒 Creation Proof & Metadata */}
                           <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] sm:text-[11px]">
-                            <span className="flex items-center gap-1.5 font-semibold text-slate-600 bg-slate-100/50 px-2 py-0.5 rounded-md border border-slate-200">
+                            <span className="flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-100/50 px-2 py-0.5 font-semibold text-slate-600">
                               <Clock className="h-3 w-3 text-indigo-500" />
                               {user.createdAt ? (
                                 <span title={new Date(user.createdAt).toISOString()}>
-                                  Created: {new Date(user.createdAt).toLocaleString('en-IN', {
+                                  Created:{' '}
+                                  {new Date(user.createdAt).toLocaleString('en-IN', {
                                     weekday: 'short',
                                     day: '2-digit',
                                     month: 'short',
@@ -749,25 +770,27 @@ export default function UsersClient() {
 
                             <span className="flex items-center gap-1 text-slate-400">
                               <Shield className="h-3 w-3 text-slate-300" />
-                              <code className="bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 text-[9px] font-mono select-all">
+                              <code className="rounded border border-slate-100 bg-slate-50 px-1.5 py-0.5 font-mono text-[9px] select-all">
                                 ID: {user.id}
                               </code>
                             </span>
 
                             {/* 🎯 Exam & Source Badges */}
-                            <span className="flex items-center gap-1 rounded-full bg-slate-900 px-2 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider">
+                            <span className="flex items-center gap-1 rounded-full bg-slate-900 px-2 py-0.5 text-[9px] font-bold tracking-wider text-white uppercase">
                               Exam: {user.examType || 'mppsc'}
                             </span>
 
                             {user.metadata?.source && (
-                              <span className="flex items-center gap-1 rounded-full bg-indigo-50 border border-indigo-100 px-2 py-0.5 text-[9px] font-bold text-indigo-600 uppercase">
+                              <span className="flex items-center gap-1 rounded-full border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[9px] font-bold text-indigo-600 uppercase">
                                 Source: {user.metadata.source}
                               </span>
                             )}
 
                             {user.metadata?.ip && (
-                              <span className="flex items-center gap-1 text-slate-400 border-l pl-3 border-slate-200">
-                                <span className="font-medium text-slate-300 uppercase text-[9px]">IP:</span>
+                              <span className="flex items-center gap-1 border-l border-slate-200 pl-3 text-slate-400">
+                                <span className="text-[9px] font-medium text-slate-300 uppercase">
+                                  IP:
+                                </span>
                                 {user.metadata.ip}
                               </span>
                             )}

@@ -474,9 +474,35 @@ export async function getPaymentExitStats() {
 export async function generateManualPasswordLink(userId: string) {
   await assertAdmin();
   try {
-    const { verificationTokens } = await import('@/db/schema');
+    const { mppscUsers, payments, verificationTokens } = await import('@/db/schema');
     const { v4: uuidv4 } = await import('uuid');
     const { addHours } = await import('date-fns');
+
+    // 1. Verify user exists and is not deleted
+    const [user] = await db
+      .select()
+      .from(mppscUsers)
+      .where(and(eq(mppscUsers.id, userId), sql`${mppscUsers.deletedAt} IS NULL`));
+
+    if (!user) {
+      return { success: false, error: 'User not found or has been deleted' };
+    }
+
+    // 2. Guard: Only for users with a captured payment or non-free plan
+    // This prevents unintentional Pro access for free users if the set-password flow defaults to Pro.
+    const [latestPayment] = await db
+      .select()
+      .from(payments)
+      .where(and(eq(payments.userId, userId), eq(payments.status, 'captured')))
+      .orderBy(desc(payments.createdAt))
+      .limit(1);
+
+    if (!latestPayment && user.planTier === 'free') {
+      return { 
+        success: false, 
+        error: 'Manual links are restricted to users with a captured payment or active paid plan.' 
+      };
+    }
 
     const token = uuidv4();
     const expires = addHours(new Date(), 24); // Manual links last longer (24h)
@@ -490,7 +516,7 @@ export async function generateManualPasswordLink(userId: string) {
     const { appPath } = await import('@/lib/app-url');
     const url = `${appPath('auth/set-password')}?token=${token}`;
 
-    logger.info(`Manual password link generated for user: ${userId}`);
+    logger.info(`Manual password link generated for user: ${userId} by admin`);
     return { success: true, url };
   } catch (error) {
     logger.error('Failed to generate manual link:', error);
