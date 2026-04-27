@@ -447,7 +447,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         });
 
         if (!resendApiKey) {
-          logger.error('RESEND_API_KEY missing — welcome email skipped after payment', {
+          logger.error('RESEND_API_KEY missing — welcome email skipped after payment', undefined, {
             category: 'email',
             userId,
             metadata: { to: paidUser.email },
@@ -468,8 +468,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
           });
 
           if (emailError) {
-            logger.error('Failed to send welcome email via Resend', {
-              error: emailError,
+            logger.error('Failed to send welcome email via Resend', emailError, {
               category: 'email',
               userId,
               metadata: { to: paidUser.email, fromEmail },

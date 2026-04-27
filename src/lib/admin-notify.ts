@@ -161,10 +161,6 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
 export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) {
   try {
     const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) return;
-
-    const resend = new Resend(apiKey);
-
     const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC ZEN';
     const fromAddress = process.env.RESEND_FROM_EMAIL || 'mppsc@zenscroll.app';
     const fromEmail = `${fromName} <${fromAddress}>`;
@@ -209,12 +205,21 @@ export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) 
       </div>
     `;
 
-    await resend.emails.send({
-      from: fromEmail,
-      to: [ADMIN_EMAIL],
-      subject: `🚨 USER EMAIL FAILED: ${userName} (${userEmail}) — MPPSC ZEN`,
-      html,
-    });
+    // Try email notification only when Resend is configured.
+    if (apiKey) {
+      const resend = new Resend(apiKey);
+      await resend.emails.send({
+        from: fromEmail,
+        to: [ADMIN_EMAIL],
+        subject: `🚨 USER EMAIL FAILED: ${userName} (${userEmail}) — MPPSC ZEN`,
+        html,
+      });
+    } else {
+      logger.warn('RESEND_API_KEY not set — skipping admin email, sending Telegram only', {
+        category: 'email',
+        metadata: { userEmail, paymentId },
+      });
+    }
 
     // 🚀 TELEGRAM NOTIFICATION (MPPSC ZEN Branding)
     const telegramMessage =
@@ -264,7 +269,7 @@ export async function notifyAdminOnVerificationFailure(data: {
     logger.warn('Admin notified of verification failure via Telegram', {
       category: 'payment',
       metadata: { userId, orderId, error: String(error) },
-    } as any);
+    });
   } catch (err) {
     logger.error('Failed to send verification failure notification', err);
   }

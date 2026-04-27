@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { mppscUsers, verificationTokens } from '@/db/schema';
-import { sql, and, isNull } from 'drizzle-orm';
+import { sql, and, isNull, eq } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { v4 as uuidv4 } from 'uuid';
 import { addHours } from 'date-fns';
 import { Resend } from 'resend';
 import { appPath } from '@/lib/app-url';
 import { notifyAdminOnEmailFailure } from '@/lib/admin-notify';
+import { escapeHTML } from '@/lib/telegram';
+import { escapeHTML } from '@/lib/telegram';
 
 export async function POST(request: Request) {
   try {
@@ -35,13 +37,21 @@ export async function POST(request: Request) {
 
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
-      logger.error('Forgot password: RESEND_API_KEY is not set', { category: 'email' });
+      logger.error('Forgot password: RESEND_API_KEY is not set', undefined, { category: 'email' });
+      // Alert admin (Telegram fallback works even if Resend key is missing)
+      notifyAdminOnEmailFailure({
+        userName: 'Unknown',
+        userEmail: normalizedEmail,
+        errorMessage: 'RESEND_API_KEY is not configured on the server (forgot-password)',
+        paymentId: 'forgot-password-config',
+      }).catch(() => {});
       return NextResponse.json(
         { error: 'Password reset is temporarily unavailable. Please try again later.' },
         { status: 503 }
       );
     }
 
+    // First try index-friendly exact match (emails are normalized on write).
     const users = await db
       .select({
         id: mppscUsers.id,
@@ -50,11 +60,27 @@ export async function POST(request: Request) {
       })
       .from(mppscUsers)
       .where(
-        and(sql`LOWER(${mppscUsers.email}) = ${normalizedEmail}`, isNull(mppscUsers.deletedAt))
+        and(eq(mppscUsers.email, normalizedEmail), isNull(mppscUsers.deletedAt))
       )
       .limit(1);
 
-    const user = users[0];
+    let user = users[0];
+
+    // Backward-compat: if legacy rows had mixed-case emails, fall back to LOWER(email) match.
+    if (!user) {
+      const legacyUsers = await db
+        .select({
+          id: mppscUsers.id,
+          name: mppscUsers.name,
+          email: mppscUsers.email,
+        })
+        .from(mppscUsers)
+        .where(
+          and(sql`LOWER(${mppscUsers.email}) = ${normalizedEmail}`, isNull(mppscUsers.deletedAt))
+        )
+        .limit(1);
+      user = legacyUsers[0];
+    }
 
     if (!user) {
       await new Promise((resolve) => setTimeout(resolve, 500 + Math.random() * 500));
@@ -84,7 +110,7 @@ export async function POST(request: Request) {
     const emailHtml = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e5e7eb; border-radius: 12px;">
         <h2 style="color: #111; margin-bottom: 20px;">Reset your password</h2>
-        <p>Hi ${user.name || 'Student'},</p>
+        <p>Hi ${escapeHTML(user.name || 'Student')},</p>
         <p>We received a request to set or reset the password for your MPPSC ZEN account. Click the button below to continue (same link as after payment — you will choose a new password):</p>
         <div style="margin: 35px 0; text-align: center;">
           <a href="${actionUrl}" style="background: #0a0a0a; color: #00F0FF; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">Set password →</a>
@@ -106,8 +132,7 @@ export async function POST(request: Request) {
     });
 
     if (emailError) {
-      logger.error('Forgot password: Resend send failed', {
-        error: emailError,
+      logger.error('Forgot password: Resend send failed', emailError, {
         category: 'email',
         userId: user.id,
         metadata: { to: user.email, fromEmail },
