@@ -138,14 +138,23 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
                 </div>
               </div>
               <div
+                onMouseEnter={() => router.prefetch('/syllabus/quiz/pyq/analysis')}
                 onClick={() => {
                   setNavigatingId('pyq-view-all');
-                  router.push('/syllabus/quiz/pyq/analysis');
+                  startTransition(() => {
+                    router.push('/syllabus/quiz/pyq/analysis');
+                  });
                 }}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-black text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 cursor-pointer"
               >
-                {language === 'hi' ? 'सब देखें' : 'View All'}
-                <ArrowRight className="h-3.5 w-3.5" />
+                {navigatingId === 'pyq-view-all' ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <>
+                    {language === 'hi' ? 'सब देखें' : 'View All'}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </>
+                )}
               </div>
             </div>
 
@@ -153,9 +162,12 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
 
               {/* Card 1: Year-wise Trend */}
               <div 
+                onMouseEnter={() => router.prefetch('/syllabus/quiz/pyq/analysis')}
                 onClick={() => {
                   setNavigatingId('pyq-matrix');
-                  router.push('/syllabus/quiz/pyq/analysis');
+                  startTransition(() => {
+                    router.push('/syllabus/quiz/pyq/analysis');
+                  });
                 }} 
                 className="group block cursor-pointer"
               >

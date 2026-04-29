@@ -435,7 +435,7 @@ export const getPyqTopicAnalysis = unstable_cache(
       trendDelta: number | null;
     };
 
-    // 🚀 PERF BOOST: Fetch trends and year matrix in parallel
+    // 🚀 PERF BOOST: Fetch trends and year matrix in parallel from snapshot table
     const [trendRowsResult, rawYearMatrix] = await Promise.all([
       (async () => {
         try {
@@ -464,30 +464,19 @@ export const getPyqTopicAnalysis = unstable_cache(
           }
         }
       })(),
+      // Optimized: Sum question counts from trends table instead of re-calculating from questions
       db
         .select({
-          year: sql<number>`CASE 
-            WHEN ${tests.title} LIKE '%2025%' THEN 2025 
-            WHEN ${tests.title} LIKE '%2024%' THEN 2024 
-            WHEN ${tests.title} LIKE '%2023%' THEN 2023 
-            WHEN ${tests.title} LIKE '%2022%' THEN 2022 
-            WHEN ${tests.title} LIKE '%2019-20%' OR ${tests.title} LIKE '%2020%' THEN 2020 
-            WHEN ${tests.title} LIKE '%2021%' THEN 2021
-            ELSE CAST(strftime('%Y', ${tests.createdAt}) AS INTEGER)
-          END`.as('resolved_year'),
-          questionCount: sql<number>`count(distinct ${pyqQuestionTopics.questionId})`,
+          year: pyqTopicTrends.year,
+          questionCount: sql<number>`SUM(${pyqTopicTrends.questionCount})`,
         })
-        .from(pyqQuestionTopics)
-        .innerJoin(pyqTopics, eq(pyqQuestionTopics.topicId, pyqTopics.id))
-        .innerJoin(questions, eq(pyqQuestionTopics.questionId, questions.id))
-        .innerJoin(tests, eq(questions.testId, tests.id))
+        .from(pyqTopicTrends)
         .where(and(
-          eq(pyqTopics.subject, effectiveSubject), 
-          eq(tests.type, 'PYQ'),
-          gte(sql`resolved_year`, fromYear)
+          eq(pyqTopicTrends.subject, effectiveSubject),
+          gte(pyqTopicTrends.year, fromYear)
         ))
-        .groupBy(sql`resolved_year`)
-        .orderBy(sql`resolved_year`)
+        .groupBy(pyqTopicTrends.year)
+        .orderBy(pyqTopicTrends.year)
     ]);
 
     let trendRows = trendRowsResult;

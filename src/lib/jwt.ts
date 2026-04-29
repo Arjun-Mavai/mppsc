@@ -10,7 +10,13 @@ function getJwtSecret(): string {
   return secret;
 }
 
-export function signToken(payload: object) {
+export interface JWTPayload {
+  userId: string;
+  email?: string;
+  role?: string;
+}
+
+export function signToken(payload: JWTPayload) {
   try {
     // 🛡️ SECURITY FIX: JWT expiry must match cookie maxAge (30 days)
     // Bhai, PEHLE JWT 7 days mein expire hota tha par cookie 30 days ki thi.
@@ -27,11 +33,12 @@ export function signToken(payload: object) {
   }
 }
 
-export function verifyToken(token: string) {
+export function verifyToken(token: string): JWTPayload | null {
   try {
-    return jwt.verify(token, getJwtSecret());
-  } catch (error: any) {
-    if (error.message === 'jwt malformed' || error.message === 'invalid token') {
+    return jwt.verify(token, getJwtSecret()) as JWTPayload;
+  } catch (error) {
+    const err = error as Error;
+    if (err.message === 'jwt malformed' || err.message === 'invalid token') {
       return null;
     }
     console.error('Token verify error:', error);

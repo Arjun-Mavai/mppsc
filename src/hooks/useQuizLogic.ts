@@ -105,7 +105,11 @@ export function useQuizLogic({
   // ───────────────────────────────────────────────────────────────
   // useRef because we don't want re-renders when this changes
   // Stores timestamp when user started viewing current question
-  const questionStartTimeRef = useRef<number>(Date.now());
+  const questionStartTimeRef = useRef<number>(0);
+
+  useEffect(() => {
+    questionStartTimeRef.current = Date.now();
+  }, []);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 🔧 HELPER FUNCTIONS (Internal utilities)

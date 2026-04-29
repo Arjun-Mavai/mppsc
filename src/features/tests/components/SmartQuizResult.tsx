@@ -38,6 +38,24 @@ interface SmartQuizResultProps {
   isGuest?: boolean;
 }
 
+const PremiumLock = ({ label, onUnlock }: { label: string; onUnlock: () => void }) => (
+  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg border border-slate-100 bg-white/60 backdrop-blur-[2px]">
+    <div className="max-w-[200px] rounded-2xl border border-slate-100 bg-white p-4 text-center shadow-xl">
+      <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
+        <Lock className="h-5 w-5 text-amber-600" />
+      </div>
+      <p className="mb-2 text-sm font-bold text-slate-800">{label}</p>
+      <Button
+        size="sm"
+        className="w-full bg-gradient-to-r from-amber-500 to-orange-500 font-bold text-white hover:from-amber-600 hover:to-orange-600"
+        onClick={onUnlock}
+      >
+        Unlock Now
+      </Button>
+    </div>
+  </div>
+);
+
 export function SmartQuizResult({
   testId,
   userId,
@@ -75,24 +93,6 @@ export function SmartQuizResult({
   const handleUnlock = () => {
     router.push('/pricing');
   };
-
-  const PremiumLock = ({ label }: { label: string }) => (
-    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg border border-slate-100 bg-white/60 backdrop-blur-[2px]">
-      <div className="max-w-[200px] rounded-2xl border border-slate-100 bg-white p-4 text-center shadow-xl">
-        <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
-          <Lock className="h-5 w-5 text-amber-600" />
-        </div>
-        <p className="mb-2 text-sm font-bold text-slate-800">{label}</p>
-        <Button
-          size="sm"
-          className="w-full bg-gradient-to-r from-amber-500 to-orange-500 font-bold text-white hover:from-amber-600 hover:to-orange-600"
-          onClick={handleUnlock}
-        >
-          Unlock Now
-        </Button>
-      </div>
-    </div>
-  );
 
   if (loading) {
     return (
@@ -295,7 +295,7 @@ export function SmartQuizResult({
 
           {/* ANALYSIS TAB */}
           <TabsContent value="insights" className="relative space-y-4">
-            {isGuest && <PremiumLock label="Detailed Analysis Locked" />}
+            {isGuest && <PremiumLock label="Detailed Analysis Locked" onUnlock={handleUnlock} />}
             
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold tracking-wider text-slate-500 uppercase">
@@ -479,7 +479,7 @@ export function SmartQuizResult({
           </TabsContent>
 
           <TabsContent value="facts" className="relative min-h-[200px] space-y-4">
-            {isGuest && <PremiumLock label="Flashcards Locked" />}
+            {isGuest && <PremiumLock label="Flashcards Locked" onUnlock={handleUnlock} />}
             {result.pyq_facts.length === 0 ? (
               <div className="py-20 text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-50 text-amber-500">

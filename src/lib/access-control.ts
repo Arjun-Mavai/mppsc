@@ -204,8 +204,8 @@ export function hasAccessToContent(flags: ContentAccessFlags, tier: PlanTier | '
  * 5. Free/Guest → sirf isFree wale
  * 6. Default → LOCKED 🔒
  */
-export function canAccessTopic(topic: Topic, user: User): boolean {
-  if ((user as any)?.role === 'admin') return true;
+export function canAccessTopic(topic: Topic, user: AccessControlUser | null): boolean {
+  if (user?.role === 'admin') return true;
   if (topic.isFree) return true;
   const tier = getUserTier(user);
   return hasAccessToContent(
@@ -236,9 +236,9 @@ export function canAccessBlog(
     isProAccess: boolean | null;
     isPremium?: boolean | null;
   },
-  user: User
+  user: AccessControlUser | null
 ): boolean {
-  if ((user as any)?.role === 'admin') return true;
+  if (user?.role === 'admin') return true;
   const tier = getUserTier(user);
   return hasAccessToContent(
     {

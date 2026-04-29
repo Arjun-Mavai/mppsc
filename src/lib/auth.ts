@@ -4,6 +4,7 @@ import { mppscUsers } from '@/db/schema';
 import { eq, isNull, and } from 'drizzle-orm';
 import { cache } from 'react';
 import { logger } from '@/lib/logger';
+import type { JWTPayload } from './jwt';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🔐 AUTH VERIFICATION — har server component me use hota h
@@ -32,7 +33,7 @@ export const verifyAuth = cache(async () => {
   }
 
   const { verifyToken } = await import('@/lib/jwt');
-  const decoded: any = verifyToken(token.value);
+  const decoded = verifyToken(token.value);
 
   if (!decoded || !decoded.userId) {
     return null;
