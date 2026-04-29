@@ -29,7 +29,8 @@ function ThankYouContent() {
     // 1. Fresh Payment Flag: One-time token from PaymentModal
     // 2. Intelligent Fallback: Valid query params (email + paid plan)
     // We allow access if ETITHER is true to prevent lockouts in strict mode or incognito.
-    const isFreshPayment = typeof window !== 'undefined' && sessionStorage.getItem('payment_success_fresh');
+    const isFreshPayment =
+      typeof window !== 'undefined' && sessionStorage.getItem('payment_success_fresh');
     const hasValidParams = email && plan && plan !== 'free';
 
     if (!isFreshPayment && !hasValidParams) {
@@ -69,7 +70,7 @@ function ThankYouContent() {
   const features = isPro
     ? [
         { icon: Target, text: 'Unlimited Topic & Unit Tests' },
-        { icon: BookOpen, text: 'PYQ Papers (2020-2025)' },
+        { icon: BookOpen, text: 'PYQ Papers (2020-2026)' },
         { icon: BarChart3, text: 'Smart Analytics Dashboard' },
         { icon: Sparkles, text: 'Full Length Mock Tests (100Q)' },
       ]

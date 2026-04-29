@@ -7,9 +7,14 @@ import { eq, inArray, sql } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import ViewAllQuestionsClient from './ViewAllQuestionsClient';
 import { getUnitDistributionStats } from '@/actions/pyq-analytics';
-import { getScopedStateServiceYear, PYQ_SCOPE_START_YEAR, PYQ_SCOPE_END_YEAR } from '@/features/tests/utils/pyq-scope';
+import {
+  getScopedStateServiceYear,
+  PYQ_SCOPE_START_YEAR,
+  PYQ_SCOPE_END_YEAR,
+} from '@/features/tests/utils/pyq-scope';
 import { getYearFromTestId } from '@/lib/pyq-constants';
 import { normalizeCorrectAnswer } from '@/lib/quiz-scoring';
+import { mapRawQuestionToClientQuestion } from '@/lib/quiz-question-normalize';
 
 // Cache for 1 hour
 export const revalidate = 3600;
@@ -55,21 +60,17 @@ async function fetchQuestionsWithDetailsFromDb(questionIds: string[]) {
 
   return questionData.map((q) => {
     const year = getYearFromTestId(q.testId);
+    // Use the canonical normalization function
+    const clientQ = mapRawQuestionToClientQuestion(q as unknown as Record<string, unknown>, {
+      subject: q.subject || undefined,
+    });
+
     return {
-      id: q.id,
-      text: q.text,
-      textEn: q.textEn,
-      options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
-      type: q.type || 'standard',
-      matchPairs: typeof q.matchPairs === 'string' ? JSON.parse(q.matchPairs) : q.matchPairs,
-      correctAnswer: normalizeCorrectAnswer(q.correctAnswer),
-      explanation: q.explanation,
-      explanationEn: q.explanationEn,
-      explanation_hi: q.explanation,
+      ...clientQ,
+      text: clientQ.question,
+      textEn: clientQ.questionEn,
       year,
       qNo: q.order,
-      subject: q.subject,
-      extendedData: q.extendedData,
     };
   });
 }
@@ -137,7 +138,7 @@ const UNIT_TITLES: Record<string, string> = {
 export default async function ViewAllQuestionsPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const isPdfMode = params.pdf_mode === 'true';
-  
+
   // Skip authentication for PDF generation mode
   if (!isPdfMode) {
     const user = await verifyAuth();
@@ -171,38 +172,38 @@ export default async function ViewAllQuestionsPage({ searchParams }: PageProps) 
     const { getOverallWeightageSubjectData } = await import('@/actions/pyq-analytics');
     // 🔧 No limit here, we want all questions for "View All" page
     const subjectData = await getOverallWeightageSubjectData();
-    
+
     if (subject === 'All') {
-      const allQuestionIds = subjectData.flatMap(data => data.questions.map(q => q.id));
+      const allQuestionIds = subjectData.flatMap((data) => data.questions.map((q) => q.id));
       questionList = await getQuestionsWithDetails(allQuestionIds);
       unitTitle = `All Subjects Questions (2020-2026)`;
     } else {
-      const matchingSubject = subjectData.find(data => data.subject === subject);
+      const matchingSubject = subjectData.find((data) => data.subject === subject);
       if (matchingSubject) {
         // Convert subject questions to the expected format
-        questionList = await getQuestionsWithDetails(matchingSubject.questions.map(q => q.id));
+        questionList = await getQuestionsWithDetails(matchingSubject.questions.map((q) => q.id));
         unitTitle = `${subject} Questions (2020-2026)`;
       }
     }
   } else {
     // Unit-based query - get from cached analytics data
     const stats = await getUnitDistributionStats();
-    
+
     // Filter stats by unit and optionally by year
-    const relevantStats = stats.filter(s => {
+    const relevantStats = stats.filter((s) => {
       if (s.unitId !== unitId) return false;
       if (year && s.year !== year) return false;
       return true;
     });
-    
+
     // Collect all question IDs from matching stats
-    const questionIds = relevantStats.flatMap(s => s.questions.map(q => q.id));
-    
+    const questionIds = relevantStats.flatMap((s) => s.questions.map((q) => q.id));
+
     // Fetch full question details
     if (questionIds.length > 0) {
       questionList = await getQuestionsWithDetails(questionIds);
     }
-    
+
     // Update unit title from stats if available
     if (relevantStats.length > 0) {
       unitTitle = relevantStats[0].unitTitle;
