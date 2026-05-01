@@ -30,35 +30,46 @@ interface PageProps {
   }>;
 }
 
-/** Next.js `unstable_cache` rejects serialized payloads >2MB — “Subject = All” exceeds that. */
-const MAX_QUESTION_IDS_FOR_DATA_CACHE = 320;
+/** Next.js `unstable_cache` rejects serialized payloads >2MB. 
+ * We increase it to 800 but we will be careful with columns. */
+const MAX_QUESTION_IDS_FOR_DATA_CACHE = 800;
 
 async function fetchQuestionsWithDetailsFromDb(questionIds: string[]) {
   if (questionIds.length === 0) return [];
 
-  const questionData = await db
-    .select({
-      id: questions.id,
-      text: questions.questionText,
-      textEn: questions.questionTextEn,
-      options: questions.options,
-      type: questions.type,
-      matchPairs: questions.matchPairs,
-      correctAnswer: questions.correctAnswer,
-      explanation: questions.explanation,
-      explanationEn: questions.explanationEn,
-      explanation_hi: questions.explanation,
-      testId: questions.testId,
-      testTitle: tests.title,
-      order: questions.order,
-      subject: questions.subject,
-      extendedData: questions.extendedData,
-    })
-    .from(questions)
-    .innerJoin(tests, eq(questions.testId, tests.id))
-    .where(inArray(questions.id, questionIds));
+  // 🚀 PERF: Chunk the questionIds to avoid SQLite variable limit if too many
+  const chunks = [];
+  const chunkSize = 200;
+  for (let i = 0; i < questionIds.length; i += chunkSize) {
+    chunks.push(questionIds.slice(i, i + chunkSize));
+  }
 
-  return questionData.map((q) => {
+  const allData = [];
+  for (const chunk of chunks) {
+    const questionData = await db
+      .select({
+        id: questions.id,
+        text: questions.questionText,
+        textEn: questions.questionTextEn,
+        options: questions.options,
+        type: questions.type,
+        matchPairs: questions.matchPairs,
+        correctAnswer: questions.correctAnswer,
+        explanation: questions.explanation,
+        explanationEn: questions.explanationEn,
+        testId: questions.testId,
+        testTitle: tests.title,
+        order: questions.order,
+        subject: questions.subject,
+        extendedData: questions.extendedData,
+      })
+      .from(questions)
+      .innerJoin(tests, eq(questions.testId, tests.id))
+      .where(inArray(questions.id, chunk));
+    allData.push(...questionData);
+  }
+
+  return allData.map((q) => {
     const year = getYearFromTestId(q.testId);
     // Use the canonical normalization function
     const clientQ = mapRawQuestionToClientQuestion(q as unknown as Record<string, unknown>, {

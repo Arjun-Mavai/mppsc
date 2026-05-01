@@ -499,7 +499,7 @@ export default function UnitContent({
                     mnemonic={currentTopics[revisionIndex].mnemonic}
                     labels={{
                       tapToFlip: language === 'hi' ? 'पलटने के लिए टैप करें' : 'Tap to Flip',
-                      topicAnalysis: language === 'hi' ? 'विषय विश्लेषण' : 'TOPIC ANALYSIS',
+                      // topicAnalysis: language === 'hi' ? 'विषय विश्लेषण' : 'TOPIC ANALYSIS',
                       mnemonicLabel: language === 'hi' ? 'स्मरण सूत्र' : 'MNEMONIC',
                       practiceTest: language === 'hi' ? 'यूनिट टेस्ट दें' : 'Start Unit Test',
                       closeAnalysis: language === 'hi' ? 'बंद करें' : 'Close Analysis',

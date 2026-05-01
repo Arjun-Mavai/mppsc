@@ -37,6 +37,7 @@ const menuItems = [
     subtitleHi: 'परीक्षा फैक्ट्स',
     color: 'emerald',
   },
+  /*
   {
     id: 'analysis',
     href: '/syllabus/quiz/pyq/analysis',
@@ -47,6 +48,7 @@ const menuItems = [
     subtitleHi: 'विषयवार गहन विश्लेषण',
     color: 'cyan',
   },
+  */
 ];
 
 export function PYQMenu({ isHindi, currentPage, theme = 'dark' }: PYQMenuProps) {
