@@ -49,8 +49,8 @@ async function fetchQuestionsWithDetailsFromDb(questionIds: string[]) {
     const questionData = await db
       .select({
         id: questions.id,
-        text: questions.questionText,
-        textEn: questions.questionTextEn,
+        questionText: questions.questionText,
+        questionTextEn: questions.questionTextEn,
         options: questions.options,
         type: questions.type,
         matchPairs: questions.matchPairs,
