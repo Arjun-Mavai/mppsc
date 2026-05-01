@@ -111,6 +111,59 @@ interface PyqFactCard {
   scamAlertEn?: string | null;
 }
 
+const PremiumLock = ({
+  label,
+  className,
+  onUnlock,
+}: {
+  label: string;
+  className?: string;
+  onUnlock: () => void;
+}) => (
+  <div
+    className={cn(
+      'pointer-events-auto absolute inset-0 z-30 flex cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-slate-900/10 backdrop-blur-[6px]',
+      className
+    )}
+    onClick={() => {
+      toast('🔒 Pro Feature Requested', {
+        description: `This feature is locked for guest users. Unlock to access!`,
+        action: {
+          label: 'Unlock',
+          onClick: onUnlock,
+        },
+      });
+    }}
+  >
+    <div
+      className="animate-in fade-in zoom-in pointer-events-auto relative w-[85%] max-w-[280px] cursor-default overflow-hidden rounded-3xl border border-slate-100 bg-white p-6 text-center shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] duration-500"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r from-amber-400 via-rose-500 to-amber-400"></div>
+      <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-slate-100 bg-slate-50 shadow-inner">
+        <Lock className="h-6 w-6 text-slate-900" />
+      </div>
+      <h3 className="mb-2 text-xl leading-tight font-black tracking-tight text-slate-900">
+        {label}
+      </h3>
+      <p className="mb-6 px-2 text-xs leading-relaxed font-semibold text-pretty text-slate-500 opacity-80">
+        {label.includes('Strategy')
+          ? 'Upgrade to Pro to unlock advanced attempt intelligence and optimal simulators.'
+          : 'Get Expert PYQ Insights to see repeated patterns and high-yield topics.'}
+      </p>
+      <Button
+        className="h-12 w-full rounded-2xl bg-slate-950 text-sm font-black tracking-wide text-white shadow-xl transition-all hover:bg-slate-900 active:scale-95"
+        onClick={(e) => {
+          e.stopPropagation();
+          onUnlock();
+        }}
+      >
+        Unlock Pro Access 🚀
+      </Button>
+    </div>
+  </div>
+);
+
 export function QuizResult({
   questions,
   answers,
@@ -132,51 +185,6 @@ export function QuizResult({
   const isHindi = language === 'hi';
 
   const isGuestLocked = isGuest && !userId;
-
-  const PremiumLock = ({ label, className }: { label: string; className?: string }) => (
-    <div
-      className={cn(
-        'pointer-events-auto absolute inset-0 z-30 flex cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-slate-900/10 backdrop-blur-[6px]',
-        className
-      )}
-      onClick={() => {
-        toast('🔒 Pro Feature Requested', {
-          description: `This feature is locked for guest users. Unlock to access!`,
-          action: {
-            label: 'Unlock',
-            onClick: () => router.push('/pricing'),
-          },
-        });
-      }}
-    >
-      <div
-        className="animate-in fade-in zoom-in pointer-events-auto relative w-[85%] max-w-[280px] cursor-default overflow-hidden rounded-3xl border border-slate-100 bg-white p-6 text-center shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] duration-500"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r from-amber-400 via-rose-500 to-amber-400"></div>
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-slate-100 bg-slate-50 shadow-inner">
-          <Lock className="h-6 w-6 text-slate-900" />
-        </div>
-        <h3 className="mb-2 text-xl leading-tight font-black tracking-tight text-slate-900">
-          {label}
-        </h3>
-        <p className="mb-6 px-2 text-xs leading-relaxed font-semibold text-pretty text-slate-500 opacity-80">
-          {label.includes('Strategy')
-            ? 'Upgrade to Pro to unlock advanced attempt intelligence and optimal simulators.'
-            : 'Get Expert PYQ Insights to see repeated patterns and high-yield topics.'}
-        </p>
-        <Button
-          className="h-12 w-full rounded-2xl bg-slate-950 text-sm font-black tracking-wide text-white shadow-xl transition-all hover:bg-slate-900 active:scale-95"
-          onClick={(e) => {
-            e.stopPropagation();
-            router.push('/pricing');
-          }}
-        >
-          Unlock Pro Access 🚀
-        </Button>
-      </div>
-    </div>
-  );
 
   const [leaderboard, setLeaderboard] = useState<LeaderboardData | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
@@ -964,7 +972,10 @@ export function QuizResult({
     if (isGuestLocked) {
       return (
         <div className="relative min-h-[400px] pt-10">
-          <PremiumLock label={isHindi ? 'स्मार्ट ऑडिट लॉक है' : 'Smart Audit Locked'} />
+          <PremiumLock
+            label={isHindi ? 'स्मार्ट ऑडिट लॉक है' : 'Smart Audit Locked'}
+            onUnlock={() => router.push('/pricing')}
+          />
           <div className="flex flex-col gap-6 opacity-5">
             <div className="h-20 rounded-3xl bg-slate-200 animate-pulse" />
             <div className="h-64 rounded-3xl bg-slate-200 animate-pulse" />
@@ -1318,7 +1329,10 @@ export function QuizResult({
     if (isGuestLocked) {
       return (
         <div className="relative min-h-[300px]">
-          <PremiumLock label={isHindi ? 'फ्लैशकार्ड लॉक है' : 'Flashcards Locked'} />
+          <PremiumLock
+            label={isHindi ? 'फ्लैशकार्ड लॉक है' : 'Flashcards Locked'}
+            onUnlock={() => router.push('/pricing')}
+          />
           <div className="flex flex-col gap-4 opacity-10">
             {[1, 2].map((i) => (
               <div key={i} className="h-32 rounded-3xl bg-slate-100 animate-pulse" />

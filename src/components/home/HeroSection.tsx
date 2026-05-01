@@ -25,7 +25,8 @@ export function HeroSection() {
       title1: 'Master the New',
       title2: 'MPPSC Pattern.',
       subtitle: 'The ultimate data-driven platform with Bilingual Mnemonics, Smart PYQ Analysis & High-Performance Test Series.',
-      primaryBtn: 'Practice PYQs',
+      primaryBtn: 'Practice Free Test',
+      pyqBtn: 'Practice PYQs',
       /** Kept for when we re-enable the `/free-quiz` hero CTA (currently commented below). */
       secondaryBtn: 'Free Mock Test',
       openPrelimsHeroBtn: '2026 Prelims paper',
@@ -38,7 +39,8 @@ export function HeroSection() {
       title1: 'नए पैटर्न में',
       title2: 'महारत हासिल करें।',
       subtitle: 'मेमोनिक्स, स्मार्ट PYQ विश्लेषण और हाई-परफॉरमेंस टेस्ट सीरीज़ के साथ अपनी तैयारी को एलीट लेवल पर ले जाएं।',
-      primaryBtn: 'PYQs प्रैक्टिस करें',
+      primaryBtn: 'फ्री टेस्ट प्रैक्टिस करें',
+      pyqBtn: 'PYQs प्रैक्टिस करें',
       secondaryBtn: 'फ्री मॉक टेस्ट',
       openPrelimsHeroBtn: '2026 प्रारंभिक पेपर',
       stats: ['100+ टॉपिक टेस्ट', 'स्मार्ट PYQ एनालिसिस', 'स्मार्ट मेमोनिक्स']
@@ -165,12 +167,12 @@ export function HeroSection() {
           {/* Secondary CTA: PYQs */}
           <button
             type="button"
-            onClick={() => handleNavigation('/syllabus/quiz/pyq', 'hero_pyq_clicked')}
+            onClick={() => handleNavigation(user ? '/syllabus/quiz/pyq' : '/free-quiz', user ? 'hero_pyq_clicked' : 'hero_free_test_clicked')}
             disabled={isPending}
             className="group flex h-16 w-full items-center justify-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] px-10 font-bold text-white backdrop-blur-2xl transition-all hover:bg-white/[0.08] hover:border-white/20 active:scale-[0.97] sm:w-auto"
           >
             <Zap size={20} className="text-amber-500 transition-transform group-hover:translate-x-0.5" />
-            <span className="text-lg tracking-tighter">{t.primaryBtn}</span>
+            <span className="text-lg tracking-tighter">{user ? t.pyqBtn : t.primaryBtn}</span>
             <ChevronRight size={20} className="text-white/80 transition-transform group-hover:translate-x-1" />
           </button>
         </motion.div>

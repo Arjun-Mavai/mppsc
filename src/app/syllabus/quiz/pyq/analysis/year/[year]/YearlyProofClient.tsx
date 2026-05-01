@@ -21,6 +21,7 @@ import { normalizeCorrectAnswer } from '@/lib/quiz-scoring';
 import type { YearlySubjectQuestions } from '@/features/tests/actions/pyq-insights';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { cn } from '@/lib/utils';
+import { normalizeMatchPairs } from '@/lib/quiz-question-normalize';
 
 // Helper to parse options safely
 const getParsedOptions = (opts: any) => {
@@ -39,17 +40,7 @@ const getParsedOptions = (opts: any) => {
 
 // Helper to parse matchPairs safely
 const getParsedMatchPairs = (pairs: any) => {
-  if (!pairs) return [];
-  if (Array.isArray(pairs)) return pairs;
-  if (typeof pairs === 'string') {
-    try {
-      const parsed = JSON.parse(pairs);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-      return [];
-    }
-  }
-  return [];
+  return normalizeMatchPairs(pairs) || [];
 };
 
 export default function YearlyProofClient({ data }: { data: YearlySubjectQuestions }) {
@@ -255,6 +246,7 @@ export default function YearlyProofClient({ data }: { data: YearlySubjectQuestio
                                explanationEn={q.explanationEn} 
                                explanationHi={q.explanation}
                                language={isHindi ? 'hi' : 'en'}
+                               darkMode={true}
                              />
                           </div>
                         )}

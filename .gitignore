@@ -67,3 +67,6 @@ docs/
 .env.sentry-build-plugin
 
 db-backup.sh
+
+*.log
+*.bak

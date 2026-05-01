@@ -1,0 +1,25 @@
+# Mindful MPPSC
+
+Mindful MPPSC is India's first bilingual mnemonic-based preparation platform for the MPPSC (Madhya Pradesh Public Service Commission) State Service Exam. It focuses on helping students crack the exam using specialized memory techniques (Mnemonics), extensive bilingual test series, and deep analysis of previous year questions (PYQs).
+
+## Core Features
+
+- **Bilingual Content**: All study materials and test series are available in both Hindi and English.
+- **Mnemonics-Based Learning**: Specialized memory techniques to retain complex historical facts, dates, and geographical data.
+- **Topic-Wise Test Series**: 100+ modules covering the entire MPPSC syllabus (Units 1-10).
+- **PYQ Analysis**: Rigorous analysis of the last 5+ years of MPPSC papers to identify patterns.
+- **Digital Learning Tools**: Smart explanations, Flashcards, and detailed performance analytics.
+
+## Key Links
+
+- [Home](https://mppsc.zenscroll.app) - Overview and features.
+- [Syllabus](https://mppsc.zenscroll.app/syllabus) - Detailed MPPSC syllabus breakdown.
+- [Test Series](https://mppsc.zenscroll.app/syllabus/quiz) - Access to various quiz types (Full Length, Topic-wise, PYQ).
+- [Blogs](https://mppsc.zenscroll.app/blogs) - Strategy guides, news, and preparation tips.
+- [Pricing](https://mppsc.zenscroll.app/pricing) - Subscription plans for premium content.
+
+## Technical Details
+
+- The site uses Next.js with Server-Side Rendering (SSR) for optimal SEO and performance.
+- Structured data (JSON-LD) is implemented for Articles and Organizations to assist search engines and AI models.
+- The platform is designed for MPPSC 2025 and 2026 aspirants.

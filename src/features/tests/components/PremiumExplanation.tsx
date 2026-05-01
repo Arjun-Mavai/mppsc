@@ -138,7 +138,7 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
               <p
                 className={cn(
                   'text-[14px] leading-relaxed font-semibold tracking-tight sm:text-[15.5px]',
-                  darkMode ? 'text-slate-200' : 'text-slate-800'
+                  darkMode ? 'text-slate-100' : 'text-slate-800'
                 )}
               >
                 {displayExplanation(ai.content)}
@@ -490,7 +490,7 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
             <p
               className={cn(
                 'text-[14px] leading-relaxed font-semibold tracking-tight sm:text-[15.5px]',
-                darkMode ? 'text-slate-200' : 'text-slate-800'
+                darkMode ? 'text-slate-100' : 'text-slate-800'
               )}
             >
               {displayExplanation(ai.content)}

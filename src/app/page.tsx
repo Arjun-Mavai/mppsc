@@ -2,14 +2,69 @@
 // AppNavbar + UpgradePage + Testimonials = poora landing page
 import UpgradePage from './upgrade/page';
 import dynamic from 'next/dynamic';
+import Script from 'next/script';
 
 const Testimonials = dynamic(() =>
   import('@/components/home/Testimonials').then((m) => m.Testimonials)
 );
 
 export default function Home() {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mppsc.zenscroll.app';
+
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'What is Mindful MPPSC?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Mindful MPPSC is India\'s first bilingual mnemonic-based preparation platform for the MPPSC State Service Exam. It provides high-quality study materials, test series, and memory techniques to help students crack the exam effectively.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Is the content available in both Hindi and English?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Yes, Mindful MPPSC provides all study materials, test series, and explanations in both Hindi and English (Bilingual).',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'What is mnemonic-based learning?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Mnemonic-based learning uses specialized memory techniques to help you retain complex facts, historical timelines, and geographical data with ease.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'How many tests are included in the MPPSC Test Series?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'The MPPSC Test Series includes over 100+ topic-wise modules covering the entire syllabus from Unit 1 to Unit 10.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Does it cover Previous Year Questions (PYQs)?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Yes, Mindful MPPSC provides a rigorous analysis of 5+ years of Previous Year Papers to help students identify patterns and difficulty levels.',
+        },
+      },
+    ],
+  };
+
   return (
     <main>
+      <Script
+        id="faq-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       <h1 className="sr-only">Mindful MPPSC - Crack MPPSC 2026 with Bilingual Tests & Mnemonics</h1>
 
       <UpgradePage />
