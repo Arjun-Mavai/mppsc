@@ -119,6 +119,23 @@ export function RenderTableQuestion({
     const h1 = isHindi ? 'सूची - I' : 'List - I';
     const h2 = isHindi ? 'सूची - II' : 'List - II';
 
+    // 🚀 FIX: Prevent obvious answers by separating and sorting List 2
+    // List 1 items stay in their original order (usually 1, 2, 3, 4)
+    const list1 = matchPairs.map((p) => ({
+      id: p.id,
+      label: isHindi ? p.label : p.labelEn || p.label,
+    }));
+
+    // List 2 items are extracted and sorted by matchId (A, B, C, D)
+    // This ensures that List 2 always appears in a standard order, 
+    // rather than aligning perfectly with List 1 if it was stored that way.
+    const list2 = matchPairs
+      .map((p) => ({
+        matchId: p.matchId,
+        match: isHindi ? p.match : p.matchEn || p.match,
+      }))
+      .sort((a, b) => String(a.matchId).localeCompare(String(b.matchId)));
+
     // Dark mode styles
     const borderColor = darkMode ? 'border-slate-600' : 'border-slate-800';
     const headerBg = darkMode ? 'bg-slate-800' : 'bg-slate-50';
@@ -144,33 +161,36 @@ export function RenderTableQuestion({
             {h2}
           </div>
         </div>
-        {matchPairs.map((pair, i) => (
-          <div
-            key={i}
-            className={cn(
-              'grid w-full grid-cols-2',
-              rowBg,
-              i !== matchPairs.length - 1 && cn('border-b', borderColor)
-            )}
-          >
-            <div className={cn('flex items-center border-r-2', borderColor)}>
-              <div className={cn('min-w-[2rem] border-r px-2 py-2 text-center text-xs font-bold sm:min-w-[3rem] sm:px-3 sm:py-3 sm:text-sm', cellBorder, cellBg, cellText)}>
-                {pair.id}
+        {list1.map((item1, i) => {
+          const item2 = list2[i] || { matchId: '', match: '' };
+          return (
+            <div
+              key={i}
+              className={cn(
+                'grid w-full grid-cols-2',
+                rowBg,
+                i !== list1.length - 1 && cn('border-b', borderColor)
+              )}
+            >
+              <div className={cn('flex items-center border-r-2', borderColor)}>
+                <div className={cn('min-w-[2rem] border-r px-2 py-2 text-center text-xs font-bold sm:min-w-[3rem] sm:px-3 sm:py-3 sm:text-sm', cellBorder, cellBg, cellText)}>
+                  {item1.id}
+                </div>
+                <div className={cn('flex-1 px-2 py-2 text-xs sm:px-3 sm:py-3 sm:text-sm', cellText)}>
+                  {item1.label}
+                </div>
               </div>
-              <div className={cn('flex-1 px-2 py-2 text-xs sm:px-3 sm:py-3 sm:text-sm', cellText)}>
-                {isHindi ? pair.label : pair.labelEn || pair.label}
+              <div className="flex items-center">
+                <div className={cn('min-w-[2rem] border-r px-2 py-2 text-center text-xs font-bold sm:min-w-[3rem] sm:px-3 sm:py-3 sm:text-sm', cellBorder, cellBg, cellText)}>
+                  {item2.matchId}
+                </div>
+                <div className={cn('flex-1 px-2 py-2 text-xs sm:px-3 sm:py-3 sm:text-sm', cellText)}>
+                  {item2.match}
+                </div>
               </div>
             </div>
-            <div className="flex items-center">
-              <div className={cn('min-w-[2rem] border-r px-2 py-2 text-center text-xs font-bold sm:min-w-[3rem] sm:px-3 sm:py-3 sm:text-sm', cellBorder, cellBg, cellText)}>
-                {pair.matchId}
-              </div>
-              <div className={cn('flex-1 px-2 py-2 text-xs sm:px-3 sm:py-3 sm:text-sm', cellText)}>
-                {isHindi ? pair.match : pair.matchEn || pair.match}
-              </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }

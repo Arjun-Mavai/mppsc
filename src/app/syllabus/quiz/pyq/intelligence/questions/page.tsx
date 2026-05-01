@@ -2,17 +2,12 @@ import { redirect } from 'next/navigation';
 import { verifyAuth } from '@/lib/auth';
 import { getUserTier } from '@/lib/access-control';
 import { db } from '@/db';
-import { questions, tests, pyqQuestionTopics, pyqTopics } from '@/db/schema';
-import { eq, inArray, sql } from 'drizzle-orm';
+import { questions, pyqQuestionTopics, pyqTopics } from '@/db/schema';
+import { and, eq, inArray } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
-import ViewAllQuestionsClient from './ViewAllQuestionsClient';
-import { getUnitDistributionStats } from '@/actions/pyq-analytics';
-import {
-  getScopedStateServiceYear,
-  PYQ_SCOPE_START_YEAR,
-  PYQ_SCOPE_END_YEAR,
-} from '@/features/tests/utils/pyq-scope';
-import { getYearFromTestId } from '@/lib/pyq-constants';
+import ViewAllQuestionsClient, { type QuestionData } from './ViewAllQuestionsClient';
+import { getOverallWeightageSubjectData, getUnitDistributionStats } from '@/actions/pyq-analytics';
+import { getCanonicalTestIds, getYearFromTestId } from '@/lib/pyq-constants';
 import { normalizeCorrectAnswer } from '@/lib/quiz-scoring';
 import { mapRawQuestionToClientQuestion } from '@/lib/quiz-question-normalize';
 
@@ -34,19 +29,35 @@ interface PageProps {
  * We increase it to 800 but we will be careful with columns. */
 const MAX_QUESTION_IDS_FOR_DATA_CACHE = 800;
 
+function mapQuestionRowToClient(q: Record<string, unknown>): QuestionData {
+  const clientQ = mapRawQuestionToClientQuestion(q, {
+    subject: (q.subject as string) || undefined,
+  });
+
+  return {
+    ...clientQ,
+    text: clientQ.question,
+    textEn: clientQ.questionEn,
+    year: getYearFromTestId(q.testId as string),
+    qNo: q.order as number,
+    explanation_hi: clientQ.explanation_hi || clientQ.explanation || null,
+  } as QuestionData;
+}
+
 async function fetchQuestionsWithDetailsFromDb(questionIds: string[]) {
-  if (questionIds.length === 0) return [];
+  const uniqueQuestionIds = Array.from(new Set(questionIds));
+  if (uniqueQuestionIds.length === 0) return [];
 
   // 🚀 PERF: Chunk the questionIds to avoid SQLite variable limit if too many
   const chunks = [];
-  const chunkSize = 200;
-  for (let i = 0; i < questionIds.length; i += chunkSize) {
-    chunks.push(questionIds.slice(i, i + chunkSize));
+  const chunkSize = 400;
+  for (let i = 0; i < uniqueQuestionIds.length; i += chunkSize) {
+    chunks.push(uniqueQuestionIds.slice(i, i + chunkSize));
   }
 
-  const allData = [];
-  for (const chunk of chunks) {
-    const questionData = await db
+  const chunkResults = await Promise.all(
+    chunks.map((chunk) =>
+      db
       .select({
         id: questions.id,
         questionText: questions.questionText,
@@ -58,32 +69,24 @@ async function fetchQuestionsWithDetailsFromDb(questionIds: string[]) {
         explanation: questions.explanation,
         explanationEn: questions.explanationEn,
         testId: questions.testId,
-        testTitle: tests.title,
         order: questions.order,
         subject: questions.subject,
         extendedData: questions.extendedData,
       })
       .from(questions)
-      .innerJoin(tests, eq(questions.testId, tests.id))
-      .where(inArray(questions.id, chunk));
-    allData.push(...questionData);
-  }
+      .where(inArray(questions.id, chunk))
+    )
+  );
 
-  return allData.map((q) => {
-    const year = getYearFromTestId(q.testId);
-    // Use the canonical normalization function
-    const clientQ = mapRawQuestionToClientQuestion(q as unknown as Record<string, unknown>, {
-      subject: q.subject || undefined,
-    });
+  const mappedById = new Map<string, QuestionData>(
+    chunkResults.flat().map((q) => {
+      return [q.id, mapQuestionRowToClient(q)];
+    })
+  );
 
-    return {
-      ...clientQ,
-      text: clientQ.question,
-      textEn: clientQ.questionEn,
-      year,
-      qNo: q.order,
-    };
-  });
+  return uniqueQuestionIds
+    .map((id) => mappedById.get(id))
+    .filter((q): q is QuestionData => Boolean(q));
 }
 
 const getQuestionsWithDetailsCached = unstable_cache(
@@ -93,11 +96,40 @@ const getQuestionsWithDetailsCached = unstable_cache(
 );
 
 async function getQuestionsWithDetails(questionIds: string[]) {
-  if (questionIds.length > MAX_QUESTION_IDS_FOR_DATA_CACHE) {
-    return fetchQuestionsWithDetailsFromDb(questionIds);
+  const uniqueQuestionIds = Array.from(new Set(questionIds));
+  if (uniqueQuestionIds.length > MAX_QUESTION_IDS_FOR_DATA_CACHE) {
+    return fetchQuestionsWithDetailsFromDb(uniqueQuestionIds);
   }
-  return getQuestionsWithDetailsCached(questionIds);
+  return getQuestionsWithDetailsCached(uniqueQuestionIds);
 }
+
+const fetchAllCanonicalQuestionsCached = unstable_cache(
+  async () => {
+    const canonicalTestIds = getCanonicalTestIds();
+    const rows = await db
+      .select({
+        id: questions.id,
+        questionText: questions.questionText,
+        questionTextEn: questions.questionTextEn,
+        options: questions.options,
+        type: questions.type,
+        matchPairs: questions.matchPairs,
+        correctAnswer: questions.correctAnswer,
+        explanation: questions.explanation,
+        explanationEn: questions.explanationEn,
+        testId: questions.testId,
+        order: questions.order,
+        subject: questions.subject,
+        extendedData: questions.extendedData,
+      })
+      .from(questions)
+      .where(and(eq(questions.examType, 'mppsc'), inArray(questions.testId, canonicalTestIds)));
+
+    return rows.map(mapQuestionRowToClient);
+  },
+  ['pyq-all-canonical-questions-v1'],
+  { revalidate: 3600, tags: ['pyq-questions'] }
+);
 
 // Cached function to get questions by topic (using topicSlug)
 const getQuestionsByTopic = unstable_cache(
@@ -169,7 +201,7 @@ export default async function ViewAllQuestionsPage({ searchParams }: PageProps) 
   const source = (params.source as 'paper' | 'overall' | 'topic' | 'subject') || 'overall';
   const subject = params.subject;
 
-  let questionList: any[] = [];
+  let questionList: QuestionData[] = [];
   let unitTitle = UNIT_TITLES[unitId] || '';
   let topicTitle: string | undefined;
 
@@ -180,15 +212,12 @@ export default async function ViewAllQuestionsPage({ searchParams }: PageProps) 
     topicTitle = result.topic?.topicTitle || result.topic?.topicTitleEn || undefined;
   } else if (subject && source === 'subject') {
     // Subject-based query - get questions by subject
-    const { getOverallWeightageSubjectData } = await import('@/actions/pyq-analytics');
-    // 🔧 No limit here, we want all questions for "View All" page
-    const subjectData = await getOverallWeightageSubjectData();
-
     if (subject === 'All') {
-      const allQuestionIds = subjectData.flatMap((data) => data.questions.map((q) => q.id));
-      questionList = await getQuestionsWithDetails(allQuestionIds);
+      questionList = await fetchAllCanonicalQuestionsCached();
       unitTitle = `All Subjects Questions (2020-2026)`;
     } else {
+      // 🔧 No limit here, we want all questions for "View All" page
+      const subjectData = await getOverallWeightageSubjectData();
       const matchingSubject = subjectData.find((data) => data.subject === subject);
       if (matchingSubject) {
         // Convert subject questions to the expected format
@@ -220,6 +249,8 @@ export default async function ViewAllQuestionsPage({ searchParams }: PageProps) 
       unitTitle = relevantStats[0].unitTitle;
     }
   }
+
+  questionList.sort((a, b) => (b.year ?? 0) - (a.year ?? 0) || (a.qNo ?? 0) - (b.qNo ?? 0));
 
   return (
     <ViewAllQuestionsClient
