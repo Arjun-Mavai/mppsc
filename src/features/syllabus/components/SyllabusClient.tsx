@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect, Fragment, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Lock, ArrowRight, ChevronDown } from 'lucide-react';
+import { Lock, ArrowRight, ChevronDown, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
@@ -22,6 +22,7 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const { user, isSubscribed, setUser, language, setLanguage } = useSettingsStore();
+  const [isPending, startTransition] = useTransition();
 
   // Hydration fix for Persist middleware
   useEffect(() => {
