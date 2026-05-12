@@ -1,12 +1,18 @@
 'use server';
 
 import { db } from '@/db';
-import { mppscUsers, pricingConfig, payments, verificationTokens } from '@/db/schema';
+import { mppscUsers, payments, verificationTokens } from '@/db/schema';
+import { fetchPricingConfigRow } from '@/lib/pricing-db';
 import { eq, sql, and } from 'drizzle-orm';
 import { addHours } from 'date-fns';
 import { Resend } from 'resend';
 import { appPath } from '@/lib/app-url';
 import { PRICING_DEFAULTS } from '@/config/pricing';
+import { mergePricingRow } from '@/lib/pricing-merge';
+import { mergeMppscProductCopy, paymentLabelToMppscSegment } from '@/config/mppsc-product-copy';
+import { renderMppscPaymentWelcomeEmail } from '@/lib/welcome-payment-email';
+import { resolveVerifiedPayment } from '@/lib/payment-access-resolve';
+import { parseAccessGrants, serializeAccessGrants } from '@/lib/access-grants';
 import { verifyAuth } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
@@ -31,7 +37,7 @@ const startPaymentSchema = z.object({
   email: z.string().email('Invalid email address'),
   phone: z.string().min(10, 'Phone must be at least 10 digits').max(20),
   source: z.string().optional(),
-  planType: z.enum(['lite', 'pro', 'upgrade']),
+  planType: z.enum(['lite', 'pro', 'upgrade', 'mains', 'combo']),
   examType: z.enum(['upsc', 'mppsc', 'mppolice']).default('mppsc'),
 });
 
@@ -72,13 +78,14 @@ export async function startPayment(input: StartPaymentInput) {
 
     const currentSession = await verifyAuth();
 
-    // If this email already has a paid plan (lite/pro) — block unless same user is logged in
+    // Paid Pre (lite/pro) + same email + duplicate Pre SKU → block unless that user is logged in (mains/combo/add-ons use logged-in flow)
     if (existingUser) {
       const tier = String(existingUser.planTier ?? 'free').toLowerCase();
-      const isSubscribed = Boolean(existingUser.isSubscribed);
-      const hasPaidPlan = tier === 'lite' || tier === 'pro' || isSubscribed;
+      const hasPaidPre = tier === 'lite' || tier === 'pro';
+      const duplicatePreSku =
+        hasPaidPre && (planType === 'lite' || planType === 'pro' || planType === 'upgrade');
 
-      if (hasPaidPlan) {
+      if (duplicatePreSku) {
         if (!currentSession || currentSession.id !== existingUser.id) {
           return {
             error:
@@ -144,6 +151,7 @@ export async function startPayment(input: StartPaymentInput) {
         metadata: JSON.stringify({ source }),
         planTier: 'free',
         examType: examType, // Set exam type on registration
+        accessGrants: serializeAccessGrants(['mppsc_pre']),
       });
     }
 
@@ -152,17 +160,14 @@ export async function startPayment(input: StartPaymentInput) {
       return { error: 'Razorpay keys not configured' };
     }
 
-    const rows = await db
-      .select()
-      .from(pricingConfig)
-      .where(eq(pricingConfig.examType, examType))
-      .limit(1);
-    const p = rows[0] || PRICING_DEFAULTS;
+    const pricing = mergePricingRow(await fetchPricingConfigRow(examType));
 
     const PLAN_AMOUNTS: Record<string, number> = {
-      lite: (p.litePrice ?? PRICING_DEFAULTS.litePrice) * 100,
-      pro: (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100,
-      upgrade: (p.upgradePrice ?? PRICING_DEFAULTS.upgradePrice) * 100,
+      lite: pricing.litePrice * 100,
+      pro: pricing.proPrice * 100,
+      upgrade: pricing.upgradePrice * 100,
+      mains: pricing.mainsPrice * 100,
+      combo: pricing.comboPrice * 100,
     };
 
     const amount = PLAN_AMOUNTS[planType];
@@ -178,7 +183,11 @@ export async function startPayment(input: StartPaymentInput) {
     const order = await instance.orders.create({
       amount,
       currency: 'INR',
-      notes: { planType, userId, examType },
+      notes: {
+        planType,
+        userId,
+        examType,
+      },
     });
 
     return {
@@ -303,9 +312,18 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         category: 'payment',
         metadata: { userId, orderId: razorpay_order_id },
       });
+      const u = await db.query.mppscUsers.findFirst({
+        where: eq(mppscUsers.id, userId as string),
+        columns: { accessGrants: true, planTier: true },
+      });
+      const g = parseAccessGrants(u?.accessGrants);
+      const sku = String(existingPayment.planTier ?? 'pro');
       return {
+        success: true as const,
         message: 'Payment already verified',
-        planTier: existingPayment.planTier, // DB column is `planTier`
+        planTier: u?.planTier ?? existingPayment.planTier,
+        paymentLabel: sku,
+        accessGrants: g.length ? g : ['mppsc_pre'],
       };
     }
 
@@ -345,31 +363,27 @@ export async function verifyPayment(input: VerifyPaymentInput) {
     // After fix: Keep paise throughout. Compare against pricing × 100.
     // ─────────────────────────────────────────────────────────────────────
     const amountInPaise = Number(order.amount); // Already paise from Razorpay
-    
+
     // Recover examType from order notes (fallback to user's examType or mppsc)
     const examType = (order.notes?.examType as 'upsc' | 'mppsc' | 'mppolice') || 'mppsc';
 
-    const rows = await db
-      .select()
-      .from(pricingConfig)
-      .where(eq(pricingConfig.examType, examType)) // 🔒 Isolation
-      .limit(1);
-    const p = rows[0] || PRICING_DEFAULTS;
+    const pricingRow = await fetchPricingConfigRow(examType);
+    const pricing = mergePricingRow(pricingRow);
 
-    // Compare paise against expected prices (config stores rupees, ×100 for paise)
-    const litePaise = (p.litePrice ?? PRICING_DEFAULTS.litePrice) * 100;
-    const proPaise = (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100;
-    const upgradePaise = (p.upgradePrice ?? PRICING_DEFAULTS.upgradePrice) * 100;
+    const paidUserBefore = await db.query.mppscUsers.findFirst({
+      where: eq(mppscUsers.id, userId!),
+      columns: { accessGrants: true, planTier: true },
+    });
 
-    let planTier: 'lite' | 'pro';
-    if (amountInPaise === litePaise) {
-      planTier = 'lite';
-    } else if (amountInPaise === proPaise || amountInPaise === upgradePaise) {
-      // 🛡️ Both pro purchase and lite→pro upgrade grant 'pro' tier
-      planTier = 'pro';
-    } else {
-      // 🚨 SECURITY: Reject unknown amounts instead of defaulting to pro!
-      // Before this fix, ANY amount → 'pro' tier (free pro for everyone!)
+    const resolved = resolveVerifiedPayment(
+      amountInPaise,
+      order.notes?.planType as string | undefined,
+      pricing,
+      paidUserBefore?.accessGrants,
+      paidUserBefore?.planTier as string | undefined
+    );
+
+    if (!resolved.allowedAmount) {
       logger.warn('Unknown payment amount — does not match any plan', {
         category: 'payment',
         metadata: { userId, orderId: razorpay_order_id, amountInPaise },
@@ -377,13 +391,12 @@ export async function verifyPayment(input: VerifyPaymentInput) {
       return { error: 'Payment amount does not match any valid plan' };
     }
 
-    // 📅 Step 5: Calculate Expiry Date
-    const months =
-      planTier === 'pro'
-        ? p.proMonths ?? PRICING_DEFAULTS.proMonths
-        : p.liteMonths ?? PRICING_DEFAULTS.liteMonths;
     const accessExpiresAt = new Date();
-    accessExpiresAt.setMonth(accessExpiresAt.getMonth() + months);
+    accessExpiresAt.setMonth(accessExpiresAt.getMonth() + resolved.months);
+
+    const planTier = resolved.planTier;
+    const subscribedNow =
+      planTier === 'lite' || planTier === 'pro' || resolved.paymentLabel === 'mains' || resolved.paymentLabel === 'combo';
 
     // 💾 Step 6: Atomic Transaction (Payment + User Update)
     await db.transaction(async (tx) => {
@@ -394,7 +407,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         paymentId: razorpay_payment_id,
         signature: razorpay_signature,
         amount: amountInPaise,
-        planTier,
+        planTier: resolved.paymentLabel,
         status: 'captured',
         examType,
       });
@@ -403,9 +416,10 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         .update(mppscUsers)
         .set({
           planTier,
-          isSubscribed: true,
+          isSubscribed: subscribedNow,
           isActive: true,
           accessExpiresAt,
+          accessGrants: serializeAccessGrants(resolved.accessGrants),
           deletedAt: null,
         })
         .where(eq(mppscUsers.id, userId!));
@@ -440,11 +454,43 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         const fromEmail = `${fromName} <${fromAddress}>`;
         const actionUrl = `${appPath('auth/set-password')}?token=${token}`;
 
-        const emailHtml = await renderWelcomeSetPasswordEmailHtml({
-          name: paidUser.name || 'Student',
-          actionUrl,
-          planTier: planTier,
-        });
+        const welcomePlan: 'lite' | 'pro' =
+          resolved.paymentLabel === 'mains' || resolved.paymentLabel === 'combo'
+            ? 'pro'
+            : planTier === 'lite'
+              ? 'lite'
+              : 'pro';
+
+        const mergedMppscCopy =
+          examType === 'mppsc'
+            ? mergeMppscProductCopy(
+                (pricingRow as Record<string, unknown> | null)?.mppscProductCopyJson as
+                  | string
+                  | null
+                  | undefined
+              )
+            : null;
+
+        let emailHtml: string;
+        let emailSubject =
+          '🎉 Welcome to MPPSC ZEN — Set Your Password';
+        if (examType === 'mppsc' && mergedMppscCopy) {
+          const segmentCopy =
+            mergedMppscCopy[paymentLabelToMppscSegment(resolved.paymentLabel)];
+          const rend = await renderMppscPaymentWelcomeEmail({
+            name: paidUser.name || 'Student',
+            actionUrl,
+            segmentCopy,
+          });
+          emailHtml = rend.html;
+          emailSubject = rend.subject;
+        } else {
+          emailHtml = await renderWelcomeSetPasswordEmailHtml({
+            name: paidUser.name || 'Student',
+            actionUrl,
+            planTier: welcomePlan,
+          });
+        }
 
         if (!resendApiKey) {
           logger.error('RESEND_API_KEY missing — welcome email skipped after payment', undefined, {
@@ -463,7 +509,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
           const { error: emailError } = await resend.emails.send({
             from: fromEmail,
             to: [paidUser.email],
-            subject: '🎉 Welcome to MPPSC ZEN — Set Your Password',
+            subject: emailSubject,
             html: emailHtml,
           });
 
@@ -489,7 +535,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
           type: 'new_payment',
           userName: paidUser.name || 'Unknown',
           userEmail: paidUser.email,
-          planTier,
+          planTier: resolved.paymentLabel,
           amountInRupees: amountInPaise / 100,
           orderId: razorpay_order_id,
           paymentId: razorpay_payment_id,
@@ -512,7 +558,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         `👤 User: ${escapeHTML(userResult?.name || 'Unknown')}\n` +
         `📧 Email: ${escapeHTML(userResult?.email || 'N/A')}\n` +
         `📞 Phone: ${userResult?.phone || 'N/A'}\n` +
-        `🎟️ Plan: ${planTier.toUpperCase()}\n` +
+        `🎟️ Plan: ${String(resolved.paymentLabel).toUpperCase()} (tier ${String(planTier).toUpperCase()})\n` +
         `💵 Amount: ₹${amountInRupees}\n` +
         `🆔 Payment ID: <code>${razorpay_payment_id}</code>\n` +
         `✅ Access granted instantly.`;
@@ -527,7 +573,12 @@ export async function verifyPayment(input: VerifyPaymentInput) {
       metadata: { userId, planTier, orderId: razorpay_order_id },
     });
 
-    return { success: true, planTier };
+    return {
+      success: true,
+      planTier,
+      paymentLabel: resolved.paymentLabel,
+      accessGrants: resolved.accessGrants,
+    };
   } catch (error: unknown) {
     logger.error('Payment verification error:', error, {
       category: 'payment',

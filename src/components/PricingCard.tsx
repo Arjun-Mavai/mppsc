@@ -39,7 +39,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 };
 
 interface PricingCardProps {
-  planType: 'lite' | 'pro' | 'upgrade';
+  planType: 'lite' | 'pro' | 'upgrade' | 'mains' | 'combo';
   pricing: PricingData;
   features: PlanFeatureWithIcon[];
   language: 'en' | 'hi';
@@ -64,34 +64,95 @@ export function PricingCard({
   const isLite = planType === 'lite';
   const isPro = planType === 'pro';
   const isUpgrade = planType === 'upgrade';
+  const isMains = planType === 'mains';
+  const isCombo = planType === 'combo';
+  const isProShell = isPro || isUpgrade || isMains || isCombo;
 
-  const price = isLite ? p.litePrice : isPro ? p.proPrice : p.upgradePrice;
+  const price = isLite
+    ? p.litePrice
+    : isPro
+      ? p.proPrice
+      : isUpgrade
+        ? p.upgradePrice
+        : isMains
+          ? p.mainsPrice
+          : isCombo
+            ? p.comboPrice
+            : 0;
   const originalPrice = isLite
     ? p.liteOriginalPrice
     : isPro
       ? p.proOriginalPrice
-      : p.upgradeOriginalPrice;
+      : isUpgrade
+        ? p.upgradeOriginalPrice
+        : isMains
+          ? p.mainsOriginalPrice
+          : isCombo
+            ? p.comboOriginalPrice
+            : 0;
   const discount = calcDiscount(price, originalPrice);
-  const months = isLite ? p.liteMonths : isPro ? p.proMonths : 1; // months only relevant for full plans
+  const months = isLite
+    ? p.liteMonths
+    : isPro
+      ? p.proMonths
+      : isUpgrade
+        ? 1
+        : isMains
+          ? p.mainsMonths
+          : isCombo
+            ? p.comboMonths
+            : 1;
   const monthly = calcMonthly(price, months);
-  const validityText = isLite ? p.liteValidityText : p.proValidityText;
+  const validityText = isLite
+    ? p.liteValidityText
+    : isPro
+      ? p.proValidityText
+      : isUpgrade
+        ? p.proValidityText
+        : isMains
+          ? p.mainsValidityText
+          : isCombo
+            ? p.comboValidityText
+            : p.proValidityText;
 
-  // Card Specific Styling
+  // Card shell: Pro card look; mains = emerald border; combo = slightly deeper amber border
   const cardClasses = cn(
     'relative flex flex-col h-full transition-all duration-300',
-    isPro || isUpgrade
-      ? 'border-2 border-amber-500 shadow-[0_20px_50px_rgba(245,158,11,0.15)] overflow-hidden scale-[1.02] z-10'
-      : 'border border-amber-100 shadow-sm hover:shadow-md'
+    isLite
+      ? 'border border-amber-100 shadow-sm hover:shadow-md'
+      : isMains
+        ? 'border-2 border-emerald-500 shadow-[0_20px_50px_rgba(16,185,129,0.14)] overflow-hidden scale-[1.02] z-10'
+        : isCombo
+          ? 'border-2 border-amber-600 shadow-[0_20px_50px_rgba(245,158,11,0.15)] overflow-hidden scale-[1.02] z-10'
+          : isPro || isUpgrade
+            ? 'border-2 border-amber-500 shadow-[0_20px_50px_rgba(245,158,11,0.15)] overflow-hidden scale-[1.02] z-10'
+            : 'border border-amber-100 shadow-sm hover:shadow-md'
   );
 
   const titleIcon = isLite ? (
     <Zap className="h-5 w-5 text-amber-500" />
-  ) : isPro ? (
+  ) : isMains ? (
+    <BookOpen className="h-5 w-5 text-emerald-600" />
+  ) : isCombo || isPro ? (
     <Crown className="h-5 w-5 text-amber-600" />
   ) : (
     <Star className="h-5 w-5 fill-amber-500 text-amber-500" />
   );
-  const title = isLite ? 'Lite' : isPro ? 'Pro' : hi ? 'प्रो में अपग्रेड' : 'Upgrade to Pro';
+  const title = isLite
+    ? 'Lite'
+    : isPro
+      ? 'Pro'
+      : isMains
+        ? hi
+          ? 'मेंस वॉल्ट'
+          : 'Mains Vault'
+        : isCombo
+          ? hi
+            ? 'प्री + मेंस'
+            : 'Pre + Mains'
+          : hi
+            ? 'प्रो में अपग्रेड'
+            : 'Upgrade to Pro';
   const subtitle = isLite
     ? hi
       ? 'स्मार्ट शुरुआत — प्रीलिम्स तक'
@@ -100,20 +161,36 @@ export function PricingCard({
       ? hi
         ? 'पूरी ताकत — मेन्स तक'
         : 'Full power — till Mains'
-      : hi
-        ? 'लाइट से प्रो — सिर्फ़ अंतर भरें'
-        : 'Lite → Pro — Just pay the difference';
+      : isMains
+        ? hi
+          ? 'सिलेबस, मॉडल उत्तर व PYQ डेस्क'
+          : 'Syllabus, model answers & mains PYQ desk'
+        : isCombo
+          ? hi
+            ? 'प्रो प्रीलिम्स + पूरा मेंस एक साथ'
+            : 'Pro prelims stack + full mains vault'
+          : hi
+            ? 'लाइट से प्रो — सिर्फ़ अंतर भरें'
+            : 'Lite → Pro — Just pay the difference';
+
+  const featureIconTone = isLite
+    ? 'text-amber-500'
+    : isMains
+      ? 'text-emerald-600'
+      : 'text-amber-600';
 
   return (
     <div className="group relative h-full">
-      {/* Pro/Upgrade Glow Effect */}
-      {(isPro || isUpgrade) && (
+      {(isPro || isUpgrade || isCombo) && (
         <div className="absolute -inset-0.5 animate-pulse rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 opacity-20 blur-md" />
+      )}
+      {isMains && (
+        <div className="absolute -inset-0.5 animate-pulse rounded-xl bg-gradient-to-r from-emerald-400 to-teal-500 opacity-20 blur-md" />
       )}
 
       <Card className={cn(cardClasses, 'bg-white')}>
         {/* Most Popular Badge */}
-        {isPopular && isPro && (
+        {isPopular && (isPro || isCombo) && (
           <div className="absolute top-0 right-0 z-20 rounded-bl-lg bg-amber-600 px-4 py-1.5 text-[10px] font-black tracking-widest text-white uppercase">
             {hi ? 'सबसे लोकप्रिय' : 'MOST POPULAR'}
           </div>
@@ -132,7 +209,7 @@ export function PricingCard({
               <h3
                 className={cn(
                   'text-xl font-bold',
-                  isPro || isUpgrade ? 'text-amber-900' : 'text-slate-900'
+                  isPro || isUpgrade || isCombo ? 'text-amber-900' : isMains ? 'text-emerald-950' : 'text-slate-900'
                 )}
               >
                 {title}
@@ -146,7 +223,11 @@ export function PricingCard({
             <p
               className={cn(
                 'text-sm font-medium',
-                isPro || isUpgrade ? 'text-amber-700/80' : 'text-slate-500'
+                isPro || isUpgrade || isCombo
+                  ? 'text-amber-700/80'
+                  : isMains
+                    ? 'text-emerald-800/90'
+                    : 'text-slate-500'
               )}
             >
               {subtitle}
@@ -207,15 +288,12 @@ export function PricingCard({
                   key={f.en}
                   className={cn(
                     'flex items-start gap-3 text-sm font-medium',
-                    isPro || isUpgrade ? 'text-slate-900' : 'text-slate-700',
-                    isPro && i === 0 && 'font-bold'
+                    isProShell ? 'text-slate-900' : 'text-slate-700',
+                    isProShell && !isUpgrade && i === 0 && 'font-bold'
                   )}
                 >
                   <IconComp
-                    className={cn(
-                      'mt-0.5 h-4.5 w-4.5 shrink-0',
-                      isLite ? 'text-amber-500' : 'text-amber-600'
-                    )}
+                    className={cn('mt-0.5 h-4.5 w-4.5 shrink-0', isLite ? 'text-amber-500' : featureIconTone)}
                   />
                   <span>{hi ? f.hi : f.en}</span>
                 </li>
@@ -226,21 +304,17 @@ export function PricingCard({
               <li
                 className={cn(
                   'flex items-start gap-3 text-sm font-medium',
-                  isPro || isUpgrade ? 'text-slate-900' : 'text-slate-700'
+                  isProShell ? 'text-slate-900' : 'text-slate-700'
                 )}
               >
                 <Clock
                   className={cn(
                     'mt-0.5 h-4.5 w-4.5 shrink-0',
-                    isLite ? 'text-blue-500' : 'text-amber-600'
+                    isLite ? 'text-blue-500' : featureIconTone
                   )}
                 />
                 <span>
-                  {hi
-                    ? isLite
-                      ? 'MPPSC 2026 प्रीलिम्स तक वैध'
-                      : 'MPPSC 2026 मेन्स तक वैध'
-                    : validityText}
+                  {hi ? (isLite ? 'MPPSC 2026 प्रीलिम्स तक वैध' : validityText) : validityText}
                 </span>
               </li>
             )}
@@ -256,11 +330,13 @@ export function PricingCard({
                   'h-12 w-full rounded-xl font-bold transition-all',
                   isLite &&
                     'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900',
-                  (isPro || isUpgrade) &&
-                    'bg-slate-950 text-white shadow-lg shadow-amber-900/20 hover:bg-black border border-amber-500/30'
+                  (isProShell && !isMains) &&
+                    'bg-slate-950 text-white shadow-lg shadow-amber-900/20 hover:bg-black border border-amber-500/30',
+                  isMains &&
+                    'bg-slate-950 text-white shadow-lg shadow-emerald-900/25 hover:bg-black border border-emerald-500/35'
                 )}
               >
-                <Link href={href} prefetch={true}>
+                <Link href={href} prefetch={true} onClick={onBuy}>
                   {isLite
                     ? hi
                       ? `₹${price} में लाइट लें`
@@ -269,9 +345,17 @@ export function PricingCard({
                       ? hi
                         ? `₹${price} में प्रो लें`
                         : `Upgrade to Pro — ₹${price}`
-                      : hi
-                        ? `₹${price} में प्रो लें`
-                        : `Get Pro — ₹${price}`}
+                      : isMains
+                        ? hi
+                          ? `मेंस लाइब्रेरी सक्रिय करें — ₹${price}`
+                          : `Activate Mains Library — ₹${price}`
+                        : isCombo
+                          ? hi
+                            ? `₹${price} में कॉम्बो लें`
+                            : `Get Combo — ₹${price}`
+                          : hi
+                            ? `₹${price} में प्रो लें`
+                            : `Get Pro — ₹${price}`}
                 </Link>
               </Button>
             </motion.div>
@@ -284,8 +368,10 @@ export function PricingCard({
                   'h-12 w-full rounded-xl font-bold transition-all',
                   isLite &&
                     'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900',
-                  (isPro || isUpgrade) &&
-                    'bg-slate-950 text-white shadow-lg shadow-amber-900/20 hover:bg-black border border-amber-500/30'
+                  (isProShell && !isMains) &&
+                    'bg-slate-950 text-white shadow-lg shadow-amber-900/20 hover:bg-black border border-amber-500/30',
+                  isMains &&
+                    'bg-slate-950 text-white shadow-lg shadow-emerald-900/25 hover:bg-black border border-emerald-500/35'
                 )}
               >
                 {isLite
@@ -296,9 +382,17 @@ export function PricingCard({
                     ? hi
                       ? `₹${price} में प्रो लें`
                       : `Upgrade to Pro — ₹${price}`
-                    : hi
-                      ? `₹${price} में प्रो लें`
-                      : `Get Pro — ₹${price}`}
+                    : isMains
+                      ? hi
+                        ? `मेंस लाइब्रेरी सक्रिय करें — ₹${price}`
+                        : `Activate Mains Library — ₹${price}`
+                      : isCombo
+                        ? hi
+                          ? `₹${price} में कॉम्बो लें`
+                          : `Get Combo — ₹${price}`
+                        : hi
+                          ? `₹${price} में प्रो लें`
+                          : `Get Pro — ₹${price}`}
               </Button>
             </motion.div>
           )}

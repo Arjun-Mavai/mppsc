@@ -20,12 +20,9 @@ export const metadata: Metadata = {
 
 // 7-Day Cached Data Fetching
 async function getSyllabusData(): Promise<SyllabusData> {
-  console.log('DEBUG: getSyllabusData started');
-
   try {
     // 1. Fetch Dynamic Topics from DB (Cached)
     const { data: dynamicTopics } = await getSyllabusTopics();
-    console.log('DEBUG: dynamicTopics fetched', dynamicTopics ? 'Found' : 'Null');
 
     // 2. Merge with Static Metadata (Titles, Images)
     // We clone the static data to avoid mutating the original import
@@ -36,30 +33,17 @@ async function getSyllabusData(): Promise<SyllabusData> {
         const unitTopics = dynamicTopics[unitKey];
         if (unitTopics && unitTopics.length > 0) {
           // Logic to merge DB topics would go here.
-          // Currently just logging and using static data as per previous logic.
-          // To execute dynamic merge:
-          /*
-                 const mappedTopics = unitTopics.map(t => ({
-                    id: parseInt(t.id) || 0,
-                    front: t.title,
-                    back: "",
-                    order: t.order
-                 }));
-                 // mergedUnits[unitKey].topics = mappedTopics as any;
-                 */
         }
       });
     }
 
     return staticSyllabusData;
   } catch (e) {
-    console.error('DEBUG: getSyllabusData Failed', e);
     return staticSyllabusData;
   }
 }
 
 export default async function SyllabusPage() {
-  console.log('DEBUG: SyllabusPage Rendering');
   const syllabusData = await getSyllabusData();
 
   return (

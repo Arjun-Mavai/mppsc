@@ -7,6 +7,7 @@ import { eq } from 'drizzle-orm';
 import { cookies, headers } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { logger } from '@/lib/logger';
+import { parseAccessGrants, serializeAccessGrants } from '@/lib/access-grants';
 
 /**
  * 🔐 Get Current User (Server Action)
@@ -26,6 +27,8 @@ export async function getCurrentUser() {
     return { user: null };
   }
 
+  const grants = parseAccessGrants(user.accessGrants);
+
   return {
     user: {
       id: user.id,
@@ -35,6 +38,7 @@ export async function getCurrentUser() {
       planTier: (user.planTier as any) || 'free',
       role: user.role ?? undefined,
       accessExpiresAt: user.accessExpiresAt ?? undefined,
+      accessGrants: grants.length ? grants : ['mppsc_pre'],
     },
   };
 }
@@ -111,14 +115,18 @@ export async function loginUserAction(formData: LoginParams) {
     let currentPlanTier = (user.planTier as any) || 'free';
     let currentIsSubscribed = !!user.isSubscribed;
 
-    if (user.accessExpiresAt && user.planTier !== 'free') {
+    if (user.accessExpiresAt) {
       const now = new Date();
       const expiryDate = new Date(user.accessExpiresAt);
-      if (expiryDate < now) {
-        // Downgrade to free instead of blocking login
+      const hadPaidAccess = user.planTier !== 'free' || user.isSubscribed;
+      if (expiryDate < now && hadPaidAccess) {
         await db
           .update(mppscUsers)
-          .set({ planTier: 'free', isSubscribed: false })
+          .set({
+            planTier: 'free',
+            isSubscribed: false,
+            accessGrants: serializeAccessGrants(['mppsc_pre']),
+          })
           .where(eq(mppscUsers.id, user.id));
 
         currentPlanTier = 'free';
@@ -167,6 +175,13 @@ export async function loginUserAction(formData: LoginParams) {
       sameSite: 'lax',
     });
 
+    const fresh = await db.query.mppscUsers.findFirst({
+      where: eq(mppscUsers.id, user.id),
+      columns: { accessGrants: true },
+    });
+
+    const freshGrants = parseAccessGrants(fresh?.accessGrants);
+
     return {
       success: true,
       user: {
@@ -177,6 +192,7 @@ export async function loginUserAction(formData: LoginParams) {
         planTier: currentPlanTier,
         role: user.role ?? undefined,
         accessExpiresAt: user.accessExpiresAt ?? undefined,
+        accessGrants: freshGrants.length ? freshGrants : ['mppsc_pre'],
       },
     };
   } catch (error) {

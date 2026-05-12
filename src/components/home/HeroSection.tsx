@@ -22,9 +22,9 @@ export function HeroSection() {
       badge: 'MPPSC 2026 : Elite Selection',
       welcome: 'Welcome back,',
       ready: 'Ready for today\'s challenge?',
-      title1: 'Master the New',
-      title2: 'MPPSC Pattern.',
-      subtitle: 'The ultimate data-driven platform with Bilingual Mnemonics, Smart PYQ Analysis & High-Performance Test Series.',
+      title1: 'Master Both',
+      title2: 'Prelims & Mains.',
+      subtitle: 'Pure PYQ-focused strategic analysis, deep conceptual clarity, and expert-guided syllabus analytics. Learn from the ultimate hub of rankers — built for complete conceptual mastery with zero textbook clutter.',
       primaryBtn: 'Practice Free Test',
       pyqBtn: 'Practice PYQs',
       /** Kept for when we re-enable the `/free-quiz` hero CTA (currently commented below). */
@@ -36,9 +36,9 @@ export function HeroSection() {
       badge: 'MPPSC 2026 : एलीट सिलेक्शन',
       welcome: 'स्वागत है,',
       ready: 'क्या आप आज की चुनौती के लिए तैयार हैं?',
-      title1: 'नए पैटर्न में',
+      title1: 'प्रारंभिक और मुख्य परीक्षा दोनों में',
       title2: 'महारत हासिल करें।',
-      subtitle: 'मेमोनिक्स, स्मार्ट PYQ विश्लेषण और हाई-परफॉरमेंस टेस्ट सीरीज़ के साथ अपनी तैयारी को एलीट लेवल पर ले जाएं।',
+      subtitle: 'शुद्ध PYQ-केंद्रित रणनीतिक विश्लेषण, गहरी वैचारिक स्पष्टता, और विषय-विशेषज्ञों के सिलेबस एनालिटिक्स। बिना किसी उबाऊ रटने के तरीक़े के — असली और सटीक तैयारी का एकमात्र हब।',
       primaryBtn: 'फ्री टेस्ट प्रैक्टिस करें',
       pyqBtn: 'PYQs प्रैक्टिस करें',
       secondaryBtn: 'फ्री मॉक टेस्ट',
@@ -50,7 +50,7 @@ export function HeroSection() {
   const t = content[language === 'hi' ? 'hi' : 'en'];
 
   return (
-    <section className="relative flex min-h-[100dvh] w-full flex-col items-center justify-center overflow-hidden bg-[#020408] px-4 py-12 selection:bg-amber-500/30 md:px-6">
+    <section className="relative flex min-h-[100dvh] w-full flex-col items-center justify-center overflow-hidden bg-[#020408] px-4 pt-16 pb-28 selection:bg-amber-500/30 md:px-6 md:pb-20">
       
       {/* 🎭 BEYOND-PREMIUM ATMOSPHERE */}
       <div className="pointer-events-none absolute inset-0 z-0">
@@ -71,7 +71,7 @@ export function HeroSection() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#020408_90%)]" />
       </div>
 
-      <div className="relative z-10 flex w-full max-w-6xl flex-col items-center justify-center text-center">
+      <div className="relative z-10 flex w-full max-w-6xl flex-col items-center justify-center text-center -translate-y-4 md:-translate-y-6">
         
         {/* 👤 PERSONALIZED HUB - Standardized Position */}
         <AnimatePresence mode="wait">
@@ -113,9 +113,9 @@ export function HeroSection() {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="space-y-4"
         >
-          <h1 className="flex flex-col gap-1 text-5xl font-black tracking-tighter text-white sm:text-7xl md:text-9xl md:leading-[0.9]">
-            <span className="opacity-80 mix-blend-overlay">{t.title1}</span>
-            <span className="bg-gradient-to-b from-amber-200 via-amber-400 to-orange-600 bg-clip-text text-transparent filter drop-shadow-[0_10px_40px_rgba(245,158,11,0.25)]">
+          <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter text-white leading-[1.1] md:leading-[1.05]">
+            <span className="block opacity-80 mix-blend-overlay">{t.title1}</span>
+            <span className="block bg-gradient-to-b from-amber-200 via-amber-400 to-orange-600 bg-clip-text text-transparent filter drop-shadow-[0_10px_40px_rgba(245,158,11,0.25)]">
               {t.title2}
             </span>
           </h1>
@@ -142,7 +142,7 @@ export function HeroSection() {
             type="button"
             onClick={() => handleNavigation('/open/2026-mppsc-prelims', 'hero_open_2026_prelims_clicked')}
             disabled={isPending}
-            className="group relative flex h-16 w-full items-center justify-center gap-4 overflow-hidden rounded-2xl bg-white px-10 font-black text-black transition-all hover:scale-[1.03] hover:shadow-[0_0_50px_rgba(255,255,255,0.15)] active:scale-[0.97] sm:w-auto"
+            className="group relative flex h-16 w-full items-center justify-center gap-4 overflow-hidden rounded-2xl bg-gradient-to-r from-amber-200 via-white to-amber-100 px-10 font-black text-black shadow-[0_0_30px_rgba(251,191,36,0.1)] transition-all hover:scale-[1.03] hover:shadow-[0_0_40px_rgba(251,191,36,0.25)] active:scale-[0.97] sm:w-auto"
           >
             <BookOpen size={22} className="text-amber-600" />
             <span className="text-lg tracking-tighter">{t.openPrelimsHeroBtn}</span>
@@ -150,26 +150,12 @@ export function HeroSection() {
             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-black/5 to-transparent group-hover:animate-shimmer" />
           </button>
 
-          {/*
-            Secondary CTA (Free mock at /free-quiz) — commented 2026-04-26: hero priority is the
-            open 2026 prelims PYQ paper at /open/2026-mppsc-prelims. Restore this block and swap
-            the button below if free quiz should lead the hero again.
-            <button
-              onClick={() => handleNavigation('/free-quiz', 'hero_free_test_clicked')}
-              disabled={isPending}
-              className="group flex h-16 w-full items-center justify-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] px-10 font-bold text-white backdrop-blur-2xl transition-all hover:bg-white/[0.08] hover:border-white/20 active:scale-[0.97] sm:w-auto"
-            >
-              <Rocket size={20} className="text-amber-500 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
-              <span className="text-lg tracking-tighter">{t.secondaryBtn}</span>
-            </button>
-          */}
-
           {/* Secondary CTA: PYQs */}
           <button
             type="button"
             onClick={() => handleNavigation(user ? '/syllabus/quiz/pyq' : '/free-quiz', user ? 'hero_pyq_clicked' : 'hero_free_test_clicked')}
             disabled={isPending}
-            className="group flex h-16 w-full items-center justify-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] px-10 font-bold text-white backdrop-blur-2xl transition-all hover:bg-white/[0.08] hover:border-white/20 active:scale-[0.97] sm:w-auto"
+            className="group flex h-16 w-full items-center justify-center gap-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 px-10 font-bold text-white backdrop-blur-2xl transition-all hover:bg-amber-500/10 hover:border-amber-500/40 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)] active:scale-[0.97] sm:w-auto"
           >
             <Zap size={20} className="text-amber-500 transition-transform group-hover:translate-x-0.5" />
             <span className="text-lg tracking-tighter">{user ? t.pyqBtn : t.primaryBtn}</span>

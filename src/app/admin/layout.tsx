@@ -91,6 +91,18 @@ const ADMIN_ROUTES = [
     description: 'Enrich topics with AI',
   },
   {
+    href: '/admin/mains',
+    label: 'Mains syllabus & AI',
+    icon: BookOpen,
+    description: 'Copy prompt → external AI → paste JSON → DB',
+  },
+  {
+    href: '/admin/mains-pyq',
+    label: 'Mains PYQ upload',
+    icon: Upload,
+    description: 'Official mains paper JSON → DB + syllabus link',
+  },
+  {
     href: '/admin/pyq-insights',
     label: 'PYQ Insights',
     icon: Brain,

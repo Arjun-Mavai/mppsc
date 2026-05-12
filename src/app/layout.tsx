@@ -91,6 +91,7 @@ export const metadata: Metadata = {
 };
 
 import { verifyAuth } from '@/lib/auth';
+import { parseAccessGrants } from '@/lib/access-grants';
 import { AppNavbar } from '@/components/layout/AppNavbar';
 import { MainContentWrapper } from '@/components/layout/MainContentWrapper';
 
@@ -106,15 +107,19 @@ export default async function RootLayout({
 
   // 2. Transform for Navbar
   const navbarUser = user
-    ? {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        image: null,
-        role: user.role || undefined,
-        is_subscribed: user.isSubscribed ?? false,
-        plan_tier: user.planTier ?? 'free',
-      }
+    ? (() => {
+        const grantList = parseAccessGrants(user.accessGrants);
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: null,
+          role: user.role || undefined,
+          is_subscribed: user.isSubscribed ?? false,
+          plan_tier: user.planTier ?? 'free',
+          accessGrants: grantList.length ? grantList : ['mppsc_pre'],
+        };
+      })()
     : null;
 
   // JSON-LD structured data — helps Google show rich results

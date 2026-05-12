@@ -17,42 +17,34 @@ export default function Home() {
     mainEntity: [
       {
         '@type': 'Question',
-        name: 'What is Mindful MPPSC?',
+        name: 'Does Mindful MPPSC provide traditional textbook or PDF notes?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Mindful MPPSC is India\'s first bilingual mnemonic-based preparation platform for the MPPSC State Service Exam. It provides high-quality study materials, test series, and memory techniques to help students crack the exam effectively.',
+          text: 'No. Mindful MPPSC does not provide bulky, boring, or traditional textbook PDF notes to memorize blindly. Instead, we offer complete conceptual clarity of the entire syllabus, topic-by-topic structural breakdowns, smart explanations, and memory mnemonics for active retention.',
         },
       },
       {
         '@type': 'Question',
-        name: 'Is the content available in both Hindi and English?',
+        name: 'How are the Prelims questions and PYQs organized on the platform?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Yes, Mindful MPPSC provides all study materials, test series, and explanations in both Hindi and English (Bilingual).',
+          text: 'For Prelims, everything is systematically organized: Year-wise (2020–2026), Unit-wise (Units 1 to 10), and Subject-wise. Every single question comes with detailed explanations, analytics, and bilingual mnemonics (memory techniques) to boost retention.',
         },
       },
       {
         '@type': 'Question',
-        name: 'What is mnemonic-based learning?',
+        name: 'What does the Mains module include?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Mnemonic-based learning uses specialized memory techniques to help you retain complex facts, historical timelines, and geographical data with ease.',
+          text: 'The Mains module features topic-by-topic deep syllabus clarity mapped directly to the syllabus tree. Every single Mains PYQ and core question includes "Double-Style Answer Variations" (2 completely distinct ways of writing the same model answer, written naturally by experts, not machine-translated) paired with Expert Insights, constitutional articles, SC judgements, and Madhya Pradesh specific dynamic facts.',
         },
       },
       {
         '@type': 'Question',
-        name: 'How many tests are included in the MPPSC Test Series?',
+        name: 'Is the content fully bilingual in Hindi and English?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'The MPPSC Test Series includes over 100+ topic-wise modules covering the entire syllabus from Unit 1 to Unit 10.',
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'Does it cover Previous Year Questions (PYQs)?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Yes, Mindful MPPSC provides a rigorous analysis of 5+ years of Previous Year Papers to help students identify patterns and difficulty levels.',
+          text: 'Yes, Mindful MPPSC is fully bilingual. All mock tests, PYQs, model answers, and strategic analytics are natively available in both Hindi and English with a single-click language toggle.',
         },
       },
     ],

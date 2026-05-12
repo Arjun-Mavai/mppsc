@@ -39,7 +39,7 @@ const formSchema = z.object({
 interface PaymentModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  planType?: 'lite' | 'pro' | 'upgrade';
+  planType?: 'lite' | 'pro' | 'upgrade' | 'mains' | 'combo';
   planName?: string;
 }
 
@@ -223,7 +223,11 @@ export function PaymentModal({
       }
 
       // 🚀 Server Action: Register + Create Order in ONE call
-      const startRes = await startPayment({ ...values, planType, examType: 'mppsc' });
+      const startRes = await startPayment({
+        ...values,
+        planType,
+        examType: 'mppsc',
+      });
 
       // Server-side block: existing lite/pro must be same logged-in user
       if (!startRes.success || !startRes.data) {
@@ -271,7 +275,7 @@ export function PaymentModal({
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              userId: userIdRef.current || undefined, // Fallback for new users without JWT
+              userId: userIdRef.current || undefined,
             });
 
             if (verifyResult.error) {
@@ -284,8 +288,20 @@ export function PaymentModal({
             // 2. Local State update (Fast/Synchronous)
             try {
               if (user) {
-                const updatedPlan = (verifyResult.planTier as 'free' | 'lite' | 'pro') || 'pro';
-                setUser({ ...user, planTier: updatedPlan, isSubscribed: true }, true);
+                const vr = verifyResult as {
+                  planTier?: string;
+                  accessGrants?: string[];
+                };
+                const updatedPlan = (vr.planTier as 'free' | 'lite' | 'pro') || 'pro';
+                setUser(
+                  {
+                    ...user,
+                    planTier: updatedPlan,
+                    isSubscribed: true,
+                    accessGrants: vr.accessGrants ?? user.accessGrants,
+                  },
+                  true
+                );
               }
             } catch (err) {
               console.warn('Local state update failed (non-blocking):', err);
@@ -301,9 +317,26 @@ export function PaymentModal({
             }
 
             // 4. PREPARE REDIRECT AS SOON AS POSSIBLE
-            const displayPlan = planType === 'upgrade' ? 'pro' : verifyResult.planTier || planType;
+            const vr = verifyResult as {
+              planTier?: string;
+              paymentLabel?: string;
+              accessGrants?: string[];
+              error?: string;
+            };
+            const sku =
+              (vr.paymentLabel as string | undefined) ||
+              (planType === 'upgrade' ? 'upgrade' : planType);
+            const displayPlan =
+              vr.planTier ??
+              (planType === 'upgrade' || planType === 'combo'
+                ? 'pro'
+                : planType === 'mains'
+                  ? 'free'
+                  : planType === 'lite'
+                    ? 'lite'
+                    : 'pro');
             const upgradeParam = planType === 'upgrade' ? '&type=upgrade' : '';
-            const successUrl = `/thank-you?plan=${displayPlan}&email=${encodeURIComponent(values.email)}&name=${encodeURIComponent(values.name)}${upgradeParam}`;
+            const successUrl = `/thank-you?plan=${encodeURIComponent(String(displayPlan))}&sku=${encodeURIComponent(sku)}&email=${encodeURIComponent(values.email)}&name=${encodeURIComponent(values.name)}${upgradeParam}`;
 
             // 5. Background Tasks (Non-blocking)
             // Hum inhein await nahi karenge taaki redirect turant ho!
@@ -323,6 +356,7 @@ export function PaymentModal({
                     role: meData.user.role ?? undefined,
                     isSubscribed: meData.user.isSubscribed ?? undefined,
                     planTier: meData.user.planTier ?? undefined,
+                    accessGrants: (meData.user as unknown as { accessGrants?: string[] }).accessGrants,
                   };
                   setUser(u, true);
                 }

@@ -21,6 +21,7 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import type { mppscUsers, tests, syllabusTopics } from '@/db/schema';
+import { hasPreAccess } from '@/lib/access-grants';
 import { PLAN_LIMITS, type PlanType } from '@/config/plans';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -69,6 +70,8 @@ export interface AccessControlUser {
   is_subscribed?: boolean | null; // DB variant
   planTier?: PlanTier | string | null;
   plan_tier?: PlanTier | string | null; // DB/Store variant
+  /** `mppsc_pre` | `mppsc_mains` — from `mppsc_users.access_grants` */
+  accessGrants?: unknown;
 }
 
 /**
@@ -141,7 +144,11 @@ export function getUserTier(user: AccessControlUser | null): PlanTier | 'guest' 
   const isSubscribed = !!(user.isSubscribed ?? user.is_subscribed);
   if (isSubscribed) {
     const plan = getPlanTierFromUser(user);
-    if (plan === 'free') return 'lite'; // legacy: subscribed but plan free
+    // Mains-only paid user: subscribed for vault but no Pre entitlement → stay "free" for Pre syllabus locks
+    if ((plan === 'free' || plan === null) && !hasPreAccess(user as any)) {
+      return 'free';
+    }
+    if (plan === 'free' || plan === null) return 'lite'; // legacy: subscribed but plan free
     return plan || 'lite';
   }
 

@@ -15,7 +15,7 @@
 
 import { db } from '@/db';
 import { tests, questions, syllabusTopics, testAttemptLimits, userAttempts, attemptAnswers, testLeaderboard } from '@/db/schema';
-import { eq, inArray, desc, and } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
 import { requireAdmin } from '@/lib/auth-admin';
 import { logger } from '@/lib/logger';
@@ -49,41 +49,17 @@ export async function getAllTestsForAdmin() {
       displayOrder: tests.displayOrder,
       tags: tests.tags,
       createdAt: tests.createdAt,
+      topicName: syllabusTopics.title,
+      topicNameEn: syllabusTopics.titleEn,
     })
     .from(tests)
+    .leftJoin(syllabusTopics, eq(tests.topicId, syllabusTopics.id))
     .where(eq(tests.examType, 'mppsc'))
     .orderBy(desc(tests.createdAt));
-
-  // TOPIC tests ke liye syllabusTopics se proper name fetch karo
-  const topicTestIds = allTests
-    .filter((t) => t.type === 'TOPIC' && t.topicId)
-    .map((t) => t.topicId!);
-
-  let topicNameMap: Record<string, { title: string; titleEn: string | null }> = {};
-  if (topicTestIds.length > 0) {
-    const topics = await db
-      .select({
-        id: syllabusTopics.id,
-        title: syllabusTopics.title,
-        titleEn: syllabusTopics.titleEn,
-      })
-      .from(syllabusTopics)
-      .where(inArray(syllabusTopics.id, topicTestIds));
-
-    topicNameMap = topics.reduce(
-      (acc, t) => {
-        acc[t.id] = { title: t.title, titleEn: t.titleEn };
-        return acc;
-      },
-      {} as Record<string, { title: string; titleEn: string | null }>
-    );
-  }
 
   return allTests.map((t) => ({
     ...t,
     tags: (t.tags as string[] | null), // JSON → typed array at boundary
-    topicName: t.topicId ? (topicNameMap[t.topicId]?.title ?? null) : null,
-    topicNameEn: t.topicId ? (topicNameMap[t.topicId]?.titleEn ?? null) : null,
   }));
 }
 

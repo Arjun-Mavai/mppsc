@@ -1,0 +1,566 @@
+'use server';
+
+import { assertAdmin } from '@/lib/auth';
+import { db } from '@/db';
+import { mainsPyqPapers, mainsPyqQuestions, mainsPyqPreparedVariants } from '@/db/schema';
+import { eq, and, desc, count, inArray, type InferSelectModel } from 'drizzle-orm';
+import { isMainsPyqPaperListedRow, whereMainsPyqPaperListed } from '@/lib/mains-pyq-visibility';
+import { MAINS_PYQ_PREPARED_VARIANTS_PURGE_PHRASE } from '@/config/mains-pyq-admin';
+import { v4 as uuidv4 } from 'uuid';
+import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
+import { buildPyqAnswersBatchUserPrompt, type PyqBatchQuestion } from '@/config/mains-pyq-answers-batch-prompt';
+import { extractPasteItems } from '@/lib/mains-pyq-batch-paste';
+import { parseMainsPyqPasteJson } from '@/lib/mains-pyq-paste-json-parse';
+import type { NormalizedVariant } from '@/lib/mains-pyq-batch-paste';
+
+function variantsMissingStyleLabelHiColumn(message: string) {
+  return /no such column[\s\S]*style_label_hi/i.test(message);
+}
+
+/** Shape shared by Drizzle relational loads (full + legacy column sets). */
+type PyqQuestionWithVariantsRow = {
+  id: string;
+  part: string;
+  unitNumber: number;
+  marks: number;
+  questionType: string;
+  questionNumber: string;
+  questionHi: string;
+  questionEn: string | null;
+  expertInsightsHi: string | null;
+  expertInsightsEn: string | null;
+  preparedVariants?: Array<{
+    variantSlot: number;
+    styleLabel: string | null;
+    styleLabelHi?: string | null;
+    answerHi: string;
+    answerEn: string | null;
+  }>;
+};
+
+function mapPyqPaperPublicQuestions(qs: PyqQuestionWithVariantsRow[]) {
+  return qs.map((q) => ({
+    id: q.id,
+    part: q.part,
+    unitNumber: q.unitNumber,
+    marks: q.marks,
+    questionType: q.questionType,
+    questionNumber: q.questionNumber,
+    questionHi: q.questionHi,
+    questionEn: q.questionEn,
+    expertInsightsHi: q.expertInsightsHi,
+    expertInsightsEn: q.expertInsightsEn,
+    variants: (q.preparedVariants ?? []).map((v) => ({
+      slot: v.variantSlot,
+      styleLabel: v.styleLabel,
+      styleLabelHi: v.styleLabelHi ?? null,
+      answerHi: v.answerHi,
+      answerEn: v.answerEn,
+    })),
+  }));
+}
+
+/** When DB migrations lag behind schema (SQLite reports one missing column per failed SELECT). */
+const PYQ_QUESTION_COLS_NO_EXPERT = {
+  id: true,
+  paperId: true,
+  part: true,
+  unitNumber: true,
+  unitTitleHi: true,
+  unitTitleEn: true,
+  questionNumber: true,
+  marks: true,
+  questionType: true,
+  questionHi: true,
+  questionEn: true,
+  displayOrder: true,
+} as const;
+
+const PYQ_VARIANT_COLS_LEGACY = {
+  id: true,
+  pyqQuestionId: true,
+  variantSlot: true,
+  styleLabel: true,
+  structureBreakdown: true,
+  answerHi: true,
+  answerEn: true,
+  updatedAt: true,
+} as const;
+
+function normalizeLoadedPyqRows(rows: PyqQuestionWithVariantsRow[]): PyqQuestionWithVariantsRow[] {
+  return rows.map((q) => ({
+    ...q,
+    expertInsightsHi: q.expertInsightsHi ?? null,
+    expertInsightsEn: q.expertInsightsEn ?? null,
+    preparedVariants: (q.preparedVariants ?? []).map((v) => ({
+      ...v,
+      styleLabelHi: v.styleLabelHi ?? null,
+    })),
+  }));
+}
+
+async function loadPaperQuestionsWithVariantsRelational(
+  pyqPaperId: string
+): Promise<PyqQuestionWithVariantsRow[]> {
+  const base = eq(mainsPyqQuestions.paperId, pyqPaperId);
+  const orderBy = [mainsPyqQuestions.displayOrder];
+
+  const attempts: Array<{
+    qCols?: typeof PYQ_QUESTION_COLS_NO_EXPERT;
+    variantsWide: boolean;
+  }> = [
+    { variantsWide: true },
+    { variantsWide: false },
+    { qCols: PYQ_QUESTION_COLS_NO_EXPERT, variantsWide: true },
+    { qCols: PYQ_QUESTION_COLS_NO_EXPERT, variantsWide: false },
+  ];
+
+  let lastError: unknown;
+  for (const spec of attempts) {
+    try {
+      const variantRel = spec.variantsWide
+        ? ({ preparedVariants: true } as const)
+        : ({ preparedVariants: { columns: PYQ_VARIANT_COLS_LEGACY } } as const);
+      const rows = await db.query.mainsPyqQuestions.findMany({
+        where: base,
+        orderBy,
+        ...(spec.qCols ? { columns: spec.qCols } : {}),
+        with: variantRel,
+      });
+      return normalizeLoadedPyqRows(rows as PyqQuestionWithVariantsRow[]);
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError;
+}
+
+// ━━━ CACHED DATA FETCHERS (event-driven invalidation) ━━━
+
+const cachedListMainsPyqPapersLibrarySummary = unstable_cache(
+  async () => {
+    const orderBy = [desc(mainsPyqPapers.examYear), mainsPyqPapers.paperNumber];
+    try {
+      const papers = await db.query.mainsPyqPapers.findMany({
+        where: whereMainsPyqPaperListed(),
+        orderBy,
+      });
+      return { success: true as const, data: papers };
+    } catch (e1) {
+      const m1 = e1 instanceof Error ? e1.message : String(e1);
+      console.error('[listMainsPyqPapersLibrarySummary] filtered query failed', m1);
+
+      try {
+        const papers = await db.query.mainsPyqPapers.findMany({ orderBy });
+        const data = papers.filter(isMainsPyqPaperListedRow);
+        return { success: true as const, data };
+      } catch (e2) {
+        const m2 = e2 instanceof Error ? e2.message : String(e2);
+        console.error('[listMainsPyqPapersLibrarySummary] unfiltered fallback failed', m2);
+        return {
+          success: false as const,
+          error: 'fetch_failed' as const,
+          detail: `${m1} | fallback: ${m2}`.slice(0, 1200),
+        };
+      }
+    }
+  },
+  ['mains-pyq-papers-list'],
+  { revalidate: 86400 } // 24h fallback, but event-driven revalidation on admin upload
+);
+
+const cachedGetMainsPyqPaperPublic = unstable_cache(
+  async (pyqPaperId: string) => {
+    try {
+      const paper = await db.query.mainsPyqPapers.findFirst({
+        where: eq(mainsPyqPapers.id, pyqPaperId),
+      });
+      if (!paper || Boolean(paper.isHidden)) return { success: false as const, error: 'not_found' as const };
+
+      const qs = await loadPaperQuestionsWithVariantsRelational(pyqPaperId);
+
+      return {
+        success: true as const,
+        data: {
+          paper,
+          questions: mapPyqPaperPublicQuestions(qs),
+        },
+      };
+    } catch (e) {
+      console.error('[getMainsPyqPaperPublic]', e);
+      return { success: false as const, error: 'fetch_failed' as const };
+    }
+  },
+  ['mains-pyq-paper'],
+  { revalidate: 86400 } // 24h fallback
+);
+
+type VariantDbPayload = {
+  styleLabel: string | null;
+  styleLabelHi: string | null;
+  structureBreakdown: string | null;
+  answerHi: string;
+  answerEn: string | null;
+  updatedAt: Date;
+};
+
+async function upsertPreparedVariantInTx(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  qid: string,
+  slot: 1 | 2,
+  payload: VariantDbPayload
+) {
+  const existing = await tx.query.mainsPyqPreparedVariants.findFirst({
+    where: and(
+      eq(mainsPyqPreparedVariants.pyqQuestionId, qid),
+      eq(mainsPyqPreparedVariants.variantSlot, slot)
+    ),
+  });
+
+  const base = {
+    styleLabel: payload.styleLabel,
+    structureBreakdown: payload.structureBreakdown,
+    answerHi: payload.answerHi,
+    answerEn: payload.answerEn,
+    updatedAt: payload.updatedAt,
+  };
+
+  const tryApply = async (includeStyleHi: boolean) => {
+    const rowPayload = includeStyleHi ? { ...base, styleLabelHi: payload.styleLabelHi } : base;
+    if (existing) {
+      await tx
+        .update(mainsPyqPreparedVariants)
+        .set(rowPayload)
+        .where(eq(mainsPyqPreparedVariants.id, existing.id));
+    } else {
+      await tx.insert(mainsPyqPreparedVariants).values({
+        id: uuidv4(),
+        pyqQuestionId: qid,
+        variantSlot: slot,
+        ...(rowPayload as typeof rowPayload & { styleLabelHi?: string | null }),
+      });
+    }
+  };
+
+  try {
+    await tryApply(true);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (!variantsMissingStyleLabelHiColumn(msg)) throw err;
+    await tryApply(false);
+  }
+}
+
+function normalizedVariantToDbPayload(v: NormalizedVariant): VariantDbPayload {
+  return {
+    styleLabel: v.styleLabel,
+    styleLabelHi: v.styleLabelHi,
+    structureBreakdown: v.structureBreakdown,
+    answerHi: v.answerHi,
+    answerEn: v.answerEn,
+    updatedAt: new Date(),
+  };
+}
+
+/** Deletes all model-answer variants. Does not touch `mains_pyq_papers`, `mains_pyq_questions`, expert_insights_* or topic links. */
+export async function purgeAllMainsPyqPreparedVariantsConfirm(confirmation: string) {
+  try {
+    await assertAdmin();
+    if (confirmation !== MAINS_PYQ_PREPARED_VARIANTS_PURGE_PHRASE) {
+      return { success: false as const, error: 'Confirmation phrase does not match' };
+    }
+    await db.delete(mainsPyqPreparedVariants);
+    revalidatePath('/admin/mains-pyq');
+    revalidatePath('/mains/syllabus/pyq-library');
+    (revalidateTag as any)('mains-pyq-papers-list');
+    (revalidateTag as any)('mains-pyq-paper');
+    return { success: true as const };
+  } catch (e) {
+    return { success: false as const, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+export async function purgeMainsPyqPreparedVariantsForPaper(paperId: string) {
+  try {
+    await assertAdmin();
+    if (!paperId) return { success: false as const, error: 'No paper ID provided' };
+
+    const qs = await db.select({ id: mainsPyqQuestions.id }).from(mainsPyqQuestions).where(eq(mainsPyqQuestions.paperId, paperId));
+    const qIds = qs.map(q => q.id);
+
+    if (qIds.length > 0) {
+      await db.delete(mainsPyqPreparedVariants).where(inArray(mainsPyqPreparedVariants.pyqQuestionId, qIds));
+    }
+    
+    revalidatePath('/admin/mains-pyq');
+    revalidatePath('/mains/syllabus/pyq-library');
+    (revalidateTag as any)('mains-pyq-papers-list');
+    (revalidateTag as any)('mains-pyq-paper');
+    return { success: true as const };
+  } catch (e) {
+    return { success: false as const, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+
+export async function adminGetPyqPrepOverview() {
+  try {
+    await assertAdmin();
+    const [tq] = await db.select({ n: count() }).from(mainsPyqQuestions);
+    const grouped = await db
+      .select({
+        qid: mainsPyqPreparedVariants.pyqQuestionId,
+        c: count(),
+      })
+      .from(mainsPyqPreparedVariants)
+      .groupBy(mainsPyqPreparedVariants.pyqQuestionId);
+
+    const withTwo = grouped.filter((g) => Number(g.c) >= 2).length;
+    const withAny = grouped.filter((g) => Number(g.c) >= 1).length;
+
+    return {
+      success: true as const,
+      data: {
+        totalQuestions: Number(tq?.n ?? 0),
+        /** Stems that have variant slot 1 and 2 filled */
+        questionsWithTwoVariants: withTwo,
+        /** Stems that have at least one variant row */
+        questionsWithAnyVariant: withAny,
+      },
+    };
+  } catch (e) {
+    return { success: false as const, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+export async function adminGetPyqPaperPrepDetail(pyqPaperId: string) {
+  try {
+    await assertAdmin();
+    const paper = await db.query.mainsPyqPapers.findFirst({
+      where: eq(mainsPyqPapers.id, pyqPaperId),
+    });
+    if (!paper) return { success: false as const, error: 'Paper not found' };
+
+    const qs = await loadPaperQuestionsWithVariantsRelational(pyqPaperId);
+
+    const rows = qs.map((q) => ({
+      id: q.id,
+      part: q.part,
+      unitNumber: q.unitNumber,
+      questionNumber: q.questionNumber,
+      marks: q.marks,
+      questionType: q.questionType,
+      previewHi: q.questionHi.slice(0, 160),
+      previewEn: q.questionEn ? q.questionEn.slice(0, 160) : '',
+      variantCount: q.preparedVariants?.length ?? 0,
+      slots: (q.preparedVariants ?? []).map((v) => v.variantSlot),
+    }));
+
+    const done = rows.filter((r) => r.variantCount >= 2).length;
+
+    return {
+      success: true as const,
+      data: {
+        paper,
+        progress: { total: rows.length, done },
+        questions: rows,
+      },
+    };
+  } catch (e) {
+    return { success: false as const, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+/**
+ * Next N questions from the work pool, offset by parallel batch slot.
+ * Pool = incomplete (<2 variants) when any exist, else full paper (re-edit / regen).
+ * Batch tab k (0-based index) → slice [k * batchSize, (k+1) * batchSize) so tabs 1–4 don’t duplicate the same 8 stems.
+ */
+async function selectBatchQuestions(
+  pyqPaperId: string,
+  batchSize: number,
+  batchSlotIndex = 0
+): Promise<PyqBatchQuestion[]> {
+  const qs = await loadPaperQuestionsWithVariantsRelational(pyqPaperId);
+
+  const incomplete = qs.filter((q) => (q.preparedVariants?.length ?? 0) < 2);
+  const pool = incomplete.length ? incomplete : qs;
+  const slot = Math.max(0, Math.floor(batchSlotIndex));
+  const start = slot * batchSize;
+  const pick = pool.slice(start, start + batchSize);
+
+  return pick.map((q) => ({
+    id: q.id,
+    part: q.part,
+    unitNumber: q.unitNumber,
+    questionNumber: q.questionNumber,
+    marks: q.marks,
+    questionType: q.questionType,
+    questionHi: q.questionHi,
+    questionEn: q.questionEn ?? null,
+  }));
+}
+
+export async function adminBuildPyqAnswersBatchPrompt(pyqPaperId: string, batchSize = 8, batchSlotIndex = 0, targetQuestionId?: string) {
+  try {
+    await assertAdmin();
+    const paper = await db.query.mainsPyqPapers.findFirst({
+      where: eq(mainsPyqPapers.id, pyqPaperId),
+    });
+    if (!paper) return { success: false as const, error: 'Paper not found' };
+
+    const slot = Math.max(0, Math.floor(batchSlotIndex));
+    let questions: PyqBatchQuestion[] = [];
+
+    if (targetQuestionId) {
+      const q = await db.query.mainsPyqQuestions.findFirst({
+        where: and(eq(mainsPyqQuestions.id, targetQuestionId), eq(mainsPyqQuestions.paperId, pyqPaperId)),
+      });
+      if (!q) return { success: false as const, error: 'Target question not found' };
+      questions = [{
+        id: q.id,
+        part: q.part,
+        unitNumber: q.unitNumber,
+        questionNumber: q.questionNumber,
+        marks: q.marks,
+        questionType: q.questionType,
+        questionHi: q.questionHi,
+        questionEn: q.questionEn ?? null,
+      }];
+    } else {
+      questions = await selectBatchQuestions(pyqPaperId, batchSize, slot);
+    }
+    if (questions.length === 0) {
+      const qs = await loadPaperQuestionsWithVariantsRelational(pyqPaperId);
+      if (qs.length === 0) {
+        return { success: false as const, error: 'No questions in this paper' };
+      }
+      const incomplete = qs.filter((q) => (q.preparedVariants?.length ?? 0) < 2);
+      const poolLen = incomplete.length ? incomplete.length : qs.length;
+      return {
+        success: false as const,
+        error:
+          slot === 0
+            ? 'No questions in this paper'
+            : `Batch ${slot + 1}: no stems in this slice (only ${poolLen} in pool; earlier batches cover 1–${slot * batchSize}). Generate from Batch 1 or wait until more incompletes exist.`,
+      };
+    }
+
+    const prompt = buildPyqAnswersBatchUserPrompt({
+      paperNumber: paper.paperNumber,
+      examYear: paper.examYear,
+      examLabel: paper.examLabel,
+      questions,
+    });
+
+    return {
+      success: true as const,
+      prompt,
+      meta: {
+        questionIds: questions.map((q) => q.id),
+        count: questions.length,
+        batchSlot: slot + 1,
+        batchOffset: slot * batchSize,
+      },
+    };
+  } catch (e) {
+    return { success: false as const, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+export async function adminPastePyqAnswersBatchJson(pyqPaperId: string, rawText: string) {
+  try {
+    await assertAdmin();
+    const paper = await db.query.mainsPyqPapers.findFirst({
+      where: eq(mainsPyqPapers.id, pyqPaperId),
+    });
+    if (!paper) return { success: false as const, error: 'Paper not found' };
+
+    const parseResult = parseMainsPyqPasteJson(rawText);
+    if (!parseResult.ok) {
+      const MAX = 6500;
+      const snippet = parseResult.context ? `\n\n${parseResult.context}` : '';
+      const body = `Invalid JSON: ${parseResult.message}${snippet}`;
+      return {
+        success: false as const,
+        error: body.length > MAX ? `${body.slice(0, MAX)}\n… [error truncated for UI; full details in server logs]` : body,
+      };
+    }
+    const parsed = parseResult.value;
+    let warnings: string[] = [...(parseResult.recoveryNotes ?? [])];
+
+    const extracted = extractPasteItems(parsed);
+    if (!Array.isArray(extracted)) {
+      return { success: false as const, error: extracted.error };
+    }
+
+    let variantsWritten = 0;
+    let insightQuestionsTouched = 0;
+
+    await db.transaction(async (tx) => {
+      for (const item of extracted) {
+        const qid = item.questionId;
+        const belongs = await tx.query.mainsPyqQuestions.findFirst({
+          where: and(eq(mainsPyqQuestions.id, qid), eq(mainsPyqQuestions.paperId, pyqPaperId)),
+        });
+        if (!belongs) {
+          warnings.push(`Skipped unknown question_id (wrong paper or typo): ${qid.slice(0, 12)}…`);
+          continue;
+        }
+
+        if (item.expertPatch && (item.expertPatch.hi !== undefined || item.expertPatch.en !== undefined)) {
+          const insightPatch: Partial<typeof mainsPyqQuestions.$inferInsert> = {};
+          if (item.expertPatch.hi !== undefined) {
+            insightPatch.expertInsightsHi =
+              item.expertPatch.hi != null && item.expertPatch.hi.length > 0 ? item.expertPatch.hi : null;
+          }
+          if (item.expertPatch.en !== undefined) {
+            insightPatch.expertInsightsEn =
+              item.expertPatch.en != null && item.expertPatch.en.length > 0 ? item.expertPatch.en : null;
+          }
+          if (Object.keys(insightPatch).length > 0) {
+            await tx.update(mainsPyqQuestions).set(insightPatch).where(eq(mainsPyqQuestions.id, qid));
+            insightQuestionsTouched++;
+          }
+        }
+
+        for (const v of item.variants) {
+          await upsertPreparedVariantInTx(tx, qid, v.slot, normalizedVariantToDbPayload(v));
+          variantsWritten++;
+        }
+      }
+    });
+
+    revalidatePath('/admin/mains-pyq');
+    revalidatePath('/mains/syllabus/pyq-library');
+    (revalidateTag as any)('mains-pyq-papers-list');
+    (revalidateTag as any)('mains-pyq-paper');
+
+    const upserted = variantsWritten + insightQuestionsTouched;
+    return {
+      success: true as const,
+      upserted,
+      variantsUpserted: variantsWritten,
+      insightQuestionsUpdated: insightQuestionsTouched,
+      warnings: warnings.slice(0, 40),
+      warningCount: warnings.length,
+    };
+  } catch (e) {
+    return {
+      success: false as const,
+      error: e instanceof Error ? e.message : String(e),
+    };
+  }
+}
+
+/** Student / library: one imported paper with questions + variants. */
+export async function getMainsPyqPaperPublic(pyqPaperId: string) {
+  return cachedGetMainsPyqPaperPublic(pyqPaperId);
+}
+
+export type MainsPyqPaperListResponse =
+  | { success: true; data: InferSelectModel<typeof mainsPyqPapers>[] }
+  | { success: false; error: 'fetch_failed'; detail?: string };
+
+export async function listMainsPyqPapersLibrarySummary(): Promise<MainsPyqPaperListResponse> {
+  return cachedListMainsPyqPapersLibrarySummary();
+}

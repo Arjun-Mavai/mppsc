@@ -41,32 +41,42 @@ const FAQS: QA[] = [
   },
   {
     question: {
+      en: 'Do you provide traditional bookish textbook notes?',
+      hi: 'क्या आप इसमें पारंपरिक टेक्स्टबुक नोट्स भी देते हैं?',
+    },
+    answer: {
+      en: 'No. We do NOT provide boring, bulky, or outdated textbook notes to memorize blindly. Instead, we offer complete conceptual clarity, structural topic-wise breakdowns, and exam-focused blueprinting for both Prelims & Mains.',
+      hi: 'नहीं! हम रटने वाली पारंपरिक और भारी-भरकम पीडीएफ नोट्स नहीं देते हैं। इसके बजाय, हम आपको प्रारंभिक (Prelims) और मुख्य (Mains) परीक्षा दोनों के लिए उत्कृष्ट वैचारिक स्पष्टता (conceptual clarity) और सटीक लेखन रणनीति (blueprints) प्रदान करते हैं।',
+    },
+  },
+  {
+    question: {
+      en: 'How is the Prelims content and PYQs structured?',
+      hi: 'प्रारंभिक परीक्षा (Prelims) के टेस्ट व PYQs कैसे व्यवस्थित हैं?',
+    },
+    answer: {
+      en: 'Our Prelims modules are systematically organized in a highly structured layout: Year-wise (2020-2026), Unit-wise (Unit 1 to 10), and Subject-wise. Every single question has detailed explanations, analytics, and bilingual retention mnemonics.',
+      hi: 'हमारा प्रीलिम्स कंटेंट पूरी तरह से व्यवस्थित है: वर्ष-वार (2020-2026), यूनिट-वार (यूनिट 1 से 10) और विषय-वार (Subject-wise)। हर प्रश्न के साथ आपको मिलेगी स्मार्ट व्याख्या, याद रखने के लिए आसान मेमोनिक्स और सुधारात्मक एनालिटिक्स।',
+    },
+  },
+  {
+    question: {
+      en: 'What exactly do we get in the Mains module?',
+      hi: 'मुख्य परीक्षा (Mains) मॉड्यूल में वास्तव में क्या-क्या मिलेगा?',
+    },
+    answer: {
+      en: 'You get entire syllabus topic-by-topic deep clarity mapped to the syllabus tree. Every single question features 2 completely independent model answers (Double-Style Variations: natural, native drafts written separately in Hindi & English, not machine-translated) paired with Expert Strategy insights (constitutional articles, landmark cases, MP context data, and memory triggers).',
+      hi: 'मेंस मॉड्यूल में आपको पूरे सिलेबस ट्री के अनुसार प्रत्येक टॉपिक की गहरी संरचनात्मक समझ मिलती है। इसके अलावा, मुख्य परीक्षा के प्रश्नों के लिए हर प्रश्न के "2 बिल्कुल अलग दृष्टिकोण वाले मॉडल उत्तर" (डबल-स्टाइल उत्तर वेरिएशन) मिलते हैं। ये दोनों भाषाओं (Hindi & English) में बिना मशीन अनुवाद के लिखे गए हैं, साथ ही इनमें रणनीतिक विशेषज्ञ मार्गदर्शन भी शामिल है।',
+    },
+  },
+  {
+    question: {
       en: 'What if my access expires or exam gets delayed?',
       hi: 'अगर एक्सेस समाप्त हो जाए या परीक्षा देरी से हो?',
     },
     answer: {
-      en: 'If MPPSC delays the exam, we extend your access — no extra charge. Admin can also extend your access anytime from the dashboard.',
-      hi: 'अगर MPPSC परीक्षा में देरी करता है, तो हम आपका एक्सेस बढ़ा देंगे — कोई अतिरिक्त शुल्क नहीं।',
-    },
-  },
-  {
-    question: {
-      en: 'Is this available in Hindi & English?',
-      hi: 'क्या यह हिंदी और अंग्रेजी दोनों में उपलब्ध है?',
-    },
-    answer: {
-      en: 'Yes! All tests, blogs, and explanations are available in both Hindi & English with a one-click language toggle.',
-      hi: 'हाँ! सभी टेस्ट, ब्लॉग्स और एक्सप्लेनेशन हिंदी और अंग्रेजी दोनों में एक क्लिक से उपलब्ध हैं।',
-    },
-  },
-  {
-    question: {
-      en: "What's included in the test series?",
-      hi: 'टेस्ट सीरीज़ में क्या-क्या शामिल है?',
-    },
-    answer: {
-      en: 'Topic-wise tests, Unit tests, Full Length Tests (100Q), CSAT papers, PYQ papers (2020-2026), smart explanations, and Analytics dashboard.',
-      hi: 'टॉपिक वाइज़ टेस्ट, यूनिट टेस्ट, फुल लेंथ टेस्ट (100 प्रश्न), CSAT पेपर, PYQ पेपर (2020-2026), स्मार्ट एक्सप्लेनेशन और एनालिटिक्स डैशबोर्ड।',
+      en: 'If MPPSC delays the exam, we extend your access with no extra charge. Your strategic preparation is fully covered!',
+      hi: 'अगर MPPSC परीक्षा में देरी करता है, तो हम आपका एक्सेस बढ़ा देंगे — कोई अतिरिक्त शुल्क नहीं। आपकी तैयारी की सुरक्षा हमारी ज़िम्मेदारी है!',
     },
   },
 ];
@@ -76,10 +86,60 @@ export function SupportChat() {
   const language = useSettingsStore((state) => state.language);
   const hi = language === 'hi';
   const pathname = usePathname();
+  const isMainsPage = pathname.startsWith('/mains');
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'chat' | 'faq'>('chat');
   const [expandedFaq, setExpandedFaq] = useState<number | null>(0);
   const [isNudgeOpen, setIsNudgeOpen] = useState(true);
+
+  const dynamicFaqs = isMainsPage
+    ? [
+        {
+          question: { en: 'How to unlock the Mains Vault?', hi: 'मेंस वॉल्ट (Mains Vault) कैसे अनलॉक करें?' },
+          answer: {
+            en: (
+              <span>
+                You can unlock instant access to the entire Mains syllabus tree & PYQ Library with dual-variant model answers directly from our{' '}
+                <Link href="/pricing?need=mains" className="font-semibold text-indigo-600 hover:underline">
+                  Pricing page
+                </Link>
+                . No rote-learning generic notes — pure exam blueprints!
+              </span>
+            ),
+            hi: (
+              <span>
+                आप हमारे{' '}
+                <Link href="/pricing?need=mains" className="font-semibold text-indigo-600 hover:underline">
+                  प्राइसिंग पेज
+                </Link>{' '}
+                से सीधे मेंस प्लान लेकर पूरे सिलेबस ट्री और PYQ लाइब्रेरी को अनलॉक कर सकते हैं। यहाँ कोई रटने वाले लंबे नोट्स नहीं, बल्कि केवल काम के टू-वे मॉडल उत्तर और रणनीतिक इनसाइट्स हैं!
+              </span>
+            ),
+          }
+        },
+        {
+          question: { en: 'Are model answers bilingual and dual-style?', hi: 'क्या मॉडल उत्तर हिंदी और अंग्रेजी में हैं और इनके 2 वेरिएंट्स हैं?' },
+          answer: {
+            en: 'Yes! Every question features 2 completely independent model answers (Double-Style Variations: natural drafts written separately in Hindi & English, not machine translation) with dedicated subject-expert perspectives and strategic value additions.',
+            hi: 'हाँ! प्रत्येक प्रश्न के लिए हिंदी और अंग्रेजी दोनों भाषाओं में स्वतंत्र रूप से लिखे गए "2 बिल्कुल अलग दृष्टिकोण वाले मॉडल उत्तर" (डबल-स्टाइल उत्तर वेरिएशन) दिए गए हैं। ये बिना किसी मशीन अनुवाद के हैं और इनमें विषय-विशेषज्ञों द्वारा रणनीतिक मार्गदर्शन शामिल है।',
+          }
+        },
+        {
+          question: { en: 'Do you provide textbook syllabus notes for Mains?', hi: 'क्या आप मुख्य परीक्षा (Mains) के लिए टेक्स्टबुक नोट्स भी देते हैं?' },
+          answer: {
+            en: 'No. We do NOT sell boring, outdated textbook notes to memorize. Instead, we provide entire syllabus topic-by-topic deep structural clarity mapped directly to the syllabus tree, strategically enriched with constitutional articles, landmark cases, MP context data, and high-scoring model answer frameworks!',
+            hi: 'नहीं, हम रटने वाले पारंपरिक पीडीएफ नोट्स नहीं देते हैं। इसके बजाय, हम आपको सिलेबस ट्री के अनुसार प्रत्येक टॉपिक की गहरी वैचारिक समझ, रणनीतिक मूल्यवर्धन (संवैधानिक अनुच्छेद, कोर्ट फैसले, MP-विशिष्ट डेटा) और मॉडल उत्तर प्रारूप प्रदान करते हैं।',
+          }
+        },
+        {
+          question: { en: 'What if the Mains exam gets delayed?', hi: 'अगर मुख्य परीक्षा (Mains) में देरी हुई तो?' },
+          answer: {
+            en: 'If MPPSC delays the Mains exam, we extend your access accordingly with no extra charge.',
+            hi: 'अगर MPPSC मुख्य परीक्षा में देरी करता है, तो हम आपका मेंस एक्सेस उसी हिसाब से बिना किसी अतिरिक्त शुल्क के बढ़ा देंगे।',
+          }
+        }
+      ]
+    : FAQS;
 
   /**
    * Enterprise-grade user name detection with multiple fallback strategies
@@ -132,16 +192,34 @@ export function SupportChat() {
     message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Show ONLY on the Home page to reduce clutter, especially on mobile
-  if (pathname !== '/') return null;
+  
+  // 🎯 Detect exam context from pathname and user access grants
+  const userAccessGrants = user?.accessGrants || [];
+  const hasMainsAccess = userAccessGrants.includes('mppsc_mains');
+  const hasPreAccess = userAccessGrants.includes('mppsc_pre');
+  
+  // Determine support category based on context
+  const getSupportCategory = (): 'pre_content' | 'mains_content' | 'general' => {
+    if (isMainsPage && hasMainsAccess) return 'mains_content';
+    if (!isMainsPage && hasPreAccess) return 'pre_content';
+    return 'general';
+  };
+  
+  // Show ONLY on the Home page & /mains landing page to reduce clutter, especially on mobile
+  if (pathname !== '/' && pathname !== '/mains') return null;
 
   const handleWhatsApp = () => {
-    const message = 'Hi, I need help with the MPPSC App. My query is:';
+    const message = isMainsPage
+      ? 'Hi, I have a query regarding the MPPSC Mains module.'
+      : 'Hi, I need help with the MPPSC App. My query is:';
     window.open(`https://wa.me/918766451748?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const handleTelegram = () => {
-    window.open('https://t.me/mppss_26_bot', '_blank');
+    const url = isMainsPage
+      ? 'https://t.me/MPPSC_Support_Bot?start=mppsc_mains_query'
+      : 'https://t.me/mppss_26_bot';
+    window.open(url, '_blank');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -156,7 +234,7 @@ export function SupportChat() {
       const result = await submitSupportTicket({
         ...formData,
         userId: user?.id || null,
-        category: 'general',
+        category: getSupportCategory(),
       });
 
       if (result.success) {
@@ -330,7 +408,7 @@ export function SupportChat() {
                 ) : (
                   <div className="space-y-2 p-4">
                     <p className="mb-2 px-1 text-xs font-medium text-slate-500">Common Questions</p>
-                    {FAQS.map((faq, idx) => (
+                    {dynamicFaqs.map((faq, idx) => (
                       <div
                         key={idx}
                         className="overflow-hidden rounded-xl border border-slate-200 bg-white transition-all"
@@ -392,18 +470,20 @@ export function SupportChat() {
               initial={{ opacity: 0, y: 10, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.9 }}
-              className="mr-1 mb-1 flex origin-bottom-right items-center gap-3 rounded-xl border border-indigo-100 bg-white px-4 py-3 shadow-xl"
+              className="mr-1 mb-1 flex origin-bottom-right items-center gap-3 rounded-2xl border border-amber-500/30 bg-[#060a12]/95 px-4 py-3.5 shadow-2xl backdrop-blur-md text-white ring-1 ring-white/5"
             >
               <div className="relative flex h-3 w-3 shrink-0">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex h-3 w-3 rounded-full bg-green-500"></span>
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-amber-500"></span>
               </div>
               <div>
-                <p className="text-sm leading-tight font-bold text-slate-800">
-                  {hi ? 'मदद चाहिए?' : 'Need Help?'}
+                <p className="text-sm leading-tight font-black text-white">
+                  {isMainsPage 
+                    ? (hi ? 'Mains पूछताछ?' : 'Mains Query?')
+                    : (hi ? 'मदद चाहिए?' : 'Need Help?')}
                 </p>
-                <p className="text-xs font-medium whitespace-nowrap text-slate-500">
-                  {hi ? 'सपोर्ट टीम से बात करें' : 'Chat with our support team'}
+                <p className="text-[11px] font-semibold whitespace-nowrap text-slate-400 mt-0.5">
+                  {hi ? 'सपोर्ट टीम से बात करें' : 'Chat with support team'}
                 </p>
               </div>
 
@@ -411,14 +491,9 @@ export function SupportChat() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  // We rely on the parent logic or just let user click the main button
-                  // Ideally we would have a separate state to dismiss JUST the nudge,
-                  // but user said "click ke baad hat jaaye" (main button click).
-                  // Adding a visual distinct close just in case, but functionally
-                  // clicking the main button is the primary dismissal.
                   setIsNudgeOpen(false);
                 }}
-                className="ml-2 rounded-full p-1 text-slate-400 hover:bg-slate-100"
+                className="ml-2 rounded-full p-1 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
               >
                 <X size={12} />
               </button>
@@ -430,19 +505,24 @@ export function SupportChat() {
           onMouseEnter={() => !isOpen} // Just for interaction tracking if needed
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
-            'group relative flex h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-indigo-600 text-white shadow-2xl shadow-indigo-500/40 transition-all duration-300 hover:scale-105 hover:bg-indigo-700 active:scale-95',
-            isOpen && 'rotate-90 border-slate-700 bg-slate-800'
+            'group relative flex h-14 w-14 items-center justify-center rounded-full border-3 border-slate-950 bg-gradient-to-tr from-amber-600 via-amber-500 to-orange-500 text-white shadow-2xl shadow-amber-500/20 transition-all duration-300 hover:scale-110 active:scale-95',
+            isOpen ? 'rotate-90 bg-slate-800' : 'hover:shadow-[0_0_30px_rgba(245,158,11,0.45)]'
           )}
         >
           {isOpen ? (
-            <X className="h-7 w-7" />
+            <X className="h-6 w-6" />
           ) : (
-            <MessageCircle className="h-7 w-7 transition-transform group-hover:rotate-12" />
+            <MessageCircle className="h-6 w-6 transition-transform group-hover:rotate-12" />
           )}
 
           {/* Ping animation when closed */}
           {!isOpen && (
-            <span className="absolute top-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-red-500" />
+            <span className="absolute top-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-slate-950 bg-red-500" />
+          )}
+
+          {/* Golden Ring Pulse when closed */}
+          {!isOpen && (
+            <span className="absolute inset-0 -z-10 rounded-full bg-amber-500/10 animate-ping" />
           )}
         </button>
       </div>

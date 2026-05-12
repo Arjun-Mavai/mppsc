@@ -22,7 +22,7 @@ import { YearBadge } from '../components/shared/UnitBadge';
 import { formatUnitTitle, getUnitColor } from '../components/shared/constants';
 import { normalizeCorrectAnswer } from '@/lib/quiz-scoring';
 
-interface QuestionData {
+export interface QuestionData {
   id: string;
   text: string;
   textEn?: string | null;
@@ -43,7 +43,7 @@ interface ViewAllQuestionsClientProps {
   unitId: string;
   unitTitle: string;
   questions: QuestionData[];
-  source: 'paper' | 'overall' | 'topic' | 'subject';
+  source: 'paper' | 'overall' | 'topic' | 'subject' | 'combined';
   topicTitle?: string;
   year?: number;
   subject?: string;
@@ -94,11 +94,72 @@ export default function ViewAllQuestionsClient({
     ).sort((a, b) => b - a);
   }, [questions]);
 
+  // Pre-process questions to avoid heavy logic in render loop
+  const processedQuestions = useMemo(() => {
+    return questions.map((q) => {
+      const stemQ = questionDataToQuestion(q);
+      const rawStem =
+        (isHindi ? q.text : (q.textEn && String(q.textEn).trim() !== '' ? q.textEn : q.text)) ??
+        '';
+      const cleanedStem = cleanMatchingQuestionText(String(rawStem), stemQ);
+      const stemFormatted =
+        cleanedStem.trim().length > 0 ? cleanedStem : normalizeMultilineText(String(rawStem));
+      
+      const previewPlain = normalizeMultilineText(stemFormatted)
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+        
+      const previewShort =
+        previewPlain.length === 0
+          ? isHindi
+            ? 'प्रश्न टेक्स्ट उपलब्ध नहीं'
+            : 'Question text unavailable'
+          : previewPlain;
+            
+      const parsedOptsRaw = parseQuestionOptions(q.options);
+      const hasMatch = Array.isArray(q.matchPairs) && q.matchPairs.length > 0;
+      const correctAnswerIdx = normalizeCorrectAnswer(q.correctAnswer);
+
+      const processedOpts = parsedOptsRaw.slice(0, 4).map((opt, optIdx) => {
+        const parsedOpt: {
+          text?: unknown;
+          text_en?: unknown;
+          textEn?: unknown;
+        } =
+          typeof opt === 'object' && opt !== null
+            ? (opt as Record<string, unknown>)
+            : { text: opt };
+        const optText = isHindi
+          ? (parsedOpt.text ?? opt)
+          : (parsedOpt.text_en ?? parsedOpt.textEn ?? parsedOpt.text ?? opt);
+        const optDisplay = normalizeMultilineText(
+          typeof optText === 'string' ? optText : String(optText ?? ''),
+        );
+        return {
+          idx: optIdx,
+          display: optDisplay,
+          isCorrect: correctAnswerIdx === optIdx,
+        };
+      });
+
+      return {
+        ...q,
+        stemQ,
+        stemFormatted,
+        previewShort,
+        processedOpts,
+        hasMatch,
+        rawStem,
+      };
+    });
+  }, [questions, isHindi]);
+
   // Filter questions by year
   const filteredQuestions = useMemo(() => {
-    if (!filterYear) return questions;
-    return questions.filter((q) => q.year === filterYear);
-  }, [questions, filterYear]);
+    if (!filterYear) return processedQuestions;
+    return processedQuestions.filter((q) => q.year === filterYear);
+  }, [processedQuestions, filterYear]);
 
   // Auto-expand all questions in PDF mode
   useEffect(() => {
@@ -282,19 +343,13 @@ export default function ViewAllQuestionsClient({
       >
         {filteredQuestions.map((q, idx) => {
           const isExpanded = expandedIds.has(q.id);
-          const stemQ = questionDataToQuestion(q);
-          const rawStem =
-            (isHindi ? q.text : (q.textEn && String(q.textEn).trim() !== '' ? q.textEn : q.text)) ??
-            '';
-          const stemFormatted = cleanMatchingQuestionText(String(rawStem), stemQ);
-          const previewPlain = normalizeMultilineText(stemFormatted)
-            .replace(/<[^>]*>/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim();
-          const previewShort =
-            previewPlain.length > 200 ? `${previewPlain.slice(0, 200)}…` : previewPlain;
-          const parsedOpts = parseQuestionOptions(q.options);
-          const hasMatch = Array.isArray(q.matchPairs) && q.matchPairs.length > 0;
+          const {
+            stemFormatted,
+            previewShort,
+            processedOpts,
+            hasMatch,
+            rawStem,
+          } = q;
 
           return (
             <div
@@ -335,7 +390,7 @@ export default function ViewAllQuestionsClient({
                     <p
                       className={cn(
                         'text-[15px] leading-[1.6] font-bold tracking-tight text-slate-200 sm:text-[17px]',
-                        !isExpanded && 'line-clamp-2'
+                        !isExpanded && 'line-clamp-none'
                       )}
                     >
                       {previewShort || '\u00a0'}
@@ -386,10 +441,17 @@ export default function ViewAllQuestionsClient({
                     >
                       <div className="space-y-6 border-t border-white/[0.05] bg-slate-950/40 p-5 sm:p-7">
                         <div className="rounded-2xl border border-white/10 bg-slate-50 p-4 sm:p-5 text-slate-900 shadow-inner">
-                          <FormattedQuestionText
-                            text={stemFormatted}
-                            className="!text-slate-900 text-[15px] font-semibold leading-relaxed sm:text-[17px]"
-                          />
+                          {stemFormatted.trim() ? (
+                            <FormattedQuestionText
+                              text={stemFormatted}
+                              questionId={q.id}
+                              className="!text-slate-900 text-[15px] font-semibold leading-relaxed sm:text-[17px]"
+                            />
+                          ) : (
+                            <p className="text-[15px] font-semibold text-slate-700 sm:text-[17px]">
+                              {isHindi ? 'प्रश्न टेक्स्ट उपलब्ध नहीं' : 'Question text unavailable'}
+                            </p>
+                          )}
                         </div>
 
                         {q.type === 'matching' && hasMatch && (
@@ -402,24 +464,12 @@ export default function ViewAllQuestionsClient({
                           </div>
                         )}
 
-                        {parsedOpts.length > 0 && (
+                        {processedOpts.length > 0 && (
                           <div className="grid gap-4 sm:grid-cols-2">
-                            {parsedOpts.slice(0, 4).map((opt, optIdx) => {
-                              const parsedOpt: {
-                                text?: unknown;
-                                text_en?: unknown;
-                                textEn?: unknown;
-                              } =
-                                typeof opt === 'object' && opt !== null
-                                  ? (opt as Record<string, unknown>)
-                                  : { text: opt };
-                              const isCorrect = normalizeCorrectAnswer(q.correctAnswer) === optIdx;
-                              const optText = isHindi
-                                ? (parsedOpt.text ?? opt)
-                                : (parsedOpt.text_en ?? parsedOpt.textEn ?? parsedOpt.text ?? opt);
-                              const optDisplay = normalizeMultilineText(
-                                typeof optText === 'string' ? optText : String(optText ?? ''),
-                              );
+                            {processedOpts.map((opt) => {
+                              const isCorrect = opt.isCorrect;
+                              const optDisplay = opt.display;
+                              const optIdx = opt.idx;
 
                               return (
                                 <div

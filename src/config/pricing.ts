@@ -16,6 +16,16 @@ export interface PricingData {
   proMonths: number;
   upgradePrice: number;
   upgradeOriginalPrice: number;
+  /** MPPSC Mains syllabus vault — rupees (server ×100 for paise). */
+  mainsPrice: number;
+  mainsOriginalPrice: number;
+  mainsValidityText: string;
+  mainsMonths: number;
+  /** Pre + Mains bundle — rupees. */
+  comboPrice: number;
+  comboOriginalPrice: number;
+  comboValidityText: string;
+  comboMonths: number;
   urgencyText: string;
   urgencyTextHi: string;
   studentsBought: number;
@@ -32,6 +42,14 @@ export const PRICING_DEFAULTS: PricingData = {
   proMonths: 6,
   upgradePrice: 199,
   upgradeOriginalPrice: 299,
+  mainsPrice: 1499,
+  mainsOriginalPrice: 2499,
+  mainsValidityText: 'Valid till MPPSC 2026 Mains',
+  mainsMonths: 12,
+  comboPrice: 2499,
+  comboOriginalPrice: 3999,
+  comboValidityText: 'Pre + Mains — full access',
+  comboMonths: 12,
   urgencyText: 'Special pricing for first 100 students',
   urgencyTextHi: 'पहले 100 छात्रों के लिए विशेष मूल्य',
   studentsBought: 23,

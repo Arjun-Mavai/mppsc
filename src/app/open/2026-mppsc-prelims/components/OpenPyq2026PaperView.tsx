@@ -358,6 +358,7 @@ export function OpenPyq2026PaperView({
                         <div className="rounded-2xl border border-white/10 bg-slate-50 p-4 sm:p-5 text-slate-900 shadow-inner">
                           <FormattedQuestionText
                             text={stemFormatted}
+                            questionId={q.id}
                             className="!text-slate-900 text-[15px] font-semibold leading-relaxed sm:text-[17px]"
                           />
                         </div>

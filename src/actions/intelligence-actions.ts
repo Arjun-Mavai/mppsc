@@ -98,6 +98,7 @@ export async function submitIntelligenceFeedback(data: IntelligenceFeedbackData)
     const studentLabel = isPro ? '💎 Subscribed Pro User' : '👤 Guest Student';
     const sourceLabel = source === 'expert_analysis' ? '🧠 Intelligence Analysis' : 
                        source === 'open_paper_view' ? '📄 Paper Solutions' : 
+                       source === 'mains_pyq' ? '📝 Mains PYQ Library' :
                        source || 'Generic Page';
 
     await sendTelegramNotification(
@@ -111,7 +112,7 @@ export async function submitIntelligenceFeedback(data: IntelligenceFeedbackData)
       `<b>Content:</b> <i>"${escapeHTML(questionText).slice(0, 150)}${questionText.length > 150 ? '...' : ''}"</i>\n` +
       (message ? `\n<b>Feedback:</b> ${escapeHTML(message)}\n` : '') +
       `━━━━━━━━━━━━━━━━\n` +
-      `#SolutionIntelligence #MPPSC2026 ${isPro ? '#ProUser' : ''}`
+      `#SolutionIntelligence ${source === 'mains_pyq' ? '#MainsPYQ' : '#MPPSC2026'} ${isPro ? '#ProUser' : ''}`
     );
 
     return { success: true };

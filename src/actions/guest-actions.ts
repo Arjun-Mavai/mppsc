@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger';
 import { eq, and } from 'drizzle-orm';
 import { sendTelegramNotification } from '@/lib/telegram';
 import { getTelegramStatsSummary } from '@/lib/telegram-stats-loader';
-import { GUEST_LEAD_SOURCE } from '@/lib/lead-source';
+import { GUEST_LEAD_SOURCE, getGuestLeadSourceLabel } from '@/lib/lead-source';
 import { escapeHTML } from '@/lib/telegram';
 
 /**
@@ -107,12 +107,15 @@ function composeGuestTelegramBody(
   const nameLine = isNewWithBoldName
     ? `👤 <b>${safeName}</b>\n`
     : `👤 ${safeName}\n`;
+  const leadSourceLabel = getGuestLeadSourceLabel(leadSource);
   return (
     `${title}\n` +
     (extra || '') +
     nameLine +
     `📱 <code>${normalizedMobile}</code>\n` +
-    `📧 ${safeEmail}\n\n` +
+    `📧 ${safeEmail}\n` +
+    `🎯 <b>Platform/Exam:</b> MPPSC (Pre & Mains)\n` +
+    `🏷️ <b>Lead Source:</b> ${leadSourceLabel}\n\n` +
     (statsSummary ? statsSummary + '\n\n' : '') +
     tag
   );

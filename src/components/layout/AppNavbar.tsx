@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 import { usePwa } from '@/hooks/usePwa';
 import { useQuery } from '@tanstack/react-query';
 import { getCurrentUser } from '@/actions/auth-actions';
+import { getProductPortalNavVisibility } from '@/lib/product-portal-policy';
 
 import './navbar-animations.css';
 
@@ -86,6 +87,7 @@ const createUserToStore = (user: any) => ({
   role: user.role ?? undefined,
   isSubscribed: user.isSubscribed ?? user.is_subscribed ?? undefined,
   planTier: user.planTier ?? user.plan_tier ?? undefined,
+  accessGrants: user.accessGrants ?? user.access_grants ?? undefined,
 });
 
 export function AppNavbar({ user: initialUser }: AppNavbarProps) {
@@ -110,26 +112,51 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   const rawUser = (globalUser || initialUser) as UnifiedUser | null;
   const user = normalizeUser(rawUser);
 
+  const portalNav = useMemo(() => getProductPortalNavVisibility(user as any), [user]);
+
   // ✅ PERFORMANCE: Memoized navigation items
-  const navItems = useMemo(() => [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, color: 'text-slate-700' },
-    { name: 'Syllabus', href: '/syllabus', icon: BookOpen, color: 'text-emerald-600' },
-    {
-      name: 'Test Series',
-      href: '/syllabus/quiz/pyq',
-      icon: GraduationCap,
-      color: 'text-amber-600',
-    },
-    { name: 'Free Daily Quiz', href: '/free-quiz', icon: Zap, color: 'text-orange-500' },
-    { name: 'Blogs', href: '/blogs', icon: BookOpen, color: 'text-sky-600' },
-    {
-      name: 'Test History',
-      href: '/syllabus/test-history',
-      icon: History,
-      color: 'text-violet-600',
-    },
-    { name: 'About Us', href: '/', icon: Info, color: 'text-slate-500' },
-  ], []);
+  const navItems = useMemo(() => {
+    const all = [
+      { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, color: 'text-slate-700' },
+      { name: 'Syllabus', href: '/syllabus', icon: BookOpen, color: 'text-emerald-600' },
+      {
+        name: 'Test Series',
+        href: '/syllabus/quiz/pyq',
+        icon: GraduationCap,
+        color: 'text-amber-600',
+      },
+      { name: 'Free Daily Quiz', href: '/free-quiz', icon: Zap, color: 'text-orange-500' },
+      { name: 'Blogs', href: '/blogs', icon: BookOpen, color: 'text-sky-600' },
+      {
+        name: 'Test History',
+        href: '/syllabus/test-history',
+        icon: History,
+        color: 'text-violet-600',
+      },
+      {
+        name: 'Mains',
+        href: '/mains/syllabus',
+        icon: Crown,
+        color: 'text-emerald-500',
+      },
+      { name: 'About Us', href: '/', icon: Info, color: 'text-slate-500' },
+    ];
+
+    return all.filter((item) => {
+      if (item.name === 'Mains') {
+        return portalNav.showMainsNav;
+      }
+      // Dashboard only for pre users, not for mains-only
+      if (item.name === 'Dashboard') {
+        return portalNav.showPrePortalNav;
+      }
+      const preRoutes = ['Syllabus', 'Test Series', 'Free Daily Quiz', 'Test History', 'Blogs'];
+      if (preRoutes.includes(item.name)) {
+        return portalNav.showPrePortalNav;
+      }
+      return true;
+    });
+  }, [portalNav]);
 
   // ------------------------------------------------------------------
   // QUERY: SESSION RESTORATION (The "Hydration") - NOW WITH SERVER ACTION!
@@ -461,7 +488,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                             </SheetClose>
 
                             {/* ✅ UX EXPERT: Premium PYQ Analysis Dropdown - Positioned directly below Dashboard */}
-                            {item.name === 'Dashboard' && user?.isSubscribed && (
+                            {item.name === 'Dashboard' && portalNav.showPyqAnalysisAccordion && (
                               <div className="mx-2 mt-1 mb-2">
                                 <Accordion type="single" collapsible className="border-none w-full">
                                   <AccordionItem value="pyq-analysis" className="border-none">
@@ -563,40 +590,10 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                               </div>
                             </div>
                           </div>
-                          {/* ✅ PERFORMANCE: Static gradient instead of conic spin for better performance */}
-                          <SheetClose asChild>
-                            <Link href="/pricing" className="mt-2 block">
-                              <div className="relative overflow-hidden rounded-xl p-[1.5px]">
-                                <div className="absolute inset-0 bg-gradient-to-r from-pink-500 via-red-500 to-purple-500" />
-                                <div className="relative flex items-center gap-3 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white">
-                                  <Sparkles size={18} className="text-pink-400" />
-                                  Upgrade to Pro
-                                </div>
-                              </div>
-                            </Link>
-                          </SheetClose>
+
                         </>
                       ) : (
-                        <>
-                          <SheetClose asChild>
-                            <Link
-                              href="/pricing"
-                              className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-amber-50 active:bg-amber-100"
-                            >
-                              <Sparkles size={18} className="text-amber-500" />
-                              Pricing
-                            </Link>
-                          </SheetClose>
-                          <SheetClose asChild>
-                            <Link
-                              href="/pricing"
-                              className="flex items-center gap-3 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-slate-900/20 transition-all duration-200 tap-scale-98"
-                            >
-                              <Crown size={18} className="text-yellow-400" />
-                              Become Premium Member
-                            </Link>
-                          </SheetClose>
-                        </>
+                        <></>
                       )}
                     </div>
 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
+import { parseAccessGrants, serializeAccessGrants } from '@/lib/access-grants';
 import { eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
@@ -92,16 +93,19 @@ export async function POST(request: Request) {
     let currentPlanTier = user.planTier;
     let currentIsSubscribed = user.isSubscribed;
 
-    if (user.accessExpiresAt && user.planTier !== 'free') {
+    if (user.accessExpiresAt) {
       const now = new Date();
       const expiryDate = new Date(user.accessExpiresAt);
-      if (expiryDate < now) {
-        // Downgrade to free instead of blocking login
+      const hadPaidAccess = user.planTier !== 'free' || user.isSubscribed;
+      if (expiryDate < now && hadPaidAccess) {
         await db
           .update(mppscUsers)
-          .set({ planTier: 'free', isSubscribed: false })
+          .set({
+            planTier: 'free',
+            isSubscribed: false,
+            accessGrants: serializeAccessGrants(['mppsc_pre']),
+          })
           .where(eq(mppscUsers.id, user.id));
-        // Still allow login — user sees free tier content
         currentPlanTier = 'free';
         currentIsSubscribed = false;
       }
@@ -149,6 +153,13 @@ export async function POST(request: Request) {
       sameSite: 'lax',
     });
 
+    const fresh = await db.query.mppscUsers.findFirst({
+      where: eq(mppscUsers.id, user.id),
+      columns: { accessGrants: true },
+    });
+
+    const freshGrants = parseAccessGrants(fresh?.accessGrants);
+
     return NextResponse.json({
       success: true,
       user: {
@@ -158,6 +169,7 @@ export async function POST(request: Request) {
         planTier: currentPlanTier,
         role: user.role,
         accessExpiresAt: user.accessExpiresAt,
+        accessGrants: freshGrants.length ? freshGrants : ['mppsc_pre'],
       },
     });
   } catch (error) {

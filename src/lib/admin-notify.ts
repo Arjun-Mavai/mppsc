@@ -25,7 +25,7 @@ interface PaymentNotification {
   type: 'new_payment' | 'upgrade' | 'failed';
   userName: string;
   userEmail: string;
-  planTier: 'lite' | 'pro';
+  planTier: string;
   amountInRupees: number;
   orderId: string;
   paymentId: string;
@@ -296,3 +296,57 @@ export async function logEmailAttempt(data: {
     logger.info('Email attempt logged', { category: 'email', metadata: data });
   }
 }
+
+/**
+ * 🎫 Notify Admin on Support Ticket Creation
+ *
+ * Sends a clean, real-time Telegram alert when a student submits a support ticket.
+ * Fully non-blocking and handles errors gracefully.
+ */
+export async function notifyAdminOnSupportTicket(data: {
+  name: string;
+  email: string;
+  phone?: string | null;
+  category?: string | null;
+  message: string;
+}) {
+  try {
+    const { name, email, phone, category, message } = data;
+
+    // 🎯 Map category to emoji and label
+    const categoryMap: Record<string, { emoji: string; label: string }> = {
+      pre_content: { emoji: '📚', label: 'Prelims Content' },
+      mains_content: { emoji: '🏛️', label: 'Mains Content' },
+      payment: { emoji: '💳', label: 'Payment Issue' },
+      technical: { emoji: '⚙️', label: 'Technical Issue' },
+      general: { emoji: '❓', label: 'General Enquiry' },
+      content: { emoji: '📄', label: 'Content Query' },
+    };
+
+    const cat = String(category || 'general').toLowerCase();
+    const catInfo = categoryMap[cat] || { emoji: '📋', label: cat.toUpperCase() };
+
+    const telegramMessage =
+      `👮 <b>MPPSC ZEN</b>\n` +
+      `🎫 <b>New Support Ticket</b>\n\n` +
+      `👤 <b>Student:</b> ${escapeHTML(name)}\n` +
+      `📧 <b>Email:</b> ${escapeHTML(email)}\n` +
+      (phone ? `📞 <b>Phone:</b> ${escapeHTML(phone)}\n` : '') +
+      `${catInfo.emoji} <b>Category:</b> ${catInfo.label}\n\n` +
+      `💬 <b>Query Message:</b>\n` +
+      `${escapeHTML(message)}`;
+
+    await sendTelegramNotification(telegramMessage);
+
+    logger.info('Admin notified of support ticket via Telegram', {
+      category: 'telegram',
+      metadata: { email, ticketCategory: cat },
+    });
+  } catch (error) {
+    // Graceful & non-blocking
+    logger.error('Failed to send Telegram support ticket notification (non-blocking)', error, {
+      category: 'telegram',
+    });
+  }
+}
+

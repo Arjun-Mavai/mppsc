@@ -3,15 +3,13 @@ import { logger } from '@/lib/logger';
 import Razorpay from 'razorpay';
 import { verifyAuth } from '@/lib/auth';
 import { z } from 'zod';
-import { db } from '@/db';
-import { pricingConfig } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-import { PRICING_DEFAULTS } from '@/config/pricing';
+import { fetchPricingConfigRow } from '@/lib/pricing-db';
+import { mergePricingRow } from '@/lib/pricing-merge';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { notifyAdminOnVerificationFailure } from '@/lib/admin-notify';
 
 const createOrderSchema = z.object({
-  planType: z.enum(['lite', 'pro', 'upgrade']),
+  planType: z.enum(['lite', 'pro', 'upgrade', 'mains', 'combo']),
   examType: z.enum(['upsc', 'mppsc', 'mppolice']).default('mppsc'),
 });
 
@@ -53,17 +51,14 @@ export async function POST(req: Request) {
 
     // 💰 Amount Calculation: The Single Source of Truth
     // DB se price fetch karo. Agar DB down h, to default constant use karo (Fallback Strategy).
-    const rows = await db
-      .select()
-      .from(pricingConfig)
-      .where(eq(pricingConfig.examType, examType))
-      .limit(1);
-    const p = rows[0] || PRICING_DEFAULTS;
+    const pricing = mergePricingRow(await fetchPricingConfigRow(examType));
 
     const PLAN_AMOUNTS: Record<string, number> = {
-      lite: (p.litePrice ?? PRICING_DEFAULTS.litePrice) * 100, // Amount in Paise (INR * 100)
-      pro: (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100,
-      upgrade: (p.upgradePrice ?? PRICING_DEFAULTS.upgradePrice) * 100,
+      lite: pricing.litePrice * 100,
+      pro: pricing.proPrice * 100,
+      upgrade: pricing.upgradePrice * 100,
+      mains: pricing.mainsPrice * 100,
+      combo: pricing.comboPrice * 100,
     };
 
     const amount = PLAN_AMOUNTS[planType];
@@ -85,7 +80,11 @@ export async function POST(req: Request) {
     const order = await instance.orders.create({
       amount,
       currency: 'INR',
-      notes: { planType, userId: session?.id ?? '', examType }, // Metadata for future reference
+      notes: {
+        planType,
+        userId: session?.id ?? '',
+        examType,
+      },
     });
 
     return NextResponse.json({ ...(order as any), planType });

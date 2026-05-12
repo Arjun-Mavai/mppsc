@@ -49,8 +49,12 @@ function SelectContent({
   children,
   position = 'item-aligned',
   align = 'center',
+  viewportClassName,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Content>) {
+}: React.ComponentProps<typeof SelectPrimitive.Content> & {
+  /** Overrides default viewport; pass e.g. `max-h-[min(70vh,22rem)]` for scrollable menus */
+  viewportClassName?: string;
+}) {
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -69,8 +73,12 @@ function SelectContent({
         <SelectPrimitive.Viewport
           className={cn(
             'p-1',
-            position === 'popper' &&
-              'h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-1'
+            position === 'popper'
+              ? cn(
+                  'w-full min-w-[var(--radix-select-trigger-width)] scroll-my-1',
+                  viewportClassName ?? 'h-[var(--radix-select-trigger-height)]'
+                )
+              : viewportClassName
           )}
         >
           {children}

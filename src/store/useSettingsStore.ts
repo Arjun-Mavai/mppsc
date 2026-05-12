@@ -13,6 +13,8 @@ export interface User {
   isSubscribed?: boolean; // Fixed: camelCase to match DB
   isPro?: boolean; // Legacy flag support
   planTier?: 'free' | 'lite' | 'pro'; // Fixed: camelCase to match DB
+  /** Product entitlements from DB */
+  accessGrants?: string[];
 }
 
 interface SettingsState {

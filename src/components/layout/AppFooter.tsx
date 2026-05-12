@@ -25,6 +25,7 @@ export function AppFooter() {
   // 🚫 Quiz pages pe footer nahi dikhana — user test de raha hai ya prepare kar raha hai!
   if (pathname.startsWith('/syllabus/quiz')) return null;
   if (pathname.startsWith('/free-quiz')) return null;
+  if (pathname.startsWith('/mains/syllabus')) return null;
 
   return (
     <footer className="min-h-[250px] border-t border-slate-200 bg-slate-50 py-12 pb-24 sm:min-h-[200px] md:pb-12">

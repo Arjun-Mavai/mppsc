@@ -639,6 +639,7 @@ npm run db:migrate
 ```
 
 Why:
+
 - `drizzle-kit push` can try to drop tables that exist in DB but are not represented in `schema.ts` (for example FTS virtual tables like `questions_fts*`).
 - `migrate` only runs explicit SQL migration files, so unmanaged tables are not dropped unless you intentionally write a drop statement.
 
@@ -676,10 +677,12 @@ npm run db:push
 ## 🧠 Migration Kya Hai?
 
 Migration ek SQL instruction file hoti hai jo batati hai:
+
 - kaunsa table/column add hua
 - kaunsa index/constraint change hua
 
 Simple words:
+
 - `db:generate` = instruction banana
 - `db:migrate` = instruction chalana
 
@@ -1484,3 +1487,33 @@ It was a simple fix of re-routing the import using your root alias!
 typescript
 // ✅ FIXED
 import { CANONICAL_TEST_IDS } from "@/lib/pyq-constants";
+
+# users
+
+🎉 AB SAHI H! Ab ye credentials se login kar sakte ho:
+
+📧 Email: pre.test@mppsc.in
+🔑 Password: PreTest@123456
+
+📧 Email: mains.test@mppsc.in
+🔑 Password: MainsTest@123456
+
+📧 Email: combo.test@mppsc.in
+🔑 Password: ComboTest@123456
+
+~/.copilot/session-state/18f9bf97-9df5-4964-8703-178c02302a26/files/
+
+1.  DOCUMENTATION-INDEX.md - Master guide
+2.  TEST-USER-CREDENTIALS.md - Quick reference
+3.  DEEP-TESTING-FLOWS.md - Complete user journeys
+4.  BUG-CHECK-RESULTS.md - Security review ✅ NO BUGS!
+5.  DATABASE-FIELDS-DETAILED.md - Schema reference
+6.  PRE-MAINS-COMBO-COMPLETE-SUMMARY.md - Architecture
+7.  PAYMENT-FLOW-GUIDE.md - Payment mapping
+8.  TESTING-CHECKLIST.md - QA steps
+
+✅ Three Test Users Created
+
+- Pre-only: pre.test@mppsc.in / PreTest@123456
+- Mains-only: mains.test@mppsc.in / MainsTest@123456
+- Combo: combo.test@mppsc.in / ComboTest@123456

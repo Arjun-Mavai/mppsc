@@ -111,6 +111,7 @@ export function QuizQuestion({
       {/* Question Text - Smart Formatted */}
       <FormattedQuestionText
         text={questionText}
+        questionId={question.id}
         className="text-lg leading-relaxed font-semibold text-slate-900 sm:text-xl md:text-2xl"
       />
 
