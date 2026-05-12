@@ -1517,3 +1517,5 @@ import { CANONICAL_TEST_IDS } from "@/lib/pyq-constants";
 - Pre-only: pre.test@mppsc.in / PreTest@123456
 - Mains-only: mains.test@mppsc.in / MainsTest@123456
 - Combo: combo.test@mppsc.in / ComboTest@123456
+
+/tmp/PROTECTION_SUMMARY.txt entire copy protection code md file

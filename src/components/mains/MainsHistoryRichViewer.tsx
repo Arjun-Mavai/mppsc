@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { coerceMarkdownBulletsLoose } from '@/lib/mains-readable-coerce';
-import { MAINS_HISTORY_RICH_VERSION, pickInterlinkingMarkdown, pickVariantStem } from '@/lib/mains-history-rich-normalize';
+import { MAINS_HISTORY_RICH_VERSION, pickInterlinkingMarkdown, pickVariantStem, extractModelAnswers } from '@/lib/mains-history-rich-normalize';
 import { CheckCircle, BookOpen, Filter, Network, Brain, Palette, AlertTriangle, Sparkles, FileText, ChevronDown, Zap, Compass, Trophy, LineChart } from 'lucide-react';
 import { MainsKeyTermsFlash } from '@/components/mains/MainsKeyTermsFlash';
 
@@ -88,30 +88,8 @@ function readDynamicDims(payload: Record<string, unknown>, hi: boolean) {
   return raw.filter((x) => x && typeof x === 'object') as Record<string, unknown>[];
 }
 
-type ModelVariant = { text: string; stem?: string };
-
-function models(payload: Record<string, unknown>, lang: 'hi' | 'en'): Record<string, ModelVariant[]> {
-  const key = lang === 'hi' ? 'model_answers_hi' : 'model_answers_en';
-  let raw = payload[key] as Record<string, unknown> | undefined;
-  if (lang === 'en' && (!raw || Object.keys(raw).length === 0)) {
-    raw = payload['model_answers_hi'] as Record<string, unknown> | undefined;
-  }
-  if (!raw || typeof raw !== 'object') return {};
-  const out: Record<string, ModelVariant[]> = {};
-  for (const band of ['2m', '7m', '10m', '11m', 'case18'] as const) {
-    const arr = raw[band];
-    if (!Array.isArray(arr)) continue;
-    out[band] = arr.map((v) => {
-      if (typeof v === 'string') return { text: v };
-      if (v && typeof v === 'object') {
-        const o = v as Record<string, unknown>;
-        const stem = pickVariantStem(o) ?? '';
-        if (typeof o.text === 'string') return { text: o.text, stem: stem || undefined };
-      }
-      return { text: '' };
-    });
-  }
-  return out;
+function models(payload: Record<string, unknown>, lang: 'hi' | 'en') {
+  return extractModelAnswers(payload, lang);
 }
 
 export function MainsHistoryRichViewer({

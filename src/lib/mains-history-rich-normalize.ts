@@ -152,38 +152,68 @@ export function composeExpertStrategyFromRich(parsed: Record<string, unknown>, l
     .trim();
 }
 
-type ModelBlock = Record<string, MainsModelVariant[]>;
+export type ModelBlock = Record<string, MainsModelVariant[]>;
 
 export function extractModelAnswersForValidation(parsed: Record<string, unknown>): ModelBlock {
-  const raw = (parsed.model_answers_hi ?? parsed.model_answers ?? parsed.modelAnswers) as
-    | ModelBlock
-    | Record<string, unknown>
-    | undefined;
+  const raw = (
+    parsed.model_answers_hi ??
+    parsed.model_answer_hi ??
+    parsed.modelanswers_hi ??
+    parsed.model_answers ??
+    parsed.model_answer ??
+    parsed.modelAnswers ??
+    parsed.modelAnswer ??
+    parsed.modelanswers
+  ) as ModelBlock | Record<string, unknown> | undefined;
   if (!raw || typeof raw !== 'object') {
     return { '2m': [], '7m': [], '10m': [], '11m': [], case18: [] };
   }
   const o = raw as Record<string, unknown>;
   return {
-    '2m': normalizeVariantArr(o['2m']),
-    '7m': normalizeVariantArr(o['7m']),
-    '10m': normalizeVariantArr(o['10m']),
-    '11m': normalizeVariantArr(o['11m']),
-    case18: normalizeVariantArr(o.case18),
+    '2m': normalizeVariantArr(o['2m'] ?? o['2'] ?? o['2-mark'] ?? o['2marks'] ?? o['2_marks']),
+    '7m': normalizeVariantArr(o['7m'] ?? o['7'] ?? o['7-mark'] ?? o['7marks'] ?? o['7_marks']),
+    '10m': normalizeVariantArr(o['10m'] ?? o['10'] ?? o['10-mark'] ?? o['10marks'] ?? o['10_marks']),
+    '11m': normalizeVariantArr(o['11m'] ?? o['11'] ?? o['11-mark'] ?? o['11marks'] ?? o['11_marks']),
+    case18: normalizeVariantArr(o.case18 ?? o['18'] ?? o['18m'] ?? o['case_18'] ?? o['case-18']),
   };
 }
 
 export function extractModelAnswersEn(parsed: Record<string, unknown>): ModelBlock {
-  const raw = parsed.model_answers_en as Record<string, unknown> | undefined;
+  const raw = (
+    parsed.model_answers_en ??
+    parsed.model_answer_en ??
+    parsed.modelanswers_en
+  ) as Record<string, unknown> | undefined;
   if (!raw || typeof raw !== 'object') {
     return { '2m': [], '7m': [], '10m': [], '11m': [], case18: [] };
   }
+  const o = raw as Record<string, unknown>;
   return {
-    '2m': normalizeVariantArr(raw['2m']),
-    '7m': normalizeVariantArr(raw['7m']),
-    '10m': normalizeVariantArr(raw['10m']),
-    '11m': normalizeVariantArr(raw['11m']),
-    case18: normalizeVariantArr(raw.case18),
+    '2m': normalizeVariantArr(o['2m'] ?? o['2'] ?? o['2-mark'] ?? o['2marks'] ?? o['2_marks']),
+    '7m': normalizeVariantArr(o['7m'] ?? o['7'] ?? o['7-mark'] ?? o['7marks'] ?? o['7_marks']),
+    '10m': normalizeVariantArr(o['10m'] ?? o['10'] ?? o['10-mark'] ?? o['10marks'] ?? o['10_marks']),
+    '11m': normalizeVariantArr(o['11m'] ?? o['11'] ?? o['11-mark'] ?? o['11marks'] ?? o['11_marks']),
+    case18: normalizeVariantArr(o.case18 ?? o['18'] ?? o['18m'] ?? o['case_18'] ?? o['case-18']),
   };
+}
+
+export function extractModelAnswers(parsed: Record<string, unknown>, lang: 'hi' | 'en'): ModelBlock {
+  const isHi = lang === 'hi';
+  const primary = isHi ? extractModelAnswersForValidation(parsed) : extractModelAnswersEn(parsed);
+  
+  // If English model answers are empty, fallback to Hindi model answers as backup
+  if (!isHi) {
+    const hasAnyEn =
+      primary['2m'].length +
+      primary['7m'].length +
+      primary['10m'].length +
+      primary['11m'].length +
+      primary.case18.length > 0;
+    if (!hasAnyEn) {
+      return extractModelAnswersForValidation(parsed);
+    }
+  }
+  return primary;
 }
 
 export function stripServerFields(parsed: Record<string, unknown>): Record<string, unknown> {
