@@ -29,62 +29,35 @@ export function useDisableSelection(
   const isLoggedIn = !!user;
 
   useEffect(() => {
+    // 🛡️ If protection is disabled (local dev) or user is logged in, DO NOTHING
     if (!ref.current || isLoggedIn || !isProtectionEnabled) return;
     if (!requireLogin) return;
 
     const element = ref.current;
 
-    // CSS: Disable selection permanently
+    // CSS: Disable selection
     element.style.userSelect = 'none';
     element.style.webkitUserSelect = 'none';
-    (element.style as any).msUserSelect = 'none';
-    (element.style as any).MozUserSelect = 'none';
 
-    // Block copy event (Ctrl+C, Cmd+C)
-    const handleCopy = (e: ClipboardEvent) => {
-      e.preventDefault();
-      // Toast feedback (optional)
-      if (typeof window !== 'undefined') {
-        console.log('📋 Content is protected - copy disabled');
-      }
-    };
-
-    // Block cut event (Ctrl+X, Cmd+X)
-    const handleCut = (e: ClipboardEvent) => {
-      e.preventDefault();
-    };
-
-    // Block paste event (Ctrl+V, Cmd+V)
-    const handlePaste = (e: ClipboardEvent) => {
-      e.preventDefault();
-    };
-
-    // Block right-click context menu
+    // Block copy/cut/paste
+    const handleBlock = (e: Event) => e.preventDefault();
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
       return false;
     };
 
-    // Block mouse selection start (select-all)
-    const handleSelectStart = (e: Event) => {
-      e.preventDefault();
-      return false;
-    };
-
-    // Add all event listeners
-    element.addEventListener('copy', handleCopy, { capture: true });
-    element.addEventListener('cut', handleCut, { capture: true });
-    element.addEventListener('paste', handlePaste, { capture: true });
+    element.addEventListener('copy', handleBlock, { capture: true });
+    element.addEventListener('cut', handleBlock, { capture: true });
+    element.addEventListener('paste', handleBlock, { capture: true });
     element.addEventListener('contextmenu', handleContextMenu, { capture: true });
-    element.addEventListener('selectstart', handleSelectStart, { capture: true });
+    element.addEventListener('selectstart', handleBlock, { capture: true });
 
-    // Cleanup
     return () => {
-      element.removeEventListener('copy', handleCopy, true);
-      element.removeEventListener('cut', handleCut, true);
-      element.removeEventListener('paste', handlePaste, true);
+      element.removeEventListener('copy', handleBlock, true);
+      element.removeEventListener('cut', handleBlock, true);
+      element.removeEventListener('paste', handleBlock, true);
       element.removeEventListener('contextmenu', handleContextMenu, true);
-      element.removeEventListener('selectstart', handleSelectStart, true);
+      element.removeEventListener('selectstart', handleBlock, true);
     };
   }, [ref, isLoggedIn, requireLogin]);
 }

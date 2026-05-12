@@ -18,6 +18,7 @@ export function MainsGuestAccessGuards() {
   const isLoggedIn = !!user;
 
   useEffect(() => {
+    // 🛡️ CRITICAL: If protection is disabled (local dev) or user is logged in, DO NOTHING
     if (!isProtectionEnabled || isLoggedIn) return;
 
     const block = (e: Event) => {
@@ -28,22 +29,20 @@ export function MainsGuestAccessGuards() {
       const mod = isMac ? e.metaKey : e.ctrlKey;
       if (!mod) return;
       const key = e.key.toLowerCase();
+      // Block common copy/select shortcuts
       if (key === 'c' || key === 'x' || key === 'v' || key === 'a') {
         e.preventDefault();
       }
     };
 
+    // Apply global body protections for guests
     document.body.style.userSelect = 'none';
     document.body.style.webkitUserSelect = 'none';
-    (document.body.style as any).MozUserSelect = 'none';
-    (document.body.style as any).msUserSelect = 'none';
 
     document.addEventListener('selectstart', block, true);
     document.addEventListener('copy', block, true);
     document.addEventListener('cut', block, true);
-    document.addEventListener('paste', block, true);
-    document.addEventListener('contextmenu', block, true);
-    document.addEventListener('dragstart', block, true);
+    document.addEventListener('contextmenu', block, true); // Blocks right-click
     document.addEventListener('keydown', keyBlock, true);
 
     return () => {

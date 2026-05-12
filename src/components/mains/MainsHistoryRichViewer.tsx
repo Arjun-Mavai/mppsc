@@ -158,8 +158,8 @@ export function MainsHistoryRichViewer({
             className={cn(
               'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 shadow-sm transition-colors',
               topicMetaOpen
-                ? 'border-violet-500 bg-violet-50 text-violet-800 dark:bg-violet-950/70 dark:text-violet-200'
-                : 'border-slate-200 bg-white text-slate-600 hover:border-indigo-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-500'
+                ? 'border-amber-500 bg-amber-500 text-white dark:bg-amber-600 dark:border-amber-600'
+                : 'border-amber-200 bg-amber-50 text-amber-800 hover:border-amber-300 hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:border-amber-500/50'
             )}
             aria-expanded={topicMetaOpen}
             aria-label={hi ? 'शीर्षक व विवरण' : 'Title & overview'}
@@ -234,6 +234,134 @@ export function MainsHistoryRichViewer({
             </details>
           ) : null}
 
+          {/* Model answers */}
+          <details
+            className="group rounded-2xl border-2 border-emerald-200 bg-emerald-50/5 pt-4 pb-0 px-0 sm:pt-6 sm:pb-0 sm:px-0 shadow-sm dark:border-emerald-500/20 dark:bg-[#0c1c14] transition-all hover:border-emerald-400/50 overflow-hidden"
+            aria-label={hi ? 'मॉडल उत्तर' : 'Model answers'}
+          >
+            <summary className="mb-4 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-4 border-b border-emerald-200/50 dark:border-emerald-500/20 px-4 sm:px-6">
+              <div className="flex flex-wrap items-center gap-3">
+                <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-emerald-950 dark:text-emerald-100">
+                  <FileText className="h-6 w-6 text-emerald-500" aria-hidden />
+                  {hi ? '✍️ | |  मॉडल उत्तर अभ्यास' : '✍️ Model Answer Suite'}
+                </h2>
+                <div className="flex gap-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-1 shadow-inner ml-4">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setModelLang('hi'); }}
+                    className={cn(
+                      'rounded-lg px-3 py-1.5 text-xs font-black sm:px-4 sm:text-sm transition-colors',
+                      modelLang === 'hi'
+                        ? 'bg-emerald-600 text-white shadow'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                    )}
+                  >
+                    हिंदी
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setModelLang('en'); }}
+                    className={cn(
+                      'rounded-lg px-3 py-1.5 text-xs font-black sm:px-4 sm:text-sm transition-colors',
+                      modelLang === 'en'
+                        ? 'bg-emerald-600 text-white shadow'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                    )}
+                  >
+                    English
+                  </button>
+                </div>
+              </div>
+              <ChevronDown className="h-6 w-6 shrink-0 transition-transform group-open:rotate-180 text-emerald-400" />
+            </summary>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={modelLang}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-3 mt-1.5 px-2 pb-3 sm:px-3 sm:pb-4 min-w-0 overflow-hidden break-words"
+              >
+                {(() => {
+                  const allVariants: Array<{ variant: typeof ma[ModelBand][number]; band: ModelBand }> = [];
+                  (['2m', '7m', '10m', '11m', 'case18'] as ModelBand[]).forEach((band) => {
+                    const variants = ma[band] || [];
+                    variants.forEach((v) => {
+                      allVariants.push({ variant: v, band });
+                    });
+                  });
+
+                  if (allVariants.length === 0) {
+                    return (
+                      <p className="text-sm font-semibold text-slate-500 text-center py-6">
+                        {modelLang === 'hi' ? 'कोई  उत्तर उपलब्ध नहीं है।' : 'No model answers available.'}
+                      </p>
+                    );
+                  }
+
+                  return (
+                    <div className="grid gap-3 min-w-0 overflow-hidden">
+                      {allVariants.map(({ variant: v, band }, idx) => (
+                        <article
+                          key={idx}
+                          className={cn(
+                            "rounded-lg sm:rounded-xl border p-2.5 sm:p-3 shadow-sm ring-1 ring-black/[0.03] min-w-0 overflow-hidden break-words",
+                            [
+                              'border-pink-200/80 bg-pink-50/60 text-slate-900 dark:border-pink-500/20 dark:bg-pink-950/15 dark:text-slate-100',
+                              'border-emerald-200/80 bg-emerald-50/60 text-slate-900 dark:border-emerald-500/20 dark:bg-emerald-950/15 dark:text-slate-100',
+                              'border-amber-200/80 bg-amber-50/60 text-slate-900 dark:border-emerald-500/20 dark:bg-amber-950/15 dark:text-slate-100',
+                              'border-sky-200/80 bg-sky-50/60 text-slate-900 dark:border-emerald-500/20 dark:bg-sky-950/15 dark:text-slate-100',
+                            ][idx % 4]
+                          )}
+                        >
+                          <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                            <div className={cn(
+                              'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider shadow-xs',
+                              [
+                                'border-pink-300 bg-pink-50 text-pink-800 dark:border-pink-500/30 dark:bg-pink-950/40 dark:text-pink-300',
+                                'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-950/40 dark:text-emerald-300',
+                                'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-300',
+                                'border-sky-300 bg-sky-50 text-sky-800 dark:border-sky-500/30 dark:bg-sky-950/40 dark:text-sky-300',
+                              ][idx % 4]
+                            )}>
+                              {modelLang === 'hi' ? `विकल्प ${idx + 1}` : `Variant ${idx + 1}`}
+                            </div>
+                            <PyqMarksBandChip marks={marksForBand(band)} lang={modelLang} theme="paper" />
+                          </div>
+                          {v.stem ? (
+                            <div className="mb-2.5 rounded-md border border-slate-200 bg-slate-50/85 px-2.5 py-1.5 text-slate-900 dark:border-slate-800/60 dark:bg-slate-900/40 dark:text-slate-100">
+                              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                                {modelLang === 'hi' ? '❓ प्रश्न' : '❓ Question'}
+                              </p>
+                              <p className={cn(
+                                'mt-1 text-[14px] font-semibold leading-relaxed sm:text-[15px]',
+                                modelLang === 'hi' ? 'font-[family-name:var(--font-pyq-dev)]' : 'font-[family-name:var(--font-pyq-serif)]'
+                              )}>
+                                {v.stem}
+                              </p>
+                            </div>
+                          ) : null}
+                          <PyqAnswerProse
+                            text={coerceMarkdownBulletsLoose(v.text)}
+                            lang={modelLang === 'hi' ? 'hi' : 'en'}
+                            theme="paper"
+                            sectionTint={(idx % 2) as 0 | 1}
+                            marks={marksForBand(band)}
+                            density="compact"
+                            paletteRotationStart={idx % 4}
+                            mainsBoxLayout={true}
+                            prominentHeadings={marksForBand(band) >= 7}
+                            readerAccent
+                          />
+                        </article>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </motion.div>
+            </AnimatePresence>
+          </details>
+
           {/* PYQ / examiner demand */}
           <details className="group rounded-2xl border-2 border-pink-200 bg-pink-50/5 p-4 sm:p-6 shadow-sm dark:border-pink-500/20 dark:bg-[#1a0e1c] transition-all hover:border-pink-400/60">
             <summary className="mb-4 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-4 border-b border-pink-200/50 dark:border-pink-500/20 text-pink-900 dark:text-pink-200">
@@ -258,17 +386,17 @@ export function MainsHistoryRichViewer({
           </details>
 
           {/* Analogy + Source */}
-          <details className="group rounded-2xl border-2 border-sky-200 bg-sky-50/5 p-4 sm:p-6 shadow-sm dark:border-sky-500/20 dark:bg-[#0c1626] transition-all hover:border-sky-400/60">
-            <summary className="mb-4 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-4 border-b border-sky-200/50 dark:border-sky-500/20 text-sky-900 dark:text-sky-200">
+          <details className="group rounded-2xl border-2 border-sky-200 bg-sky-50/5 pt-4 pb-0 px-0 sm:pt-6 sm:pb-0 sm:px-0 shadow-sm dark:border-sky-500/20 dark:bg-[#0c1626] transition-all hover:border-sky-400/60 overflow-hidden">
+            <summary className="mb-4 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-4 border-b border-sky-200/50 dark:border-sky-500/20 px-4 sm:px-6 text-sky-900 dark:text-sky-200">
               <div className="flex items-center gap-2">
                 <BookOpen className="h-5 w-5 shrink-0 text-sky-500" />
                 <h2 className="text-lg font-black sm:text-xl">{hi ? '🔍 व्यावहारिक उदाहरण एवं प्रामाणिक संदर्भ' : '🔍 Conceptual Analogies & Scholarly Sources'}</h2>
               </div>
               <ChevronDown className="h-6 w-6 shrink-0 text-sky-400 transition-transform group-open:rotate-180 text-sky-400" />
             </summary>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="rounded-2xl border-2 border-sky-200 bg-sky-50/70 p-4 sm:p-5 dark:border-sky-900/50 dark:bg-sky-950/30">
-                <p className="mb-2 text-sm font-black uppercase tracking-widest text-sky-900 dark:text-sky-300">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 px-2 pb-3 sm:px-3 sm:pb-4">
+              <div className="rounded-lg sm:rounded-xl border border-sky-200 bg-sky-50/70 p-2.5 sm:p-3 dark:border-sky-900/50 dark:bg-sky-950/30">
+                <p className="mb-2 text-xs font-black uppercase tracking-widest text-sky-900 dark:text-sky-300">
                   🏪 {hi ? 'व्यावहारिक सादृश्य एवं वास्तविक उदाहरण' : 'Real-World Analogy & Practical Context'}
                 </p>
                 <MainsMarkdownBody
@@ -278,8 +406,8 @@ export function MainsHistoryRichViewer({
                   bulletClassName="bg-sky-500 shadow-[0_0_12px_rgba(14,165,233,0.4)] ring-sky-500/15"
                 />
               </div>
-              <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 sm:p-5 dark:border-amber-800 dark:bg-amber-950/40">
-                <p className="mb-2 text-sm font-black uppercase tracking-widest text-amber-950 dark:text-amber-200">
+              <div className="rounded-lg sm:rounded-xl border border-amber-300 bg-amber-50 p-2.5 sm:p-3 dark:border-amber-800 dark:bg-amber-950/40">
+                <p className="mb-2 text-xs font-black uppercase tracking-widest text-amber-950 dark:text-amber-200">
                   📜 {hi ? 'प्रामाणिक संदर्भ एवं स्थापित स्रोत' : 'Scholarly Sources & Academic Citations'}
                 </p>
                 <MainsMarkdownBody
@@ -337,18 +465,18 @@ export function MainsHistoryRichViewer({
           </details>
 
           {/* Interlinking + hooks */}
-          <details className="group rounded-2xl border-2 border-emerald-200 bg-emerald-50/5 p-4 sm:p-6 shadow-sm dark:border-emerald-500/20 dark:bg-[#0c1c14] transition-all hover:border-emerald-400/60">
-            <summary className="mb-4 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-4 border-b border-emerald-200/50 dark:border-emerald-500/20 text-emerald-950 dark:text-emerald-200">
+          <details className="group rounded-2xl border-2 border-emerald-200 bg-emerald-50/5 pt-4 pb-0 px-0 sm:pt-6 sm:pb-0 sm:px-0 shadow-sm dark:border-emerald-500/20 dark:bg-[#0c1c14] transition-all hover:border-emerald-400/60 overflow-hidden">
+            <summary className="mb-4 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-4 border-b border-emerald-200/50 dark:border-emerald-500/20 px-4 sm:px-6 text-emerald-950 dark:text-emerald-200">
               <div className="flex items-center gap-2">
                 <Network className="h-5 w-5 shrink-0 text-emerald-500" />
                 <h2 className="text-lg font-black sm:text-xl">{hi ? '🔗 अंतर-विषय जुड़ाव व मेमोरी हुक्स' : '🔗 Inter-Paper Linkages & Memory Hooks'}</h2>
               </div>
               <ChevronDown className="h-6 w-6 shrink-0 text-emerald-400 transition-transform group-open:rotate-180" />
             </summary>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <div className="rounded-2xl border border-indigo-200 bg-indigo-50/80 p-4 sm:p-5 dark:border-indigo-900/50 dark:bg-indigo-950/30">
-                <h3 className="mb-3 flex items-center gap-2 text-lg font-black text-indigo-950 dark:text-indigo-100">
-                  <Network className="h-5 w-5 shrink-0" /> {hi ? '🔗 अंतर-पेपर जुड़ाव' : '🔗 Interlinking'}
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 px-2 pb-3 sm:px-3 sm:pb-4">
+              <div className="rounded-lg sm:rounded-xl border border-indigo-200 bg-indigo-50/80 p-2.5 sm:p-3 dark:border-indigo-900/50 dark:bg-indigo-950/30">
+                <h3 className="mb-2 flex items-center gap-2 text-base font-black text-indigo-950 dark:text-indigo-100">
+                  <Network className="h-4 w-4 shrink-0" /> {hi ? '🔗 अंतर-पेपर जुड़ाव' : '🔗 Interlinking'}
                 </h3>
                 <MainsMarkdownBody
                   markdown={coerceMarkdownBulletsLoose(pickInterlinkingMarkdown(payload, hi ? 'hi' : 'en'))}
@@ -357,9 +485,9 @@ export function MainsHistoryRichViewer({
                   bulletClassName="bg-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.4)] ring-indigo-500/15"
                 />
               </div>
-              <div className="rounded-2xl border border-fuchsia-200 bg-fuchsia-50/70 p-4 sm:p-5 dark:border-fuchsia-900/50 dark:bg-fuchsia-950/25">
-                <h3 className="mb-3 flex items-center gap-2 text-lg font-black text-fuchsia-950 dark:text-fuchsia-100">
-                  <Brain className="h-5 w-5 shrink-0" /> {hi ? '🧠 मेमोरी हुक' : '🧠 Memory hook'}
+              <div className="rounded-lg sm:rounded-xl border border-fuchsia-200 bg-fuchsia-50/70 p-2.5 sm:p-3 dark:border-fuchsia-900/50 dark:bg-fuchsia-950/25">
+                <h3 className="mb-2 flex items-center gap-2 text-base font-black text-fuchsia-950 dark:text-fuchsia-100">
+                  <Brain className="h-4 w-4 shrink-0" /> {hi ? '🧠 मेमोरी हुक' : '🧠 Memory hook'}
                 </h3>
                 <MainsMarkdownBody
                   markdown={coerceMarkdownBulletsLoose(bulletizeMemoryHook(pick(payload, 'psychological_memory_hook', hi)))}
@@ -368,9 +496,9 @@ export function MainsHistoryRichViewer({
                   bulletClassName="bg-fuchsia-500 shadow-[0_0_12px_rgba(217,70,239,0.4)] ring-fuchsia-500/15"
                 />
               </div>
-              <div className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4 sm:p-5 dark:border-cyan-900/50 dark:bg-cyan-950/25">
-                <h3 className="mb-3 flex items-center gap-2 text-lg font-black text-cyan-950 dark:text-cyan-100">
-                  <Palette className="h-5 w-5 shrink-0" /> {hi ? '📐 डायग्राम / नक्शा' : '📐 Diagram / map cue'}
+              <div className="rounded-lg sm:rounded-xl border border-cyan-200 bg-cyan-50/70 p-2.5 sm:p-3 dark:border-cyan-900/50 dark:bg-cyan-950/25">
+                <h3 className="mb-2 flex items-center gap-2 text-base font-black text-cyan-950 dark:text-cyan-100">
+                  <Palette className="h-4 w-4 shrink-0" /> {hi ? '📐 डायग्राम / नक्शा' : '📐 Diagram / map cue'}
                 </h3>
                 <MainsMarkdownBody
                   markdown={coerceMarkdownBulletsLoose(pick(payload, 'visual_infographic_cue', hi))}
@@ -379,9 +507,9 @@ export function MainsHistoryRichViewer({
                   bulletClassName="bg-cyan-500 shadow-[0_0_12px_rgba(6,182,212,0.4)] ring-cyan-500/15"
                 />
               </div>
-              <div className="rounded-2xl border border-red-200 bg-red-50/80 p-4 sm:p-5 dark:border-red-900/50 dark:bg-red-950/30">
-                <h3 className="mb-3 flex items-center gap-2 text-lg font-black text-red-900 dark:text-red-100">
-                  <AlertTriangle className="h-5 w-5 shrink-0" /> {hi ? '⚠️ एग्जामिनर ट्रैप' : '⚠️ Examiner trap'}
+              <div className="rounded-lg sm:rounded-xl border border-red-200 bg-red-50/80 p-2.5 sm:p-3 dark:border-red-900/50 dark:bg-red-950/30">
+                <h3 className="mb-2 flex items-center gap-2 text-base font-black text-red-900 dark:text-red-100">
+                  <AlertTriangle className="h-4 w-4 shrink-0" /> {hi ? '⚠️ एग्जामिनर ट्रैप' : '⚠️ Examiner trap'}
                 </h3>
                 <MainsMarkdownBody
                   markdown={coerceMarkdownBulletsLoose(pick(payload, 'examiner_trap', hi))}
@@ -407,139 +535,6 @@ export function MainsHistoryRichViewer({
               itemClassName="border-amber-200 bg-white/70 dark:border-amber-900/40 dark:bg-[#251a0e]"
               bulletClassName="bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.4)] ring-amber-500/15"
             />
-          </details>
-
-          {/* Model answers */}
-          <details
-            className="group rounded-2xl border-2 border-emerald-200 bg-emerald-50/5 p-4 sm:p-6 shadow-sm dark:border-emerald-500/20 dark:bg-[#0c1c14] transition-all hover:border-emerald-400/50"
-            aria-label={hi ? 'मॉडल उत्तर' : 'Model answers'}
-          >
-            <summary className="mb-6 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-4 border-b border-emerald-200/50 dark:border-emerald-500/20 px-2 sm:px-0">
-              <div className="flex flex-wrap items-center gap-3">
-                <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-emerald-950 dark:text-emerald-100">
-                  <FileText className="h-6 w-6 text-emerald-500" aria-hidden />
-                  {hi ? '✍️ | | मॉडल उत्तर अभ्यास' : '✍️ Model Answer Suite'}
-                </h2>
-                <div className="flex gap-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-1 shadow-inner ml-4">
-                  <button
-                    type="button"
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setModelLang('hi'); }}
-                    className={cn(
-                      'rounded-lg px-3 py-1.5 text-xs font-black sm:px-4 sm:text-sm transition-colors',
-                      modelLang === 'hi'
-                        ? 'bg-emerald-600 text-white shadow'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
-                    )}
-                  >
-                    हिंदी
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setModelLang('en'); }}
-                    className={cn(
-                      'rounded-lg px-3 py-1.5 text-xs font-black sm:px-4 sm:text-sm transition-colors',
-                      modelLang === 'en'
-                        ? 'bg-emerald-600 text-white shadow'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
-                    )}
-                  >
-                    English
-                  </button>
-                </div>
-              </div>
-              <ChevronDown className="h-6 w-6 shrink-0 transition-transform group-open:rotate-180 text-emerald-400" />
-            </summary>
-
-            <div
-              className="rounded-xl sm:rounded-[1.75rem] border-2 border-emerald-200/50 bg-[#f4f8fb] p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] ring-1 ring-slate-100 [color-scheme:light] sm:p-6 min-w-0 overflow-hidden break-words mt-4 text-slate-900"
-              style={{ colorScheme: 'light' }}
-            >
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={modelLang}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="space-y-10 min-w-0 overflow-hidden break-words"
-                >
-                  {(() => {
-                    const allVariants: Array<{ variant: typeof ma[ModelBand][number]; band: ModelBand }> = [];
-                    (['2m', '7m', '10m', '11m', 'case18'] as ModelBand[]).forEach((band) => {
-                      const variants = ma[band] || [];
-                      variants.forEach((v) => {
-                        allVariants.push({ variant: v, band });
-                      });
-                    });
-
-                    if (allVariants.length === 0) {
-                      return (
-                        <p className="text-sm font-semibold text-slate-500 text-center py-6">
-                          {modelLang === 'hi' ? 'कोई मॉडल उत्तर उपलब्ध नहीं है।' : 'No model answers available.'}
-                        </p>
-                      );
-                    }
-
-                    return (
-                      <div className="grid gap-6 min-w-0 overflow-hidden">
-                        {allVariants.map(({ variant: v, band }, idx) => (
-                          <article
-                            key={idx}
-                            className={cn(
-                              "rounded-xl sm:rounded-2xl border p-4 sm:p-6 text-slate-900 shadow-sm ring-1 ring-black/[0.03] min-w-0 overflow-hidden break-words",
-                              [
-                                'border-pink-200/80 bg-pink-50/60',
-                                'border-emerald-200/80 bg-emerald-50/60',
-                                'border-amber-200/80 bg-amber-50/60',
-                                'border-sky-200/80 bg-sky-50/60',
-                              ][idx % 4]
-                            )}
-                          >
-                            <div className="flex flex-wrap items-center gap-2.5 mb-4">
-                              <div className={cn(
-                                'inline-flex items-center gap-1.5 rounded-lg border-2 px-3 py-1 text-[11px] font-black uppercase tracking-widest shadow-xs',
-                                [
-                                  'border-pink-300 bg-pink-50 text-pink-800',
-                                  'border-emerald-300 bg-emerald-50 text-emerald-800',
-                                  'border-amber-300 bg-amber-50 text-amber-800',
-                                  'border-sky-300 bg-sky-50 text-sky-800',
-                                ][idx % 4]
-                              )}>
-                                {modelLang === 'hi' ? `विकल्प ${idx + 1}` : `Variant ${idx + 1}`}
-                              </div>
-                              <PyqMarksBandChip marks={marksForBand(band)} lang={modelLang} theme="paper" />
-                            </div>
-                            {v.stem ? (
-                              <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50/80 px-4 py-3 text-slate-900">
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-                                  {modelLang === 'hi' ? '❓ प्रश्न' : '❓ Question'}
-                                </p>
-                                <p className={cn(
-                                  'mt-2 text-[15px] font-semibold leading-relaxed text-slate-900 sm:text-[16px]',
-                                  modelLang === 'hi' ? 'font-[family-name:var(--font-pyq-dev)]' : 'font-[family-name:var(--font-pyq-serif)]'
-                                )}>
-                                  {v.stem}
-                                </p>
-                              </div>
-                            ) : null}
-                            <PyqAnswerProse
-                              text={coerceMarkdownBulletsLoose(v.text)}
-                              lang={modelLang === 'hi' ? 'hi' : 'en'}
-                              theme="paper"
-                              sectionTint={(idx % 2) as 0 | 1}
-                              marks={marksForBand(band)}
-                              density="comfortable"
-                              paletteRotationStart={idx % 4}
-                              mainsBoxLayout={true}
-                              prominentHeadings={marksForBand(band) >= 7}
-                              readerAccent
-                            />
-                          </article>
-                        ))}
-                      </div>
-                    );
-                  })()}
-                </motion.div>
-              </AnimatePresence>
-            </div>
           </details>
 
           {/* Key terms */}
