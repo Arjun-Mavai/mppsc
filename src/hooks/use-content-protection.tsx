@@ -18,6 +18,9 @@ import {
   COPY_PROTECTION_CSS,
 } from '@/lib/content-protection';
 
+// Development toggle (disable in .env.local)
+const isProtectionEnabled = process.env.NEXT_PUBLIC_DISABLE_CONTENT_PROTECTION !== 'true';
+
 export interface UseContentProtectionOptions {
   userId?: string;
   contentType?: 'question' | 'answer' | 'explanation' | 'quiz';
@@ -39,7 +42,7 @@ export function useContentProtection(options: UseContentProtectionOptions = {}) 
 
   // Setup copy protection
   useEffect(() => {
-    if (!ref.current) return;
+    if (!ref.current || !isProtectionEnabled) return;
 
     const cleanup = attachCopyProtection(ref.current, userId, (fingerprint) => {
       // Track copy attempt if enabled
@@ -58,7 +61,7 @@ export function useContentProtection(options: UseContentProtectionOptions = {}) 
 
   // Add CSS to document (once per component mount)
   useEffect(() => {
-    if (typeof document !== 'undefined') {
+    if (typeof document !== 'undefined' && isProtectionEnabled) {
       // Only add once
       if (!document.querySelector('[data-content-protection-css]')) {
         const style = document.createElement('style');
@@ -68,6 +71,15 @@ export function useContentProtection(options: UseContentProtectionOptions = {}) 
       }
     }
   }, []);
+
+  if (!isProtectionEnabled) {
+    return {
+      ref,
+      watermarkMeta: {},
+      className: '',
+      fingerprint: '',
+    };
+  }
 
   const watermarkMeta = generateWatermarkMeta(userId);
 
