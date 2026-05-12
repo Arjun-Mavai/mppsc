@@ -30,6 +30,7 @@ export default async function MainsTopicPage({
 
   const { unit, content, titleHi, titleEn } = topicRes.data;
   if (!unit) notFound();
+  const isFreeUnit = unit.part === 'A' && unit.unitNumber === 1;
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
@@ -49,7 +50,7 @@ export default async function MainsTopicPage({
       </div>
 
       <MainsTopicContentClient
-        vaultLocked={!vaultUnlocked && !!content}
+        vaultLocked={!vaultUnlocked && !isFreeUnit && !!content}
         topic={{ id: topicRes.data.id, titleHi, titleEn, unitId: unit.id }}
         content={
           content

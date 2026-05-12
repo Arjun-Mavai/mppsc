@@ -11,14 +11,31 @@ import { logger } from '@/lib/logger';
 
 export async function POST(req: Request) {
   try {
-    const formData = await req.formData();
-    
-    const action = formData.get('action') as string;
-    const fingerprint = formData.get('fingerprint') as string;
-    const contentType = formData.get('contentType') as string;
-    const contentId = formData.get('contentId') as string;
-    const userId = formData.get('userId') as string;
-    const timestamp = formData.get('timestamp') as string;
+    const contentTypeHeader = req.headers.get('content-type') || '';
+    let action: string | null = null;
+    let fingerprint: string | null = null;
+    let contentType: string | null = null;
+    let contentId: string | null = null;
+    let userId: string | null = null;
+    let timestamp: string | null = null;
+
+    if (contentTypeHeader.includes('multipart/form-data') || contentTypeHeader.includes('application/x-www-form-urlencoded')) {
+      const formData = await req.formData();
+      action = formData.get('action') as string;
+      fingerprint = formData.get('fingerprint') as string;
+      contentType = formData.get('contentType') as string;
+      contentId = formData.get('contentId') as string;
+      userId = formData.get('userId') as string;
+      timestamp = formData.get('timestamp') as string;
+    } else {
+      const body = await req.json();
+      action = body.action;
+      fingerprint = body.fingerprint;
+      contentType = body.contentType;
+      contentId = body.contentId;
+      userId = body.userId;
+      timestamp = body.timestamp;
+    }
 
     // Validate inputs
     if (!action || !fingerprint || !contentType || !contentId) {
@@ -37,7 +54,7 @@ export async function POST(req: Request) {
 
     // Log the copy attempt
     logger.warn(`Copy attempt on protected content`, {
-      category: 'content_protection',
+      category: 'content',
       metadata: {
         fingerprint,
         contentType,
@@ -62,7 +79,7 @@ export async function POST(req: Request) {
     return Response.json({ success: true, message: 'Logged' });
   } catch (error) {
     logger.error('Failed to track copy attempt', error as Error, {
-      category: 'content_protection',
+      category: 'content',
     });
 
     return Response.json(

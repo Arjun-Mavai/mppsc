@@ -5,18 +5,13 @@ import { ChevronDown, Lock, Layers, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { PyqAnswerProse } from '@/components/mains/PyqAnswerProse';
-import { Badge } from '@/components/ui/badge';
-import {
-  MAINS_PYQ_DEMO_PAPER_NUMBER,
-  MAINS_PYQ_DEMO_YEAR,
-  orderMainsPyqRowsForVaultDemo,
-  pickMainsPyqFreeDemoQuestionIds,
-} from '@/lib/mains-vault-demo';
+import { Button } from '@/components/ui/button';
 import {
   MAIN_SYLLABUS_CARD_HUES,
   mainsSyllabusTileSkin,
   mainsSyllabusVariantBadge,
 } from '@/components/mains/mainsSyllabusTileSkin';
+import { PyqExpertInsightsRenderer } from '@/components/mains/PyqExpertInsightsRenderer';
 
 export type QRow = {
   id: string;
@@ -45,7 +40,6 @@ interface PyqQuestionListProps {
   onPartFilterChange: (part: string) => void;
   readingTheme: ReadingTheme;
   vaultUnlocked: boolean;
-  isDemoPaper: boolean;
   onVaultModalOpen: () => void;
 }
 
@@ -55,7 +49,6 @@ export function PyqQuestionList({
   onPartFilterChange,
   readingTheme,
   vaultUnlocked,
-  isDemoPaper,
   onVaultModalOpen,
 }: PyqQuestionListProps) {
   const { language } = useSettingsStore();
@@ -75,23 +68,51 @@ export function PyqQuestionList({
     return questions.filter((q) => String(q.part).toUpperCase() === partFilter);
   }, [questions, partFilter]);
 
-  const freeDemoIds = useMemo(() => {
-    if (vaultUnlocked || !isDemoPaper) return new Set<string>();
-    return pickMainsPyqFreeDemoQuestionIds(filtered.map((q) => ({ id: q.id, marks: q.marks })));
-  }, [vaultUnlocked, isDemoPaper, filtered]);
+  const guestFreeIds = useMemo(() => {
+    if (vaultUnlocked) return new Set<string>();
+    const picked = new Set<string>();
 
-  const displayQuestions = useMemo(
-    () => orderMainsPyqRowsForVaultDemo(filtered, freeDemoIds, vaultUnlocked),
-    [filtered, freeDemoIds, vaultUnlocked]
-  );
+    // 2-mark x2
+    for (const q of filtered) {
+      if (q.marks === 2 && !picked.has(q.id)) picked.add(q.id);
+      if (Array.from(picked).filter((id) => filtered.find((x) => x.id === id)?.marks === 2).length >= 2) break;
+    }
+
+    // 5/7-mark x1
+    const mid = filtered.find((q) => (q.marks === 5 || q.marks === 7) && !picked.has(q.id));
+    if (mid) picked.add(mid.id);
+
+    // 10/11-mark x1
+    const high = filtered.find((q) => (q.marks === 10 || q.marks === 11) && !picked.has(q.id));
+    if (high) picked.add(high.id);
+
+    // Fallback: ensure at least 4 visible if matching marks are missing
+    if (picked.size < 4) {
+      for (const q of filtered) {
+        if (!picked.has(q.id)) picked.add(q.id);
+        if (picked.size >= 4) break;
+      }
+    }
+
+    return picked;
+  }, [vaultUnlocked, filtered]);
+
+  const displayQuestions = useMemo(() => {
+    if (vaultUnlocked) return filtered;
+    return filtered.filter((q) => guestFreeIds.has(q.id));
+  }, [vaultUnlocked, filtered, guestFreeIds]);
+
+  const hiddenCount = useMemo(() => {
+    if (vaultUnlocked) return 0;
+    return Math.max(0, filtered.length - displayQuestions.length);
+  }, [vaultUnlocked, filtered.length, displayQuestions.length]);
 
   const isPyqRowLocked = useCallback(
     (q: QRow) => {
       if (vaultUnlocked) return false;
-      if (!isDemoPaper) return true;
-      return !freeDemoIds.has(q.id);
+      return !guestFreeIds.has(q.id);
     },
-    [vaultUnlocked, isDemoPaper, freeDemoIds]
+    [vaultUnlocked, guestFreeIds]
   );
 
   function stemFor(q: QRow) {
@@ -280,43 +301,37 @@ export function PyqQuestionList({
                                   theme={readingTheme}
                                 />
                               </div>
-
-                              {hasInsights ? (
-                                <div className="mb-4">
-                                  <button
-                                    type="button"
-                                    onClick={() => setInsightsOpenId(insightsOpen ? null : q.id)}
-                                    className={cn(
-                                      'flex w-full items-center gap-1.5 rounded-lg border px-3 py-2 text-[13px] font-bold transition-colors',
-                                      insightsOpen
-                                        ? themeDeep
-                                          ? 'border-emerald-500/40 bg-emerald-900/20 text-emerald-100'
-                                          : 'border-emerald-300 bg-emerald-50 text-emerald-800'
-                                        : themeDeep
-                                          ? 'border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-800'
-                                          : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-white'
-                                    )}
-                                  >
-                                    <Trophy className="h-4 w-4 shrink-0" />
-                                    {hi ? 'एक्सपर्ट टिप्स' : 'Expert Tips'}
-                                  </button>
-                                  {insightsOpen && (
-                                    <div
-                                      className={cn(
-                                        'mt-2 rounded-lg border-l-4 px-3 py-2 text-[14px] leading-relaxed',
-                                        themeDeep
-                                          ? 'border-l-emerald-500 bg-slate-900/50 text-slate-300'
-                                          : 'border-l-emerald-500 bg-emerald-50 text-slate-700'
-                                      )}
-                                    >
-                                      {insightsText}
-                                    </div>
-                                  )}
-                                </div>
-                              ) : null}
                             </div>
                           );
                         })}
+
+                      {hasInsights ? (
+                        <div className="mt-6 mb-2 flex flex-col items-center justify-center px-4">
+                          <button
+                            type="button"
+                            onClick={() => setInsightsOpenId(insightsOpen ? null : q.id)}
+                            className={cn(
+                              'inline-flex items-center gap-2 rounded-xl border px-6 py-2.5 text-[12px] font-black uppercase tracking-wider transition-all duration-300 hover:scale-105 active:scale-95 shadow-md',
+                              insightsOpen
+                                ? 'bg-slate-950 border-amber-500 text-amber-300 shadow-amber-500/20'
+                                : 'bg-slate-900 border-slate-800 hover:border-amber-500/40 text-amber-400/95 hover:text-amber-300 shadow-black/40 hover:shadow-amber-500/10'
+                            )}
+                          >
+                            <Trophy className="h-4 w-4 shrink-0 text-amber-500" />
+                            {hi ? 'एक्सपर्ट टिप्स' : 'Expert Tips'}
+                          </button>
+                          
+                          {insightsOpen && (
+                            <div className="mt-4 w-full max-w-2xl text-left">
+                              <PyqExpertInsightsRenderer
+                                insightsText={insightsText}
+                                themeDeep={themeDeep}
+                                hi={hi}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ) : null}
                     </div>
                   )}
                 </div>
@@ -325,6 +340,42 @@ export function PyqQuestionList({
           );
         })}
       </ul>
+
+      {!vaultUnlocked && hiddenCount > 0 ? (
+        <div
+          className={cn(
+            'mb-8 overflow-hidden rounded-[2rem] border p-6 text-center sm:p-7',
+            themeDeep
+              ? 'border-amber-500/30 bg-gradient-to-b from-amber-500/10 to-slate-900'
+              : 'border-amber-300 bg-gradient-to-b from-amber-50 to-white'
+          )}
+        >
+          <div
+            className={cn(
+              'mx-auto mb-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em]',
+              themeDeep ? 'border-amber-400/40 text-amber-300' : 'border-amber-300 text-amber-700'
+            )}
+          >
+            <Lock className="h-3.5 w-3.5" aria-hidden />
+            {hi ? 'मेंस लाइब्रेरी' : 'Mains Library'}
+          </div>
+          <p className={cn('mx-auto max-w-xl text-sm leading-relaxed', themeDeep ? 'text-slate-300' : 'text-slate-700')}>
+            {hi
+              ? 'Deep syllabus concepts, authentic bilingual model answers, and strategic insights unlock with the Mains plan.'
+              : 'Deep syllabus concepts, authentic bilingual model answers, and strategic insights unlock with the Mains plan.'}
+          </p>
+          <Button
+            type="button"
+            onClick={onVaultModalOpen}
+            className="mt-5 h-11 rounded-xl bg-gradient-to-tr from-amber-600 via-amber-500 to-orange-500 px-7 font-black text-white shadow-lg shadow-amber-500/25 hover:opacity-95"
+          >
+            {hi ? 'Unlock Library · pricing' : 'Unlock Library · pricing'}
+          </Button>
+          <p className={cn('mt-3 text-xs', themeDeep ? 'text-slate-400' : 'text-slate-500')}>
+            {hiddenCount} {hi ? 'प्रश्न लॉक हैं' : 'questions locked'}
+          </p>
+        </div>
+      ) : null}
     </>
   );
 }

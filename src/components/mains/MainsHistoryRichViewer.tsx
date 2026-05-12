@@ -3,7 +3,8 @@
 import { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MainsMarkdownBody } from '@/components/mains/MainsMarkdownBody';
-import { PyqAnswerProse } from '@/components/mains/PyqAnswerProse';
+import { PyqAnswerProse, PyqMarksBandChip } from '@/components/mains/PyqAnswerProse';
+import { useMainsReaderProseTheme } from '@/components/mains/useMainsReaderTheme';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -104,6 +105,7 @@ export function MainsHistoryRichViewer({
   uiLang: 'hi' | 'en';
 }) {
   const hi = uiLang === 'hi';
+  const proseTheme = useMainsReaderProseTheme();
   const [modelLang, setModelLang] = useState<'hi' | 'en'>(uiLang === 'hi' ? 'hi' : 'en');
   const [topicMetaOpen, setTopicMetaOpen] = useState(false);
 
@@ -186,11 +188,11 @@ export function MainsHistoryRichViewer({
                 <p className="text-balance text-lg font-black leading-snug text-slate-900 dark:text-white sm:text-xl">
                   {title}
                 </p>
-                <p className="max-w-2xl text-[13px] leading-relaxed text-slate-600 dark:text-slate-400">
+                {/* <p className="max-w-2xl text-[13px] leading-relaxed text-slate-600 dark:text-slate-400">
                   {hi
                     ? 'शुरू से सिलेबस समझ, फिर ट्रेंड, फिर नीचे मॉडल उत्तर।  मॉडल लाइट पृष्ठभूमि पर पढ़ने के लिए। प्रश्न जब JSON में stem हो।'
                     : 'Flow: syllabus grasp, then trends, then model answers below. Models stay on a light sheet for readability. Question stems when JSON includes stem.'}
-                </p>
+                </p> */}
               </div>
             </motion.div>
           ) : null}
@@ -260,14 +262,14 @@ export function MainsHistoryRichViewer({
             <summary className="mb-4 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-4 border-b border-sky-200/50 dark:border-sky-500/20 text-sky-900 dark:text-sky-200">
               <div className="flex items-center gap-2">
                 <BookOpen className="h-5 w-5 shrink-0 text-sky-500" />
-                <h2 className="text-lg font-black sm:text-xl">{hi ? '🔍 देसी एनालॉजी व प्रामाणिक स्रोत' : '🔍 Desi Analogy & Source Linker'}</h2>
+                <h2 className="text-lg font-black sm:text-xl">{hi ? '🔍 व्यावहारिक उदाहरण एवं प्रामाणिक संदर्भ' : '🔍 Conceptual Analogies & Scholarly Sources'}</h2>
               </div>
               <ChevronDown className="h-6 w-6 shrink-0 text-sky-400 transition-transform group-open:rotate-180 text-sky-400" />
             </summary>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="rounded-2xl border-2 border-sky-200 bg-sky-50/70 p-4 sm:p-5 dark:border-sky-900/50 dark:bg-sky-950/30">
                 <p className="mb-2 text-sm font-black uppercase tracking-widest text-sky-900 dark:text-sky-300">
-                  🏪 {hi ? 'देसी एनालॉजी' : 'Modern analogy'}
+                  🏪 {hi ? 'व्यावहारिक सादृश्य एवं वास्तविक उदाहरण' : 'Real-World Analogy & Practical Context'}
                 </p>
                 <MainsMarkdownBody
                   markdown={coerceMarkdownBulletsLoose(pick(payload, 'desi_analogy', hi))}
@@ -278,7 +280,7 @@ export function MainsHistoryRichViewer({
               </div>
               <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 sm:p-5 dark:border-amber-800 dark:bg-amber-950/40">
                 <p className="mb-2 text-sm font-black uppercase tracking-widest text-amber-950 dark:text-amber-200">
-                  📜 {hi ? 'प्रामाणिक स्रोत' : 'Authentic source'}
+                  📜 {hi ? 'प्रामाणिक संदर्भ एवं स्थापित स्रोत' : 'Scholarly Sources & Academic Citations'}
                 </p>
                 <MainsMarkdownBody
                   markdown={coerceMarkdownBulletsLoose(pick(payload, 'authentic_source_citation', hi))}
@@ -391,6 +393,7 @@ export function MainsHistoryRichViewer({
             </div>
           </details>
 
+          {/* Topper X-Factor Strategy */}
           <details className="group rounded-2xl border-2 border-amber-300 bg-amber-50/5 p-4 sm:p-6 transition-all dark:border-amber-500/20 dark:bg-[#1a140e] hover:border-amber-400/60">
             <summary className="mb-4 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-4 border-b border-amber-200/50 dark:border-amber-500/20 text-lg font-black text-amber-950 dark:text-amber-100 sm:text-xl">
               <div className="flex items-center gap-2">
@@ -406,18 +409,18 @@ export function MainsHistoryRichViewer({
             />
           </details>
 
-          {/* Model answers — always light “paper desk” surface (readable even when site dark) */}
+          {/* Model answers */}
           <details
-            className="group rounded-2xl border-2 border-emerald-200 bg-emerald-50/5 p-1.5 sm:p-6 shadow-sm dark:border-emerald-500/20 dark:bg-[#0c1c14] transition-all hover:border-emerald-400/50"
+            className="group rounded-2xl border-2 border-emerald-200 bg-emerald-50/5 p-4 sm:p-6 shadow-sm dark:border-emerald-500/20 dark:bg-[#0c1c14] transition-all hover:border-emerald-400/50"
             aria-label={hi ? 'मॉडल उत्तर' : 'Model answers'}
           >
-            <summary className="mb-4 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-4 border-b border-emerald-200/50 dark:border-emerald-500/20 px-2 sm:px-0">
+            <summary className="mb-6 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-4 border-b border-emerald-200/50 dark:border-emerald-500/20 px-2 sm:px-0">
               <div className="flex flex-wrap items-center gap-3">
                 <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-emerald-950 dark:text-emerald-100">
                   <FileText className="h-6 w-6 text-emerald-500" aria-hidden />
-                  {hi ? '✍️ | मॉडल उत्तर अभ्यास' : '✍️ Model Answer Suite'}
+                  {hi ? '✍️ | | मॉडल उत्तर अभ्यास' : '✍️ Model Answer Suite'}
                 </h2>
-                <div className="flex gap-1 rounded-xl border border-slate-200/90 bg-slate-50/80 p-1 shadow-inner ml-4">
+                <div className="flex gap-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-1 shadow-inner ml-4">
                   <button
                     type="button"
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); setModelLang('hi'); }}
@@ -425,7 +428,7 @@ export function MainsHistoryRichViewer({
                       'rounded-lg px-3 py-1.5 text-xs font-black sm:px-4 sm:text-sm transition-colors',
                       modelLang === 'hi'
                         ? 'bg-emerald-600 text-white shadow'
-                        : 'text-slate-600 hover:bg-slate-200'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
                     )}
                   >
                     हिंदी
@@ -437,7 +440,7 @@ export function MainsHistoryRichViewer({
                       'rounded-lg px-3 py-1.5 text-xs font-black sm:px-4 sm:text-sm transition-colors',
                       modelLang === 'en'
                         ? 'bg-emerald-600 text-white shadow'
-                        : 'text-slate-600 hover:bg-slate-200'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
                     )}
                   >
                     English
@@ -446,8 +449,9 @@ export function MainsHistoryRichViewer({
               </div>
               <ChevronDown className="h-6 w-6 shrink-0 transition-transform group-open:rotate-180 text-emerald-400" />
             </summary>
+
             <div
-              className="rounded-xl sm:rounded-[1.75rem] border-2 border-emerald-200/50 bg-[#f4f8fb] p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] ring-1 ring-slate-100 [color-scheme:light] sm:p-6 min-w-0 overflow-hidden break-words"
+              className="rounded-xl sm:rounded-[1.75rem] border-2 border-emerald-200/50 bg-[#f4f8fb] p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] ring-1 ring-slate-100 [color-scheme:light] sm:p-6 min-w-0 overflow-hidden break-words mt-4 text-slate-900"
               style={{ colorScheme: 'light' }}
             >
               <AnimatePresence mode="wait">
@@ -457,78 +461,82 @@ export function MainsHistoryRichViewer({
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-10 min-w-0 overflow-hidden break-words"
                 >
-                  {(['2m', '7m', '10m', '11m', 'case18'] as ModelBand[]).map((band) => {
-                    const variants = ma[band] || [];
-                    if (variants.length === 0) return null;
-                    const meta = BAND_META[band];
+                  {(() => {
+                    const allVariants: Array<{ variant: typeof ma[ModelBand][number]; band: ModelBand }> = [];
+                    (['2m', '7m', '10m', '11m', 'case18'] as ModelBand[]).forEach((band) => {
+                      const variants = ma[band] || [];
+                      variants.forEach((v) => {
+                        allVariants.push({ variant: v, band });
+                      });
+                    });
+
+                    if (allVariants.length === 0) {
+                      return (
+                        <p className="text-sm font-semibold text-slate-500 text-center py-6">
+                          {modelLang === 'hi' ? 'कोई मॉडल उत्तर उपलब्ध नहीं है।' : 'No model answers available.'}
+                        </p>
+                      );
+                    }
+
                     return (
-                      <div key={band} className="space-y-4 min-w-0 overflow-hidden break-words">
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">{meta.emoji}</span>
-                          <Badge className="bg-slate-900 font-mono text-white">{band.toUpperCase()}</Badge>
-                          <span className="text-xs font-bold uppercase tracking-[0.12em] text-slate-600">
-                            {modelLang === 'hi' ? meta.hi : meta.en}
-                          </span>
-                        </div>
-                        {variants.some((vv) => !vv.stem) ? (
-                          <p className="rounded-lg border border-dashed border-amber-400/70 bg-amber-50 px-3 py-2 text-[11px] font-medium text-amber-950/90 break-words">
-                            {modelLang === 'hi'
-                              ? 'कुछ विकल्पों में stem नहीं — अगले JSON में हर आइटम: दोहे में stem + text (देखें अंग्रेज़ी नोट)'
-                              : 'Some variants lack `stem` — use {"stem": "full question", "text": "- bullets..."} per model row in the next export.'}
-                          </p>
-                        ) : null}
-                        <div className="grid gap-4 min-w-0 overflow-hidden">
-                          {variants.map((v, i) => (
-                            <article
-                              key={i}
-                              className={cn(
-                                "rounded-xl sm:rounded-2xl border p-3 sm:p-6 text-slate-900 shadow-sm ring-1 ring-black/[0.03] mb-4 sm:mb-6 min-w-0 overflow-hidden break-words",
+                      <div className="grid gap-6 min-w-0 overflow-hidden">
+                        {allVariants.map(({ variant: v, band }, idx) => (
+                          <article
+                            key={idx}
+                            className={cn(
+                              "rounded-xl sm:rounded-2xl border p-4 sm:p-6 text-slate-900 shadow-sm ring-1 ring-black/[0.03] min-w-0 overflow-hidden break-words",
+                              [
+                                'border-pink-200/80 bg-pink-50/60',
+                                'border-emerald-200/80 bg-emerald-50/60',
+                                'border-amber-200/80 bg-amber-50/60',
+                                'border-sky-200/80 bg-sky-50/60',
+                              ][idx % 4]
+                            )}
+                          >
+                            <div className="flex flex-wrap items-center gap-2.5 mb-4">
+                              <div className={cn(
+                                'inline-flex items-center gap-1.5 rounded-lg border-2 px-3 py-1 text-[11px] font-black uppercase tracking-widest shadow-xs',
                                 [
-                                  'border-pink-200/80 bg-pink-50/60',
-                                  'border-emerald-200/80 bg-emerald-50/60',
-                                  'border-amber-200/80 bg-amber-50/60',
-                                  'border-sky-200/80 bg-sky-50/60',
-                                ][i % 4]
-                              )}
-                            >
-                              <p className="mb-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">
-                                {modelLang === 'hi' ? `विकल्प ${i + 1}` : `Variant ${i + 1}`}
-                              </p>
-                              {v.stem ? (
-                                <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50/80 px-4 py-3">
-                                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-                                    {modelLang === 'hi' ? '❓ प्रश्न' : '❓ Question'}
-                                  </p>
-                                  <p
-                                    className={cn(
-                                      'mt-2 text-[15px] font-semibold leading-relaxed text-slate-900 sm:text-[16px]',
-                                      modelLang === 'hi'
-                                        ? 'font-[family-name:var(--font-pyq-dev)]'
-                                        : 'font-[family-name:var(--font-pyq-serif)]'
-                                    )}
-                                  >
-                                    {v.stem}
-                                  </p>
-                                </div>
-                              ) : null}
-                              <PyqAnswerProse
-                                text={coerceMarkdownBulletsLoose(v.text)}
-                                lang={modelLang === 'hi' ? 'hi' : 'en'}
-                                theme="paper"
-                                sectionTint={(i % 2) as 0 | 1}
-                                marks={marksForBand(band)}
-                                density="comfortable"
-                                paletteRotationStart={i % 4}
-                                mainsBoxLayout
-                                prominentHeadings={marksForBand(band) >= 7}
-                                readerAccent
-                              />
-                            </article>
-                          ))}
-                        </div>
+                                  'border-pink-300 bg-pink-50 text-pink-800',
+                                  'border-emerald-300 bg-emerald-50 text-emerald-800',
+                                  'border-amber-300 bg-amber-50 text-amber-800',
+                                  'border-sky-300 bg-sky-50 text-sky-800',
+                                ][idx % 4]
+                              )}>
+                                {modelLang === 'hi' ? `विकल्प ${idx + 1}` : `Variant ${idx + 1}`}
+                              </div>
+                              <PyqMarksBandChip marks={marksForBand(band)} lang={modelLang} theme="paper" />
+                            </div>
+                            {v.stem ? (
+                              <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50/80 px-4 py-3 text-slate-900">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                                  {modelLang === 'hi' ? '❓ प्रश्न' : '❓ Question'}
+                                </p>
+                                <p className={cn(
+                                  'mt-2 text-[15px] font-semibold leading-relaxed text-slate-900 sm:text-[16px]',
+                                  modelLang === 'hi' ? 'font-[family-name:var(--font-pyq-dev)]' : 'font-[family-name:var(--font-pyq-serif)]'
+                                )}>
+                                  {v.stem}
+                                </p>
+                              </div>
+                            ) : null}
+                            <PyqAnswerProse
+                              text={coerceMarkdownBulletsLoose(v.text)}
+                              lang={modelLang === 'hi' ? 'hi' : 'en'}
+                              theme="paper"
+                              sectionTint={(idx % 2) as 0 | 1}
+                              marks={marksForBand(band)}
+                              density="comfortable"
+                              paletteRotationStart={idx % 4}
+                              mainsBoxLayout={true}
+                              prominentHeadings={marksForBand(band) >= 7}
+                              readerAccent
+                            />
+                          </article>
+                        ))}
                       </div>
                     );
-                  })}
+                  })()}
                 </motion.div>
               </AnimatePresence>
             </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MessageCircle, X, Send, Phone, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -91,6 +91,15 @@ export function SupportChat() {
   const [activeTab, setActiveTab] = useState<'chat' | 'faq'>('chat');
   const [expandedFaq, setExpandedFaq] = useState<number | null>(0);
   const [isNudgeOpen, setIsNudgeOpen] = useState(true);
+
+  useEffect(() => {
+    if (isMainsPage && isNudgeOpen) {
+      const timer = setTimeout(() => {
+        setIsNudgeOpen(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isMainsPage, isNudgeOpen]);
 
   const dynamicFaqs = isMainsPage
     ? [

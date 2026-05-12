@@ -6,6 +6,8 @@
  */
 
 import { logger } from '@/lib/logger';
+import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
+import { createGuestEntry } from '@/actions/guest-actions';
 
 export interface GuestLeadPayload {
   name: string;
@@ -27,9 +29,23 @@ export async function POST(req: Request) {
       );
     }
 
+    // Save to DB (Drizzle guests table upsert)
+    try {
+      await createGuestEntry({
+        name: body.name,
+        mobile: body.phone,
+        email: body.email,
+        leadSource: body.page,
+      });
+    } catch (dbError) {
+      logger.error('Failed to save guest lead to DB (non-blocking)', dbError as Error, {
+        category: 'admin',
+      });
+    }
+
     // Log guest lead
     logger.info('Guest lead captured', {
-      category: 'lead_generation',
+      category: 'admin',
       metadata: {
         name: body.name,
         phone: body.phone,
@@ -40,19 +56,34 @@ export async function POST(req: Request) {
       },
     });
 
-    // Optional: Store in database for CRM integration
-    // await db.insert(guestLeads).values({
-    //   id: uuidv4(),
-    //   name: body.name,
-    //   phone: body.phone,
-    //   email: body.email,
-    //   page: body.page,
-    //   source: req.headers.get('referer') || 'direct',
-    //   timestamp: new Date(body.timestamp),
-    // });
+    // 🚀 TELEGRAM NOTIFICATION FOR GUEST LEAD (MPPSC ZEN Admin Alert)
+    try {
+      const displayCategory =
+        body.page === 'mains-pyq-library'
+          ? '📚 Mains PYQ Library'
+          : body.page === 'mains-syllabus'
+            ? '📘 Mains Syllabus Library'
+            : `🔍 ${body.page}`;
 
-    // Optional: Send to CRM/Telegram
-    // await notifyAdminNewLead(body);
+      const isMains = body.page.includes('mains');
+      const tags = isMains ? '#GuestLead #mainslead' : '#GuestLead';
+
+      const telegramMessage =
+        `👮 <b>MPPSC MAINS ZEN ADMIN ALERT</b>\n` +
+        `🔓 <b>Free Content Unlocked! (Guest Lead)</b>\n\n` +
+        `👤 <b>Name:</b> ${escapeHTML(body.name)}\n` +
+        `📞 <b>Phone:</b> ${escapeHTML(body.phone)}\n` +
+        (body.email ? `📧 <b>Email:</b> ${escapeHTML(body.email)}\n` : '') +
+        `🎯 <b>Module Access:</b> <code>${displayCategory}</code>\n` +
+        `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST\n\n` +
+        `${tags}`;
+
+      await sendTelegramNotification(telegramMessage);
+    } catch (telegramError) {
+      logger.error('Telegram guest lead notification failed (non-blocking)', telegramError, {
+        category: 'telegram',
+      });
+    }
 
     return Response.json({
       success: true,
@@ -60,7 +91,7 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     logger.error('Failed to track guest lead', error as Error, {
-      category: 'lead_generation',
+      category: 'admin',
     });
 
     return Response.json(

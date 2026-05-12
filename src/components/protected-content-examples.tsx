@@ -5,7 +5,7 @@
  * <ProtectedQuestionCard question={question} userId={userId} />
  */
 
-import { useSession } from 'next-auth/react';
+import { useSettingsStore } from '@/store/useSettingsStore';
 import { ProtectedContent } from '@/hooks/use-content-protection';
 
 interface QuestionCardProps {
@@ -19,8 +19,8 @@ export function ProtectedQuestionCard({
   questionText,
   options,
 }: QuestionCardProps) {
-  const { data: session } = useSession();
-  const userId = session?.user?.id;
+  const { user } = useSettingsStore();
+  const userId = user?.id;
 
   return (
     <ProtectedContent
@@ -58,8 +58,8 @@ export function ProtectedExplanation({
   questionId: string;
   explanation: string;
 }) {
-  const { data: session } = useSession();
-  const userId = session?.user?.id;
+  const { user } = useSettingsStore();
+  const userId = user?.id;
 
   return (
     <ProtectedContent

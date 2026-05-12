@@ -6,7 +6,18 @@
  * • Zero visual impact on readability
  */
 
-import { createHash } from 'crypto';
+/**
+ * Simple hash function that works in both Node.js and Browser
+ */
+function simpleHash(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return Math.abs(hash).toString(16);
+}
 
 // ============================================================================
 // 1. WATERMARK GENERATION (Subtle, embedded in HTML)
@@ -44,7 +55,7 @@ export function generateFingerprint(userId: string | undefined): string {
   const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
 
   const combined = `${userId}|${sessionId}|${timestamp}|${userAgent}`;
-  return createHash('sha256').update(combined).digest('hex').slice(0, 16);
+  return simpleHash(combined);
 }
 
 // ============================================================================

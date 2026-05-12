@@ -2,17 +2,17 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { listMainsPyqPapersLibrarySummary, getMainsPyqPaperPublic } from '@/actions/mains-pyq-prepared-actions';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { SyllabusLockMainsModal } from '@/features/mains/components/SyllabusLockMainsModal';
-import { MAINS_PYQ_DEMO_PAPER_NUMBER, MAINS_PYQ_DEMO_YEAR } from '@/lib/mains-vault-demo';
 import { cn } from '@/lib/utils';
 import { PyqDeskControls } from './PyqDeskControls';
 import { PyqLibraryHeader } from './PyqLibraryHeader';
 import { PyqQuestionList, type QRow } from './PyqQuestionList';
 import { PyqLibraryErrorBoundary } from './PyqLibraryErrorBoundary';
+import { MAINS_PYQ_DEMO_YEAR, MAINS_PYQ_DEMO_PAPER_NUMBER } from '@/lib/mains-vault-demo';
 
 type Paper = {
   id: string;
@@ -34,7 +34,6 @@ export function PyqLibraryClient({ vaultUnlocked }: { vaultUnlocked: boolean }) 
   const [papers, setPapers] = useState<Paper[]>([]);
   const [paperId, setPaperId] = useState('');
   const [questions, setQuestions] = useState<QRow[]>([]);
-  const [meta, setMeta] = useState<{ examYear: number; paperNumber: number } | null>(null);
 
   const [loadingList, setLoadingList] = useState(true);
   const [loadingQ, setLoadingQ] = useState(false);
@@ -82,11 +81,9 @@ export function PyqLibraryClient({ vaultUnlocked }: { vaultUnlocked: boolean }) 
     const r = await getMainsPyqPaperPublic(pid);
     setLoadingQ(false);
     if (r.success && r.data) {
-      setMeta({ examYear: r.data.paper.examYear, paperNumber: r.data.paper.paperNumber });
       setQuestions(r.data.questions as QRow[]);
     } else {
       setQuestions([]);
-      setMeta(null);
       if (r.success === false) {
         setQuestionsLoadIssue(r.error === 'not_found' ? 'not_found' : 'fetch_failed');
       }
@@ -109,9 +106,6 @@ export function PyqLibraryClient({ vaultUnlocked }: { vaultUnlocked: boolean }) 
     setPartFilter('ALL');
   }, [paperId]);
 
-  const isDemoPaper =
-    meta != null && meta.examYear === MAINS_PYQ_DEMO_YEAR && meta.paperNumber === MAINS_PYQ_DEMO_PAPER_NUMBER;
-
   const themeDeep = readingTheme === 'deep';
   const shell = cn(
     'relative min-h-screen w-screen max-w-[100vw] overflow-x-hidden px-2 pb-24 pt-5 sm:px-2.5 sm:pb-28 sm:pt-6',
@@ -131,25 +125,42 @@ export function PyqLibraryClient({ vaultUnlocked }: { vaultUnlocked: boolean }) 
       ) : null}
 
       <div className="relative mx-auto max-w-3xl px-1 sm:px-1.5">
-        <Button
-          variant="ghost"
-          className={cn(
-            'mb-6',
-            themeDeep ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
-          )}
-          asChild
-        >
-          <Link href="/mains/syllabus">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {hi ? 'सिलेबस' : 'Syllabus'}
-          </Link>
-        </Button>
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <Button
+            variant="ghost"
+            className={cn(
+              'h-9 px-3',
+              themeDeep ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+            )}
+            asChild
+          >
+            <Link href="/mains/syllabus">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {hi ? 'सिलेबस' : 'Syllabus'}
+            </Link>
+          </Button>
 
-        <PyqLibraryHeader
-          readingTheme={readingTheme}
-          deskControlsOpen={deskControlsOpen}
-          onControlsToggle={setDeskControlsOpen}
-        />
+          <button
+            type="button"
+            onClick={() => setDeskControlsOpen(!deskControlsOpen)}
+            className={cn(
+              'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 shadow-sm transition-transform hover:-translate-y-0.5 active:scale-95',
+              deskControlsOpen
+                ? themeDeep
+                  ? 'border-amber-400 bg-amber-950/60 text-amber-300 shadow-md shadow-amber-500/15'
+                  : 'border-amber-500 bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                : themeDeep
+                  ? 'border-slate-700 bg-slate-900 text-slate-300 hover:border-amber-500/50 hover:text-amber-300'
+                  : 'border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-400 hover:bg-amber-100/50'
+            )}
+            aria-expanded={deskControlsOpen}
+            aria-label={hi ? 'पेपर, थीम व विवरण' : 'Paper, theme & description'}
+          >
+            <Target className="h-[18px] w-[18px]" aria-hidden />
+          </button>
+        </div>
+
+        <PyqLibraryHeader readingTheme={readingTheme} />
 
         <PyqDeskControls
           papers={papers}
@@ -177,7 +188,6 @@ export function PyqLibraryClient({ vaultUnlocked }: { vaultUnlocked: boolean }) 
             onPartFilterChange={setPartFilter}
             readingTheme={readingTheme}
             vaultUnlocked={vaultUnlocked}
-            isDemoPaper={isDemoPaper}
             onVaultModalOpen={() => setVaultModalOpen(true)}
           />
         </PyqLibraryErrorBoundary>

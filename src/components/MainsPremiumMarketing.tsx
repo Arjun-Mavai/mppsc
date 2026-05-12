@@ -72,8 +72,8 @@ export function MainsPremiumMarketing({ onClose }: MainsPremiumMarketingProps) {
       </h2>
       <p className="mx-auto mb-8 max-w-lg px-2 text-sm font-medium text-slate-600 md:text-base">
         {hi
-          ? 'सिलेबस के प्रत्येक टॉपिक पर 2020-2024 (5 वर्ष) के संपूर्ण आधिकारिक मुख्य परीक्षा (Mains) PYQs के विस्तृत विश्लेषणात्मक व द्विभाषी मॉडल उत्तर।'
-          : 'Complete official Mains PYQs from 2020 to 2024 (5 years) mapped to every syllabus topic with deep analytical bilingual model answers.'}
+          ? 'सिलेबस के प्रत्येक टॉपिक की गहरी समझ (Syllabus Grasp) के लिए पिछले वर्षों के प्रश्नों (PYQs) के हिंदी व इंग्लिश (English & Hindi) में तैयार 2 अलग-अलग स्टाइल के सटीक मॉडल उत्तर।'
+          : 'Deeply grasp every syllabus topic with complete previous years\' questions (PYQs) and 2 distinct model answer styles (Dual-Style variations) in clean English & Hindi.'}
       </p>
 
       <div className="mb-8 flex justify-center">

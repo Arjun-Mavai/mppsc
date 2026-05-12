@@ -69,8 +69,8 @@ export function PyqDeskControls({
               )}
             >
               {hi
-                ? 'पिछले वर्षों के वास्तविक मेंस प्रश्न, दो लेखन शैलियों में तैयार उत्तर और एक्सपर्ट टिप्स — साइट की भाषा स्विच से पढ़ें; प्रश्न पर टैप कर विस्तार खोलें।'
-                : 'Real MPPSC Mains previous-year questions, two curated answer styles, and expert pointers — use the site language switcher; tap a question to expand.'}
+                ? 'पेपर, थीम्स या परिचय खोलने के लिए दाएँ नियंत्रण बटन का उपयोग करें। नीचे संपूर्ण प्रश्न सूची और सटीक विश्लेषणात्मक उत्तर उपलब्ध हैं।'
+                : 'Use the right control panel to explore paper filters, dark mode, or summary guides. Access the complete list of strategic answers below.'}
             </p>
 
             <div

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookMarked, BookOpen, Filter, Moon, Sparkles, SunMedium } from 'lucide-react';
+import { ArrowLeft, BookMarked, BookOpen, Filter, Moon, Sparkles, SunMedium, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { MAIN_SYLLABUS_CARD_HUES, mainsSyllabusTileSkin } from '@/components/mains/mainsSyllabusTileSkin';
@@ -39,7 +39,7 @@ export function MainsSyllabusHubClient({
 }) {
   const { language } = useSettingsStore();
   const hi = language === 'hi';
-  const [readingTheme, setReadingTheme] = useState<ReadingTheme>('deep');
+  const [readingTheme, setReadingTheme] = useState<ReadingTheme>('paper');
   const themeDeep = readingTheme === 'deep';
   const [filterOpen, setFilterOpen] = useState(false);
   /** `__ALL__` = सभी; default hydrate to पहला पेपर via effect */
@@ -80,76 +80,64 @@ export function MainsSyllabusHubClient({
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/90 to-transparent" />
         </>
       ) : null}
-
       <div className="relative mx-auto max-w-3xl px-1 sm:px-1.5">
-        <Button
-          variant="ghost"
-          className={cn(
-            'mb-6',
-            themeDeep ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
-          )}
-          asChild
-        >
-          <Link href="/mains">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {hi ? 'मेंस हब' : 'Mains hub'}
-          </Link>
-        </Button>
-
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 items-start gap-3">
-            <div
-              className={cn(
-                'mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-2xl shadow-sm',
-                themeDeep
-                  ? 'border border-emerald-500/30 bg-emerald-950/40'
-                  : 'border border-emerald-200 bg-emerald-50'
-              )}
-              aria-hidden
-            >
-              📚
-            </div>
-            <div className="min-w-0">
-              <h1
-                className={cn(
-                  'text-[1.65rem] font-black tracking-tight md:text-[2rem]',
-                  !themeDeep &&
-                    'bg-gradient-to-r from-slate-900 via-emerald-800 to-slate-900 bg-clip-text text-transparent'
-                )}
-              >
-                {hi ? 'MPPSC मेंस सिलेबस 🎯' : 'MPPSC Mains syllabus 🎯'}
-              </h1>
-              <p
-                className={cn(
-                  'mt-2 text-[15px] leading-relaxed md:text-base',
-                  themeDeep ? 'text-slate-400' : 'text-slate-600'
-                )}
-              >
-                {hi
-                  ? 'पेपर चुनें — यूनिट ट्री व टॉपिक एक्सपर्ट कंटेंट (जहाँ जोड़ा गया हो)। भाषा स्विच से EN/HI देखें। फिल्टर बटन से पढ़ने का थीम और पेपर स्कोप। ✨'
-                  : 'Pick a paper for units & topics — expert notes where published. Site language toggles HI/EN. Use the circular filter for reading theme & paper scope. ✨'}
-              </p>
-            </div>
-          </div>
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <Button
+            variant="ghost"
+            className={cn(
+              'h-9 px-3',
+              themeDeep ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+            )}
+            asChild
+          >
+            <Link href="/mains">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {hi ? 'मेंस हब' : 'Mains hub'}
+            </Link>
+          </Button>
 
           <button
             type="button"
             onClick={() => setFilterOpen((o) => !o)}
             className={cn(
-              'mx-auto flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 shadow-md transition-transform hover:-translate-y-0.5 active:scale-95 sm:mx-0',
+              'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 shadow-sm transition-transform hover:-translate-y-0.5 active:scale-95',
               themeDeep
                 ? filterOpen
-                  ? 'border-emerald-400 bg-emerald-950/70 text-emerald-200'
-                  : 'border-slate-600 bg-slate-900 text-slate-200 hover:border-emerald-500/50'
+                  ? 'border-amber-400 bg-amber-950/60 text-amber-300 shadow-md shadow-amber-500/15'
+                  : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-amber-500/50 hover:text-amber-300'
                 : filterOpen
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-900'
-                  : 'border-slate-200 bg-white text-slate-700 hover:border-emerald-300'
+                  ? 'border-amber-500 bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                  : 'border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-400 hover:bg-amber-100/50'
             )}
             aria-expanded={filterOpen}
             aria-label={hi ? 'फिल्टर व थीम' : 'Filters & reading theme'}
           >
-            <Filter className="h-6 w-6" aria-hidden />
+            <Target className="h-[18px] w-[18px]" aria-hidden />
           </button>
+        </div>
+
+        <div className="mb-8 flex items-start gap-3">
+          <div
+            className={cn(
+              'mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-2xl shadow-sm',
+              themeDeep
+                ? 'border border-emerald-500/30 bg-emerald-950/40'
+                : 'border border-emerald-200 bg-emerald-50'
+            )}
+            aria-hidden
+          >
+            📚
+          </div>
+          <div className="min-w-0 flex-1">
+            <h1
+              className={cn(
+                'text-[1.65rem] font-black tracking-tight md:text-[2rem]',
+                themeDeep ? 'text-slate-50' : 'text-slate-900'
+              )}
+            >
+              {hi ? 'MPPSC मेंस सिलेबस 🎯' : 'MPPSC Mains syllabus 🎯'}
+            </h1>
+          </div>
         </div>
 
         <AnimatePresence initial={false}>
@@ -180,13 +168,13 @@ export function MainsSyllabusHubClient({
                 </p>
                 <p
                   className={cn(
-                    'mt-1 text-sm font-semibold leading-snug sm:text-[15px]',
+                    'mt-1 text-sm font-semibold leading-relaxed sm:text-[15px]',
                     themeDeep ? 'text-slate-400' : 'text-slate-600'
                   )}
                 >
                   {hi
-                    ? 'पढ़ने का हल्का/गहरा मोड यहीं से — बटन टेक्स्ट जितनी चौड़ाई, बेकार स्ट्रेच नहीं। नीचे डिफॉल्ट में पहला पेपर चुन रहता है; सभी देखने हों तो ड्रॉपडाउन से «सभी पेपर»।'
-                    : 'Reading theme lives here — compact buttons, content-sized width (no stretched bar). Papers default to the first in your list; pick “All papers” to restore the full list.'}
+                    ? 'पेपर चुनें — यूनिट ट्री व टॉपिक एक्सपर्ट कंटेंट (जहाँ जोड़ा गया हो)। भाषा स्विच से EN/HI देखें। फिल्टर बटन से पढ़ने का थीम और पेपर स्कोप। ✨'
+                    : 'Pick a paper for units & topics — expert notes where published. Site language toggles HI/EN. Use the circular filter for reading theme & paper scope. ✨'}
                 </p>
 
                 <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-start">
@@ -324,26 +312,75 @@ export function MainsSyllabusHubClient({
         </AnimatePresence>
 
         <div className="mb-8">
-          <Button
-            type="button"
+          <Link
+            href="/mains/syllabus/pyq-library"
             className={cn(
-              'h-auto w-full rounded-2xl border-2 py-4 font-black shadow-md transition-transform hover:-translate-y-0.5 sm:w-auto sm:min-w-[220px]',
-              themeDeep
-                ? 'border-violet-500/35 bg-gradient-to-br from-violet-950/80 to-slate-900 text-violet-50 hover:border-violet-400/50'
-                : 'border-violet-200 bg-gradient-to-br from-violet-50 to-white text-violet-950 hover:border-violet-300'
+              'flex items-center justify-between gap-4 overflow-hidden rounded-[2.25rem] px-5 py-4 transition-all duration-300 sm:rounded-[2.5rem] sm:py-5',
+              mainsSyllabusTileSkin('sky', themeDeep).frame,
+              mainsSyllabusTileSkin('sky', themeDeep).rowHover
             )}
-            asChild
           >
-            <Link href="/mains/syllabus/pyq-library" className="inline-flex items-center gap-3 px-6">
-              <BookMarked className={cn('h-6 w-6 shrink-0', themeDeep ? 'text-violet-300' : 'text-violet-600')} />
-              <span className="text-left text-sm leading-tight">
-                <span className="block text-[10px] font-black uppercase tracking-widest opacity-80">
-                  {hi ? 'पिछले वर्ष' : 'Previous years'}
-                </span>
-                <span className="text-base">{hi ? '📑 PYQ लाइब्रेरी · मॉडल उत्तर' : '📑 PYQ library · model answers'}</span>
+            <div className="flex min-w-0 items-start gap-3">
+              <span
+                className={cn(
+                  'mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl shadow-inner',
+                  themeDeep ? 'bg-black/30' : 'bg-white/80'
+                )}
+                aria-hidden
+              >
+                📑
               </span>
-            </Link>
-          </Button>
+              <div className="min-w-0">
+                <p
+                  className={cn(
+                    'font-black text-base md:text-lg',
+                    hi ? 'font-[family-name:var(--font-pyq-dev)]' : 'font-[family-name:var(--font-pyq-serif)]',
+                    themeDeep ? 'text-slate-50' : 'text-slate-900'
+                  )}
+                >
+                  {hi ? 'MPPSC मेंस PYQ लाइब्रेरी' : 'MPPSC Mains PYQ Library'}
+                </p>
+                <p
+                  className={cn(
+                    'mt-0.5 text-sm opacity-85',
+                    hi ? 'font-[family-name:var(--font-pyq-dev)]' : 'font-[family-name:var(--font-pyq-serif)]',
+                    themeDeep ? 'text-slate-400' : 'text-slate-600'
+                  )}
+                >
+                  {hi
+                    ? 'सभी वर्षों के प्रश्नपत्र और 2 अलग-अलग मॉडल उत्तर'
+                    : 'All previous years\' papers & 2 distinct model answers'}
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide',
+                      themeDeep
+                        ? 'border-white/15 bg-black/25 text-amber-200'
+                        : 'border-amber-200/90 bg-amber-50 text-amber-900'
+                    )}
+                  >
+                    <Sparkles className="h-3 w-3 text-amber-500" />
+                    {hi ? 'सभी सॉल्व्ड' : '100% Solved'}
+                  </span>
+                  <span
+                    className={cn(
+                      'text-[11px] font-bold',
+                      themeDeep ? 'text-slate-500' : 'text-slate-500'
+                    )}
+                  >
+                    {hi ? '2 अलग-अलग स्टाइल उत्तर' : '2 distinct writing styles'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <BookMarked
+              className={cn(
+                'h-9 w-9 shrink-0 opacity-85',
+                themeDeep ? 'text-sky-400' : 'text-sky-600'
+              )}
+            />
+          </Link>
         </div>
 
         {missing ? (

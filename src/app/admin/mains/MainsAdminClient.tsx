@@ -859,6 +859,28 @@ export function MainsAdminClient() {
                       </p>
                     </div>
                   </div>
+
+                  {/* Truncation warning alert banner */}
+                  <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4 text-amber-950 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600 animate-pulse" />
+                      <strong className="text-base font-black">⚠️ AI Truncation Alert — IMP / MUST READ:</strong>
+                    </div>
+                    <p className="mt-2 text-sm font-semibold leading-relaxed text-amber-900">
+                      Kyunki ye prompt bohot detailed aur premium bilingual content (Syllabus Grasp, 360° Dimensions, Model Answers for both Hindi & English) generate karta hai, <strong>Gemini/ChatGPT aksar likhte-likhte beech me ruk (truncate) jata hai!</strong>
+                    </p>
+                    <p className="mt-1 text-sm font-semibold leading-relaxed text-amber-850">
+                      Aapka JSON me abhi <strong>model_answers_hi/en</strong>, <strong>key_terms_cards</strong>, etc. bilkul missing hain (yeh <code className="rounded bg-white px-1 text-xs">topper_x_factor_hi</code> par hi cut ho gaya hai aur hamara automatic repair engine ise aadhe par hi thik karke band kar de raha hai).
+                    </p>
+                    <p className="mt-2 text-sm font-extrabold text-indigo-950">
+                      💡 Ise thik karne ka tareeqa (Dono blocks ko jodna):
+                    </p>
+                    <ol className="mt-1 list-decimal space-y-1.5 pl-5 text-sm font-semibold leading-relaxed text-slate-800">
+                      <li>Gemini/ChatGPT me jab generation ruk jaye, to likhein: <strong>"continue writing the JSON from topper_x_factor_en key onwards, maintain proper JSON"</strong> or click the <strong>"Continue generating" (लिखना जारी रखें)</strong> button.</li>
+                      <li>Jab wo baaki bacha JSON bhej de, to dono blocks ko aapas me jod (merge) kar dein (taaki ek hi closed curly braces <code className="rounded bg-white px-1 text-xs">{`{ ... }`}</code> ho aur bache hue keys jaise <code className="rounded bg-white px-1 text-xs">model_answers_hi</code> usme shamil ho sakein).</li>
+                      <li>Combined complete JSON ko yahan paste karke save karein!</li>
+                    </ol>
+                  </div>
                   <Textarea
                     value={jsonDraft}
                     onChange={(e) => setJsonDraft(e.target.value)}

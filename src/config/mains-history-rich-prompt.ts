@@ -8,6 +8,12 @@ import { MAINS_HISTORY_RICH_VERSION } from '@/lib/mains-history-rich-normalize';
  */
 export const MAINS_HISTORY_RICH_OUTPUT_SPEC = `
 --- LATEST — REQUIRED OUTPUT: EXPERT-RICH JSON (single object) ---
+🚨 CRITICAL DIRECTIVE FOR LLM (PREVENT TRUNCATION): Because this is a highly comprehensive bilingual prompt, you MUST write dense, ultra-crisp, and compact responses.
+- Keep all bullet points to a maximum of 1-2 lines.
+- Do NOT write verbose narrative or explanatory fluff outside the requested bullet formats.
+- Limit flashcard decks (key_terms_cards_hi/en) to exactly 8-10 high-value cards per language.
+- By being precise and concise, you guarantee that the entire JSON generates successfully in a single turn without getting cut off mid-way.
+
 Authority order: (1) scratch module DEMO + lens above, (2) this key list. Do **NOT** emit legacy flat keys (\`concept_hi\`, \`expert_strategy_*\`, top-level flat \`model_answers\`).
 
 Set "schema_version": "${MAINS_HISTORY_RICH_VERSION}" (exact string).
@@ -59,7 +65,7 @@ Mark discipline (mirror MPPSC notification; fill unused keys as [] arrays):
 - **Papers V–VI (Hindi + Essay):** model_answers_hi MUST include strong Pure Hindi-ready samples. You MUST leave model_answers_en completely empty ([]) or null, as English is strictly prohibited. Add longer Hindi practice in **7m**/ **10m** / optional **11m** as the topic warrants.
 
 Flash terms — UI parses **key_terms_cards_\*** arrays as strict JSON — valid JSON only (double quotes on keys/strings, commas between objects, **no trailing comma**, UTF-8).
-- **REQUIRED:** "key_terms_cards_hi" AND "key_terms_cards_en" — each exactly **12–22** objects of this shape (keys as written):
+- **REQUIRED:** "key_terms_cards_hi" AND "key_terms_cards_en" — each exactly **8–12** objects of this shape (keys as written):
   {\"emoji\":\"📜\",\"term\":\"…\",\"hint\":\"…\"}
   - **emoji** — one symbol per card (exam-relevant catalogue: 📜🗺️🏛️⚖️📊🧭 etc.), not spam.
   - **term** — **2–5 words**, scan-friendly headline (not a full sentence).

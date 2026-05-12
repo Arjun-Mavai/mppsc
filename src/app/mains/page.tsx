@@ -154,7 +154,7 @@ export default function MainsLandingPage() {
               : 'Direct analytical syllabus decoding with premium Double-Style Answer Variations — zero textbook and rote-learning clutter.'}
           </p>
 
-          <div className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-5 w-full max-w-lg mx-auto">
+          <div className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-5 w-full max-w-md sm:max-w-2xl md:max-w-3xl mx-auto">
             {/* 📚 Syllabus Deep Understanding Button - Premium Amber Gradient with Glowing Shadow */}
             <button
               type="button"

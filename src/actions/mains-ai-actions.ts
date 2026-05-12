@@ -31,14 +31,7 @@ function stripCodeFence(s: string) {
 function normalizeAiPayload(raw: Record<string, unknown>) {
   const conceptHi = String(raw.concept_hi ?? raw.conceptHi ?? '').trim();
   const conceptEn = String(raw.concept_en ?? raw.conceptEn ?? '').trim();
-  const ma = (raw.model_answers ?? raw.modelAnswers) as Record<string, unknown> | undefined;
-  const modelAnswers = {
-    '2m': normalizeVariantArr(ma?.['2m']),
-    '7m': normalizeVariantArr(ma?.['7m']),
-    '10m': normalizeVariantArr(ma?.['10m']),
-    '11m': normalizeVariantArr(ma?.['11m']),
-    case18: normalizeVariantArr(ma?.case18),
-  };
+  const modelAnswers = extractModelAnswersForValidation(raw);
   return {
     conceptHi,
     conceptEn,
@@ -129,6 +122,22 @@ function parseContentJson(rawText: string): Record<string, unknown> {
   throw new Error(`JSON Parsing Failed: ${lastErrorMsg}\n\n${context}`);
 }
 
+function getDiagnostics(parsed: Record<string, unknown>, ma: ReturnType<typeof extractModelAnswersForValidation>): string {
+  const rootKeys = Object.keys(parsed);
+  const findMaObj = (
+    parsed.model_answers_hi ??
+    parsed.model_answer_hi ??
+    parsed.modelanswers_hi ??
+    parsed.model_answers ??
+    parsed.model_answer ??
+    parsed.modelAnswers ??
+    parsed.modelAnswer ??
+    parsed.modelanswers
+  ) as Record<string, unknown> | undefined;
+  const maKeys = findMaObj && typeof findMaObj === 'object' ? Object.keys(findMaObj) : [];
+  return `[Diagnostics — schema_version: "${parsed.schema_version ?? 'missing'}", has_model_answers_hi: ${!!parsed.model_answers_hi}, has_model_answers: ${!!parsed.model_answers}, root_keys: [${rootKeys.join(', ')}], ma_subkeys: [${maKeys.join(', ')}], counted_models: 2m=${ma['2m'].length}, 7m=${ma['7m'].length}, 10m=${ma['10m'].length}, 11m=${ma['11m'].length}, case18=${ma.case18.length}]`;
+}
+
 function validateModelShape(
   pn: number,
   ma: ReturnType<typeof extractModelAnswersForValidation>
@@ -189,7 +198,10 @@ export async function adminApplyMainsContentJson(topicId: string, rawText: strin
 
       const ma = extractModelAnswersForValidation(parsed);
       const err = validateModelShape(pn, ma);
-      if (err) return { success: false as const, error: err };
+      if (err) {
+        const diag = getDiagnostics(parsed, ma);
+        return { success: false as const, error: `${err} ${diag}` };
+      }
 
       const keyHi =
         String(parsed.key_terms_hi ?? '').trim() ||
@@ -216,9 +228,10 @@ export async function adminApplyMainsContentJson(topicId: string, rawText: strin
       }
       const enErr = validateModelShape(pn, maEn);
       if (enErr) {
+        const diag = getDiagnostics(parsed, maEn);
         return {
           success: false as const,
-          error: `English models: ${enErr}`,
+          error: `English models: ${enErr} ${diag}`,
         };
       }
 
@@ -242,7 +255,10 @@ export async function adminApplyMainsContentJson(topicId: string, rawText: strin
       return { success: false as const, error: 'concept_hi / concept_en required' };
     }
     const err = validateModelShape(pn, n.modelAnswers);
-    if (err) return { success: false as const, error: err };
+    if (err) {
+      const diag = getDiagnostics(parsed, n.modelAnswers);
+      return { success: false as const, error: `${err} ${diag}` };
+    }
 
     const res = await upsertMainsContent(topicId, {
       conceptHi: n.conceptHi,
