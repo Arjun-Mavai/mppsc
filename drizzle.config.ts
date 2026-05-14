@@ -5,7 +5,10 @@ import { config as loadEnv } from 'dotenv';
 loadEnv({ path: '.env' });
 loadEnv({ path: '.env.local', override: true });
 
-const localDbPath = `file:${path.resolve(process.cwd(), 'mppsc_local_dev.db')}`;
+const localDbPath = `file:${path.resolve(
+  process.cwd(),
+  'backups/turso-backup-20260513-095501/mppsc-mains-target-2026-arjun-gurjar.sqlite'
+)}`;
 /** Same rule as `src/db/index.ts` (NEXT: NODE_ENV defaults to development when unset; tsx/cli often omits it). */
 const nodeEnv = process.env.NODE_ENV || 'development';
 const useLocalSqlite =

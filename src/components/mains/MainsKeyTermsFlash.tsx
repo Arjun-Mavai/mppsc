@@ -29,7 +29,7 @@ export function MainsKeyTermsFlash({
   return (
     <ul
       className={cn(
-        'grid list-none gap-3 p-0 sm:grid-cols-2',
+        'grid list-none gap-2.5 p-0 sm:grid-cols-2',
         font,
         className
       )}
@@ -38,7 +38,7 @@ export function MainsKeyTermsFlash({
         <li
           key={`${idx}-${it.term}-${it.hint.slice(0, 12)}`}
           className={cn(
-            'rounded-2xl border-2 px-4 py-3.5 shadow-sm transition-transform duration-200 hover:-translate-y-0.5',
+            'rounded-xl sm:rounded-2xl border-2 px-2.5 sm:px-3 py-2 sm:py-2.5 shadow-sm transition-transform duration-200 hover:-translate-y-0.5 overflow-hidden',
             [
               'border-pink-200/90 bg-gradient-to-br from-white via-pink-50/60 to-white dark:border-pink-800/60 dark:from-pink-950/50 dark:via-slate-900',
               'border-emerald-200/90 bg-gradient-to-br from-white via-emerald-50/60 to-white dark:border-emerald-800/60 dark:from-emerald-950/50 dark:via-slate-900',
@@ -47,25 +47,31 @@ export function MainsKeyTermsFlash({
             ][idx % 4]
           )}
         >
-          <div className="flex flex-wrap items-start gap-2">
-            {it.emoji ? (
-              <span className="select-none text-xl leading-none" aria-hidden>
-                {it.emoji}
-              </span>
-            ) : null}
-            {it.term ? (
-              <p className="text-[15px] font-black leading-snug text-slate-900 dark:text-slate-100 sm:text-[16px]">
-                {it.term}
-              </p>
-            ) : null}
+          <div className="mb-2">
+            <span className={cn(
+              "inline-flex items-center gap-1.5 rounded-lg border-b-[3px] border-r px-3 py-1 text-xs uppercase tracking-wider font-extrabold shadow-md shadow-black/10 dark:shadow-black/40 ring-1 ring-white/60 dark:ring-white/10",
+              [
+                'bg-gradient-to-r from-pink-500/30 to-pink-500/10 text-pink-950 dark:text-pink-300 border-pink-500/60',
+                'bg-gradient-to-r from-emerald-500/30 to-emerald-500/10 text-emerald-950 dark:text-emerald-300 border-emerald-500/60',
+                'bg-gradient-to-r from-amber-500/30 to-amber-500/10 text-amber-950 dark:text-amber-300 border-amber-500/60',
+                'bg-gradient-to-r from-sky-500/30 to-sky-500/10 text-sky-950 dark:text-sky-300 border-sky-500/60',
+              ][idx % 4]
+            )}>
+              {it.emoji ? (
+                <span className="select-none text-base sm:text-lg leading-none shrink-0" aria-hidden>
+                  {it.emoji}
+                </span>
+              ) : null}
+              {it.term}
+            </span>
           </div>
           <div
             className={cn(
-              'text-[15px] leading-relaxed text-slate-800 dark:text-slate-200 sm:text-[16px] whitespace-pre-line',
-              it.term ? 'mt-2 border-t border-slate-200/50 pt-2 dark:border-slate-800/50' : 'font-semibold'
+              'text-[14.5px] sm:text-[15.5px] leading-[1.75] sm:leading-[1.8] tracking-[0.01em] text-slate-800 dark:text-slate-200 whitespace-pre-line pl-0.5',
+              it.term ? 'mt-1.5 border-t border-slate-200/50 pt-1.5 dark:border-slate-800/50' : 'font-semibold'
             )}
           >
-            {it.hint.replace(/\s*\|\s*/g, '\n• ').replace(/\.\s+(?=[A-Z\u0900-\u097F])/g, '.\n• ')}
+            {it.hint.replace(/\s*\|\s*/g, '\n• ').replace(/\.\s+(?=[A-Z\u0900-\u097F])/g, '.\n• ').replace(/,\s*/g, ',\n• ')}
           </div>
         </li>
       ))}

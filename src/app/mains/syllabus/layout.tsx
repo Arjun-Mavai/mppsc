@@ -18,6 +18,7 @@ const devanagari = Noto_Sans_Devanagari({
 
 /**
  * Mains syllabus tree + PYQ desk are publicly navigable for demos.
+ * Pre-only users see Mains content as demo (overlays & locked sections).
  * Topic expert content & most PYQs are gated in-page (overlay + SyllabusLockMainsModal) unless vault unlocked.
  */
 export default async function MainsSyllabusLayout({ children }: { children: React.ReactNode }) {

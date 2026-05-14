@@ -27,6 +27,7 @@ import { usePwa } from '@/hooks/usePwa';
 import { useQuery } from '@tanstack/react-query';
 import { getCurrentUser } from '@/actions/auth-actions';
 import { getProductPortalNavVisibility } from '@/lib/product-portal-policy';
+import { hasPreAccess, hasMainsAccess } from '@/lib/access-grants';
 
 import './navbar-animations.css';
 
@@ -45,6 +46,7 @@ import {
   Zap,
   History,
   Info,
+  Library,
 } from './icons';
 
 // Import optimized sub-components
@@ -135,7 +137,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
       },
       {
         name: 'Mains',
-        href: '/mains/syllabus',
+        href: '/mains',
         icon: Crown,
         color: 'text-emerald-500',
       },
@@ -157,6 +159,113 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
       return true;
     });
   }, [portalNav]);
+
+  // Custom mobile sidebar navigation items based on active product/subscription category
+  const mobileNavItems = useMemo(() => {
+    // 1. Guest User (Not logged in)
+    if (!user) {
+      return [
+        { name: 'Syllabus', href: '/syllabus', icon: BookOpen, color: 'text-emerald-600' },
+        {
+          name: 'Test Series',
+          href: '/syllabus/quiz/pyq',
+          icon: GraduationCap,
+          color: 'text-amber-600',
+        },
+        { name: 'Free Daily Quiz', href: '/free-quiz', icon: Zap, color: 'text-orange-500' },
+        { name: 'Blogs', href: '/blogs', icon: BookOpen, color: 'text-sky-600' },
+        {
+          name: 'Mains',
+          href: '/mains',
+          icon: Crown,
+          color: 'text-emerald-500',
+        },
+      ];
+    }
+
+    const hasPreAccessVal = hasPreAccess(user as any);
+    const hasMainsAccessVal = hasMainsAccess(user as any);
+
+    // 2. Mains-only User (Logged in, has Mains but NOT Pre)
+    if (hasMainsAccessVal && !hasPreAccessVal) {
+      return [
+        {
+          name: language === 'hi' ? 'मुख्य पाठ्यक्रम' : 'Mains Syllabus',
+          href: '/mains',
+          icon: Crown,
+          color: 'text-emerald-500',
+        },
+        {
+          name: language === 'hi' ? 'मेंस PYQ लाइब्रेरी' : 'Mains PYQ Library',
+          href: '/mains/syllabus/pyq-library',
+          icon: Library,
+          color: 'text-violet-600',
+        },
+        {
+          name: 'About Us',
+          href: '/mains',
+          icon: Info,
+          color: 'text-slate-500',
+        },
+      ];
+    }
+
+    // 3. Combo User (Logged in, has BOTH Pre and Mains)
+    if (hasMainsAccessVal && hasPreAccessVal) {
+      return [
+        { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, color: 'text-slate-700' },
+        { name: 'Syllabus', href: '/syllabus', icon: BookOpen, color: 'text-emerald-600' },
+        {
+          name: 'Test Series',
+          href: '/syllabus/quiz/pyq',
+          icon: GraduationCap,
+          color: 'text-amber-600',
+        },
+        { name: 'Free Daily Quiz', href: '/free-quiz', icon: Zap, color: 'text-orange-500' },
+        { name: 'Blogs', href: '/blogs', icon: BookOpen, color: 'text-sky-600' },
+        {
+          name: 'Test History',
+          href: '/syllabus/test-history',
+          icon: History,
+          color: 'text-violet-600',
+        },
+        {
+          name: language === 'hi' ? 'मुख्य पाठ्यक्रम' : 'Mains Syllabus',
+          href: '/mains',
+          icon: Crown,
+          color: 'text-emerald-500',
+        },
+        {
+          name: language === 'hi' ? 'मेंस PYQ लाइब्रेरी' : 'Mains PYQ Library',
+          href: '/mains/syllabus/pyq-library',
+          icon: Library,
+          color: 'text-violet-600',
+        },
+        { name: 'About Us', href: '/', icon: Info, color: 'text-slate-500' },
+      ];
+    }
+
+    // 4. Pre-only User (Logged in, has Pre but NOT Mains)
+    return [
+      { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, color: 'text-slate-700' },
+      { name: 'Syllabus', href: '/syllabus', icon: BookOpen, color: 'text-emerald-600' },
+      {
+        name: 'Test Series',
+        href: '/syllabus/quiz/pyq',
+        icon: GraduationCap,
+        color: 'text-amber-600',
+      },
+      { name: 'Free Daily Quiz', href: '/free-quiz', icon: Zap, color: 'text-orange-500' },
+      { name: 'Blogs', href: '/blogs', icon: BookOpen, color: 'text-sky-600' },
+      {
+        name: 'Test History',
+        href: '/syllabus/test-history',
+        icon: History,
+        color: 'text-violet-600',
+      },
+      { name: 'About Us', href: '/', icon: Info, color: 'text-slate-500' },
+    ];
+  }, [user, language]);
 
   // ------------------------------------------------------------------
   // QUERY: SESSION RESTORATION (The "Hydration") - NOW WITH SERVER ACTION!
@@ -455,16 +564,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
 
 
                   <div className="flex-1 space-y-1 overflow-y-auto px-4 py-5">
-                    {navItems
-                      .filter((item) => {
-                        // Dashboard & Test History — logged-in users only
-                        if (item.name === 'Dashboard' || item.name === 'Test History')
-                          return !!user;
-                        // About Us — logged-in users only (they see home as about page)
-                        if (item.name === 'About Us') return !!user;
-                        return true;
-                      })
-                      .map((item) => {
+                    {mobileNavItems.map((item) => {
                         const isActive = pathname === item.href;
                         const Icon = item.icon;
                         return (

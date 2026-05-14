@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookMarked, BookOpen, Filter, Moon, Sparkles, SunMedium, Target } from 'lucide-react';
+import { ArrowLeft, BookMarked, BookOpen, Filter, Moon, Sparkles, SunMedium, Target, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { MAIN_SYLLABUS_CARD_HUES, mainsSyllabusTileSkin } from '@/components/mains/mainsSyllabusTileSkin';
@@ -26,7 +26,16 @@ export type MainsSyllabusHubPaper = {
   progress: number;
 };
 
-const PAPER_MOJIS = ['📘', '📗', '📙', '📕'] as const;
+const PAPER_MOJIS = ['📘', '📗', '📙', '📕', '📓', '📝'] as const;
+
+const ALL_SIX_PAPERS = [
+  { paperNumber: 1, titleHi: 'इतिहास + भूगोल', titleEn: 'History & Geography', moji: '📘' },
+  { paperNumber: 2, titleHi: 'राजनीति + समाजशास्त्र', titleEn: 'Polity & Sociology', moji: '📗' },
+  { paperNumber: 3, titleHi: 'अर्थशास्त्र + विज्ञान-तकनीकी', titleEn: 'Economics & Sci–Tech', moji: '📙' },
+  { paperNumber: 4, titleHi: 'दर्शन / मनोविज्ञान / प्रबंधन', titleEn: 'Philosophy, Psych, Pub Ad & Mgmt', moji: '📕' },
+  { paperNumber: 5, titleHi: 'सामान्य हिन्दी व व्याकरण', titleEn: 'General Hindi & Grammar', moji: '📓' },
+  { paperNumber: 6, titleHi: 'निबंध व प्रारूप लेखन', titleEn: 'Essay & official drafting', moji: '📝' },
+];
 
 type ReadingTheme = 'deep' | 'paper';
 
@@ -42,15 +51,15 @@ export function MainsSyllabusHubClient({
   const [readingTheme, setReadingTheme] = useState<ReadingTheme>('paper');
   const themeDeep = readingTheme === 'deep';
   const [filterOpen, setFilterOpen] = useState(false);
-  /** `__ALL__` = सभी; default hydrate to पहला पेपर via effect */
-  const [paperScope, setPaperScope] = useState<string | '__ALL__'>('');
+  /** `__ALL__` = सभी; default hydrate to __ALL__ */
+  const [paperScope, setPaperScope] = useState<string | '__ALL__'>('__ALL__');
 
   useEffect(() => {
     if (papers.length === 0) return;
     setPaperScope((prev) => {
       if (prev === '__ALL__') return '__ALL__';
       if (prev && papers.some((x) => x.id === prev)) return prev;
-      return papers[0]!.id;
+      return '__ALL__';
     });
   }, [papers]);
 
@@ -152,141 +161,80 @@ export function MainsSyllabusHubClient({
             >
               <div
                 className={cn(
-                  'rounded-[2rem] border-2 p-5 sm:p-6',
+                  'rounded-[2rem] border-2 p-5 sm:p-6 transition-all duration-300 shadow-xl space-y-5',
                   themeDeep
-                    ? 'border-slate-600 bg-slate-900/80 text-slate-100'
-                    : 'border-slate-200 bg-white text-slate-900 shadow-md'
+                    ? 'border-slate-700 bg-slate-900/60 backdrop-blur-md shadow-black/40 text-slate-100'
+                    : 'border-slate-200/80 bg-white/95 backdrop-blur-md shadow-slate-200/60 text-slate-900'
                 )}
               >
-                <p
-                  className={cn(
-                    'text-[10px] font-black uppercase tracking-[0.2em]',
-                    themeDeep ? 'text-emerald-400' : 'text-emerald-700'
-                  )}
-                >
-                  {hi ? 'दिखावट · पेपर' : 'View · Paper'}
-                </p>
-                <p
-                  className={cn(
-                    'mt-1 text-sm font-semibold leading-relaxed sm:text-[15px]',
-                    themeDeep ? 'text-slate-400' : 'text-slate-600'
-                  )}
-                >
-                  {hi
-                    ? 'पेपर चुनें — यूनिट ट्री व टॉपिक एक्सपर्ट कंटेंट (जहाँ जोड़ा गया हो)। भाषा स्विच से EN/HI देखें। फिल्टर बटन से पढ़ने का थीम और पेपर स्कोप। ✨'
-                    : 'Pick a paper for units & topics — expert notes where published. Site language toggles HI/EN. Use the circular filter for reading theme & paper scope. ✨'}
-                </p>
-
-                <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-start">
-                  <div className="flex flex-col gap-2 sm:min-w-0">
-                    <span
+                {/* 1. PAPER FILTER (TOP) */}
+                {papers.length > 0 ? (
+                  <div>
+                    <label
                       className={cn(
-                        'text-[10px] font-black uppercase tracking-widest',
-                        themeDeep ? 'text-slate-500' : 'text-slate-500'
+                        'mb-2 flex items-center gap-1.5 text-xs font-black uppercase tracking-wider',
+                        themeDeep ? 'text-emerald-400' : 'text-emerald-600'
                       )}
                     >
-                      {hi ? 'पठन थीम' : 'Reading theme'}
-                    </span>
-                    <div
-                      role="group"
-                      className={cn(
-                        'inline-flex w-fit gap-1 rounded-xl border p-1',
-                        themeDeep ? 'border-slate-600 bg-slate-950' : 'border-slate-200 bg-slate-50'
-                      )}
-                    >
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant={!themeDeep ? 'default' : 'ghost'}
-                        className={cn(
-                          'h-9 rounded-lg px-3 font-black',
-                          !themeDeep && 'bg-amber-500 text-slate-900 shadow-sm hover:bg-amber-400'
-                        )}
-                        onClick={() => setReadingTheme('paper')}
+                      <span>🎯</span>
+                      <span>{hi ? 'पेपर फ़ील्टर (Select Paper Scope)' : 'Paper Filter Scope'}</span>
+                    </label>
+                    <div className="relative">
+                      <div className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2">
+                        <span
+                          className={cn(
+                            'inline-block h-2 w-2 rounded-full animate-pulse ring-4',
+                            themeDeep
+                              ? 'bg-emerald-400 ring-emerald-500/25 shadow-[0_0_12px_rgba(52,211,153,0.6)]'
+                              : 'bg-emerald-600 ring-emerald-200/70 shadow-[0_0_10px_rgba(5,150,105,0.4)]'
+                          )}
+                        />
+                      </div>
+                      <Select
+                        value={paperSelectValue}
+                        onValueChange={(v) => setPaperScope(v === '__ALL__' ? '__ALL__' : v)}
                       >
-                        <SunMedium className="mr-1.5 h-4 w-4 shrink-0" />
-                        <span>{hi ? 'हल्का' : 'Light'}</span>
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant={themeDeep ? 'default' : 'ghost'}
-                        className={cn(
-                          'h-9 rounded-lg px-3 font-black',
-                          themeDeep && 'bg-slate-800 text-white hover:bg-slate-700'
-                        )}
-                        onClick={() => setReadingTheme('deep')}
-                      >
-                        <Moon className="mr-1.5 h-4 w-4 shrink-0" />
-                        <span>{hi ? 'गहरा' : 'Dark'}</span>
-                      </Button>
-                    </div>
-                  </div>
-
-                  {papers.length > 0 ? (
-                    <div className="min-w-0 flex-1 sm:max-w-md">
-                      <label
-                        className={cn(
-                          'mb-2 block text-[10px] font-black uppercase tracking-[0.14em]',
-                          themeDeep ? 'text-slate-500' : 'text-slate-500'
-                        )}
-                      >
-                        {hi ? 'पेपर फ़ील्टर' : 'Paper filter'}
-                      </label>
-                      <div className="relative">
-                        <div className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2">
-                          <span
-                            className={cn(
-                              'inline-block h-1.5 w-1.5 rounded-full ring-4',
-                              themeDeep
-                                ? 'bg-emerald-400 ring-emerald-500/25'
-                                : 'bg-emerald-500 ring-emerald-200/70'
-                            )}
-                          />
-                        </div>
-                        <Select
-                          value={paperSelectValue}
-                          onValueChange={(v) => setPaperScope(v === '__ALL__' ? '__ALL__' : v)}
+                        <SelectTrigger
+                          className={cn(
+                            'h-13 w-full rounded-2xl pl-10 pr-4 text-base font-black shadow-md ring-offset-0 focus:ring-0 md:min-w-[280px]',
+                            themeDeep
+                              ? 'border-slate-700 bg-slate-950 text-slate-100 hover:border-emerald-500/50 [&_svg]:text-slate-400'
+                              : 'border-slate-200 bg-white text-slate-800 hover:border-emerald-500/40 [&_svg]:text-slate-500'
+                          )}
                         >
-                          <SelectTrigger
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent
+                          position="popper"
+                          sideOffset={6}
+                          className={cn(
+                            'z-[200] rounded-2xl shadow-2xl',
+                            themeDeep
+                              ? 'border border-slate-700 bg-slate-950 text-slate-100'
+                              : 'border border-slate-200 bg-white text-slate-800'
+                          )}
+                        >
+                          <SelectItem
+                            value="__ALL__"
                             className={cn(
-                              'h-12 w-full rounded-2xl pl-10 text-sm font-bold shadow-sm ring-offset-0 focus:ring-0 sm:text-base md:min-w-[280px]',
-                              themeDeep
-                                ? 'border-slate-600 bg-slate-950/90 text-slate-100 [&_svg]:text-slate-400'
-                                : 'border-slate-200 bg-white text-slate-800 [&_svg]:text-slate-500'
+                              'cursor-pointer py-3.5 px-4 font-black text-sm rounded-xl mx-1 my-0.5',
+                              themeDeep ? 'focus:bg-slate-800 focus:text-white' : 'focus:bg-emerald-50 focus:text-emerald-950'
                             )}
                           >
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent
-                            position="popper"
-                            sideOffset={6}
-                            className={cn(
-                              'z-[200] rounded-2xl shadow-2xl',
-                              themeDeep
-                                ? 'border border-slate-600 bg-slate-950 text-slate-100'
-                                : 'border border-slate-200 bg-white text-slate-700'
-                            )}
-                          >
+                            <span>🌐</span> {hi ? 'सभी 6 पेपर्स (All Papers)' : 'All 6 Papers'}
+                          </SelectItem>
+                          {papers.map((p) => (
                             <SelectItem
-                              value="__ALL__"
+                              key={p.id}
+                              value={p.id}
+                              textValue={`Paper ${p.paperNumber}`}
                               className={cn(
-                                'cursor-pointer py-3 font-bold',
-                                themeDeep ? 'focus:bg-slate-800' : 'focus:bg-emerald-50'
+                                'cursor-pointer py-3.5 px-4 font-bold text-sm rounded-xl mx-1 my-0.5',
+                                themeDeep ? 'focus:bg-slate-800 focus:text-white' : 'focus:bg-emerald-50 focus:text-emerald-950'
                               )}
                             >
-                              {hi ? 'सभी पेपर' : 'All papers'}
-                            </SelectItem>
-                            {papers.map((p) => (
-                              <SelectItem
-                                key={p.id}
-                                value={p.id}
-                                textValue={`Paper ${p.paperNumber}`}
-                                className={cn(
-                                  'cursor-pointer py-3 font-bold',
-                                  themeDeep ? 'focus:bg-slate-800' : 'focus:bg-emerald-50'
-                                )}
-                              >
+                              <span className="flex items-center gap-2">
+                                <span className="text-emerald-500">▪</span>
                                 {hi ? (
                                   <>
                                     पेपर {p.paperNumber}
@@ -298,13 +246,85 @@ export function MainsSyllabusHubClient({
                                     {p.titleEn ? ` · ${p.titleEn}` : ''}
                                   </>
                                 )}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  ) : null}
+                  </div>
+                ) : null}
+
+                {/* 2. THEME SWITCHER (MIDDLE) */}
+                <div
+                  className={cn(
+                    'flex items-center justify-between gap-3 border-t pt-4',
+                    themeDeep ? 'border-slate-800' : 'border-slate-100'
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'text-xs font-extrabold uppercase tracking-wider',
+                      themeDeep ? 'text-slate-400' : 'text-slate-500'
+                    )}
+                  >
+                    {hi ? 'पठन थीम (Theme)' : 'Reading Theme'}
+                  </span>
+                  <div
+                    className={cn(
+                      'flex items-center gap-1.5 rounded-2xl border p-1.5',
+                      themeDeep ? 'border-slate-700 bg-slate-950/80' : 'border-slate-200 bg-slate-100/80 shadow-inner'
+                    )}
+                  >
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={!themeDeep ? 'default' : 'ghost'}
+                      className={cn(
+                        'rounded-xl font-black px-4 py-2 h-9 transition-all active:scale-95',
+                        !themeDeep ? 'bg-amber-500 text-slate-950 shadow-md hover:bg-amber-400' : 'text-slate-400 hover:text-slate-200'
+                      )}
+                      onClick={() => setReadingTheme('paper')}
+                    >
+                      <SunMedium className="mr-1.5 h-4 w-4 shrink-0" />
+                      <span>{hi ? 'हल्का' : 'Light'}</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={themeDeep ? 'default' : 'ghost'}
+                      className={cn(
+                        'rounded-xl font-black px-4 py-2 h-9 transition-all active:scale-95',
+                        themeDeep ? 'bg-slate-800 text-white shadow-md border border-slate-700 hover:bg-slate-700' : 'text-slate-600 hover:text-slate-900'
+                      )}
+                      onClick={() => setReadingTheme('deep')}
+                    >
+                      <Moon className="mr-1.5 h-4 w-4 shrink-0" />
+                      <span>{hi ? 'गहरा' : 'Dark'}</span>
+                    </Button>
+                  </div>
+                </div>
+
+                {/* 3. DESCRIPTIVE TEXT (BOTTOM FOOTER) */}
+                <div
+                  className={cn(
+                    'rounded-2xl p-4 border transition-colors',
+                    themeDeep ? 'bg-slate-950/40 border-slate-800 text-slate-400' : 'bg-slate-50/80 border-slate-100 text-slate-600'
+                  )}
+                >
+                  <div className="flex items-start gap-2.5">
+                    <SlidersHorizontal className={cn("h-4 w-4 mt-0.5 shrink-0", themeDeep ? "text-amber-500" : "text-amber-600")} />
+                    <div className="space-y-1 text-xs leading-relaxed font-semibold">
+                      <p>
+                        {hi ? 'दिखावट · पेपर (View & Scope)' : 'View & Scope'}
+                      </p>
+                      <p className="font-normal opacity-90">
+                        {hi
+                          ? 'पेपर चुनें — यूनिट ट्री व टॉपिक एक्सपर्ट कंटेंट (जहाँ जोड़ा गया हो)। भाषा स्विच से EN/HI देखें। फिल्टर बटन से पढ़ने का थीम और पेपर स्कोप। ✨'
+                          : 'Pick a paper for units & topics — expert notes where published. Site language toggles HI/EN. Use the filter for reading theme & paper scope. ✨'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -418,41 +438,116 @@ export function MainsSyllabusHubClient({
               </code>
             </p>
           </div>
-        ) : papers.length === 0 ? (
-          <div
-            className={cn(
-              'rounded-[2rem] border-2 p-8',
-              themeDeep ? 'border-slate-700 bg-slate-900/60 text-slate-300' : 'border-slate-200 bg-white text-slate-600 shadow-sm'
-            )}
-          >
-            <p className="font-bold">{hi ? 'अभी कोई पेपर नहीं 📝' : 'No papers yet 📝'}</p>
-            <p className="mt-2 text-sm">
-              <code className={themeDeep ? 'text-emerald-400' : 'text-emerald-700'}>npm run db:seed:mains</code>
-              {hi ? ' — वैlid .env में DB के साथ।' : ' — with a valid `.env` database.'}
-            </p>
-          </div>
         ) : (
           <ul className="space-y-3 pb-10">
-            {visiblePapers.map((p, i) => {
-              const orig = Math.max(0, papers.findIndex((x) => x.id === p.id));
-              const hue = MAIN_SYLLABUS_CARD_HUES[orig % 4];
+            {ALL_SIX_PAPERS.map((sp, idx) => {
+              const matchingDb = papers.find((x) => x.paperNumber === sp.paperNumber);
+              if (paperScope && paperScope !== '__ALL__' && matchingDb?.id !== paperScope) {
+                return null;
+              }
+
+              const hue = MAIN_SYLLABUS_CARD_HUES[idx % 4];
               const tileSkin = mainsSyllabusTileSkin(hue, themeDeep);
-              const moji = PAPER_MOJIS[orig % 4];
+              const moji = sp.moji;
+
+              if (matchingDb) {
+                return (
+                  <li key={matchingDb.id}>
+                    <Link
+                      href={`/mains/syllabus/${matchingDb.id}`}
+                      className={cn(
+                        'flex items-center justify-between gap-4 overflow-hidden rounded-[2.25rem] px-5 py-4 transition-all duration-300 sm:rounded-[2.5rem] sm:py-5',
+                        tileSkin.frame,
+                        tileSkin.rowHover
+                      )}
+                    >
+                      <div className="flex min-w-0 items-start gap-3">
+                        <span
+                          className={cn(
+                            'mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl shadow-inner',
+                            themeDeep ? 'bg-black/30' : 'bg-white/80'
+                          )}
+                          aria-hidden
+                        >
+                          {moji}
+                        </span>
+                        <div className="min-w-0">
+                          <p
+                            className={cn(
+                              'truncate font-black',
+                              hi ? 'font-[family-name:var(--font-pyq-dev)]' : 'font-[family-name:var(--font-pyq-serif)]',
+                              themeDeep ? 'text-slate-50' : 'text-slate-900'
+                            )}
+                          >
+                            {hi
+                              ? `पेपर ${matchingDb.paperNumber}${matchingDb.titleHi ? `: ${matchingDb.titleHi}` : matchingDb.titleEn ? `: ${matchingDb.titleEn}` : ''}`
+                              : `Paper ${matchingDb.paperNumber}${matchingDb.titleEn ? `: ${matchingDb.titleEn}` : ''}`}
+                          </p>
+                          {!hi && matchingDb.titleHi ? (
+                            <p
+                              className={cn(
+                                'mt-0.5 truncate text-sm font-[family-name:var(--font-pyq-dev)] opacity-85',
+                                themeDeep ? 'text-slate-400' : 'text-slate-600'
+                              )}
+                            >
+                              {matchingDb.titleHi}
+                            </p>
+                          ) : hi && matchingDb.titleEn ? (
+                            <p
+                              className={cn(
+                                'mt-0.5 truncate text-sm font-[family-name:var(--font-pyq-serif)] opacity-85',
+                                themeDeep ? 'text-slate-400' : 'text-slate-600'
+                              )}
+                            >
+                              {matchingDb.titleEn}
+                            </p>
+                          ) : null}
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <span
+                              className={cn(
+                                'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide',
+                                themeDeep
+                                  ? 'border-white/15 bg-black/25 text-emerald-200'
+                                  : 'border-emerald-200/90 bg-emerald-50 text-emerald-900'
+                              )}
+                            >
+                              <Sparkles className="h-3 w-3" />
+                              {matchingDb.progress}% {hi ? 'तैयार' : 'ready'}
+                            </span>
+                            <span
+                              className={cn(
+                                'text-[11px] font-bold',
+                                themeDeep ? 'text-slate-500' : 'text-slate-500'
+                              )}
+                            >
+                              {matchingDb.publishedTopics}/{matchingDb.totalTopics} {hi ? 'टॉपिक · खोलने के लिए टैप' : 'topics · tap to open'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <BookOpen
+                        className={cn(
+                          'h-9 w-9 shrink-0 opacity-85',
+                          themeDeep ? 'text-emerald-400' : 'text-emerald-600'
+                        )}
+                      />
+                    </Link>
+                  </li>
+                );
+              }
 
               return (
-                <li key={p.id}>
-                  <Link
-                    href={`/mains/syllabus/${p.id}`}
+                <li key={`missing-${sp.paperNumber}`}>
+                  <div
                     className={cn(
-                      'flex items-center justify-between gap-4 overflow-hidden rounded-[2.25rem] px-5 py-4 transition-all duration-300 sm:rounded-[2.5rem] sm:py-5',
-                      tileSkin.frame,
-                      tileSkin.rowHover
+                      'flex items-center justify-between gap-4 overflow-hidden rounded-[2.25rem] px-5 py-4 transition-all duration-300 sm:rounded-[2.5rem] sm:py-5 opacity-80',
+                      tileSkin.frame
                     )}
                   >
                     <div className="flex min-w-0 items-start gap-3">
                       <span
                         className={cn(
-                          'mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl shadow-inner',
+                          'mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl shadow-inner grayscale',
                           themeDeep ? 'bg-black/30' : 'bg-white/80'
                         )}
                         aria-hidden
@@ -464,43 +559,32 @@ export function MainsSyllabusHubClient({
                           className={cn(
                             'truncate font-black',
                             hi ? 'font-[family-name:var(--font-pyq-dev)]' : 'font-[family-name:var(--font-pyq-serif)]',
-                            themeDeep ? 'text-slate-50' : 'text-slate-900'
+                            themeDeep ? 'text-slate-200' : 'text-slate-800'
                           )}
                         >
                           {hi
-                            ? `पेपर ${p.paperNumber}${p.titleHi ? `: ${p.titleHi}` : p.titleEn ? `: ${p.titleEn}` : ''}`
-                            : `Paper ${p.paperNumber}${p.titleEn ? `: ${p.titleEn}` : ''}`}
+                            ? `पेपर ${sp.paperNumber}: ${sp.titleHi}`
+                            : `Paper ${sp.paperNumber}: ${sp.titleEn}`}
                         </p>
-                        {!hi && p.titleHi ? (
-                          <p
-                            className={cn(
-                              'mt-0.5 truncate text-sm font-[family-name:var(--font-pyq-dev)] opacity-85',
-                              themeDeep ? 'text-slate-400' : 'text-slate-600'
-                            )}
-                          >
-                            {p.titleHi}
-                          </p>
-                        ) : hi && p.titleEn ? (
-                          <p
-                            className={cn(
-                              'mt-0.5 truncate text-sm font-[family-name:var(--font-pyq-serif)] opacity-85',
-                              themeDeep ? 'text-slate-400' : 'text-slate-600'
-                            )}
-                          >
-                            {p.titleEn}
-                          </p>
-                        ) : null}
+                        <p
+                          className={cn(
+                            'mt-0.5 truncate text-sm opacity-85',
+                            hi ? 'font-[family-name:var(--font-pyq-dev)]' : 'font-[family-name:var(--font-pyq-serif)]',
+                            themeDeep ? 'text-slate-400' : 'text-slate-600'
+                          )}
+                        >
+                          {hi ? sp.titleEn : sp.titleHi}
+                        </p>
                         <div className="mt-2 flex flex-wrap items-center gap-2">
                           <span
                             className={cn(
                               'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide',
                               themeDeep
-                                ? 'border-white/15 bg-black/25 text-emerald-200'
-                                : 'border-emerald-200/90 bg-emerald-50 text-emerald-900'
+                                ? 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+                                : 'border-amber-300 bg-amber-50 text-amber-800'
                             )}
                           >
-                            <Sparkles className="h-3 w-3" />
-                            {p.progress}% {hi ? 'तैयार' : 'ready'}
+                            🚀 {hi ? 'जल्द आ रहा है (Coming Soon)' : 'Coming Soon'}
                           </span>
                           <span
                             className={cn(
@@ -508,18 +592,18 @@ export function MainsSyllabusHubClient({
                               themeDeep ? 'text-slate-500' : 'text-slate-500'
                             )}
                           >
-                            {p.publishedTopics}/{p.totalTopics} {hi ? 'टॉपिक · खोलने के लिए टैप' : 'topics · tap to open'}
+                            {hi ? 'एक्सपर्ट कंटेंट तैयार किया जा रहा है' : 'Expert content under preparation'}
                           </span>
                         </div>
                       </div>
                     </div>
-                    <BookOpen
+                    <BookMarked
                       className={cn(
-                        'h-9 w-9 shrink-0 opacity-85',
-                        themeDeep ? 'text-emerald-400' : 'text-emerald-600'
+                        'h-9 w-9 shrink-0 opacity-30',
+                        themeDeep ? 'text-slate-500' : 'text-slate-400'
                       )}
                     />
-                  </Link>
+                  </div>
                 </li>
               );
             })}

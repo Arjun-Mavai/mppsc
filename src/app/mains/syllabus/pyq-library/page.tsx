@@ -15,5 +15,5 @@ export default async function MainsPyqLibraryPage() {
   const user = await verifyAuth();
   const vaultUnlocked = isMainsVaultUnlockedUser(user);
 
-  return <PyqLibraryClient vaultUnlocked={vaultUnlocked} />;
+  return <PyqLibraryClient vaultUnlocked={vaultUnlocked} allowDemoAccess={!user} />;
 }

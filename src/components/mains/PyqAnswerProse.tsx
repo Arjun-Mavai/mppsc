@@ -447,14 +447,14 @@ export function PyqAnswerProse({
 
       const chip = examSurfaceChrome
         ? cn(
-            compact ? 'rounded-md px-2.5 py-1.5' : 'my-0.5 rounded-lg border px-3 py-2.5',
+            compact ? 'rounded-md px-2 py-1.5' : 'my-0.5 rounded-lg border px-2 sm:px-2.5 py-1.5 sm:py-2',
             'shadow-sm break-words min-w-0 overflow-hidden text-pretty',
             theme === 'deep'
               ? 'border-slate-600 bg-slate-950 text-slate-50'
               : 'border-slate-300 bg-white text-slate-950'
           )
         : cn(
-            compact ? 'rounded-lg border px-1.5 py-1 shadow-none' : 'my-1 rounded-xl border px-2.5 py-2 shadow-sm',
+            compact ? 'rounded-lg border px-1.5 py-1 shadow-none' : 'my-0.5 rounded-xl border px-2 sm:px-2.5 py-1.5 sm:py-2 shadow-sm',
             'transition-colors break-words min-w-0 overflow-hidden text-pretty',
             theme === 'deep'
               ? BULLET_DEEP[key]

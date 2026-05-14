@@ -186,11 +186,6 @@ export function GuestLeadModal({
   // 1. User not logged in
   // 2. No stored lead or lead expired
   useEffect(() => {
-    if (!isProtectionEnabled) {
-      setIsOpen(false);
-      return;
-    }
-
     const isLoggedIn = !!user;
     if (isLoggedIn) {
       setIsOpen(false);

@@ -61,7 +61,7 @@ export function MainsGuestAccessGuards() {
     };
   }, [isLoggedIn]);
 
-  if (!isProtectionEnabled || isLoggedIn) return null;
+  if (isLoggedIn) return null;
 
   const page = pathname?.includes('/pyq-library') ? 'mains-pyq-library' : 'mains-syllabus';
   const title = page === 'mains-pyq-library'

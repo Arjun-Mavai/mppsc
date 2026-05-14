@@ -42,29 +42,21 @@ export default async function MainsPaperSyllabusLayout({
       : [];
 
   return (
-    <div className="flex h-[100dvh] overflow-hidden">
-      <aside className="hidden w-80 shrink-0 border-r border-slate-800 lg:block">
-        <div className="flex h-14 items-center border-b border-slate-800 px-4">
-          <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white" asChild>
+    <div className="flex h-[calc(100dvh-3.5rem)] overflow-hidden">
+      <aside className="hidden w-80 lg:w-[22rem] shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 lg:flex lg:flex-col lg:h-full lg:overflow-hidden">
+        <div className="flex h-14 items-center border-b border-slate-200 dark:border-slate-800 px-4">
+          <Button variant="ghost" size="sm" className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-bold" asChild>
             <Link href="/mains/syllabus">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              All papers
+              सभी पेपर (All Papers)
             </Link>
           </Button>
         </div>
-        <MainsSyllabusSidebar paperNumber={paper.paperNumber} units={units} language="hi" />
+        <MainsSyllabusSidebar paperNumber={paper.paperNumber} titleHi={paper.titleHi} titleEn={paper.titleEn} units={units} language="hi" />
       </aside>
 
-      <main className="min-h-0 min-w-0 flex-1 flex flex-col overflow-hidden">
-        <div className="flex h-14 items-center border-b border-slate-800 px-4 lg:hidden">
-          <Button variant="ghost" size="sm" className="text-slate-400" asChild>
-            <Link href="/mains/syllabus">Papers</Link>
-          </Button>
-          <span className="ml-3 truncate text-sm font-bold text-white">
-            Paper {paper.paperNumber}
-          </span>
-        </div>
-        <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+      <main className="min-h-0 min-w-0 flex-1 flex flex-col h-full overflow-hidden">
+        <div className="min-h-0 flex-1 flex flex-col h-full w-full overflow-hidden">{children}</div>
       </main>
     </div>
   );

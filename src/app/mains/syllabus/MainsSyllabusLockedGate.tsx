@@ -37,17 +37,17 @@ export function MainsSyllabusLockedGate() {
       <div className="relative z-10 w-full max-w-lg text-center">
         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-400/35 bg-gradient-to-r from-emerald-500/15 to-teal-500/10 px-4 py-2 text-[11px] font-black uppercase tracking-[0.2em] text-emerald-300 shadow-[0_0_24px_rgba(16,185,129,0.15)]">
           <Lock className="h-3.5 w-3.5" aria-hidden />
-          {hi ? 'मेंस वॉल्ट लॉक' : 'Mains vault locked'}
+          {hi ? 'मेंस ज्ञानकोश लॉक' : 'Mains Gyan Kosh locked'}
         </div>
 
         <h1 className="font-display mb-4 text-3xl font-black leading-tight tracking-tight md:text-4xl md:leading-[1.1]">
           {hi ? (
             <>
-              MPPSC मेंस सिलेबस <span className="text-emerald-400">अनलॉक</span> करें
+              MPPSC मेंस ज्ञानकोश <span className="text-emerald-400">अनलॉक</span> करें
             </>
           ) : (
             <>
-              Unlock <span className="text-emerald-400">MPPSC Mains</span> vault
+              Unlock <span className="text-emerald-400">MPPSC Mains</span> Gyan Kosh
             </>
           )}
         </h1>
@@ -61,7 +61,7 @@ export function MainsSyllabusLockedGate() {
           <div className="border-b border-emerald-500/15 bg-emerald-950/40 px-6 py-4">
             <p className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-emerald-400">
               <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
-              {hi ? 'मेंस वॉल्ट में क्या है' : "What's in the mains vault"}
+              {hi ? 'मेंस ज्ञानकोश में क्या है' : "What's in Mains Gyan Kosh"}
             </p>
           </div>
           <div className="px-6 py-6">

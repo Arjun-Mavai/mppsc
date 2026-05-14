@@ -10,7 +10,9 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { coerceMarkdownBulletsLoose } from '@/lib/mains-readable-coerce';
 import { MAINS_HISTORY_RICH_VERSION, pickInterlinkingMarkdown, pickVariantStem, extractModelAnswers } from '@/lib/mains-history-rich-normalize';
-import { CheckCircle, BookOpen, Filter, Network, Brain, Palette, AlertTriangle, Sparkles, FileText, ChevronDown, Zap, Compass, Trophy, LineChart } from 'lucide-react';
+import { CheckCircle, BookOpen, Filter, Network, Brain, Palette, AlertTriangle, Sparkles, FileText, ChevronDown, Zap, Compass, Trophy, LineChart, SlidersHorizontal, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
+import { MainsMobileSyllabusDrawer } from '@/components/mains/MainsMobileSyllabusDrawer';
 import { MainsKeyTermsFlash } from '@/components/mains/MainsKeyTermsFlash';
 
 function parseBoldInline(text: string) {
@@ -23,8 +25,13 @@ function parseBoldInline(text: string) {
         </strong>
       );
     }
-    return <span key={i}>{part}</span>;
+    return <span key={i}>{part.replace(/\*+/g, '')}</span>;
   });
+}
+
+function bulletizeOnComma(raw: string): string {
+  if (!raw) return '';
+  return raw.split(/,\s*/g).filter(Boolean).join('\n');
 }
 
 function bulletizeMemoryHook(raw: string): string {
@@ -93,23 +100,89 @@ function models(payload: Record<string, unknown>, lang: 'hi' | 'en') {
   return extractModelAnswers(payload, lang);
 }
 
+function MainsSyllabusGraspRenderer({ text, hi }: { text: string; hi: boolean }) {
+  const rawLines = text.split('\n').map(l => l.trim()).filter(l => Boolean(l) && l !== '-' && l !== '*' && l !== '•');
+
+  const editorialProse = cn(
+    "text-[15.5px] sm:text-[17px] leading-[1.85] sm:leading-[1.9] tracking-[0.015em] font-medium text-slate-100",
+    hi ? "font-[family-name:var(--font-pyq-dev)]" : "font-[family-name:var(--font-pyq-serif)]"
+  );
+
+  return (
+    <div className="space-y-4 text-left w-full mt-2">
+      {rawLines.map((line, idx) => {
+        let clean = line.replace(/^(?:#+|\-|\*+|\•)\s*/, '').replace(/\*+/g, '').trim();
+        if (!clean) return null;
+
+        const colonIdx = clean.indexOf(':');
+        let prefix = '';
+        let rest = clean;
+
+        if (colonIdx !== -1 && colonIdx < 55) {
+          prefix = clean.substring(0, colonIdx).trim();
+          rest = clean.substring(colonIdx + 1).trim();
+        }
+
+        const cardSkin = [
+          'border-amber-500/25 bg-amber-950/15 shadow-sm hover:border-amber-500/40',
+          'border-emerald-500/25 bg-emerald-950/15 shadow-sm hover:border-emerald-500/40',
+          'border-sky-500/25 bg-sky-950/15 shadow-sm hover:border-sky-500/40',
+          'border-purple-500/25 bg-purple-950/15 shadow-sm hover:border-purple-500/40',
+        ][idx % 4];
+
+        const badgeSkin = [
+          'bg-gradient-to-r from-amber-500/30 to-amber-500/10 text-amber-300 border-b-[3px] border-r border-amber-500/60 shadow-md shadow-black/40 ring-1 ring-white/10',
+          'bg-gradient-to-r from-emerald-500/30 to-emerald-500/10 text-emerald-300 border-b-[3px] border-r border-emerald-500/60 shadow-md shadow-black/40 ring-1 ring-white/10',
+          'bg-gradient-to-r from-sky-500/30 to-sky-500/10 text-sky-300 border-b-[3px] border-r border-sky-500/60 shadow-md shadow-black/40 ring-1 ring-white/10',
+          'bg-gradient-to-r from-purple-500/30 to-purple-500/10 text-purple-300 border-b-[3px] border-r border-purple-500/60 shadow-md shadow-black/40 ring-1 ring-white/10',
+        ][idx % 4];
+
+        const dotSkin = [
+          'bg-amber-500',
+          'bg-emerald-500',
+          'bg-sky-500',
+          'bg-purple-500',
+        ][idx % 4];
+
+        return (
+          <div key={idx} className={cn("px-3 py-3.5 sm:px-4 sm:py-4 rounded-xl border transition-all duration-300 overflow-hidden", cardSkin)}>
+            {prefix ? (
+              <div className="mb-2.5">
+                <span className={cn("inline-flex items-center rounded-lg px-3 py-1 text-xs uppercase tracking-wider font-extrabold shadow-sm font-[family-name:var(--font-pyq-dev)]", badgeSkin)}>
+                  {prefix}
+                </span>
+              </div>
+            ) : null}
+            <div className="flex items-start gap-2.5">
+              <span className={cn("mt-2 inline-block size-2 shrink-0 rounded-full", dotSkin)} />
+              <p className={cn(editorialProse, "flex-1 min-w-0")}>
+                {rest}
+              </p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function MainsHistoryRichViewer({
-  topicTitleHi,
-  topicTitleEn,
+  topic,
   payload,
   uiLang,
+  standalonePage = false,
 }: {
-  topicTitleHi: string;
-  topicTitleEn: string;
+  topic: { id: string; titleHi: string; titleEn: string; unitId: string; paperId?: string; paperNumber?: number };
   payload: Record<string, unknown>;
   uiLang: 'hi' | 'en';
+  standalonePage?: boolean;
 }) {
   const hi = uiLang === 'hi';
   const proseTheme = useMainsReaderProseTheme();
   const [modelLang, setModelLang] = useState<'hi' | 'en'>(uiLang === 'hi' ? 'hi' : 'en');
   const [topicMetaOpen, setTopicMetaOpen] = useState(false);
 
-  const title = hi ? topicTitleHi : topicTitleEn;
+  const title = hi ? topic.titleHi : topic.titleEn;
 
   useEffect(() => {
     setModelLang(uiLang === 'hi' ? 'hi' : 'en');
@@ -143,29 +216,52 @@ export function MainsHistoryRichViewer({
   const ver = String(payload.schema_version ?? '');
 
   return (
-    <div className="flex h-full flex-col bg-gradient-to-b from-slate-50 via-white to-amber-50/30 dark:from-slate-950 dark:via-slate-950 dark:to-amber-950/20">
-      <header className="shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95">
-        <div className="flex items-center gap-2 px-3 py-2 sm:px-4">
-          <span className="hidden shrink-0 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500 sm:inline">
-            {hi ? 'सिलेबस' : 'Topic'}
-          </span>
-          <h1 className="min-w-0 flex-1 truncate text-[13px] font-bold leading-tight text-slate-900 dark:text-slate-100 sm:text-sm">
-            {title}
-          </h1>
-          <button
-            type="button"
-            onClick={() => setTopicMetaOpen((x) => !x)}
-            className={cn(
-              'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 shadow-sm transition-colors',
-              topicMetaOpen
-                ? 'border-amber-500 bg-amber-500 text-white dark:bg-amber-600 dark:border-amber-600'
-                : 'border-amber-200 bg-amber-50 text-amber-800 hover:border-amber-300 hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:border-amber-500/50'
+    <div className="flex min-h-0 flex-1 flex-col bg-gradient-to-b from-slate-50 via-white to-amber-50/30 dark:from-slate-950 dark:via-slate-950 dark:to-amber-950/20 overflow-hidden">
+      <header className={cn(
+        'shrink-0 border-b border-slate-200/80 dark:border-slate-800',
+        standalonePage
+          ? 'fixed top-14 left-0 right-0 z-40 flex min-h-14 items-center justify-between gap-3 bg-white/90 backdrop-blur-md shadow-sm dark:bg-slate-950/90 px-3'
+          : 'bg-white/95 backdrop-blur dark:bg-slate-950/95'
+      )}>
+        <div className={cn('flex items-center justify-between gap-2 px-3 py-2 sm:px-4', standalonePage ? 'w-full px-0 py-0' : '')}>
+          <div className="flex items-center gap-2 min-w-0 pr-1">
+            {topic.paperId && (
+              <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl shrink-0" asChild>
+                <Link href={`/mains/syllabus/${topic.paperId}`}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Link>
+              </Button>
             )}
-            aria-expanded={topicMetaOpen}
-            aria-label={hi ? 'शीर्षक व विवरण' : 'Title & overview'}
-          >
-            <Filter className="h-4 w-4" aria-hidden />
-          </button>
+            <button
+              type="button"
+              onClick={() => setTopicMetaOpen((x) => !x)}
+              className={cn(
+                'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 shadow-sm transition-colors',
+                topicMetaOpen
+                  ? 'border-amber-500 bg-amber-500 text-white dark:bg-amber-600 dark:border-amber-600'
+                  : 'border-amber-200 bg-amber-50 text-amber-800 hover:border-amber-300 hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:border-amber-500/50'
+              )}
+              aria-expanded={topicMetaOpen}
+              aria-label={hi ? 'शीर्षक व विवरण' : 'Title & overview'}
+            >
+              <SlidersHorizontal className="h-4 w-4" aria-hidden />
+            </button>
+            <div className="min-w-0 pr-1">
+              {topic.paperNumber && (
+                <p className="truncate text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 leading-tight">
+                  🎯 Paper {topic.paperNumber}
+                </p>
+              )}
+              <h1 className="truncate text-xs font-bold leading-tight text-slate-900 dark:text-slate-100 sm:text-sm">
+                {title}
+              </h1>
+            </div>
+          </div>
+          <div className="flex items-center shrink-0 gap-2">
+            {topic.paperNumber && (
+              <MainsMobileSyllabusDrawer paperNumber={topic.paperNumber} language="hi" />
+            )}
+          </div>
         </div>
         <AnimatePresence initial={false}>
           {topicMetaOpen ? (
@@ -179,11 +275,11 @@ export function MainsHistoryRichViewer({
               <div className="space-y-2 px-3 py-3 sm:px-4">
                 <div className="flex flex-wrap gap-2">
                   <Badge className="bg-amber-600 font-black text-white">📜 Mains · Expert</Badge>
-                  {ver === MAINS_HISTORY_RICH_VERSION ? (
+                  {/* {ver === MAINS_HISTORY_RICH_VERSION ? (
                     <Badge variant="outline" className="font-mono text-[10px]">
                       {ver}
                     </Badge>
-                  ) : null}
+                  ) : null} */}
                 </div>
                 <p className="text-balance text-lg font-black leading-snug text-slate-900 dark:text-white sm:text-xl">
                   {title}
@@ -199,21 +295,18 @@ export function MainsHistoryRichViewer({
         </AnimatePresence>
       </header>
 
-      <div className="custom-scrollbar flex-1 overflow-y-auto px-2 py-4 sm:px-8 sm:py-8">
+      <div className={cn("custom-scrollbar flex-1 overflow-y-auto px-2 sm:px-8 sm:pb-8", standalonePage ? "pt-20 pb-12 sm:pt-20" : "py-4 sm:py-8")}>
         <div className="mx-auto max-w-4xl space-y-10 pb-36">
           {/* Syllabus grasp first */}
           {syllabusMd ? (
             <details
               open
-              className="group rounded-2xl border-2 border-amber-400/80 bg-slate-900 p-4 sm:p-6 shadow-xl ring-2 ring-amber-400/20 transition-all dark:border-amber-500/50 dark:bg-[#0b1329] hover:border-amber-400 hover:ring-amber-400/40"
+              className="group rounded-2xl border-2 border-amber-400/80 bg-slate-900 p-3 sm:p-4 shadow-xl ring-2 ring-amber-400/20 transition-all dark:border-amber-500/50 dark:bg-[#0b1329] hover:border-amber-400 hover:ring-amber-400/40"
             >
-              <summary className="mb-5 flex cursor-pointer select-none items-center justify-between border-b border-amber-400/30 pb-4 outline-none marker:content-none">
+              <summary className="mb-4 flex cursor-pointer select-none items-center justify-between border-b border-amber-400/30 pb-3 outline-none marker:content-none">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-950/80 text-amber-400 shadow-inner ring-1 ring-amber-500/50">
-                    <Sparkles className="h-5 w-5 animate-pulse" />
-                  </div>
                   <h2 className="text-xl font-black tracking-tight text-amber-300 dark:text-amber-400 sm:text-2xl">
-                    {hi ? '📘 सिलेबस डिकोडिंग व रणनीति' : '📘 Syllabus Decoding & Strategy'}
+                    📘 {hi ? 'सिलेबस डिकोडिंग व रणनीति' : 'Syllabus Decoding & Strategy'}
                     <span className="ml-2 hidden text-sm font-semibold tracking-wide text-amber-400/80 sm:inline-block">
                       — {hi ? 'यह टॉपिक क्या-क्या कहता है' : 'what this topic is asking'}
                     </span>
@@ -222,28 +315,20 @@ export function MainsHistoryRichViewer({
                 <ChevronDown className="h-6 w-6 shrink-0 text-amber-400 transition-transform group-open:rotate-180" />
               </summary>
               <motion.div layout className="text-slate-100">
-                <MainsMarkdownBody
-                  markdown={syllabusMd}
-                  isHindi={hi}
-                  strongClassName="text-amber-300 dark:text-amber-300 tracking-wider font-extrabold"
-                  itemClassName="border-amber-500/30 bg-slate-950/80 dark:border-amber-500/25 dark:bg-slate-950/90 text-slate-100 shadow-inner"
-                  bulletClassName="bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.6)] ring-amber-400/20"
-                  bodyTextClassName="text-slate-100 dark:text-slate-100"
-                />
+                <MainsSyllabusGraspRenderer text={syllabusMd} hi={hi} />
               </motion.div>
             </details>
           ) : null}
 
           {/* Model answers */}
           <details
-            className="group rounded-2xl border-2 border-emerald-200 bg-emerald-50/5 pt-4 pb-0 px-0 sm:pt-6 sm:pb-0 sm:px-0 shadow-sm dark:border-emerald-500/20 dark:bg-[#0c1c14] transition-all hover:border-emerald-400/50 overflow-hidden"
+            className="group rounded-2xl border-2 border-emerald-200/80 bg-emerald-50/40 pt-3 pb-0 px-0 sm:pt-4 sm:pb-0 sm:px-0 shadow-sm dark:border-emerald-500/20 dark:bg-[#0c1c14] transition-all hover:border-emerald-400/50 overflow-hidden"
             aria-label={hi ? 'मॉडल उत्तर' : 'Model answers'}
           >
-            <summary className="mb-4 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-4 border-b border-emerald-200/50 dark:border-emerald-500/20 px-4 sm:px-6">
+            <summary className="mb-3 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-3 border-b border-emerald-200/50 dark:border-emerald-500/20 px-3 sm:px-4">
               <div className="flex flex-wrap items-center gap-3">
-                <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-emerald-950 dark:text-emerald-100">
-                  <FileText className="h-6 w-6 text-emerald-500" aria-hidden />
-                  {hi ? '✍️ | |  मॉडल उत्तर अभ्यास' : '✍️ Model Answer Suite'}
+                <h2 className="text-xl font-black tracking-tight text-emerald-950 dark:text-emerald-100">
+                  ✍️ {hi ? 'मॉडल उत्तर अभ्यास' : 'Model Answer Suite'}
                 </h2>
                 <div className="flex gap-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-1 shadow-inner ml-4">
                   <button
@@ -293,9 +378,16 @@ export function MainsHistoryRichViewer({
 
                   if (allVariants.length === 0) {
                     return (
-                      <p className="text-sm font-semibold text-slate-500 text-center py-6">
-                        {modelLang === 'hi' ? 'कोई  उत्तर उपलब्ध नहीं है।' : 'No model answers available.'}
-                      </p>
+                      <div className="py-8 text-center rounded-2xl border border-dashed border-slate-200 bg-white/50 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-950/40">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-amber-800 shadow-sm dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                          🚀 {modelLang === 'hi' ? 'जल्द आ रहा है (Coming Soon)' : 'Coming Soon'}
+                        </span>
+                        <p className="mt-2 text-sm font-bold leading-relaxed text-slate-600 dark:text-slate-400">
+                          {modelLang === 'hi'
+                            ? 'एक्सपर्ट कंटेंट व मॉडल उत्तर तैयार किए जा रहे हैं। जल्द ही उपलब्ध होंगे।'
+                            : 'Expert content & model answers are currently under preparation.'}
+                        </p>
+                      </div>
                     );
                   }
 
@@ -305,7 +397,7 @@ export function MainsHistoryRichViewer({
                         <article
                           key={idx}
                           className={cn(
-                            "rounded-lg sm:rounded-xl border p-2.5 sm:p-3 shadow-sm ring-1 ring-black/[0.03] min-w-0 overflow-hidden break-words",
+                            "rounded-lg sm:rounded-xl border p-2 sm:p-2.5 shadow-sm ring-1 ring-black/[0.03] min-w-0 overflow-hidden break-words",
                             [
                               'border-pink-200/80 bg-pink-50/60 text-slate-900 dark:border-pink-500/20 dark:bg-pink-950/15 dark:text-slate-100',
                               'border-emerald-200/80 bg-emerald-50/60 text-slate-900 dark:border-emerald-500/20 dark:bg-emerald-950/15 dark:text-slate-100',
@@ -316,12 +408,12 @@ export function MainsHistoryRichViewer({
                         >
                           <div className="flex flex-wrap items-center gap-1.5 mb-2">
                             <div className={cn(
-                              'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider shadow-xs',
+                              'inline-flex items-center gap-1 rounded-lg border-b-[3px] border-r border-black/15 dark:border-white/20 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider shadow-md shadow-black/10 dark:shadow-black/40 ring-1 ring-white/60 dark:ring-white/10',
                               [
-                                'border-pink-300 bg-pink-50 text-pink-800 dark:border-pink-500/30 dark:bg-pink-950/40 dark:text-pink-300',
-                                'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-950/40 dark:text-emerald-300',
-                                'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-300',
-                                'border-sky-300 bg-sky-50 text-sky-800 dark:border-sky-500/30 dark:bg-sky-950/40 dark:text-sky-300',
+                                'bg-gradient-to-r from-pink-100 to-pink-50 text-pink-950 dark:from-pink-950/80 dark:to-pink-950/40 dark:text-pink-200',
+                                'bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-950 dark:from-emerald-950/80 dark:to-emerald-950/40 dark:text-emerald-200',
+                                'bg-gradient-to-r from-amber-100 to-amber-50 text-amber-950 dark:from-amber-950/80 dark:to-amber-950/40 dark:text-amber-200',
+                                'bg-gradient-to-r from-sky-100 to-sky-50 text-sky-950 dark:from-sky-950/80 dark:to-sky-950/40 dark:text-sky-200',
                               ][idx % 4]
                             )}>
                               {modelLang === 'hi' ? `विकल्प ${idx + 1}` : `Variant ${idx + 1}`}
@@ -363,12 +455,9 @@ export function MainsHistoryRichViewer({
           </details>
 
           {/* PYQ / examiner demand */}
-          <details className="group rounded-2xl border-2 border-pink-200 bg-pink-50/5 p-4 sm:p-6 shadow-sm dark:border-pink-500/20 dark:bg-[#1a0e1c] transition-all hover:border-pink-400/60">
-            <summary className="mb-4 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-4 border-b border-pink-200/50 dark:border-pink-500/20 text-pink-900 dark:text-pink-200">
-              <div className="flex items-center gap-2">
-                <LineChart className="h-5 w-5 shrink-0 text-pink-500" />
-                <h2 className="text-lg font-black sm:text-xl">{hi ? '📈 PYQ ट्रेंड व मांग डिकोडर' : '📈 PYQ Trend & Demand Decoder'}</h2>
-              </div>
+          <details className="group rounded-2xl border-2 border-pink-200/80 bg-pink-50/40 p-3 sm:p-4 shadow-sm dark:border-pink-500/20 dark:bg-[#1a0e1c] transition-all hover:border-pink-400/60">
+            <summary className="mb-3 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-3 border-b border-pink-200/50 dark:border-pink-500/20">
+              <h2 className="text-lg font-black sm:text-xl text-pink-900 dark:text-pink-200">📈 {hi ? 'PYQ ट्रेंड व मांग डिकोडर' : 'PYQ Trend & Demand Decoder'}</h2>
               <ChevronDown className="h-5 w-5 shrink-0 text-pink-400 transition-transform group-open:rotate-180" />
             </summary>
             {pyqMd ? (
@@ -386,16 +475,13 @@ export function MainsHistoryRichViewer({
           </details>
 
           {/* Analogy + Source */}
-          <details className="group rounded-2xl border-2 border-sky-200 bg-sky-50/5 pt-4 pb-0 px-0 sm:pt-6 sm:pb-0 sm:px-0 shadow-sm dark:border-sky-500/20 dark:bg-[#0c1626] transition-all hover:border-sky-400/60 overflow-hidden">
-            <summary className="mb-4 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-4 border-b border-sky-200/50 dark:border-sky-500/20 px-4 sm:px-6 text-sky-900 dark:text-sky-200">
-              <div className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 shrink-0 text-sky-500" />
-                <h2 className="text-lg font-black sm:text-xl">{hi ? '🔍 व्यावहारिक उदाहरण एवं प्रामाणिक संदर्भ' : '🔍 Conceptual Analogies & Scholarly Sources'}</h2>
-              </div>
-              <ChevronDown className="h-6 w-6 shrink-0 text-sky-400 transition-transform group-open:rotate-180 text-sky-400" />
+          <details className="group rounded-2xl border-2 border-sky-200/80 bg-sky-50/40 pt-3 pb-0 px-0 sm:pt-4 sm:pb-0 sm:px-0 shadow-sm dark:border-sky-500/20 dark:bg-[#0c1626] transition-all hover:border-sky-400/60 overflow-hidden">
+            <summary className="mb-3 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-3 border-b border-sky-200/50 dark:border-sky-500/20 px-3 sm:px-4">
+              <h2 className="text-lg font-black sm:text-xl text-sky-900 dark:text-sky-200">🔍 {hi ? 'व्यावहारिक उदाहरण एवं प्रामाणिक संदर्भ' : 'Conceptual Analogies & Scholarly Sources'}</h2>
+              <ChevronDown className="h-6 w-6 shrink-0 text-sky-400 transition-transform group-open:rotate-180" />
             </summary>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 px-2 pb-3 sm:px-3 sm:pb-4">
-              <div className="rounded-lg sm:rounded-xl border border-sky-200 bg-sky-50/70 p-2.5 sm:p-3 dark:border-sky-900/50 dark:bg-sky-950/30">
+              <div className="rounded-lg sm:rounded-xl border border-sky-200 bg-sky-50/70 p-2 sm:p-2.5 dark:border-sky-900/50 dark:bg-sky-950/30">
                 <p className="mb-2 text-xs font-black uppercase tracking-widest text-sky-900 dark:text-sky-300">
                   🏪 {hi ? 'व्यावहारिक सादृश्य एवं वास्तविक उदाहरण' : 'Real-World Analogy & Practical Context'}
                 </p>
@@ -406,7 +492,7 @@ export function MainsHistoryRichViewer({
                   bulletClassName="bg-sky-500 shadow-[0_0_12px_rgba(14,165,233,0.4)] ring-sky-500/15"
                 />
               </div>
-              <div className="rounded-lg sm:rounded-xl border border-amber-300 bg-amber-50 p-2.5 sm:p-3 dark:border-amber-800 dark:bg-amber-950/40">
+              <div className="rounded-lg sm:rounded-xl border border-amber-300 bg-amber-50 p-2 sm:p-2.5 dark:border-amber-800 dark:bg-amber-950/40">
                 <p className="mb-2 text-xs font-black uppercase tracking-widest text-amber-950 dark:text-amber-200">
                   📜 {hi ? 'प्रामाणिक संदर्भ एवं स्थापित स्रोत' : 'Scholarly Sources & Academic Citations'}
                 </p>
@@ -421,15 +507,12 @@ export function MainsHistoryRichViewer({
           </details>
 
           {/* Dynamic dimensions */}
-          <details className="group rounded-2xl border-2 border-amber-200 bg-amber-50/5 p-4 sm:p-6 shadow-sm dark:border-amber-500/20 dark:bg-[#1f1710] transition-all hover:border-amber-400/60">
-            <summary className="mb-4 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-4 border-b border-amber-200/50 dark:border-amber-500/20 text-amber-950 dark:text-amber-200">
-              <div className="flex items-center gap-2">
-                <Compass className="h-6 w-6 shrink-0 text-amber-500 animate-spin-slow" />
-                <h2 className="text-lg font-black sm:text-xl">{hi ? '🧭 360° डायनैमिक आयाम' : '🧭 360° Dynamic Dimensions'}</h2>
-              </div>
+          <details className="group rounded-2xl border-2 border-amber-200/80 bg-amber-50/40 p-3 sm:p-4 shadow-sm dark:border-amber-500/20 dark:bg-[#1f1710] transition-all hover:border-amber-400/60">
+            <summary className="mb-3 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-3 border-b border-amber-200/50 dark:border-amber-500/20">
+              <h2 className="text-lg font-black sm:text-xl text-amber-950 dark:text-amber-200">🧭 {hi ? '360° डायनैमिक आयाम' : '360° Dynamic Dimensions'}</h2>
               <ChevronDown className="h-6 w-6 shrink-0 text-amber-400 transition-transform group-open:rotate-180" />
             </summary>
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-3">
               {dimensionBlocks.length === 0 ? (
                 <p className="text-sm text-slate-500">{hi ? 'कोई आयाम नहीं' : 'No dimensions'}</p>
               ) : (
@@ -439,23 +522,56 @@ export function MainsHistoryRichViewer({
                   return (
                     <div
                       key={idx}
-                      className="overflow-hidden rounded-2xl border-2 border-amber-200/60 bg-white/60 shadow-sm dark:border-amber-900/40 dark:bg-[#1a120a]"
+                      className="overflow-hidden rounded-xl sm:rounded-2xl border-2 border-amber-200/60 bg-white/60 shadow-sm dark:border-amber-900/40 dark:bg-[#1a120a]"
                     >
-                      <div className="border-b border-amber-200 bg-amber-100/40 px-4 py-3 text-base font-black text-amber-950 dark:border-amber-900/40 dark:bg-[#251a0e] dark:text-amber-100">
+                      <div className={cn(
+                        "px-3.5 py-2.5 text-base font-black rounded-r-xl shadow-md shadow-black/5 ring-1 ring-white/60 dark:ring-white/10 border-b-[3px] border-r border-black/10 dark:border-black/50",
+                        [
+                          'border-l-[5px] border-amber-500 bg-gradient-to-r from-amber-100/80 via-amber-50/40 to-amber-100/60 text-amber-950 dark:border-amber-400 dark:from-[#251a0e] dark:via-[#1a120a] dark:to-[#251a0e] dark:text-amber-100',
+                          'border-l-[5px] border-emerald-500 bg-gradient-to-r from-emerald-100/80 via-emerald-50/40 to-emerald-100/60 text-emerald-950 dark:border-emerald-400 dark:from-[#0c1c14] dark:via-[#08130e] dark:to-[#0c1c14] dark:text-emerald-100',
+                          'border-l-[5px] border-sky-500 bg-gradient-to-r from-sky-100/80 via-sky-50/40 to-sky-100/60 text-sky-950 dark:border-sky-400 dark:from-[#0c1626] dark:via-[#080e1a] dark:to-[#0c1626] dark:text-sky-100',
+                          'border-l-[5px] border-pink-500 bg-gradient-to-r from-pink-100/80 via-pink-50/40 to-pink-100/60 text-pink-950 dark:border-pink-400 dark:from-[#1a0e1c] dark:via-[#110913] dark:to-[#1a0e1c] dark:text-pink-100',
+                        ][idx % 4]
+                      )}>
                         {name}
                       </div>
-                      <ul className="space-y-2.5 p-4">
-                        {bullets.map((b, i) => (
-                          <li
-                            key={i}
-                            className="flex gap-3 text-[16px] sm:text-[17px] leading-relaxed text-slate-800 dark:text-slate-100"
-                          >
-                            <span className="mt-2 size-2.5 shrink-0 rounded-full bg-amber-500 ring-4 ring-amber-500/15" />
-                            <span className={hi ? 'font-[family-name:var(--font-pyq-dev)]' : 'font-[family-name:var(--font-pyq-serif)]'}>
-                              {parseBoldInline(b)}
-                            </span>
-                          </li>
-                        ))}
+                      <ul className="space-y-3 p-2.5 sm:p-3">
+                        {bullets.map((b, i) => {
+                          const colonIdx = b.indexOf(':');
+                          let prefix = '';
+                          let rest = b;
+                          if (colonIdx !== -1 && colonIdx < 55) {
+                            prefix = b.substring(0, colonIdx).trim().replace(/\*+/g, '');
+                            rest = b.substring(colonIdx + 1).trim();
+                          }
+                          const badgeSkin = [
+                            'bg-gradient-to-r from-amber-500/30 to-amber-500/10 text-amber-950 dark:text-amber-300 border-b-[3px] border-r border-amber-500/60 shadow-md shadow-black/10 dark:shadow-black/40 ring-1 ring-white/60 dark:ring-white/10',
+                            'bg-gradient-to-r from-emerald-500/30 to-emerald-500/10 text-emerald-950 dark:text-emerald-300 border-b-[3px] border-r border-emerald-500/60 shadow-md shadow-black/10 dark:shadow-black/40 ring-1 ring-white/60 dark:ring-white/10',
+                            'bg-gradient-to-r from-sky-500/30 to-sky-500/10 text-sky-950 dark:text-sky-300 border-b-[3px] border-r border-sky-500/60 shadow-md shadow-black/10 dark:shadow-black/40 ring-1 ring-white/60 dark:ring-white/10',
+                            'bg-gradient-to-r from-purple-500/30 to-purple-500/10 text-purple-950 dark:text-purple-300 border-b-[3px] border-r border-purple-500/60 shadow-md shadow-black/10 dark:shadow-black/40 ring-1 ring-white/60 dark:ring-white/10',
+                          ][i % 4];
+
+                          return (
+                            <li
+                              key={i}
+                              className="rounded-xl border border-amber-200/60 bg-white/80 p-3 shadow-sm dark:border-amber-900/30 dark:bg-amber-950/20 space-y-2 overflow-hidden transition-all hover:border-amber-400"
+                            >
+                              {prefix ? (
+                                <div>
+                                  <span className={cn("inline-flex items-center rounded-lg px-3 py-1 text-xs uppercase tracking-wider font-extrabold shadow-sm font-[family-name:var(--font-pyq-dev)]", badgeSkin)}>
+                                    {prefix}
+                                  </span>
+                                </div>
+                              ) : null}
+                              <div className="flex items-start gap-2.5 text-[15px] sm:text-[16.5px] leading-relaxed text-slate-800 dark:text-slate-100">
+                                <span className="mt-2 size-2 shrink-0 rounded-full bg-amber-500 ring-4 ring-amber-500/15" />
+                                <span className={hi ? 'font-[family-name:var(--font-pyq-dev)]' : 'font-[family-name:var(--font-pyq-serif)]'}>
+                                  {parseBoldInline(rest)}
+                                </span>
+                              </div>
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   );
@@ -465,28 +581,25 @@ export function MainsHistoryRichViewer({
           </details>
 
           {/* Interlinking + hooks */}
-          <details className="group rounded-2xl border-2 border-emerald-200 bg-emerald-50/5 pt-4 pb-0 px-0 sm:pt-6 sm:pb-0 sm:px-0 shadow-sm dark:border-emerald-500/20 dark:bg-[#0c1c14] transition-all hover:border-emerald-400/60 overflow-hidden">
-            <summary className="mb-4 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-4 border-b border-emerald-200/50 dark:border-emerald-500/20 px-4 sm:px-6 text-emerald-950 dark:text-emerald-200">
-              <div className="flex items-center gap-2">
-                <Network className="h-5 w-5 shrink-0 text-emerald-500" />
-                <h2 className="text-lg font-black sm:text-xl">{hi ? '🔗 अंतर-विषय जुड़ाव व मेमोरी हुक्स' : '🔗 Inter-Paper Linkages & Memory Hooks'}</h2>
-              </div>
+          <details className="group rounded-2xl border-2 border-emerald-200/80 bg-emerald-50/40 pt-3 pb-0 px-0 sm:pt-4 sm:pb-0 sm:px-0 shadow-sm dark:border-emerald-500/20 dark:bg-[#0c1c14] transition-all hover:border-emerald-400/60 overflow-hidden">
+            <summary className="mb-3 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-3 border-b border-emerald-200/50 dark:border-emerald-500/20 px-3 sm:px-4">
+              <h2 className="text-lg font-black sm:text-xl text-emerald-950 dark:text-emerald-200">🔗 {hi ? 'अंतर-विषय जुड़ाव व मेमोरी हुक्स' : 'Inter-Paper Linkages & Memory Hooks'}</h2>
               <ChevronDown className="h-6 w-6 shrink-0 text-emerald-400 transition-transform group-open:rotate-180" />
             </summary>
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 px-2 pb-3 sm:px-3 sm:pb-4">
-              <div className="rounded-lg sm:rounded-xl border border-indigo-200 bg-indigo-50/80 p-2.5 sm:p-3 dark:border-indigo-900/50 dark:bg-indigo-950/30">
-                <h3 className="mb-2 flex items-center gap-2 text-base font-black text-indigo-950 dark:text-indigo-100">
+              <div className="rounded-lg sm:rounded-xl border border-indigo-200 bg-indigo-50/80 p-2 sm:p-2.5 dark:border-indigo-900/50 dark:bg-indigo-950/30">
+                <h3 className="mb-3 flex items-center gap-2 text-base font-black text-indigo-950 dark:text-indigo-100 border-l-[5px] border-indigo-500 bg-gradient-to-r from-indigo-100/70 via-indigo-50/30 to-indigo-100/50 dark:from-indigo-950/60 dark:via-indigo-950/30 dark:to-indigo-950/50 px-3.5 py-2.5 rounded-r-xl shadow-md shadow-black/5 ring-1 ring-white/60 dark:ring-white/10 border-b-[3px] border-r border-black/10 dark:border-black/50">
                   <Network className="h-4 w-4 shrink-0" /> {hi ? '🔗 अंतर-पेपर जुड़ाव' : '🔗 Interlinking'}
                 </h3>
                 <MainsMarkdownBody
-                  markdown={coerceMarkdownBulletsLoose(pickInterlinkingMarkdown(payload, hi ? 'hi' : 'en'))}
+                  markdown={coerceMarkdownBulletsLoose(bulletizeOnComma(pickInterlinkingMarkdown(payload, hi ? 'hi' : 'en')))}
                   isHindi={hi}
                   itemClassName="border-indigo-100 bg-white/70 dark:border-indigo-900/40 dark:bg-indigo-950/20"
                   bulletClassName="bg-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.4)] ring-indigo-500/15"
                 />
               </div>
-              <div className="rounded-lg sm:rounded-xl border border-fuchsia-200 bg-fuchsia-50/70 p-2.5 sm:p-3 dark:border-fuchsia-900/50 dark:bg-fuchsia-950/25">
-                <h3 className="mb-2 flex items-center gap-2 text-base font-black text-fuchsia-950 dark:text-fuchsia-100">
+              <div className="rounded-lg sm:rounded-xl border border-fuchsia-200 bg-fuchsia-50/70 p-2 sm:p-2.5 dark:border-fuchsia-900/50 dark:bg-fuchsia-950/25">
+                <h3 className="mb-3 flex items-center gap-2 text-base font-black text-fuchsia-950 dark:text-fuchsia-100 border-l-[5px] border-fuchsia-500 bg-gradient-to-r from-fuchsia-100/70 via-fuchsia-50/30 to-fuchsia-100/50 dark:from-fuchsia-950/60 dark:via-fuchsia-950/30 dark:to-fuchsia-950/50 px-3.5 py-2.5 rounded-r-xl shadow-md shadow-black/5 ring-1 ring-white/60 dark:ring-white/10 border-b-[3px] border-r border-black/10 dark:border-black/50">
                   <Brain className="h-4 w-4 shrink-0" /> {hi ? '🧠 मेमोरी हुक' : '🧠 Memory hook'}
                 </h3>
                 <MainsMarkdownBody
@@ -496,8 +609,8 @@ export function MainsHistoryRichViewer({
                   bulletClassName="bg-fuchsia-500 shadow-[0_0_12px_rgba(217,70,239,0.4)] ring-fuchsia-500/15"
                 />
               </div>
-              <div className="rounded-lg sm:rounded-xl border border-cyan-200 bg-cyan-50/70 p-2.5 sm:p-3 dark:border-cyan-900/50 dark:bg-cyan-950/25">
-                <h3 className="mb-2 flex items-center gap-2 text-base font-black text-cyan-950 dark:text-cyan-100">
+              <div className="rounded-lg sm:rounded-xl border border-cyan-200 bg-cyan-50/70 p-2 sm:p-2.5 dark:border-cyan-900/50 dark:bg-cyan-950/25">
+                <h3 className="mb-3 flex items-center gap-2 text-base font-black text-cyan-950 dark:text-cyan-100 border-l-[5px] border-cyan-500 bg-gradient-to-r from-cyan-100/70 via-cyan-50/30 to-cyan-100/50 dark:from-cyan-950/60 dark:via-cyan-950/30 dark:to-cyan-950/50 px-3.5 py-2.5 rounded-r-xl shadow-md shadow-black/5 ring-1 ring-white/60 dark:ring-white/10 border-b-[3px] border-r border-black/10 dark:border-black/50">
                   <Palette className="h-4 w-4 shrink-0" /> {hi ? '📐 डायग्राम / नक्शा' : '📐 Diagram / map cue'}
                 </h3>
                 <MainsMarkdownBody
@@ -507,8 +620,8 @@ export function MainsHistoryRichViewer({
                   bulletClassName="bg-cyan-500 shadow-[0_0_12px_rgba(6,182,212,0.4)] ring-cyan-500/15"
                 />
               </div>
-              <div className="rounded-lg sm:rounded-xl border border-red-200 bg-red-50/80 p-2.5 sm:p-3 dark:border-red-900/50 dark:bg-red-950/30">
-                <h3 className="mb-2 flex items-center gap-2 text-base font-black text-red-900 dark:text-red-100">
+              <div className="rounded-lg sm:rounded-xl border border-red-200 bg-red-50/80 p-2 sm:p-2.5 dark:border-red-900/50 dark:bg-red-950/30">
+                <h3 className="mb-3 flex items-center gap-2 text-base font-black text-red-900 dark:text-red-100 border-l-[5px] border-red-500 bg-gradient-to-r from-red-100/70 via-red-50/30 to-red-100/50 dark:from-red-950/60 dark:via-red-950/30 dark:to-red-950/50 px-3.5 py-2.5 rounded-r-xl shadow-md shadow-black/5 ring-1 ring-white/60 dark:ring-white/10 border-b-[3px] border-r border-black/10 dark:border-black/50">
                   <AlertTriangle className="h-4 w-4 shrink-0" /> {hi ? '⚠️ एग्जामिनर ट्रैप' : '⚠️ Examiner trap'}
                 </h3>
                 <MainsMarkdownBody
@@ -522,28 +635,24 @@ export function MainsHistoryRichViewer({
           </details>
 
           {/* Topper X-Factor Strategy */}
-          <details className="group rounded-2xl border-2 border-amber-300 bg-amber-50/5 p-4 sm:p-6 transition-all dark:border-amber-500/20 dark:bg-[#1a140e] hover:border-amber-400/60">
-            <summary className="mb-4 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-4 border-b border-amber-200/50 dark:border-amber-500/20 text-lg font-black text-amber-950 dark:text-amber-100 sm:text-xl">
-              <div className="flex items-center gap-2">
-                <Trophy className="h-6 w-6 shrink-0 text-amber-500" /> {hi ? '🏆 टॉपर एक्स-फैक्टर रणनीति' : '🏆 Topper X-Factor Strategy'}
-              </div>
-              <ChevronDown className="h-5 w-5 shrink-0 transition-transform group-open:rotate-180 text-amber-400" />
+          <details className="group rounded-2xl border-2 border-pink-200/80 bg-pink-50/40 p-3 sm:p-4 transition-all dark:border-pink-500/20 dark:bg-[#1a0e1c] hover:border-pink-400/60">
+            <summary className="mb-3 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-3 border-b border-pink-200/50 dark:border-pink-500/20">
+              <h2 className="text-lg font-black sm:text-xl text-pink-900 dark:text-pink-100">🏆 {hi ? 'टॉपर एक्स-फैक्टर रणनीति' : 'Topper X-Factor Strategy'}</h2>
+              <ChevronDown className="h-5 w-5 shrink-0 text-pink-400 transition-transform group-open:rotate-180" />
             </summary>
             <MainsMarkdownBody
-              markdown={coerceMarkdownBulletsLoose(pick(payload, 'topper_x_factor', hi))}
+              markdown={coerceMarkdownBulletsLoose(bulletizeOnComma(pick(payload, 'topper_x_factor', hi)))}
               isHindi={hi}
-              itemClassName="border-amber-200 bg-white/70 dark:border-amber-900/40 dark:bg-[#251a0e]"
-              bulletClassName="bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.4)] ring-amber-500/15"
+              itemClassName="border-pink-200 bg-white/70 dark:border-pink-900/40 dark:bg-[#251a0e]"
+              bulletClassName="bg-pink-500 shadow-[0_0_12px_rgba(236,72,153,0.4)] ring-pink-500/15"
             />
           </details>
 
           {/* Key terms */}
-          <details className="group rounded-2xl border-2 border-sky-200 bg-sky-50/5 p-4 sm:p-6 transition-all dark:border-sky-500/20 dark:bg-[#0c1626] shadow-sm hover:border-sky-400/60">
-            <summary className="mb-4 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-4 border-b border-sky-200/50 dark:border-sky-500/20 text-xl font-black text-sky-950 dark:text-sky-200">
-              <div className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-sky-500 animate-pulse" /> {hi ? '⚡ की-टर्म्स डिकोडर (Flash)' : '⚡ Key Terms Decoder (Flash)'}
-              </div>
-              <ChevronDown className="h-5 w-5 shrink-0 transition-transform group-open:rotate-180 text-sky-400" />
+          <details className="group rounded-2xl border-2 border-sky-200/80 bg-sky-50/40 p-3 sm:p-4 transition-all dark:border-sky-500/20 dark:bg-[#0c1626] shadow-sm hover:border-sky-400/60">
+            <summary className="mb-3 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-3 border-b border-sky-200/50 dark:border-sky-500/20 px-3 sm:px-4">
+              <h2 className="text-xl font-black text-sky-950 dark:text-sky-200">⚡ {hi ? 'की-टर्म्स डिकोडर (Flash)' : 'Key Terms Decoder (Flash)'}</h2>
+              <ChevronDown className="h-5 w-5 shrink-0 text-sky-400 transition-transform group-open:rotate-180" />
             </summary>
             <MainsKeyTermsFlash
               structured={

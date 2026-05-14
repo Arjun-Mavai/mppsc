@@ -51,6 +51,57 @@ export function HeroSection() {
 
   return (
     <section className="relative flex min-h-[100dvh] w-full flex-col items-center justify-center overflow-hidden bg-[#020408] px-4 pt-16 pb-28 selection:bg-amber-500/30 md:px-6 md:pb-20">
+      <style>{`
+        @keyframes curved-arrow-down-anim {
+          0%, 100% {
+            transform: rotate(-15deg) scale(1);
+          }
+          50% {
+            transform: rotate(-11deg) scale(1.08);
+          }
+        }
+
+        .premium-curved-arrow-down {
+          animation: curved-arrow-down-anim 2s infinite ease-in-out;
+          transform-origin: 27px 4px;
+        }
+
+        @keyframes curved-arrow-up-anim {
+          0%, 100% {
+            transform: rotate(15deg) scale(1);
+          }
+          50% {
+            transform: rotate(11deg) scale(1.08);
+          }
+        }
+
+        .premium-curved-arrow-up {
+          animation: curved-arrow-up-anim 2s infinite ease-in-out;
+          transform-origin: 27px 50px;
+        }
+
+        @keyframes crystal-shimmer {
+          0% {
+            background-position: -200% 0;
+          }
+          100% {
+            background-position: 200% 0;
+          }
+        }
+
+        .shimmer-bg {
+          background: linear-gradient(
+            120deg,
+            rgba(239, 68, 68, 0) 30%,
+            rgba(239, 68, 68, 0.12) 40%,
+            rgba(255, 255, 255, 0.22) 50%,
+            rgba(239, 68, 68, 0.12) 60%,
+            rgba(239, 68, 68, 0) 70%
+          );
+          background-size: 200% 100%;
+          animation: crystal-shimmer 5s infinite linear;
+        }
+      `}</style>
       
       {/* 🎭 BEYOND-PREMIUM ATMOSPHERE */}
       <div className="pointer-events-none absolute inset-0 z-0">
@@ -113,11 +164,102 @@ export function HeroSection() {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="space-y-4"
         >
-          <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter text-white leading-[1.1] md:leading-[1.05]">
-            <span className="block opacity-80 mix-blend-overlay">{t.title1}</span>
-            <span className="block bg-gradient-to-b from-amber-200 via-amber-400 to-orange-600 bg-clip-text text-transparent filter drop-shadow-[0_10px_40px_rgba(245,158,11,0.25)]">
-              {t.title2}
-            </span>
+          <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter text-white leading-[1.3] md:leading-[1.15]">
+            {language === 'hi' ? (
+              <span className="block opacity-95">
+                प्रारंभिक और{' '}
+                <span className="inline-block relative align-middle my-1">
+                  {/* Clean direct arrow placed at bottom-left pointing up-right towards the button */}
+                  <div className="absolute -bottom-6 left-2 z-20 pointer-events-none filter drop-shadow-[0_2px_8px_rgba(245,158,11,0.5)] animate-bounce">
+                    <svg
+                      width="32"
+                      height="32"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M5 19L19 5M19 5H9M19 5V15"
+                        stroke="#f59e0b"
+                        strokeWidth="3.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleNavigation('/mains', 'hero_mains_badge_clicked')}
+                    disabled={isPending}
+                    className="relative inline-flex items-center gap-2 rounded-2xl border border-red-500/50 bg-red-950/30 px-6 py-2 sm:px-8 sm:py-3.5 text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-white shadow-[0_0_25px_rgba(239,68,68,0.25)] transition-all hover:scale-[1.05] hover:border-red-400 hover:bg-red-950/50 hover:shadow-[0_0_40px_rgba(239,68,68,0.45)] active:scale-95 cursor-pointer select-none mx-3 group overflow-hidden"
+                  >
+                    {/* Shimmer background */}
+                    <div className="absolute inset-0 shimmer-bg" />
+
+                    {/* Micro-sparkles inside the box */}
+                    <Sparkles size={16} className="absolute -top-2 -right-2 text-amber-400 animate-pulse z-10" />
+                    
+                    <span className="relative z-10 text-white font-black filter drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">
+                      मुख्य परीक्षा
+                    </span>
+                  </button>
+                </span>
+                {' '}दोनों में
+              </span>
+            ) : (
+              <span className="block opacity-80 mix-blend-overlay">
+                Master Both
+              </span>
+            )}
+
+            {language === 'hi' ? (
+              <span className="block bg-gradient-to-b from-amber-200 via-amber-400 to-orange-600 bg-clip-text text-transparent filter drop-shadow-[0_10px_40px_rgba(245,158,11,0.25)] mt-2">
+                महारत हासिल करें।
+              </span>
+            ) : (
+              <span className="block bg-gradient-to-b from-amber-200 via-amber-400 to-orange-600 bg-clip-text text-transparent filter drop-shadow-[0_10px_40px_rgba(245,158,11,0.25)]">
+                Prelims &{' '}
+                <span className="inline-block relative align-middle my-1">
+                  {/* Clean direct arrow placed at bottom-left pointing up-right towards the button */}
+                  <div className="absolute -bottom-6 left-2 z-20 pointer-events-none filter drop-shadow-[0_2px_8px_rgba(245,158,11,0.5)] animate-bounce">
+                    <svg
+                      width="32"
+                      height="32"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M5 19L19 5M19 5H9M19 5V15"
+                        stroke="#f59e0b"
+                        strokeWidth="3.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleNavigation('/mains', 'hero_mains_badge_clicked')}
+                    disabled={isPending}
+                    className="relative inline-flex items-center gap-2 rounded-2xl border border-red-500/50 bg-red-950/30 px-6 py-2 sm:px-8 sm:py-3.5 text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-white shadow-[0_0_25px_rgba(239,68,68,0.25)] transition-all hover:scale-[1.05] hover:border-red-400 hover:bg-red-950/50 hover:shadow-[0_0_40px_rgba(239,68,68,0.45)] active:scale-95 cursor-pointer select-none mx-3 group overflow-hidden"
+                  >
+                    {/* Shimmer background */}
+                    <div className="absolute inset-0 shimmer-bg" />
+
+                    {/* Micro-sparkles inside the box */}
+                    <Sparkles size={16} className="absolute -top-2 -right-2 text-amber-400 animate-pulse z-10" />
+                    
+                    <span className="relative z-10 text-white font-black filter drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">
+                      Mains
+                    </span>
+                  </button>
+                </span>
+                .
+              </span>
+            )}
           </h1>
           
           <motion.p 

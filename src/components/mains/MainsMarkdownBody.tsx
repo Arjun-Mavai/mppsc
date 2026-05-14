@@ -10,7 +10,7 @@ function flashBulletize(raw: string): string {
     .split('\n')
     .map((line) => {
       const t = line.trim();
-      if (!t) return '';
+      if (!t || t === '-' || t === '*' || t === '•') return '';
       if (/^#{1,3}\s/.test(t) || /^-\s+/.test(t)) return t;
       return `- ${t}`;
     })
@@ -49,7 +49,7 @@ export function MainsMarkdownBody({
           </strong>
         );
       }
-      return <span key={i}>{part}</span>;
+      return <span key={i}>{part.replace(/\*+/g, '')}</span>;
     });
   }
 
@@ -65,10 +65,10 @@ export function MainsMarkdownBody({
   const bodyText = `${bodyFont} text-[16px] sm:text-[18px] leading-[1.82] sm:leading-[1.9] ${bodyTextClassName || "text-slate-800 dark:text-slate-100"}`;
 
   const h3Class =
-    'mt-9 first:mt-0 text-xl sm:text-2xl font-black tracking-tight text-emerald-900 dark:text-emerald-200 border-b-2 border-emerald-300/70 dark:border-emerald-600/60 pb-2.5 shadow-sm shadow-emerald-900/5';
+    'mt-6 mb-3 first:mt-0 py-2.5 pl-3.5 pr-3 text-[17px] sm:text-[19px] font-black tracking-tight border-l-[5px] border-slate-900 dark:border-white bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 text-slate-950 dark:text-slate-50 border-b-[3px] border-r border-slate-200/90 dark:border-black/60 rounded-r-xl shadow-md shadow-black/5 dark:shadow-black/30 ring-1 ring-white/60 dark:ring-white/10';
 
   const h4Sub =
-    'mt-7 text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-600 pb-2';
+    'mt-5 mb-2 py-2 pl-3 pr-2.5 text-[15.5px] sm:text-[17px] font-black tracking-tight border-l-[4px] border-slate-700 dark:border-slate-300 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 text-slate-900 dark:text-slate-100 border-b-[2px] border-r border-slate-200/80 dark:border-black/50 rounded-r-lg shadow-sm shadow-black/5 ring-1 ring-white/50 dark:ring-white/10';
 
   while (i < lines.length) {
     const line = lines[i].trimEnd();
@@ -78,22 +78,23 @@ export function MainsMarkdownBody({
       continue;
     }
 
-    if (line.startsWith('## ')) {
-      blocks.push(
-        <h3 key={`h-${i}`} className={h3Class}>
-          {parseBold(line.slice(3).trim())}
-        </h3>
-      );
-      i += 1;
-      continue;
-    }
-
-    if (line.startsWith('### ')) {
-      blocks.push(
-        <h4 key={`hh-${i}`} className={h4Sub}>
-          {parseBold(line.slice(4).trim())}
-        </h4>
-      );
+    const matchH = line.match(/^(#{1,5})\s+(.*)/);
+    if (matchH) {
+      const level = matchH[1].length;
+      const content = matchH[2].replace(/\*+/g, '').trim();
+      if (level <= 2) {
+        blocks.push(
+          <h3 key={`h-${i}`} className={h3Class}>
+            {content}
+          </h3>
+        );
+      } else {
+        blocks.push(
+          <h4 key={`hh-${i}`} className={h4Sub}>
+            {content}
+          </h4>
+        );
+      }
       i += 1;
       continue;
     }
@@ -102,7 +103,7 @@ export function MainsMarkdownBody({
       const items: string[] = [];
       while (i < lines.length && /^-\s+/.test(lines[i].trim())) {
         const cleaned = lines[i].trim().replace(/^-\s+/, '').trim();
-        if (cleaned) {
+        if (cleaned && cleaned !== '-' && cleaned !== '*' && cleaned !== '•') {
           items.push(cleaned);
         }
         i += 1;
@@ -110,22 +111,48 @@ export function MainsMarkdownBody({
       if (items.length > 0) {
         ulKey += 1;
         blocks.push(
-          <ul key={`ul-${ulKey}`} className="my-6 space-y-3 sm:space-y-3.5">
-            {items.map((item, idx) => (
-              <li
-                key={idx}
-                className={cn(
-                  "flex gap-3.5 rounded-2xl border px-4 py-3.5 shadow-sm",
-                  itemClassName || "border-slate-200/90 bg-white/90 dark:border-slate-700/80 dark:bg-slate-900/70"
-                )}
-              >
-                <span className={cn(
-                  "mt-2.5 inline-block size-2.5 shrink-0 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.4)] ring-4 ring-emerald-500/15",
-                  bulletClassName
-                )} />
-                <span className={bodyText}>{parseBold(item)}</span>
-              </li>
-            ))}
+          <ul key={`ul-${ulKey}`} className="my-4 space-y-3 sm:space-y-3.5">
+            {items.map((item, idx) => {
+              const colonIdx = item.indexOf(':');
+              let prefix = '';
+              let rest = item;
+              if (colonIdx !== -1 && colonIdx < 55) {
+                prefix = item.substring(0, colonIdx).trim().replace(/\*+/g, '');
+                rest = item.substring(colonIdx + 1).trim();
+              }
+
+              const badgeSkin = [
+                'bg-gradient-to-r from-amber-500/30 to-amber-500/10 text-amber-950 dark:text-amber-300 border-b-[3px] border-r border-amber-500/60 shadow-md shadow-black/10 dark:shadow-black/40 ring-1 ring-white/60 dark:ring-white/10',
+                'bg-gradient-to-r from-emerald-500/30 to-emerald-500/10 text-emerald-950 dark:text-emerald-300 border-b-[3px] border-r border-emerald-500/60 shadow-md shadow-black/10 dark:shadow-black/40 ring-1 ring-white/60 dark:ring-white/10',
+                'bg-gradient-to-r from-sky-500/30 to-sky-500/10 text-sky-950 dark:text-sky-300 border-b-[3px] border-r border-sky-500/60 shadow-md shadow-black/10 dark:shadow-black/40 ring-1 ring-white/60 dark:ring-white/10',
+                'bg-gradient-to-r from-purple-500/30 to-purple-500/10 text-purple-950 dark:text-purple-300 border-b-[3px] border-r border-purple-500/60 shadow-md shadow-black/10 dark:shadow-black/40 ring-1 ring-white/60 dark:ring-white/10',
+              ][idx % 4];
+
+              return (
+                <li
+                  key={idx}
+                  className={cn(
+                    "rounded-xl sm:rounded-2xl border p-3 sm:p-3.5 shadow-sm transition-all duration-300 overflow-hidden space-y-2",
+                    itemClassName || "border-slate-200/90 bg-white/90 dark:border-slate-700/80 dark:bg-slate-900/70"
+                  )}
+                >
+                  {prefix ? (
+                    <div>
+                      <span className={cn("inline-flex items-center rounded-lg px-3 py-1 text-xs uppercase tracking-wider font-extrabold shadow-sm font-[family-name:var(--font-pyq-dev)]", badgeSkin)}>
+                        {prefix}
+                      </span>
+                    </div>
+                  ) : null}
+                  <div className="flex items-start gap-2.5">
+                    <span className={cn(
+                      "mt-2 inline-block size-2 shrink-0 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.4)] ring-4 ring-emerald-500/15",
+                      bulletClassName
+                    )} />
+                    <span className={bodyText}>{parseBold(rest)}</span>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         );
       }

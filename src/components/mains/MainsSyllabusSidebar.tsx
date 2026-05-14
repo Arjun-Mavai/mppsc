@@ -15,6 +15,7 @@ import Link from 'next/link';
 import type { MainsUnitPart } from '@/lib/mains-syllabus-unit-label';
 import { mainsUnitShortBadge, mainsUnitSubtitle } from '@/lib/mains-syllabus-unit-label';
 import { useParams, usePathname } from 'next/navigation';
+import { useSettingsStore } from '@/store/useSettingsStore';
 
 /**
  * 📂 MAINS SYLLABUS SIDEBAR
@@ -40,23 +41,72 @@ interface Unit {
 }
 
 interface MainsSyllabusSidebarProps {
+  paperId?: string;
   paperNumber: number;
+  titleHi?: string | null;
+  titleEn?: string | null;
   units: Unit[];
-  language: 'hi' | 'en';
+  language?: 'hi' | 'en';
   progressData?: Record<string, string>; // topicId -> status
+  onTopicClick?: () => void;
+  hideHeaderFooter?: boolean;
 }
 
+// Alternating premium theme configurations
+const getAlternatingColors = (index: number) => {
+  const list = [
+    {
+      name: 'emerald',
+      expandedBg: "bg-emerald-50/80 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-400 border border-emerald-100/60 dark:border-emerald-900/30",
+      hoverBg: "hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10 text-slate-700 dark:text-slate-400 border border-transparent",
+      badge: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300",
+      activeTopic: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black border-l-2 border-emerald-500",
+    },
+    {
+      name: 'amber',
+      expandedBg: "bg-amber-50/80 dark:bg-amber-950/20 text-amber-900 dark:text-amber-400 border border-amber-100/60 dark:border-amber-900/30",
+      hoverBg: "hover:bg-amber-50/40 dark:hover:bg-amber-950/10 text-slate-700 dark:text-slate-400 border border-transparent",
+      badge: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300",
+      activeTopic: "bg-amber-500/10 text-amber-600 dark:text-amber-400 font-black border-l-2 border-amber-500",
+    },
+    {
+      name: 'sky',
+      expandedBg: "bg-sky-50/80 dark:bg-sky-950/20 text-sky-900 dark:text-sky-400 border border-sky-100/60 dark:border-sky-900/30",
+      hoverBg: "hover:bg-sky-50/40 dark:hover:bg-sky-950/10 text-slate-700 dark:text-slate-400 border border-transparent",
+      badge: "bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300",
+      activeTopic: "bg-sky-500/10 text-sky-600 dark:text-sky-400 font-black border-l-2 border-sky-500",
+    },
+    {
+      name: 'pink',
+      expandedBg: "bg-pink-50/80 dark:bg-pink-950/20 text-pink-900 dark:text-pink-400 border border-pink-100/60 dark:border-pink-900/30",
+      hoverBg: "hover:bg-pink-50/40 dark:hover:bg-pink-950/10 text-slate-700 dark:text-slate-400 border border-transparent",
+      badge: "bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300",
+      activeTopic: "bg-pink-500/10 text-pink-600 dark:text-pink-400 font-black border-l-2 border-pink-500",
+    },
+  ];
+  return list[index % list.length];
+};
+
 export function MainsSyllabusSidebar({ 
+  paperId,
   paperNumber,
+  titleHi,
+  titleEn,
   units, 
   language,
-  progressData = {} 
+  progressData = {},
+  onTopicClick,
+  hideHeaderFooter = false,
 }: MainsSyllabusSidebarProps) {
   const [expandedUnits, setExpandedUnits] = useState<string[]>([]);
   const params = useParams();
-  const pathname = usePathname();
   const activeTopicId = params.topicId as string | undefined;
-  const activePaperId = params.paperId as string | undefined;
+  const activePaperId = paperId ?? (params.paperId as string | undefined);
+
+  // React to client language state automatically
+  const { language: storeLanguage } = useSettingsStore();
+  const activeLanguage = language ?? storeLanguage ?? 'hi';
+  const hi = activeLanguage === 'hi';
 
   useEffect(() => {
     if (!activeTopicId) return;
@@ -71,23 +121,33 @@ export function MainsSyllabusSidebar({
     );
   };
 
-  const hi = language === 'hi';
-
   return (
-    <div className="flex flex-col h-full bg-slate-950/50 backdrop-blur-xl border-r border-slate-800/50">
+    <div className={cn(
+      "flex-1 min-h-0 flex flex-col w-full bg-white dark:bg-slate-950",
+      !hideHeaderFooter && "border-r border-slate-200 dark:border-slate-800/50"
+    )}>
       {/* ── Paper Info Header ── */}
-      <div className="p-6 border-b border-slate-800/50">
-        <h2 className="text-lg font-black tracking-tight text-white flex items-center gap-2">
-          <Target className="h-5 w-5 text-emerald-400" />
-          {hi ? 'सिलेबस नेविगेशन' : 'Syllabus Navigation'}
-        </h2>
-      </div>
+      {!hideHeaderFooter && (
+        <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/10">
+          <div className="flex items-center justify-between gap-2 mb-1.5">
+            <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border border-emerald-500/20 shadow-xs">
+              🎯 {hi ? `पेपर ${paperNumber}` : `Paper ${paperNumber}`}
+            </span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              {hi ? 'सिलेबस मेनू' : 'Syllabus Menu'}
+            </span>
+          </div>
+          <h2 className="text-[15px] font-black tracking-tight text-slate-900 dark:text-white leading-snug break-words">
+            {hi ? (titleHi || 'इतिहास + भूगोल') : (titleEn || 'History & Geography')}
+          </h2>
+        </div>
+      )}
 
       {/* ── Scrollable List ── */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
-        {units.map((unit) => {
+      <div className={cn("flex-1 p-2 space-y-3", !hideHeaderFooter && "overflow-y-auto custom-scrollbar")}>
+        {units.map((unit, unitIdx) => {
           const isExpanded = expandedUnits.includes(unit.id);
-          const completedTopics = unit.topics.filter(t => progressData[t.id] === 'done').length;
+          const theme = getAlternatingColors(unitIdx);
           
           return (
             <div key={unit.id} className="space-y-1">
@@ -95,27 +155,30 @@ export function MainsSyllabusSidebar({
               <button
                 onClick={() => toggleUnit(unit.id)}
                 className={cn(
-                  "flex items-center justify-between w-full p-3 rounded-xl transition-all duration-200 group",
-                  isExpanded ? "bg-slate-900/50 text-white" : "hover:bg-slate-900/30 text-slate-400"
+                  "flex flex-col w-full p-2.5 rounded-xl transition-all duration-200 group text-left gap-1.5",
+                  isExpanded ? theme.expandedBg : theme.hoverBg
                 )}
               >
-                <div className="flex items-center gap-3">
-                  <span
-                    className="flex min-w-[2.75rem] items-center justify-center rounded-lg bg-slate-800 px-1 py-0.5 text-[10px] font-black leading-tight text-slate-400 transition-colors group-hover:text-emerald-400"
-                    title={mainsUnitSubtitle(paperNumber, unit.part, unit.unitNumber, hi ? 'hi' : 'en')}
-                  >
-                    {mainsUnitShortBadge(unit.part, unit.unitNumber)}
-                  </span>
-                  <div className="text-left">
-                    <p className="mb-0.5 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                <div className="flex items-center justify-between gap-2 w-full pr-1">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span
+                      className={cn(
+                        "flex min-w-[2.75rem] items-center justify-center rounded-lg px-1 py-0.5 text-[10px] font-black leading-tight transition-colors",
+                        theme.badge
+                      )}
+                      title={mainsUnitSubtitle(paperNumber, unit.part, unit.unitNumber, hi ? 'hi' : 'en')}
+                    >
+                      {mainsUnitShortBadge(unit.part, unit.unitNumber)}
+                    </span>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 truncate">
                       {mainsUnitSubtitle(paperNumber, unit.part, unit.unitNumber, hi ? 'hi' : 'en')}
                     </p>
-                    <p className="max-w-[180px] truncate text-sm font-bold">
-                      {hi ? unit.titleHi : unit.titleEn}
-                    </p>
                   </div>
+                  <ChevronDown className={cn("h-4 w-4 transition-transform shrink-0 text-slate-400", isExpanded ? "rotate-180" : "")} />
                 </div>
-                <ChevronDown className={cn("h-4 w-4 transition-transform", isExpanded ? "rotate-180" : "")} />
+                <p className="text-xs font-bold leading-snug whitespace-normal break-words w-full text-slate-800 dark:text-slate-200">
+                  {hi ? unit.titleHi : unit.titleEn}
+                </p>
               </button>
 
               {/* Topics List */}
@@ -125,7 +188,7 @@ export function MainsSyllabusSidebar({
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden pl-10 space-y-1 pr-2"
+                    className="overflow-hidden pl-3 space-y-1 pr-2"
                   >
                     {unit.topics.map((topic) => {
                       const isActive = activeTopicId === topic.id;
@@ -135,20 +198,23 @@ export function MainsSyllabusSidebar({
                         <Link
                           key={topic.id}
                           href={`/mains/syllabus/${activePaperId ?? ''}/${topic.id}`}
+                          onClick={onTopicClick}
                           className={cn(
-                            "flex items-center justify-between group p-2 rounded-lg text-sm transition-all",
+                            "flex items-center justify-between group p-2 rounded-lg text-sm transition-all text-left",
                             isActive 
-                              ? "bg-emerald-500/10 text-emerald-400 font-bold" 
-                              : "text-slate-500 hover:text-slate-300"
+                              ? theme.activeTopic
+                              : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/20"
                           )}
                         >
-                          <span className="flex-1 truncate pr-2">
+                          <span className="flex-1 pr-2 text-sm font-semibold leading-relaxed whitespace-normal break-words">
                             {hi ? topic.titleHi : topic.titleEn}
                           </span>
                           {isDone ? (
-                            <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                          ) : isActive ? (
+                            <ChevronRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 transition-transform translate-x-0.5 font-bold" />
                           ) : (
-                            <Circle className="h-3 w-3 text-slate-800 flex-shrink-0 group-hover:text-slate-600" />
+                            <ChevronRight className="h-4 w-4 text-slate-300 dark:text-slate-700 shrink-0 group-hover:text-slate-500 dark:group-hover:text-slate-400 transition-all group-hover:translate-x-0.5" />
                           )}
                         </Link>
                       );
@@ -162,19 +228,21 @@ export function MainsSyllabusSidebar({
       </div>
 
       {/* ── Progress Footer ── */}
-      <div className="p-4 border-t border-slate-800/50 bg-slate-900/20">
-        <div className="flex items-center justify-between text-xs font-black tracking-widest uppercase text-slate-500 mb-2">
-          <span>Overall Progress</span>
-          <span className="text-emerald-400">32%</span>
+      {!hideHeaderFooter && (
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900/20">
+          <div className="flex items-center justify-between text-xs font-black tracking-widest uppercase text-slate-500 mb-2">
+            <span>Overall Progress</span>
+            <span className="text-emerald-600 dark:text-emerald-400">32%</span>
+          </div>
+          <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: '32%' }}
+              className="h-full bg-emerald-500"
+            />
+          </div>
         </div>
-        <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-          <motion.div 
-            initial={{ width: 0 }}
-            animate={{ width: '32%' }}
-            className="h-full bg-emerald-500"
-          />
-        </div>
-      </div>
+      )}
     </div>
   );
 }

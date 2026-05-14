@@ -67,8 +67,8 @@ const faqData = [
   {
     q: { en: 'Do you provide bookish textbook notes?', hi: 'क्या आप इसमें पारंपरिक टेक्स्टबुक नोट्स भी देते हैं?' },
     a: {
-      en: 'No. We do NOT provide boring, bulky, or outdated textbook notes to blindly memorize. Instead, we focus on deep, structured conceptual clarity for every syllabus topic and exam-ready answer-writing blueprints engineered for ranks.',
-      hi: 'नहीं! हम रटने वाली पारंपरिक और भारी-भरकम पीडीएफ नोट्स नहीं देते हैं। इसके बजाय, हम आपको सिलेबस के हर टॉपिक पर गहरी वैचारिक स्पष्टता (conceptual clarity) और परीक्षा के लिए तैयार सटीक रूपरेखा (writing blueprints) प्रदान करते हैं।',
+      en: 'No. We do NOT provide boring, bulky, or outdated textbook notes to blindly memorize. Instead, we focus on deep, structured conceptual clarity for every syllabus topic and exam-ready PYQ model answers with insights engineered for ranks.',
+      hi: 'नहीं! हम रटने वाली पारंपरिक और भारी-भरकम पीडीएफ नोट्स नहीं देते हैं। इसके बजाय, हम आपको सिलेबस के हर टॉपिक पर गहरी वैचारिक स्पष्टता (conceptual clarity) और पिछले वर्षों के सटीक मॉडल उत्तर (PYQ Model Answers) प्रदान करते हैं।',
     },
   },
   {
@@ -196,13 +196,13 @@ const mainsValueCards = [
   {
     icon: Sparkles,
     label: { en: 'Double-Style Answer Variations', hi: 'डबल-स्टाइल उत्तर वेरिएशन' },
-    sub: { en: 'Every question has 2 completely distinct ways to write the answer (practice multiple angles & styles)', hi: 'हर प्रश्न के 2 अलग-अलग तरीकों व angles से लिखे उत्तर (एक ही उत्तर को दो अलग दृष्टिकोणों से लिखने की शैली)' },
+    sub: { en: 'Every question has 2 completely distinct model answers (compare multiple structures & styles)', hi: 'हर प्रश्न के 2 अलग-अलग तरीकों व angles से लिखे मॉडल उत्तर (एक ही उत्तर को दो अलग दृष्टिकोणों से समझने की शैली)' },
     highlight: true,
   },
   {
     icon: BookOpen,
     label: { en: 'Strategic Expert Blueprint', hi: 'रणनीतिक रूपरेखा' },
-    sub: { en: 'What to write & how to secure marks', hi: 'क्या लिखना है और कैसे स्कोर बढ़ाना है' },
+    sub: { en: 'What to study & how to secure marks', hi: 'क्या पढ़ना है और कैसे स्कोर बढ़ाना है' },
     highlight: true,
   },
   {
@@ -285,7 +285,7 @@ function PricingPageInner() {
     } else if (plan === 'mains') {
       setSelectedPlan({
         planType: 'mains',
-        name: `Mains Vault — ₹${p.mainsPrice}`,
+        name: `Mains Gyan Kosh — ₹${p.mainsPrice}`,
       });
     } else if (plan === 'combo') {
       setSelectedPlan({
@@ -377,7 +377,7 @@ function PricingPageInner() {
             {!hasMainsAccess(user as any) && (
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-6 text-center shadow-sm">
                 <p className="mb-3 text-sm font-bold text-emerald-900">
-                  {hi ? 'मेन्स वॉल्ट जोड़ें' : 'Add Mains Syllabus Vault'}
+                  {hi ? 'मेन्स ज्ञानकोश जोड़ें' : 'Add Mains Gyan Kosh'}
                 </p>
                 <p className="mb-4 text-xs text-emerald-800">
                   {hi

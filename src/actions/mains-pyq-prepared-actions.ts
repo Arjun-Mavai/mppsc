@@ -1,6 +1,6 @@
 'use server';
 
-import { assertAdmin } from '@/lib/auth';
+import { assertAdmin, verifyAuth } from '@/lib/auth';
 import { db } from '@/db';
 import { mainsPyqPapers, mainsPyqQuestions, mainsPyqPreparedVariants } from '@/db/schema';
 import { eq, and, desc, count, inArray, type InferSelectModel } from 'drizzle-orm';
@@ -12,6 +12,8 @@ import { buildPyqAnswersBatchUserPrompt, type PyqBatchQuestion } from '@/config/
 import { extractPasteItems } from '@/lib/mains-pyq-batch-paste';
 import { parseMainsPyqPasteJson } from '@/lib/mains-pyq-paste-json-parse';
 import type { NormalizedVariant } from '@/lib/mains-pyq-batch-paste';
+import { isMainsVaultUnlockedUser } from '@/lib/mains-vault-access';
+import { logger } from '@/lib/logger';
 
 function variantsMissingStyleLabelHiColumn(message: string) {
   return /no such column[\s\S]*style_label_hi/i.test(message);
@@ -148,7 +150,9 @@ const cachedListMainsPyqPapersLibrarySummary = unstable_cache(
       return { success: true as const, data: papers };
     } catch (e1) {
       const m1 = e1 instanceof Error ? e1.message : String(e1);
-      console.error('[listMainsPyqPapersLibrarySummary] filtered query failed', m1);
+      logger.error('[listMainsPyqPapersLibrarySummary] filtered query failed', new Error(m1), {
+        category: 'db',
+      });
 
       try {
         const papers = await db.query.mainsPyqPapers.findMany({ orderBy });
@@ -156,7 +160,9 @@ const cachedListMainsPyqPapersLibrarySummary = unstable_cache(
         return { success: true as const, data };
       } catch (e2) {
         const m2 = e2 instanceof Error ? e2.message : String(e2);
-        console.error('[listMainsPyqPapersLibrarySummary] unfiltered fallback failed', m2);
+        logger.error('[listMainsPyqPapersLibrarySummary] unfiltered fallback failed', new Error(m2), {
+          category: 'db',
+        });
         return {
           success: false as const,
           error: 'fetch_failed' as const,
@@ -187,7 +193,10 @@ const cachedGetMainsPyqPaperPublic = unstable_cache(
         },
       };
     } catch (e) {
-      console.error('[getMainsPyqPaperPublic]', e);
+      logger.error('[getMainsPyqPaperPublic] failed to fetch paper', e as Error, {
+        category: 'content',
+        paperId: pyqPaperId,
+      });
       return { success: false as const, error: 'fetch_failed' as const };
     }
   },
@@ -554,7 +563,30 @@ export async function adminPastePyqAnswersBatchJson(pyqPaperId: string, rawText:
 
 /** Student / library: one imported paper with questions + variants. */
 export async function getMainsPyqPaperPublic(pyqPaperId: string) {
-  return cachedGetMainsPyqPaperPublic(pyqPaperId);
+  const result = await cachedGetMainsPyqPaperPublic(pyqPaperId);
+  if (!result.success) return result;
+
+  const user = await verifyAuth();
+  if (!user) return result;
+
+  if (isMainsVaultUnlockedUser(user)) return result;
+
+  const sanitized = result.data.questions.map((q) => ({
+    ...q,
+    questionHi: '',
+    questionEn: '',
+    expertInsightsHi: null,
+    expertInsightsEn: null,
+    variants: [],
+  }));
+
+  return {
+    success: true as const,
+    data: {
+      paper: result.data.paper,
+      questions: sanitized,
+    },
+  };
 }
 
 export type MainsPyqPaperListResponse =

@@ -61,9 +61,172 @@ export function PyqExpertInsightsRenderer({
       explanation.toppers_mantra ||
       explanation.topic_micro_mapping);
 
-  // Fallback: If it's not valid expert JSON, render it as clean text below a beautiful amber heading pill
+  // Fallback: If it's not valid expert JSON, check if it's the structured 9 points, and render elegantly
   if (!isExpertJSON) {
     const rawCleaned = cleanText(insightsText);
+    const parseMainsExpertTips = (text: string) => {
+      const sections: {
+        number: number;
+        title: string;
+        emoji: string;
+        content: string[];
+      }[] = [];
+
+      const standardHeadings = [
+        { num: 1, title: hi ? "प्रश्न की धुरी क्या है" : "Core Question Focus", emoji: "🔍" },
+        { num: 2, title: hi ? "पैटर्न और घुमाव" : "Pattern & Twists", emoji: "🧩" },
+        { num: 3, title: hi ? "उत्तर की रूपरेखा" : "Answer Blueprint", emoji: "🏗️" },
+        { num: 4, title: hi ? "भूमिका · मुख्य बिंदु · अंत — चेकलिस्ट" : "Intro · Body · Conclusion — Checklist", emoji: "✅" },
+        { num: 5, title: hi ? "साक्ष्य और स्रोत की सोच" : "Sources & Evidence Analysis", emoji: "📚" },
+        { num: 6, title: hi ? "मध्य प्रदेश कोण — केवल सटीक" : "Madhya Pradesh Angle — Precise Only", emoji: "📍" },
+        { num: 7, title: hi ? "शब्द सीमा — क्या छूटे, क्या नहीं" : "Word Limit Boundaries", emoji: "⏱️" },
+        { num: 8, title: hi ? "वैल्यू-ऐड औज़ार" : "Value-Add Tools", emoji: "✨" },
+        { num: 9, title: hi ? "आगे क्या पढ़ें" : "What To Read Next", emoji: "📖" },
+      ];
+
+      const lines = text.split('\n');
+      let currentSection: typeof sections[0] | null = null;
+      let hasNumberedSections = false;
+
+      for (let line of lines) {
+        const trimmedLine = line.trim();
+        if (!trimmedLine) continue;
+
+        // Check if line starts with a number 1-9 without stripping Hindi/Devnagari letters
+        const headingMatch = trimmedLine.match(/^(?:###\s+|#+\s+|\*\*)?([1-9])[\s\.\)\]\-~•\s]*(.*)$/);
+
+        if (headingMatch) {
+          const num = parseInt(headingMatch[1], 10);
+          let title = headingMatch[2].replace(/^\*+|\*+$/g, '').trim(); // clean markdown bold
+          
+          // Strip any leading emoji / symbol from the parsed title
+          title = title.replace(/^[\p{Emoji}\p{Symbol}\s\u200d\ufe0f]+/gu, '').trim();
+          
+          const standard = standardHeadings.find(h => h.num === num);
+
+          currentSection = {
+            number: num,
+            title: title || (standard ? standard.title : `Point ${num}`),
+            emoji: standard ? standard.emoji : "💡",
+            content: []
+          };
+          sections.push(currentSection);
+          hasNumberedSections = true;
+        } else {
+          if (currentSection) {
+            currentSection.content.push(trimmedLine);
+          }
+        }
+      }
+
+      return { sections, hasNumberedSections };
+    };
+
+    const { sections, hasNumberedSections } = parseMainsExpertTips(insightsText);
+
+    if (hasNumberedSections) {
+      return (
+        <div className="space-y-4 mt-2 pl-0.5 text-left w-full">
+          {/* 9 Points alternative colors cards layout */}
+          <div className="grid grid-cols-1 gap-4 w-full">
+            {sections.map((sec, idx) => {
+              const hue = ['pink', 'emerald', 'amber', 'sky'][idx % 4];
+              
+              const boxStyles = themeDeep ? {
+                pink: 'border border-pink-500/25 bg-pink-950/15 text-pink-100 shadow-md shadow-pink-950/10 hover:border-pink-500/40 transition-all duration-300 hover:-translate-y-0.5',
+                emerald: 'border border-emerald-500/25 bg-emerald-950/15 text-emerald-100 shadow-md shadow-emerald-950/10 hover:border-emerald-500/40 transition-all duration-300 hover:-translate-y-0.5',
+                amber: 'border border-amber-500/25 bg-amber-950/15 text-amber-50 shadow-md shadow-amber-950/10 hover:border-amber-500/40 transition-all duration-300 hover:-translate-y-0.5',
+                sky: 'border border-sky-500/25 bg-sky-950/15 text-sky-100 shadow-md shadow-sky-950/10 hover:border-sky-500/40 transition-all duration-300 hover:-translate-y-0.5',
+              }[hue] : {
+                pink: 'border border-pink-200/80 bg-pink-50/40 text-pink-900 shadow-sm hover:bg-pink-50/80 transition-all duration-300 hover:-translate-y-0.5',
+                emerald: 'border border-emerald-200/80 bg-emerald-50/40 text-emerald-900 shadow-sm hover:bg-emerald-50/80 transition-all duration-300 hover:-translate-y-0.5',
+                amber: 'border border-amber-200/80 bg-amber-50/40 text-amber-950 shadow-sm hover:bg-amber-50/80 transition-all duration-300 hover:-translate-y-0.5',
+                sky: 'border border-sky-200/80 bg-sky-50/40 text-sky-900 shadow-sm hover:bg-sky-50/80 transition-all duration-300 hover:-translate-y-0.5',
+              }[hue];
+
+              const badgeStyles = themeDeep ? {
+                pink: 'border-b-[3px] border-r border-pink-400 bg-pink-950 text-pink-300 font-extrabold shadow-[0_4px_12px_rgba(236,72,153,0.4)] ring-1 ring-white/10',
+                emerald: 'border-b-[3px] border-r border-emerald-400 bg-emerald-950 text-emerald-300 font-extrabold shadow-[0_4px_12px_rgba(16,185,129,0.4)] ring-1 ring-white/10',
+                amber: 'border-b-[3px] border-r border-amber-400 bg-amber-950 text-amber-300 font-extrabold shadow-[0_4px_12px_rgba(245,158,11,0.4)] ring-1 ring-white/10',
+                sky: 'border-b-[3px] border-r border-sky-400 bg-sky-950 text-sky-300 font-extrabold shadow-[0_4px_12px_rgba(14,165,233,0.4)] ring-1 ring-white/10',
+              }[hue] : {
+                pink: 'border-b-[3px] border-r border-pink-500 bg-gradient-to-r from-pink-500/20 to-pink-500/10 text-pink-950 font-black shadow-[0_4px_12px_rgba(236,72,153,0.3)] ring-1 ring-white/60',
+                emerald: 'border-b-[3px] border-r border-emerald-500 bg-gradient-to-r from-emerald-500/20 to-emerald-500/10 text-emerald-950 font-black shadow-[0_4px_12px_rgba(16,185,129,0.3)] ring-1 ring-white/60',
+                amber: 'border-b-[3px] border-r border-amber-500 bg-gradient-to-r from-amber-500/20 to-amber-500/10 text-amber-950 font-black shadow-[0_4px_12px_rgba(245,158,11,0.3)] ring-1 ring-white/60',
+                sky: 'border-b-[3px] border-r border-sky-500 bg-gradient-to-r from-sky-500/20 to-sky-500/10 text-sky-950 font-black shadow-[0_4px_12px_rgba(14,165,233,0.3)] ring-1 ring-white/60',
+              }[hue];
+
+              return (
+                <div
+                  key={sec.number}
+                  className={cn(
+                    'rounded-2xl p-3.5 sm:p-4 space-y-4',
+                    boxStyles
+                  )}
+                >
+                  {/* 3D Premium Badge & Title */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={cn('inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[13px] tracking-wide', badgeStyles)}>
+                      <span className="text-[14px]">{sec.emoji}</span>
+                      <span>{sec.number}. {sec.title}</span>
+                    </span>
+                  </div>
+
+                  {/* Bullet Points with tight left alignment & alternating colorful dots */}
+                  <ul className="space-y-3 pl-0">
+                    {sec.content.map((point, pIdx) => {
+                      const cleanedPoint = point.replace(/^[\s:*•\-~]+/g, '').trim();
+                      if (!cleanedPoint) return null;
+
+                      const isExample = cleanedPoint.startsWith('उदाहरण:') || cleanedPoint.startsWith('Example:');
+
+                      const bulletDotColor = [
+                        'bg-pink-500',
+                        'bg-emerald-500',
+                        'bg-amber-500',
+                        'bg-sky-500',
+                        'bg-purple-500',
+                        'bg-rose-500',
+                        'bg-indigo-500',
+                      ][pIdx % 7];
+                      
+                      return (
+                        <li key={pIdx} className="flex items-start gap-2.5 text-[14.5px] sm:text-[15.5px] leading-relaxed px-1 sm:px-1.5">
+                          <span className={cn(
+                            'mt-2.5 size-2 shrink-0 rounded-full inline-block',
+                            bulletDotColor
+                          )} />
+                          <span className={cn(
+                            themeDeep ? 'text-slate-200' : 'text-slate-800',
+                            'font-semibold flex-1 min-w-0'
+                          )}>
+                            {isExample ? (
+                              <span className="block mt-1">
+                                <span className={cn(
+                                  'font-black rounded px-2 py-0.5 text-[12px] uppercase mr-2 inline-block shadow-sm',
+                                  themeDeep ? 'bg-amber-500/20 text-amber-300 border border-amber-500/35' : 'bg-amber-100 text-amber-900 border border-amber-200'
+                                )}>
+                                  {hi ? 'उदाहरण:' : 'Example:'}
+                                </span>
+                                <span className="italic font-bold">{cleanedPoint.replace(/^(?:उदाहरण:|Example:)\s*/, '')}</span>
+                              </span>
+                            ) : (
+                              cleanedPoint
+                            )}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+
     return (
       <div className="space-y-3.5 mt-3 pl-1 text-left">
         <div

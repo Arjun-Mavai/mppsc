@@ -54,7 +54,7 @@ export function effectiveAccessGrants(user: Pick<MppscUserRow, 'accessGrants' | 
   const tier = String(user.planTier ?? 'free').toLowerCase();
   const paidPre = tier === 'lite' || tier === 'pro' || user.isSubscribed;
   if (paidPre) return [ACCESS_PRE];
-  return [ACCESS_PRE];
+  return [];
 }
 
 export function hasPreAccess(

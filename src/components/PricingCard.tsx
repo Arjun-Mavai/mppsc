@@ -144,8 +144,8 @@ export function PricingCard({
       ? 'Pro'
       : isMains
         ? hi
-          ? 'मेंस वॉल्ट'
-          : 'Mains Vault'
+          ? 'मेंस ज्ञानकोश'
+          : 'Mains Gyan Kosh'
         : isCombo
           ? hi
             ? 'प्री + मेंस'
@@ -168,7 +168,7 @@ export function PricingCard({
         : isCombo
           ? hi
             ? 'प्रो प्रीलिम्स + पूरा मेंस एक साथ'
-            : 'Pro prelims stack + full mains vault'
+            : 'Pro prelims stack + full Mains Gyan Kosh'
           : hi
             ? 'लाइट से प्रो — सिर्फ़ अंतर भरें'
             : 'Lite → Pro — Just pay the difference';

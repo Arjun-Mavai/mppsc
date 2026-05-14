@@ -40,6 +40,7 @@ interface PyqQuestionListProps {
   onPartFilterChange: (part: string) => void;
   readingTheme: ReadingTheme;
   vaultUnlocked: boolean;
+  allowDemoAccess: boolean;
   onVaultModalOpen: () => void;
 }
 
@@ -49,6 +50,7 @@ export function PyqQuestionList({
   onPartFilterChange,
   readingTheme,
   vaultUnlocked,
+  allowDemoAccess,
   onVaultModalOpen,
 }: PyqQuestionListProps) {
   const { language } = useSettingsStore();
@@ -70,6 +72,7 @@ export function PyqQuestionList({
 
   const guestFreeIds = useMemo(() => {
     if (vaultUnlocked) return new Set<string>();
+    if (!allowDemoAccess) return new Set<string>();
     const picked = new Set<string>();
 
     // 2-mark x2
@@ -95,7 +98,7 @@ export function PyqQuestionList({
     }
 
     return picked;
-  }, [vaultUnlocked, filtered]);
+  }, [vaultUnlocked, allowDemoAccess, filtered]);
 
   const displayQuestions = useMemo(() => {
     if (vaultUnlocked) return filtered;
@@ -246,16 +249,26 @@ export function PyqQuestionList({
                   )}
                 >
                   {q.variants.length === 0 ? (
-                    <p
-                      className={cn(
-                        'text-[15px] leading-relaxed',
-                        themeDeep ? 'text-slate-400' : 'text-amber-900'
-                      )}
-                    >
-                      {hi
-                        ? 'इस प्रश्न के लिए अभी मॉडल उत्तर डेटाबेस में नहीं हैं।'
-                        : 'No prepared variants for this stem yet.'}
-                    </p>
+                    <div className="py-4 text-center">
+                      <span className={cn(
+                        "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-black uppercase tracking-wide shadow-sm",
+                        themeDeep
+                          ? 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+                          : 'border-amber-300 bg-amber-50 text-amber-800'
+                      )}>
+                        🚀 {hi ? 'जल्द आ रहा है (Coming Soon)' : 'Coming Soon'}
+                      </span>
+                      <p
+                        className={cn(
+                          'mt-2 text-sm font-bold leading-relaxed',
+                          themeDeep ? 'text-slate-400' : 'text-slate-600'
+                        )}
+                      >
+                        {hi
+                          ? 'एक्सपर्ट कंटेंट व मॉडल उत्तर तैयार किए जा रहे हैं। जल्द ही उपलब्ध होंगे।'
+                          : 'Expert content & model answers are currently under preparation.'}
+                      </p>
+                    </div>
                   ) : (
                     <div className="space-y-0 px-0.5">
                       {q.variants
@@ -306,23 +319,42 @@ export function PyqQuestionList({
                         })}
 
                       {hasInsights ? (
-                        <div className="mt-6 mb-2 flex flex-col items-center justify-center px-4">
-                          <button
-                            type="button"
-                            onClick={() => setInsightsOpenId(insightsOpen ? null : q.id)}
-                            className={cn(
-                              'inline-flex items-center gap-2 rounded-xl border px-6 py-2.5 text-[12px] font-black uppercase tracking-wider transition-all duration-300 hover:scale-105 active:scale-95 shadow-md',
-                              insightsOpen
-                                ? 'bg-slate-950 border-amber-500 text-amber-300 shadow-amber-500/20'
-                                : 'bg-slate-900 border-slate-800 hover:border-amber-500/40 text-amber-400/95 hover:text-amber-300 shadow-black/40 hover:shadow-amber-500/10'
-                            )}
-                          >
-                            <Trophy className="h-4 w-4 shrink-0 text-amber-500" />
-                            {hi ? 'एक्सपर्ट टिप्स' : 'Expert Tips'}
-                          </button>
+                        <div className="mt-6 mb-2 px-0.5 text-left">
+                          <div className="flex justify-center mb-4">
+                            <div className="relative inline-block">
+                              <button
+                                type="button"
+                                onClick={() => setInsightsOpenId(insightsOpen ? null : q.id)}
+                                className={cn(
+                                  'inline-flex items-center gap-2 rounded-xl border px-6 py-2.5 text-[12px] font-black uppercase tracking-wider transition-all duration-300 hover:scale-105 active:scale-95 shadow-md',
+                                  insightsOpen
+                                    ? 'bg-slate-950 border-amber-500 text-amber-300 shadow-amber-500/20'
+                                    : 'bg-slate-900 border-slate-800 hover:border-amber-500/40 text-amber-400/95 hover:text-amber-300 shadow-black/40 hover:shadow-amber-500/10'
+                                )}
+                              >
+                                <Trophy className="h-4 w-4 shrink-0 text-amber-500" />
+                                {hi ? 'एक्सपर्ट टिप्स' : 'Expert Tips'}
+                              </button>
+                              {!insightsOpen && (
+                                <div className="absolute left-[105%] top-1/2 -translate-y-1/2 flex items-center pointer-events-none select-none z-30 rotate-12">
+                                  {/* Curved Arrow pointing left into the button */}
+                                  <div className="mr-1 filter drop-shadow-[0_2px_4px_rgba(236,72,153,0.6)]">
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="rotate-90">
+                                      <path d="M10 2C7 8 7 12 10 17" stroke="#ec4899" strokeWidth="2.5" strokeLinecap="round" />
+                                      <path d="M7 14L10 18L13 14" stroke="#ec4899" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  </div>
+                                  {/* Pointing finger emoji */}
+                                  <div className="text-2xl filter drop-shadow-md">
+                                    👈
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
                           
                           {insightsOpen && (
-                            <div className="mt-4 w-full max-w-2xl text-left">
+                            <div className="w-full">
                               <PyqExpertInsightsRenderer
                                 insightsText={insightsText}
                                 themeDeep={themeDeep}
@@ -361,7 +393,7 @@ export function PyqQuestionList({
           </div>
           <p className={cn('mx-auto max-w-xl text-sm leading-relaxed', themeDeep ? 'text-slate-300' : 'text-slate-700')}>
             {hi
-              ? 'Deep syllabus concepts, authentic bilingual model answers, and strategic insights unlock with the Mains plan.'
+              ? 'मेंस प्लान के साथ सिलेबस के गहन कॉन्सेप्ट्स, प्रमाणिक द्विभाषी (Bilingual) मॉडल उत्तर और रणनीतिक एक्सपर्ट टिप्स अनलॉक करें।'
               : 'Deep syllabus concepts, authentic bilingual model answers, and strategic insights unlock with the Mains plan.'}
           </p>
           <Button
@@ -369,10 +401,10 @@ export function PyqQuestionList({
             onClick={onVaultModalOpen}
             className="mt-5 h-11 rounded-xl bg-gradient-to-tr from-amber-600 via-amber-500 to-orange-500 px-7 font-black text-white shadow-lg shadow-amber-500/25 hover:opacity-95"
           >
-            {hi ? 'Unlock Library · pricing' : 'Unlock Library · pricing'}
+            {hi ? 'लाइब्रेरी अनलॉक करें · मूल्य' : 'Unlock Library · pricing'}
           </Button>
           <p className={cn('mt-3 text-xs', themeDeep ? 'text-slate-400' : 'text-slate-500')}>
-            {hiddenCount} {hi ? 'प्रश्न लॉक हैं' : 'questions locked'}
+            {hiddenCount} {hi ? 'प्रश्न अभी लॉक हैं' : 'questions locked'}
           </p>
         </div>
       ) : null}

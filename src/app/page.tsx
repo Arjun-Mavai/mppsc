@@ -36,7 +36,7 @@ export default function Home() {
         name: 'What does the Mains module include?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'The Mains module features topic-by-topic deep syllabus clarity mapped directly to the syllabus tree. Every single Mains PYQ and core question includes "Double-Style Answer Variations" (2 completely distinct ways of writing the same model answer, written naturally by experts, not machine-translated) paired with Expert Insights, constitutional articles, SC judgements, and Madhya Pradesh specific dynamic facts.',
+          text: 'The Mains module features topic-by-topic deep syllabus clarity mapped directly to the syllabus tree. Every single Mains PYQ and core question includes "Double-Style Answer Variations" (2 completely distinct ways of structuring the same model answer, written naturally by experts, not machine-translated) paired with Expert Insights, constitutional articles, SC judgements, and Madhya Pradesh specific dynamic facts.',
         },
       },
       {

@@ -26,7 +26,13 @@ type MainsPyqPaperListResponse =
   | { success: true; data: Array<{ id: string; examYear: number; paperNumber: number }> }
   | { success: false; error: 'fetch_failed'; detail?: string };
 
-export function PyqLibraryClient({ vaultUnlocked }: { vaultUnlocked: boolean }) {
+export function PyqLibraryClient({
+  vaultUnlocked,
+  allowDemoAccess,
+}: {
+  vaultUnlocked: boolean;
+  allowDemoAccess: boolean;
+}) {
   const { language } = useSettingsStore();
   const hi = language === 'hi';
 
@@ -188,6 +194,7 @@ export function PyqLibraryClient({ vaultUnlocked }: { vaultUnlocked: boolean }) 
             onPartFilterChange={setPartFilter}
             readingTheme={readingTheme}
             vaultUnlocked={vaultUnlocked}
+            allowDemoAccess={allowDemoAccess}
             onVaultModalOpen={() => setVaultModalOpen(true)}
           />
         </PyqLibraryErrorBoundary>

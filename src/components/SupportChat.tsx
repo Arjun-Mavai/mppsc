@@ -93,18 +93,18 @@ export function SupportChat() {
   const [isNudgeOpen, setIsNudgeOpen] = useState(true);
 
   useEffect(() => {
-    if (isMainsPage && isNudgeOpen) {
+    if (isNudgeOpen) {
       const timer = setTimeout(() => {
         setIsNudgeOpen(false);
-      }, 2000);
+      }, 5000); // Auto-dismiss nudge after 5 seconds
       return () => clearTimeout(timer);
     }
-  }, [isMainsPage, isNudgeOpen]);
+  }, [isNudgeOpen]);
 
   const dynamicFaqs = isMainsPage
     ? [
         {
-          question: { en: 'How to unlock the Mains Vault?', hi: 'मेंस वॉल्ट (Mains Vault) कैसे अनलॉक करें?' },
+          question: { en: 'How to unlock Mains Gyan Kosh?', hi: 'मेंस ज्ञानकोश (Mains Gyan Kosh) कैसे अनलॉक करें?' },
           answer: {
             en: (
               <span>

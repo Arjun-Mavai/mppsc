@@ -23,6 +23,7 @@ export function MainsSyllabusPaperMobileGate(props: {
   units: MobileUnit[];
   firstTopicId: string | null;
   vaultUnlocked: boolean;
+  allowGuestPreview: boolean;
 }) {
   const router = useRouter();
   const { firstTopicId, paperId } = props;
@@ -54,6 +55,7 @@ export function MainsSyllabusPaperMobileGate(props: {
           titleEn={props.titleEn}
           units={props.units}
           vaultUnlocked={props.vaultUnlocked}
+          allowGuestPreview={props.allowGuestPreview}
         />
       </div>
     </>

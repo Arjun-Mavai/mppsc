@@ -5,7 +5,10 @@ import { mainsPapers, mainsUnits, mainsTopics, mainsContent } from '@/db/schema'
 import { eq, and, sql, count, asc } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { revalidatePath } from 'next/cache';
-import { assertAdmin } from '@/lib/auth';
+import { assertAdmin, verifyAuth } from '@/lib/auth';
+import type { MainsUnitPart } from '@/lib/mains-syllabus-unit-label';
+import { isMainsVaultUnlockedUser } from '@/lib/mains-vault-access';
+import { logger } from '@/lib/logger';
 
 /**
  * 🏛️ MAINS MANAGEMENT ACTIONS
@@ -241,9 +244,94 @@ export async function getMainsTopicForPage(topicId: string, paperId: string) {
     if (!row?.unit?.paper || row.unit.paper.id !== paperId) {
       return { success: false as const, error: 'not_found' };
     }
-    return { success: true as const, data: row };
+    if (!row.content) {
+      return { success: true as const, data: row };
+    }
+
+    const user = await verifyAuth();
+    const vaultUnlocked = isMainsVaultUnlockedUser(user);
+    const isGuest = !user;
+    const isGuestDemoTopic = isGuest && row.unit.part === 'A' && row.unit.unitNumber === 1;
+
+    if (vaultUnlocked || isGuestDemoTopic) {
+      return { success: true as const, data: row };
+    }
+
+    const conceptHi = (row.content.conceptHi ?? '').trim();
+    const conceptEn = (row.content.conceptEn ?? '').trim();
+    
+    // 🔒 Type-safe content masking for non-vault users
+    const masked: typeof row.content = {
+      ...row.content,
+      conceptHi: conceptHi ? `${conceptHi.slice(0, 220)}...` : '',
+      conceptEn: conceptEn ? `${conceptEn.slice(0, 220)}...` : '',
+      expertStrategyHi: '',
+      expertStrategyEn: '',
+      modelAnswers: {},
+      keyTermsHi: null,
+      keyTermsEn: null,
+      richPayload: null,
+    };
+
+    return { success: true as const, data: { ...row, content: masked } };
   } catch (error) {
-    console.error('getMainsTopicForPage:', error);
+    logger.error('getMainsTopicForPage: failed to fetch topic', error, {
+      category: 'content',
+      topicId,
+      paperId,
+    });
     return { success: false as const, error: 'fetch_failed' };
+  }
+}
+
+/** Get all papers 1-6 with their full units and topics tree for the global Syllabus Menu */
+export async function getAllMainsPapersWithSyllabus() {
+  try {
+    const papers = await db.select().from(mainsPapers).orderBy(mainsPapers.displayOrder);
+    
+    const data = await Promise.all(
+      papers.map(async (p) => {
+        const units = await db.query.mainsUnits.findMany({
+          where: eq(mainsUnits.paperId, p.id),
+          orderBy: [asc(mainsUnits.part), asc(mainsUnits.displayOrder), asc(mainsUnits.id)],
+          with: {
+            topics: {
+              columns: {
+                id: true,
+                unitId: true,
+                titleHi: true,
+                titleEn: true,
+                displayOrder: true,
+                status: true,
+              },
+              orderBy: [mainsTopics.displayOrder],
+            },
+          },
+        });
+        return {
+          id: p.id,
+          paperNumber: p.paperNumber,
+          titleEn: p.titleEn,
+          titleHi: p.titleHi,
+          units: units.map((u) => ({
+            id: u.id,
+            unitNumber: u.unitNumber,
+            part: u.part as MainsUnitPart,
+            titleHi: u.titleHi,
+            titleEn: u.titleEn,
+            topics: u.topics.map((t) => ({
+              id: t.id,
+              titleHi: t.titleHi,
+              titleEn: t.titleEn,
+              status: t.status ?? 'draft',
+            })),
+          })),
+        };
+      })
+    );
+    return { success: true as const, data };
+  } catch (error) {
+    console.error('getAllMainsPapersWithSyllabus failed:', error);
+    return { success: false as const, error: 'fetch_failed' as const };
   }
 }

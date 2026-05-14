@@ -7,8 +7,9 @@ import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ChevronDown, ExternalLink, Layers, Lock, GraduationCap } from 'lucide-react';
+import { ChevronDown, ExternalLink, Layers, Lock, GraduationCap, ArrowLeft, BookOpen, Sparkles } from 'lucide-react';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { MainsMobileSyllabusDrawer } from '@/components/mains/MainsMobileSyllabusDrawer';
 import type { MobileUnit } from '@/components/mains/MainsSyllabusPaperMobileGate';
 import { mainsUnitShortBadge, mainsUnitSubtitle } from '@/lib/mains-syllabus-unit-label';
 import { SyllabusLockMainsModal } from '@/features/mains/components/SyllabusLockMainsModal';
@@ -22,12 +23,14 @@ export function MainsMobilePaperExplorer({
   titleEn,
   units,
   vaultUnlocked,
+  allowGuestPreview,
 }: {
   paperId: string;
   paperNumber: number;
   titleEn: string;
   units: MobileUnit[];
   vaultUnlocked: boolean;
+  allowGuestPreview: boolean;
 }) {
   const { language } = useSettingsStore();
   const hi = language === 'hi';
@@ -71,6 +74,8 @@ export function MainsMobilePaperExplorer({
                 titleHi: row.titleHi,
                 titleEn: row.titleEn,
                 unitId,
+                paperId,
+                paperNumber,
               },
               content: c
                 ? {
@@ -95,7 +100,7 @@ export function MainsMobilePaperExplorer({
   );
 
   const defaultOpenUnits = units.length ? [`unit-${units[0].id}`] : [];
-  const freeUnitId = units[0]?.id ?? null;
+  const freeUnitId = allowGuestPreview ? (units[0]?.id ?? null) : null;
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col bg-[#fafbfc] text-slate-900 overflow-hidden">
@@ -105,24 +110,30 @@ export function MainsMobilePaperExplorer({
       <div className="pointer-events-none absolute rounded-full blur-[100px] opacity-40 bottom-[10%] right-[10%] h-[320px] w-[320px] bg-amber-100" />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-slate-50/80 to-transparent" />
 
-      {/* Header Container */}
-      <div className="relative z-10 shrink-0 border-b border-slate-200/80 bg-white/85 px-4 py-4 backdrop-blur-md shadow-sm">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">
-              Paper {paperNumber}
+      {/* Header Container (Compact h-14 matching topic reading page) */}
+      <div className="fixed top-14 left-0 right-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200/80 bg-white/90 px-3 backdrop-blur-md shadow-sm dark:border-slate-800/80 dark:bg-slate-950/90">
+        <div className="flex items-center gap-2 min-w-0 text-left pr-1">
+          <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl shrink-0" asChild>
+            <Link href="/mains">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          </Button>
+          <div className="min-w-0 text-left pr-1">
+            <p className="truncate text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 leading-tight">
+              🎯 {hi ? `पेपर ${paperNumber}` : `Paper ${paperNumber}`}
             </p>
-            <h1 className="mt-1 truncate text-lg font-black text-slate-900">{titleEn}</h1>
-            <p className="mt-1 text-xs text-slate-500">
-              {hi ? 'यूनिट खोलें → टॉपिक पर टैप करें → नीचे विवरण खुलता है' : 'Open a unit → tap a topic → details expand inline'}
+            <p className="truncate text-xs font-black text-slate-900 dark:text-slate-100 mt-0.5 leading-snug">
+              {titleEn}
             </p>
           </div>
-          <GraduationCap className="h-8 w-8 shrink-0 text-emerald-600/90" />
+        </div>
+        <div className="flex items-center shrink-0">
+          <MainsMobileSyllabusDrawer paperNumber={paperNumber} language="hi" />
         </div>
       </div>
 
       {/* Main content list */}
-      <div className="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-28 pt-3">
+      <div className="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-28 pt-20">
         <Accordion type="multiple" defaultValue={defaultOpenUnits} className="space-y-3">
           {units.map((unit, unitIdx) => {
             const hue = MAIN_SYLLABUS_CARD_HUES[unitIdx % 4];
@@ -134,55 +145,91 @@ export function MainsMobilePaperExplorer({
                 key={unit.id}
                 value={`unit-${unit.id}`}
                 className={cn(
-                  'overflow-hidden rounded-2xl border transition-all duration-300 shadow-sm',
+                  'rounded-2xl border transition-all duration-300 shadow-sm',
+                  unitIdx === 0 ? 'overflow-visible' : 'overflow-hidden',
                   tileSkin.frame
                 )}
               >
                 {unitLocked ? (
-                  <div className="px-4 py-3">
-                    <div className="flex items-center gap-3 rounded-xl bg-white/80 border border-slate-200/80 backdrop-blur-sm px-3 py-3 shadow-inner">
+                  <div 
+                    onClick={() => setVaultModalOpen(true)}
+                    className="cursor-pointer px-4.5 py-4 transition-all duration-200 hover:bg-slate-100/10"
+                  >
+                    <div className="flex items-start gap-3 rounded-xl bg-slate-100/50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800 backdrop-blur-sm px-3 py-3 shadow-inner">
                       <span
-                        className={cn(
-                          'flex h-9 min-w-[2.5rem] shrink-0 items-center justify-center rounded-xl px-1 text-[10px] font-black leading-tight',
-                          tileSkin.markBadge
-                        )}
+                        className="flex h-9 min-w-[2.5rem] shrink-0 items-center justify-center rounded-xl px-1 text-[10px] font-black leading-tight bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 mt-0.5"
                         title={mainsUnitSubtitle(paperNumber, unit.part, unit.unitNumber, hi ? 'hi' : 'en')}
                       >
                         {mainsUnitShortBadge(unit.part, unit.unitNumber)}
                       </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="line-clamp-2 text-sm font-bold text-slate-800">{hi ? unit.titleHi : unit.titleEn}</p>
-                        <p className="mt-1 text-[11px] text-slate-500">{hi ? 'यह यूनिट लॉक है' : 'This unit is locked'}</p>
+                      <div className="min-w-0 flex-1 text-left flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                            {mainsUnitSubtitle(paperNumber, unit.part, unit.unitNumber, hi ? 'hi' : 'en')}
+                          </p>
+                          <Button
+                            type="button"
+                            size="xs"
+                            className="h-6 gap-1 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 hover:brightness-110 text-slate-950 font-black px-2.5 rounded-full text-[10px] transition-all active:scale-95 shrink-0 border border-amber-500/30 shadow-sm shadow-amber-500/10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setVaultModalOpen(true);
+                            }}
+                          >
+                            <Lock className="h-3 w-3 text-slate-950 fill-slate-950/10" />
+                            <span>{hi ? 'प्रीमियम' : 'Premium'}</span>
+                          </Button>
+                        </div>
+                        <p className="text-sm font-bold text-slate-400 dark:text-slate-500 leading-snug whitespace-normal break-words">{hi ? unit.titleHi : unit.titleEn}</p>
                       </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        className="gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 border-none shadow-md font-bold px-3 py-1.5 rounded-xl transition-all active:scale-95"
-                        onClick={() => setVaultModalOpen(true)}
-                      >
-                        <Lock className="h-3.5 w-3.5" />
-                        {hi ? 'Unlock' : 'Unlock'}
-                      </Button>
                     </div>
                   </div>
                 ) : (
                   <>
-                    <AccordionTrigger className="px-4 py-3 text-left hover:no-underline [&[data-state=open]]:bg-white/40">
-                      <div className="flex items-center gap-3">
+                    <AccordionTrigger className="px-4.5 py-4 text-left hover:no-underline [&[data-state=open]]:bg-white/40">
+                      <div className="flex items-start gap-3 w-full pr-2">
                         <span
                           className={cn(
-                            'flex h-9 min-w-[2.5rem] shrink-0 items-center justify-center rounded-xl px-1 text-[10px] font-black leading-tight',
+                            'flex h-9 min-w-[2.5rem] shrink-0 items-center justify-center rounded-xl px-1 text-[10px] font-black leading-tight mt-0.5',
                             tileSkin.markBadge
                           )}
                           title={mainsUnitSubtitle(paperNumber, unit.part, unit.unitNumber, hi ? 'hi' : 'en')}
                         >
                           {mainsUnitShortBadge(unit.part, unit.unitNumber)}
                         </span>
-                        <div className="min-w-0 text-left">
-                          <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">
-                            {mainsUnitSubtitle(paperNumber, unit.part, unit.unitNumber, hi ? 'hi' : 'en')}
+                        
+                        <div className="min-w-0 flex-1 text-left flex flex-col gap-1.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                              {mainsUnitSubtitle(paperNumber, unit.part, unit.unitNumber, hi ? 'hi' : 'en')}
+                            </p>
+                            
+                            <div className="relative inline-flex items-center gap-1.5 z-20 shrink-0">
+                              {unitIdx === 0 && (
+                                <div className="flex items-center gap-1 pointer-events-none select-none z-30 animate-bounce">
+                                  <span className="text-base">👉</span>
+                                </div>
+                              )}
+                              {/* Pill Size Open Button */}
+                              <Button
+                                size="xs"
+                                className="h-6 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black px-2.5 rounded-full text-[10px] transition-all duration-200 active:scale-95 shadow-sm"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Stop Accordion expand trigger
+                                }}
+                                asChild
+                              >
+                                <Link href={`/mains/syllabus/${paperId}/${unit.topics[0]?.id}`}>
+                                  <BookOpen className="h-3 w-3 text-white" />
+                                  <span>{hi ? 'खोलें' : 'Open'}</span>
+                                </Link>
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <p className="text-sm font-bold text-slate-900 leading-snug whitespace-normal break-words">
+                            {hi ? unit.titleHi : unit.titleEn}
                           </p>
-                          <p className="line-clamp-2 text-sm font-bold text-slate-900">{hi ? unit.titleHi : unit.titleEn}</p>
                         </div>
                       </div>
                     </AccordionTrigger>

@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Target, FileText, Sparkles, Lightbulb, CheckCircle, Filter } from 'lucide-react';
+import { BookOpen, Target, FileText, Sparkles, Lightbulb, CheckCircle, Filter, SlidersHorizontal, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
+import { MainsMobileSyllabusDrawer } from '@/components/mains/MainsMobileSyllabusDrawer';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,6 +24,8 @@ interface ContentProps {
     titleHi: string;
     titleEn: string;
     unitId: string;
+    paperId?: string;
+    paperNumber?: number;
   };
   content: {
     conceptHi: string;
@@ -35,6 +39,7 @@ interface ContentProps {
   language: 'hi' | 'en';
   onMarkDone: () => void;
   isDone: boolean;
+  standalonePage?: boolean;
 }
 
 function marksForBand(mark: '2m' | '7m' | '10m' | '11m' | 'case18'): number {
@@ -45,7 +50,7 @@ function marksForBand(mark: '2m' | '7m' | '10m' | '11m' | 'case18'): number {
   return 18;
 }
 
-export function MainsContentViewer({ topic, content, language, onMarkDone, isDone }: ContentProps) {
+export function MainsContentViewer({ topic, content, language, onMarkDone, isDone, standalonePage = false }: ContentProps) {
   const [activeTab, setActiveTab] = useState<'concept' | 'marking' | 'models' | 'tips'>('concept');
   const [topicMetaOpen, setTopicMetaOpen] = useState(false);
   const hi = language === 'hi';
@@ -173,7 +178,7 @@ export function MainsContentViewer({ topic, content, language, onMarkDone, isDon
           aria-selected={activeTab === tab.id}
           onClick={() => setActiveTab(tab.id)}
           className={cn(
-            'flex min-h-[44px] shrink-0 items-center gap-2 rounded-2xl px-4 py-2 text-sm font-bold transition-all sm:min-h-[48px] sm:px-5 sm:py-2.5',
+            'relative flex min-h-[44px] shrink-0 items-center gap-2 rounded-2xl px-4 py-2 text-sm font-bold transition-all sm:min-h-[48px] sm:px-5 sm:py-2.5',
             activeTab === tab.id
               ? 'bg-slate-900 text-white shadow-lg ring-2 ring-emerald-500/35 dark:bg-white dark:text-slate-900'
               : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
@@ -181,6 +186,11 @@ export function MainsContentViewer({ topic, content, language, onMarkDone, isDon
         >
           <tab.icon className={cn('h-4 w-4', activeTab === tab.id ? 'text-emerald-400 dark:text-emerald-600' : '')} />
           <span className="whitespace-nowrap">{tab.label}</span>
+          {tab.id === 'marking' && (
+            <div className="absolute left-[102%] top-1/2 -translate-y-1/2 flex items-center pointer-events-none select-none z-30 text-2xl filter drop-shadow-md">
+              👈
+            </div>
+          )}
         </button>
       ))}
     </div>
@@ -215,44 +225,68 @@ export function MainsContentViewer({ topic, content, language, onMarkDone, isDon
   );
 
   return (
-    <div className="flex h-full flex-col bg-gradient-to-b from-slate-50 to-white text-slate-900 dark:from-slate-950 dark:to-slate-950 dark:text-slate-100">
-      <header className="shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95">
-        <div className="flex items-center gap-2 px-3 py-2 sm:px-4">
-          <span className="hidden shrink-0 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500 sm:inline">
-            {hi ? 'टॉपिक' : 'Topic'}
-          </span>
-          <h1 className="min-w-0 flex-1 truncate text-[13px] font-bold leading-tight text-slate-900 dark:text-slate-100 sm:text-sm">
-            {title}
-          </h1>
-          <button
-            type="button"
-            onClick={() => setTopicMetaOpen((x) => !x)}
-            className={cn(
-              'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 shadow-sm transition-colors',
-              topicMetaOpen
-                ? 'border-violet-500 bg-violet-50 text-violet-800 dark:bg-violet-950/70 dark:text-violet-200'
-                : 'border-slate-200 bg-white text-slate-600 hover:border-indigo-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-500'
+    <div className="flex min-h-0 flex-1 flex-col bg-gradient-to-b from-slate-50 to-white text-slate-900 dark:from-slate-950 dark:to-slate-950 dark:text-slate-100 overflow-hidden">
+      <header className={cn(
+        'shrink-0 border-b border-slate-200/80 dark:border-slate-800',
+        standalonePage
+          ? 'fixed top-14 left-0 right-0 z-40 flex min-h-14 items-center justify-between gap-3 bg-white/90 backdrop-blur-md shadow-sm dark:bg-slate-950/90 px-3'
+          : 'bg-white/95 backdrop-blur-md dark:bg-slate-950/95'
+      )}>
+        <div className={cn('flex items-center justify-between gap-2 px-3 py-2 sm:px-4', standalonePage ? 'w-full px-0 py-0' : '')}>
+          <div className="flex items-center gap-2 min-w-0 pr-1">
+            {topic.paperId && (
+              <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl shrink-0" asChild>
+                <Link href={`/mains/syllabus/${topic.paperId}`}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Link>
+              </Button>
             )}
-            aria-expanded={topicMetaOpen}
-            aria-label={hi ? 'शीर्षक, विवरण व टैब' : 'Title, intro & tabs'}
-          >
-            <Filter className="h-4 w-4" aria-hidden />
-          </button>
-          <Button
-            size="sm"
-            variant={isDone ? 'default' : 'outline'}
-            className={cn(
-              'h-9 shrink-0 rounded-full px-3 text-[11px] font-black shadow-sm sm:px-4',
-              isDone ? 'border-0 bg-emerald-600 hover:bg-emerald-700' : 'border-slate-300 dark:border-slate-600'
+            <button
+              type="button"
+              onClick={() => setTopicMetaOpen((x) => !x)}
+              className={cn(
+                'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 shadow-sm transition-colors',
+                topicMetaOpen
+                  ? 'border-violet-500 bg-violet-50 text-violet-800 dark:bg-violet-950/70 dark:text-violet-200'
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-indigo-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-500'
+              )}
+              aria-expanded={topicMetaOpen}
+              aria-label={hi ? 'शीर्षक, विवरण व टैब' : 'Title, intro & tabs'}
+            >
+              <SlidersHorizontal className="h-4 w-4" aria-hidden />
+            </button>
+            <div className="min-w-0 pr-1">
+              {topic.paperNumber && (
+                <p className="truncate text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 leading-tight">
+                  🎯 Paper {topic.paperNumber}
+                </p>
+              )}
+              <h1 className="truncate text-xs font-bold leading-tight text-slate-900 dark:text-slate-100 sm:text-sm">
+                {title}
+              </h1>
+            </div>
+          </div>
+
+          <div className="flex items-center shrink-0 gap-2">
+            <Button
+              size="sm"
+              variant={isDone ? 'default' : 'outline'}
+              className={cn(
+                'h-9 shrink-0 rounded-full px-3 text-[11px] font-black shadow-sm sm:px-4',
+                isDone ? 'border-0 bg-emerald-600 hover:bg-emerald-700' : 'border-slate-300 dark:border-slate-600'
+              )}
+              onClick={onMarkDone}
+            >
+              {isDone ? <CheckCircle className="mr-1 h-4 w-4" /> : null}
+              <span className="max-[380px]:sr-only">
+                {isDone ? (hi ? 'पढ़ लिया ✓' : 'Done ✓') : hi ? 'मार्क' : 'Read'}
+              </span>
+              <span className="min-[381px]:hidden">{isDone ? '✓' : '••'}</span>
+            </Button>
+            {topic.paperNumber && (
+              <MainsMobileSyllabusDrawer paperNumber={topic.paperNumber} language="hi" />
             )}
-            onClick={onMarkDone}
-          >
-            {isDone ? <CheckCircle className="mr-1 h-4 w-4" /> : null}
-            <span className="max-[380px]:sr-only">
-              {isDone ? (hi ? 'पढ़ लिया ✓' : 'Done ✓') : hi ? 'मार्क' : 'Read'}
-            </span>
-            <span className="min-[381px]:hidden">{isDone ? '✓' : '••'}</span>
-          </Button>
+          </div>
         </div>
 
         <AnimatePresence initial={false}>
@@ -293,7 +327,7 @@ export function MainsContentViewer({ topic, content, language, onMarkDone, isDon
         {!topicMetaOpen ? <div className="px-3 sm:px-4">{tabListCompact}</div> : null}
       </header>
 
-      <div className="custom-scrollbar flex-1 overflow-y-auto px-6 py-8 sm:px-8">
+      <div className={cn("custom-scrollbar flex-1 overflow-y-auto px-6 sm:px-8 sm:pb-8", standalonePage ? "pt-20 pb-12 sm:pt-20" : "py-8")}>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -324,7 +358,12 @@ export function MainsContentViewer({ topic, content, language, onMarkDone, isDon
 
             {activeTab === 'marking' && (
               <div className="space-y-4">
-                <MainsMarkdownBody markdown={strategyBlock || (hi ? '*रणनीति जोड़ी जाएगी।*' : '*Strategy will appear here.*')} isHindi={hi} />
+                <MainsMarkdownBody 
+                  markdown={strategyBlock || (hi ? '*रणनीति जोड़ी जाएगी।*' : '*Strategy will appear here.*')} 
+                  isHindi={hi}
+                  itemClassName="border-violet-200 bg-gradient-to-r from-violet-50/40 to-white dark:border-violet-900/40 dark:bg-violet-950/20 px-2 py-2.5 sm:px-2.5 sm:py-3"
+                  bulletClassName="bg-violet-600 shadow-[0_0_12px_rgba(124,58,237,0.5)] ring-4 ring-violet-500/20"
+                />
               </div>
             )}
 
