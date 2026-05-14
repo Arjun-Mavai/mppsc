@@ -6,6 +6,8 @@
  * • Zero visual impact on readability
  */
 
+import { logger } from '@/lib/logger';
+
 /**
  * Simple hash function that works in both Node.js and Browser
  */
@@ -188,7 +190,9 @@ export async function trackCopyAttempt(params: {
       });
     }
   } catch (error) {
-    console.error('Failed to track copy attempt:', error);
+    logger.error('Failed to track copy attempt', error as Error, {
+      category: 'content',
+    });
   }
 }
 
