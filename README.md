@@ -1520,3 +1520,39 @@ import { CANONICAL_TEST_IDS } from "@/lib/pyq-constants";
 
 /tmp/PROTECTION_SUMMARY.txt entire copy protection code md file
 /tmp/PROTECTION_SUMMARY.txt
+
+📂 DOCUMENTATION SAVED
+
+- CODE_REVIEW.md — 10 issues identified + fixes
+- PRODUCTION_READINESS.md — Full deployment checklist
+- SUMMARY.md — This executive summary
+
+All in: /Users/arjun/.copilot/session-state/ffe4bbdf-1ecd-4b95-ad8b-d46b188af9cd/
+
+4 lines for md file or llm
+https://levelup.gitconnected.com/the-4-lines-every-claude-md-needs-2717a46866f6
+
+1. Don’t assume. Don’t hide confusion. Surface tradeoffs.
+
+2. Minimum code that solves the problem. Nothing speculative.
+
+3. Touch only what you must. Clean up only your own mess.
+
+4. Define success criteria. Loop until verified.
+
+✨ ACCESS MATRIX (FINAL)
+
+Free: [] → Locked Pre + Locked Mains
+Pre-Only: ["mppsc_pre"] → Full Pre + Locked Mains ← arjun@gmail.com
+Mains-Only: ["mppsc_mains"] → Locked Pre + Full Mains
+Combo: ["mppsc_pre","mppsc_mains"] → Full Pre + Full Mains
+
+ROOT CAUSE BUG:
+
+// src/lib/access-grants.ts line 57
+
+- return [ACCESS_PRE]; // ❌ Everyone got pre access!
+
+* return []; // ✅ Free users get nothing
+
+This was giving every user (even free) pre access by default, letting pre-only users bypass mains checks.
