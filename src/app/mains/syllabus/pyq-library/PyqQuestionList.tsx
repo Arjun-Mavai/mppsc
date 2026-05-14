@@ -36,6 +36,7 @@ type ReadingTheme = 'deep' | 'paper';
 
 interface PyqQuestionListProps {
   questions: QRow[];
+  paperNumber: number;
   partFilter: string;
   onPartFilterChange: (part: string) => void;
   readingTheme: ReadingTheme;
@@ -46,6 +47,7 @@ interface PyqQuestionListProps {
 
 export function PyqQuestionList({
   questions,
+  paperNumber,
   partFilter,
   onPartFilterChange,
   readingTheme,
@@ -55,6 +57,7 @@ export function PyqQuestionList({
 }: PyqQuestionListProps) {
   const { language } = useSettingsStore();
   const hi = language === 'hi';
+  const effectiveHi = paperNumber === 5 || paperNumber === 6 || hi;
   const themeDeep = readingTheme === 'deep';
 
   const [openId, setOpenId] = useState<string | null>(null);
@@ -119,20 +122,20 @@ export function PyqQuestionList({
   );
 
   function stemFor(q: QRow) {
-    return hi ? q.questionHi : (q.questionEn ?? q.questionHi);
+    return effectiveHi ? q.questionHi : (q.questionEn ?? q.questionHi);
   }
 
   function insightsFor(q: QRow) {
-    if (hi) return (q.expertInsightsHi ?? '').trim();
+    if (effectiveHi) return (q.expertInsightsHi ?? '').trim();
     return (q.expertInsightsEn ?? q.expertInsightsHi ?? '').trim();
   }
 
   function answerFor(v: QRow['variants'][0]) {
-    return hi ? v.answerHi : (v.answerEn ?? v.answerHi);
+    return effectiveHi ? v.answerHi : (v.answerEn ?? v.answerHi);
   }
 
   function styleLabelFor(v: QRow['variants'][0]) {
-    if (hi) {
+    if (effectiveHi) {
       const s = (v.styleLabelHi ?? '').trim();
       if (s) return s;
       return (v.styleLabel ?? '').trim() || null;
@@ -225,14 +228,14 @@ export function PyqQuestionList({
                       themeDeep ? 'text-slate-500' : 'text-slate-700/90'
                     )}
                   >
-                    {hi
+                    {effectiveHi
                       ? `खंड ${q.part} · इकाई ${q.unitNumber} · प्रश्न ${q.questionNumber}`
                       : `Part ${q.part} · U${q.unitNumber} · ${q.questionNumber}`}
                   </p>
                   <p
                     className={cn(
                       'mt-1 text-[15px] font-semibold leading-relaxed md:text-base',
-                      hi ? 'font-[family-name:var(--font-pyq-dev)]' : 'font-[family-name:var(--font-pyq-serif)]',
+                      effectiveHi ? 'font-[family-name:var(--font-pyq-dev)]' : 'font-[family-name:var(--font-pyq-serif)]',
                       themeDeep ? 'text-slate-100' : 'text-slate-900'
                     )}
                   >
@@ -256,7 +259,7 @@ export function PyqQuestionList({
                           ? 'border-amber-500/30 bg-amber-500/10 text-amber-300'
                           : 'border-amber-300 bg-amber-50 text-amber-800'
                       )}>
-                        🚀 {hi ? 'जल्द आ रहा है (Coming Soon)' : 'Coming Soon'}
+                        🚀 {effectiveHi ? 'जल्द आ रहा है (Coming Soon)' : 'Coming Soon'}
                       </span>
                       <p
                         className={cn(
@@ -264,7 +267,7 @@ export function PyqQuestionList({
                           themeDeep ? 'text-slate-400' : 'text-slate-600'
                         )}
                       >
-                        {hi
+                        {effectiveHi
                           ? 'एक्सपर्ट कंटेंट व मॉडल उत्तर तैयार किए जा रहे हैं। जल्द ही उपलब्ध होंगे।'
                           : 'Expert content & model answers are currently under preparation.'}
                       </p>
@@ -292,14 +295,14 @@ export function PyqQuestionList({
                               <div className="mb-3 flex flex-wrap items-center gap-1.5 px-0.5">
                                 <span className={cn('inline-flex items-center gap-1', badgeClass)}>
                                   <Layers className="h-3 w-3 shrink-0 opacity-95" />
-                                  {hi ? `वेरिएंट ${v.slot}` : `Variant ${v.slot}`}
+                                  {effectiveHi ? `वेरिएंट ${v.slot}` : `Variant ${v.slot}`}
                                 </span>
                                 {styleSubtitle ? (
                                   <span
                                     className={cn(
                                       'text-[11px] font-semibold leading-tight',
                                       themeDeep ? 'text-slate-300' : 'text-slate-700',
-                                      hi && 'font-[family-name:var(--font-pyq-dev)]'
+                                      effectiveHi && 'font-[family-name:var(--font-pyq-dev)]'
                                     )}
                                   >
                                     {styleSubtitle}
@@ -310,7 +313,7 @@ export function PyqQuestionList({
                               <div className="mb-4">
                                 <PyqAnswerProse
                                   text={answerFor(v)}
-                                  lang={v.answerEn && !hi ? 'en' : 'hi'}
+                                  lang={v.answerEn && !effectiveHi ? 'en' : 'hi'}
                                   theme={readingTheme}
                                 />
                               </div>
@@ -333,7 +336,7 @@ export function PyqQuestionList({
                                 )}
                               >
                                 <Trophy className="h-4 w-4 shrink-0 text-amber-500" />
-                                {hi ? 'एक्सपर्ट टिप्स' : 'Expert Tips'}
+                                {effectiveHi ? 'एक्सपर्ट टिप्स' : 'Expert Tips'}
                               </button>
                               {!insightsOpen && (
                                 <div className="absolute left-[105%] top-1/2 -translate-y-1/2 flex items-center pointer-events-none select-none z-30 rotate-12">
@@ -358,7 +361,7 @@ export function PyqQuestionList({
                               <PyqExpertInsightsRenderer
                                 insightsText={insightsText}
                                 themeDeep={themeDeep}
-                                hi={hi}
+                                hi={effectiveHi}
                               />
                             </div>
                           )}

@@ -41,7 +41,7 @@ export default async function MainsPaperIndexPage({
     return (
       <div className="flex h-full flex-col overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
         {/* Header Container with Syllabus Menu Drawer */}
-        <div className="fixed top-14 left-0 right-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200/80 bg-white/90 px-3 backdrop-blur-md shadow-sm dark:border-slate-800/80 dark:bg-slate-950/90">
+        <div className="fixed top-14 left-0 right-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200/80 bg-white/90 px-3 backdrop-blur-md shadow-sm dark:border-slate-800/80 dark:bg-slate-950/90 overflow-y-auto overscroll-none touch-none">
           <div className="flex items-center gap-2 min-w-0 text-left pr-1">
             <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl shrink-0" asChild>
               <Link href="/mains">

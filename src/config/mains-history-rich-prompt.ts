@@ -43,7 +43,7 @@ Model answers — **strictly bilingual**: you MUST fill **both** "model_answers_
 EXCEPTION: For Papers 5 and 6, the test is Pure Hindi. Therefore, you MUST set ALL \`_en\` keys (including \`model_answers_en\`, \`syllabus_grasp_en\`, etc.) to \`null\` or empty arrays. Write the pure Hindi content ONLY in the \`_hi\` keys.
 
 Shape (each language block mirrors the other in **structure** — same number of variants per band):
-{ "2m": [{"stem":"full question in THIS language","text":"- ..."}], "7m": [...], "10m": [...], "11m": [...], "case18": [...] }
+{ "2m": [{"stem":"Variant 1 Q","text":"- ..."}, {"stem":"Variant 2 Q","text":"- ..."}], "7m": [{"stem":"...","text":"..."}, {"stem":"...","text":"..."}], "10m": [{"stem":"...","text":"..."}, {"stem":"...","text":"..."}], "11m": [...], "case18": [...] }
 
 **Every object MUST include "stem" + "text".** stem language = parent block language (HI → Hindi question, EN → English question).
 
@@ -60,8 +60,8 @@ Shape (each language block mirrors the other in **structure** — same number of
 **Third variant (optional):** Only when breadth is clearly high, you MAY add **a third object** inside **7m** and/or **10m** arrays (distinct angle — e.g. MP tilt vs all-India institutional vs analytic timeline). Never add a third 2m row. If two variants suffice, omit the third (keep arrays to two entries).
 
 Mark discipline (mirror MPPSC notification; fill unused keys as [] arrays):
-- **Papers I–III:** at least **two** DISTINCT variants each for **2m**, **7m**, **10m** in BOTH model_answers_hi and model_answers_en — counts must match (e.g. two 7m Hindi + two 7m English). Optional **third** 7m/10m only per breadth rule above. Set "11m" and "case18" to [] unless a rare ethics tangent truly fits Paper III.
-- **Paper IV:** at least TWO **11m** variants; **case18**: one full mini-case ONLY if the syllabus line suits stakeholder ethics — else [].
+- **Papers I–III:** You MUST provide at least **one** variant each for **2m**, **7m**, and **10m** in BOTH model_answers_hi and model_answers_en. Prefer two distinct variants when the topic breadth supports it. Set "11m" and "case18" to [] unless a rare ethics tangent truly fits Paper III.
+- **Paper IV:** You MUST provide at least **one** **11m** variant; **case18**: one full mini-case ONLY if the syllabus line suits stakeholder ethics — else [].
 - **Papers V–VI (Hindi + Essay):** model_answers_hi MUST include strong Pure Hindi-ready samples. You MUST leave model_answers_en completely empty ([]) or null, as English is strictly prohibited. Add longer Hindi practice in **7m**/ **10m** / optional **11m** as the topic warrants.
 
 Flash terms — UI parses **key_terms_cards_\*** arrays as strict JSON — valid JSON only (double quotes on keys/strings, commas between objects, **no trailing comma**, UTF-8).

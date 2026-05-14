@@ -152,15 +152,15 @@ function validateModelShape(
   if (!hasModels) return 'model_answers empty — add at least one block';
 
   if (pn >= 1 && pn <= 4) {
-    if (ma['2m'].length < 2 || ma['7m'].length < 2) {
-      return 'Paper I–IV: provide at least TWO 2m and TWO 7m variants.';
+    if (ma['2m'].length < 1 || ma['7m'].length < 1) {
+      return 'Paper I–IV: provide at least ONE 2m and ONE 7m variant.';
     }
   }
   if (pn <= 3) {
-    if (ma['10m'].length < 2) return 'Paper I–III: provide TWO 10m (~200 word) variants.';
+    if (ma['10m'].length < 1) return 'Paper I–III: provide at least ONE 10m (~200 word) variant.';
   }
   if (pn === 4) {
-    if (ma['11m'].length < 2) return 'Paper IV: provide TWO 11m long-answer variants.';
+    if (ma['11m'].length < 1) return 'Paper IV: provide at least ONE 11m long-answer variant.';
   }
   if (pn >= 5) {
     if (ma['2m'].length < 1) return 'Paper V/VI: keep at least one 2m sample; add 7m and/or 10m rows as fits the topic.';

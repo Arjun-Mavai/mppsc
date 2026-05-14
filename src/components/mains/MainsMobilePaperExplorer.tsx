@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ChevronDown, ExternalLink, Layers, Lock, GraduationCap, ArrowLeft, BookOpen, Sparkles } from 'lucide-react';
+import { ChevronDown, ExternalLink, Layers, Lock, GraduationCap, ArrowLeft, ArrowRight, BookOpen, Sparkles } from 'lucide-react';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { MainsMobileSyllabusDrawer } from '@/components/mains/MainsMobileSyllabusDrawer';
 import type { MobileUnit } from '@/components/mains/MainsSyllabusPaperMobileGate';
@@ -111,7 +111,11 @@ export function MainsMobilePaperExplorer({
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-slate-50/80 to-transparent" />
 
       {/* Header Container (Compact h-14 matching topic reading page) */}
-      <div className="fixed top-14 left-0 right-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200/80 bg-white/90 px-3 backdrop-blur-md shadow-sm dark:border-slate-800/80 dark:bg-slate-950/90">
+      <div 
+        className="fixed top-14 left-0 right-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200/80 bg-white/90 px-3 backdrop-blur-md shadow-sm dark:border-slate-800/80 dark:bg-slate-950/90 overflow-y-auto overscroll-none touch-none"
+        onWheel={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center gap-2 min-w-0 text-left pr-1">
           <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl shrink-0" asChild>
             <Link href="/mains">
@@ -206,22 +210,31 @@ export function MainsMobilePaperExplorer({
                             
                             <div className="relative inline-flex items-center gap-1.5 z-20 shrink-0">
                               {unitIdx === 0 && (
-                                <div className="flex items-center gap-1 pointer-events-none select-none z-30 animate-bounce">
-                                  <span className="text-base">👉</span>
+                                <div className="absolute right-[102%] top-1/2 -translate-y-1/2 flex items-center pointer-events-none select-none z-30 -rotate-12">
+                                  <div className="text-xl filter drop-shadow-md">
+                                    👉
+                                  </div>
+                                  <div className="ml-0.5 filter drop-shadow-[0_2px_4px_rgba(236,72,153,0.6)]">
+                                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="-rotate-90">
+                                      <path d="M10 2C7 8 7 12 10 17" stroke="#ec4899" strokeWidth="2.5" strokeLinecap="round" />
+                                      <path d="M7 14L10 18L13 14" stroke="#ec4899" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  </div>
                                 </div>
                               )}
                               {/* Pill Size Open Button */}
                               <Button
                                 size="xs"
-                                className="h-6 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black px-2.5 rounded-full text-[10px] transition-all duration-200 active:scale-95 shadow-sm"
+                                className="h-6 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black px-2.5 rounded-full text-[10px] transition-all duration-200 active:scale-95 shadow-sm group"
                                 onClick={(e) => {
                                   e.stopPropagation(); // Stop Accordion expand trigger
                                 }}
                                 asChild
                               >
                                 <Link href={`/mains/syllabus/${paperId}/${unit.topics[0]?.id}`}>
-                                  <BookOpen className="h-3 w-3 text-white" />
+                                  <BookOpen className="h-3 w-3 text-white shrink-0" />
                                   <span>{hi ? 'खोलें' : 'Open'}</span>
+                                  <ArrowRight className="h-3 w-3 text-white shrink-0 transition-transform group-hover:translate-x-0.5" />
                                 </Link>
                               </Button>
                             </div>

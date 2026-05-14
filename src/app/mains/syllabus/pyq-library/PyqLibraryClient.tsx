@@ -190,6 +190,7 @@ export function PyqLibraryClient({
         >
           <PyqQuestionList
             questions={questions}
+            paperNumber={papers.find((p) => p.id === paperId)?.paperNumber ?? 1}
             partFilter={partFilter}
             onPartFilterChange={setPartFilter}
             readingTheme={readingTheme}
