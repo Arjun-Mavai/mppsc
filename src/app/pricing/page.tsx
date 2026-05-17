@@ -53,8 +53,8 @@ const faqData = [
   {
     q: { en: 'How long is my access valid?', hi: 'मेरा एक्सेस कब तक वैध रहेगा?' },
     a: {
-      en: 'Pro access is valid till MPPSC 2026 Mains.',
-      hi: 'प्रो एक्सेस MPPSC 2026 मेन्स तक वैध है।',
+      en: 'Pro access is valid for 6 Months.',
+      hi: 'प्रो एक्सेस 6 महीने तक वैध है।',
     },
   },
   {
@@ -332,7 +332,7 @@ function PricingPageInner() {
       {/* ── Hero Header ──────────────────────────────────── */}
       <section className="relative z-10 px-4 pt-24 pb-4 text-center md:pt-32 md:pb-8">
         <Badge className="mb-6 cursor-default border-amber-200 bg-amber-50 px-5 py-2 text-xs font-black tracking-widest text-amber-800 uppercase shadow-sm">
-          MPPSC 2026 Special
+          6 Months Access
         </Badge>
         <h1 className="font-display mb-4 text-4xl leading-[1.28] py-1 font-black tracking-tight text-slate-900 md:text-7xl">
           {hi ? (

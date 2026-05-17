@@ -156,12 +156,12 @@ export function PricingCard({
             : 'Upgrade to Pro';
   const subtitle = isLite
     ? hi
-      ? 'स्मार्ट शुरुआत — प्रीलिम्स तक'
-      : 'Smart start — till Prelims'
+      ? 'स्मार्ट शुरुआत — 6 महीने'
+      : 'Smart start — 6 Months'
     : isPro
       ? hi
-        ? 'पूरी ताकत — मेन्स तक'
-        : 'Full power — till Mains'
+        ? 'पूरी ताकत — 6 महीने'
+        : 'Full power — 6 Months'
       : isMains
         ? hi
           ? 'सिलेबस, मॉडल उत्तर व PYQ डेस्क'
@@ -309,7 +309,7 @@ export function PricingCard({
                   )}
                 />
                 <span>
-                  {hi ? (isLite ? 'MPPSC 2026 प्रीलिम्स तक वैध' : validityText) : validityText}
+                  {hi ? (isLite ? '6 महीने तक वैध' : validityText) : validityText}
                 </span>
               </li>
             )}

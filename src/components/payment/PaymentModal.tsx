@@ -50,7 +50,7 @@ const MPPSC_FACTS = [
   { icon: Target, text: '2 lakh+ students appear for MPPSC every year' },
   { icon: Brain, text: 'Indian History covers 15-20% of Prelims questions' },
 
-  { icon: Sparkles, text: 'MPPSC 2026 Prelims expected date is 26 April' },
+  { icon: Sparkles, text: 'Premium plans are valid for 6 months from purchase' },
   { icon: BookOpen, text: 'GS Paper 2 (CSAT) is qualifying — 33% needed' },
 
   { icon: Brain, text: 'Current Affairs covers 20-25% of questions' },
