@@ -78,12 +78,7 @@ export default function MainsLandingPage() {
 
       {/* ── Hero Section (Google & Stripe Designer Edition) ── */}
       <section className="relative z-10 flex flex-col items-center justify-center px-4 pt-4 pb-12 text-center md:px-6 md:pt-10 md:pb-16">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="max-w-5xl"
-        >
+        <div className="max-w-5xl animate-fade-in-up">
           {/* Glowing Premium Strategy Pill Badge */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
@@ -259,7 +254,7 @@ export default function MainsLandingPage() {
               <span className="text-xs font-bold text-slate-300">{hi ? 'परीक्षक जाल व टिप्स' : 'Examiner Traps Decoded'}</span>
             </div>
           </motion.div>
-        </motion.div>
+        </div>
       </section>
 
       {/* ── Features Grid (Syllabus Depth Focus) ── */}
