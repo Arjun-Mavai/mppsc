@@ -85,6 +85,13 @@ const faqData = [
       hi: 'मेंस मॉड्यूल में आपको पूरे सिलेबस ट्री के अनुसार प्रत्येक टॉपिक की गहरी संरचनात्मक समझ मिलती है। इसके अलावा, मुख्य परीक्षा के प्रश्नों के लिए हर प्रश्न के "2 बिल्कुल अलग दृष्टिकोण वाले मॉडल उत्तर" (डबल-स्टाइल उत्तर वेरिएशन) मिलते हैं। ये दोनों भाषाओं (Hindi & English) में बिना मशीन अनुवाद के लिखे गए हैं, साथ ही इनमें रणनीतिक विशेषज्ञ मार्गदर्शन (संवैधानिक अनुच्छेद, कोर्ट फैसले व MP-विशिष्ट डेटा) भी शामिल हैं।',
     },
   },
+  {
+    q: { en: 'Can I use my account on multiple devices?', hi: 'क्या मैं अपने अकाउंट को एक साथ कई डिवाइसेज पर चला सकता हूँ?' },
+    a: {
+      en: 'To maintain account security and platform integrity, we follow a strict Single Device Login policy. You can use your account on any device, but logging in on a new device will automatically log you out from the previous one.',
+      hi: 'अकाउंट की सुरक्षा के लिए हम Single Device Login पॉलिसी का पालन करते हैं। आप किसी भी डिवाइस पर अपना अकाउंट चला सकते हैं, लेकिन नए डिवाइस पर लॉगिन करने पर पिछले डिवाइस से आप अपने आप लॉग-आउट हो जाएंगे।',
+    },
+  },
 ];
 
 // ── Feature lists from centralized config ───────────────

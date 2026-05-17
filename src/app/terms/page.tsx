@@ -35,7 +35,7 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-slate-900">2. Account Responsibility</h2>
+            <h2 className="text-xl font-semibold text-slate-900">2. Account Responsibility & Usage Policy</h2>
             <ul className="mt-3 list-disc space-y-2 pl-5">
               <li>Users must provide authentic and verifiable information during registration.</li>
               <li>
@@ -43,7 +43,10 @@ export default function TermsOfServicePage() {
                 password.
               </li>
               <li>
-                Account sharing is strictly prohibited. Each subscription is for a single user only.
+                <strong>Single Device Usage:</strong> Each subscription is for a single user only. To maintain platform integrity, the Platform enforces a <strong>Single Device Login</strong> policy. Accessing your account on a new device will automatically terminate the session on any previously logged-in device.
+              </li>
+              <li>
+                <strong>Account Sharing:</strong> Sharing your login credentials or account access with third parties is strictly prohibited. Any pattern indicating unauthorized sharing or industrial usage may result in permanent suspension.
               </li>
               <li>
                 We reserve the unilateral right to terminate accounts that engage in fraudulent
