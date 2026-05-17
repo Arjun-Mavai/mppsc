@@ -150,7 +150,7 @@ export function MainsSyllabusStructure({ hi }: { hi: boolean }) {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 border-2 shadow-sm",
+          "w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 border-2 shadow-sm active:scale-100",
           isOpen 
             ? "bg-emerald-50 border-emerald-500/30 text-emerald-900 dark:bg-emerald-950/20 dark:border-emerald-500/40 dark:text-emerald-400" 
             : "bg-white border-slate-200 hover:border-emerald-300 text-slate-700 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300 dark:hover:border-emerald-500/30"
@@ -295,7 +295,7 @@ function PaperRow({
     >
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors interactive-tile"
+        className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors interactive-tile active:scale-100"
       >
         <div className="flex items-center gap-3">
           <span className="flex h-8 w-12 items-center justify-center rounded-lg bg-slate-900 text-white text-[10px] font-black uppercase">

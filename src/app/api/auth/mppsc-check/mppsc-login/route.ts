@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { logger } from '@/lib/logger';
+import { hasActiveAuthSession, touchAuthLoginMetadata } from '@/lib/auth-session-metadata';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🔑 LOGIN API — Email + Password → JWT cookie set karo
@@ -50,6 +51,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     email = body.email;
     const password = body.password;
+    const force = Boolean(body.force);
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
@@ -129,11 +131,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
+    // ── Single Device Login Logic ──────────────────────────────
+    const newVersion = (user.sessionVersion || 0) + 1;
+    if (!force) {
+      if (hasActiveAuthSession(user.metadata)) {
+        return NextResponse.json(
+          {
+            requiresConfirmation: true,
+            message:
+              'An active session was detected. Logging in here will disconnect your other devices. Continue?',
+          },
+          { status: 409 }
+        );
+      }
+    }
+
     // ── Sign JWT Token ──────────────────────────────────────────
     const payload = {
       userId: user.id,
       email: user.email,
       role: user.role,
+      sessionVersion: newVersion,
     };
 
     const { signToken } = await import('@/lib/jwt');
@@ -141,6 +159,45 @@ export async function POST(request: Request) {
 
     if (!token) {
       throw new Error('Token generation failed');
+    }
+
+    await db
+      .update(mppscUsers)
+      .set({
+        sessionVersion: newVersion,
+        metadata: touchAuthLoginMetadata(user.metadata),
+      })
+      .where(eq(mppscUsers.id, user.id));
+
+    // ── Telegram Notification (Backgrounded) ────────────────────
+    try {
+      const { sendTelegramNotification, escapeHTML } = await import('@/lib/telegram');
+      const userAgent = request.headers.get('user-agent') || 'Unknown Device';
+      const grants = Array.isArray(user.accessGrants)
+        ? user.accessGrants
+        : typeof user.accessGrants === 'string'
+          ? JSON.parse(user.accessGrants)
+          : ['mppsc_pre'];
+
+      const telegramMessage =
+        `🔑 <b>New Login (API)</b> ${force ? '(FORCED)' : ''}\n\n` +
+        `👤 <b>User:</b> ${escapeHTML(user.name || 'Anonymous')}\n` +
+        `📧 <b>Email:</b> ${escapeHTML(user.email)}\n` +
+        `📞 <b>Phone:</b> ${escapeHTML(user.phone || 'Not Provided')}\n` +
+        `🏆 <b>Plan:</b> ${escapeHTML((user.planTier as string)?.toUpperCase() || 'FREE')}\n` +
+        `🔓 <b>Grants:</b> ${escapeHTML(Array.isArray(grants) ? grants.join(', ') : 'None')}\n` +
+        `📱 <b>Device:</b> ${escapeHTML(userAgent.slice(0, 100))}\n` +
+        `🌐 <b>IP:</b> ${escapeHTML(ip)}\n` +
+        `🔢 <b>Session v:</b> ${newVersion}\n` +
+        `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
+
+      sendTelegramNotification(telegramMessage).catch((e) => {
+        logger.error('Telegram login notification failed (non-blocking)', e, {
+          category: 'telegram',
+        });
+      });
+    } catch (e) {
+      // Construction failed
     }
 
     // ── Set HTTP-Only Cookie (30 days) ──────────────────────────
@@ -153,12 +210,11 @@ export async function POST(request: Request) {
       sameSite: 'lax',
     });
 
-    const fresh = await db.query.mppscUsers.findFirst({
-      where: eq(mppscUsers.id, user.id),
-      columns: { accessGrants: true },
-    });
-
-    const freshGrants = parseAccessGrants(fresh?.accessGrants);
+    const freshGrants = Array.isArray(user.accessGrants)
+      ? user.accessGrants
+      : typeof user.accessGrants === 'string'
+        ? JSON.parse(user.accessGrants)
+        : ['mppsc_pre'];
 
     return NextResponse.json({
       success: true,

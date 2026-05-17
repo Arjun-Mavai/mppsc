@@ -7,6 +7,13 @@ export type AccessGrant = typeof ACCESS_PRE | typeof ACCESS_MAINS;
 
 export type MppscUserRow = InferSelectModel<typeof mppscUsers>;
 
+/** Basic fields needed to determine access */
+type UserAccessInfo = {
+  accessGrants?: string[] | string | null;
+  planTier?: string | null;
+  isSubscribed?: boolean | null;
+};
+
 export function dedupeGrants(grants: string[]): string[] {
   return [...new Set(grants.filter(Boolean))];
 }
@@ -48,7 +55,11 @@ export function serializeAccessGrants(grants: string[]): string {
  * Legacy: before `access_grants` existed, subscribed lite/pro implied Pre product.
  * If column is empty but user is paid pre → treat as Pre access.
  */
-export function effectiveAccessGrants(user: Pick<MppscUserRow, 'accessGrants' | 'planTier' | 'isSubscribed'>): string[] {
+export function effectiveAccessGrants(user: UserAccessInfo): string[] {
+  if (Array.isArray(user.accessGrants)) {
+    return dedupeGrants(user.accessGrants.filter((x): x is string => typeof x === 'string'));
+  }
+
   const g = parseAccessGrants(user.accessGrants);
   if (g.length > 0) return dedupeGrants(g);
   const tier = String(user.planTier ?? 'free').toLowerCase();
@@ -58,14 +69,14 @@ export function effectiveAccessGrants(user: Pick<MppscUserRow, 'accessGrants' | 
 }
 
 export function hasPreAccess(
-  user: Pick<MppscUserRow, 'accessGrants' | 'planTier' | 'isSubscribed'> | null | undefined
+  user: UserAccessInfo | null | undefined
 ): boolean {
   if (!user) return true;
   return effectiveAccessGrants(user).includes(ACCESS_PRE);
 }
 
 export function hasMainsAccess(
-  user: Pick<MppscUserRow, 'accessGrants' | 'planTier' | 'isSubscribed'> | null | undefined
+  user: UserAccessInfo | null | undefined
 ): boolean {
   if (!user) return false;
   return effectiveAccessGrants(user).includes(ACCESS_MAINS);

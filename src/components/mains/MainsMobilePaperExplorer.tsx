@@ -6,16 +6,22 @@ import { MainsTopicContentClient } from '@/components/mains/MainsTopicContentCli
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { ChevronDown, ExternalLink, Layers, Lock, GraduationCap, ArrowLeft, ArrowRight, BookOpen, Sparkles } from 'lucide-react';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { MainsMobileSyllabusDrawer } from '@/components/mains/MainsMobileSyllabusDrawer';
 import type { MobileUnit } from '@/components/mains/MainsSyllabusPaperMobileGate';
 import { mainsUnitShortBadge, mainsUnitSubtitle } from '@/lib/mains-syllabus-unit-label';
-import { SyllabusLockMainsModal } from '@/features/mains/components/SyllabusLockMainsModal';
 import { MAIN_SYLLABUS_CARD_HUES, mainsSyllabusTileSkin } from '@/components/mains/mainsSyllabusTileSkin';
 import { QuickFeedback } from '@/features/tests/components/QuickFeedback';
 import { toast } from 'sonner';
+import dynamic from 'next/dynamic';
+
+const SyllabusLockMainsModal = dynamic(
+  () => import('@/features/mains/components/SyllabusLockMainsModal').then((mod) => mod.SyllabusLockMainsModal),
+  { ssr: false }
+);
 
 type TopicRow = MobileUnit['topics'][number];
 
@@ -102,7 +108,6 @@ export function MainsMobilePaperExplorer({
   );
 
   const defaultOpenUnits: string[] = [];
-  const freeUnitId = allowGuestPreview ? (units[0]?.id ?? null) : null;
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col bg-[#fafbfc] text-slate-900 overflow-hidden">
@@ -139,12 +144,14 @@ export function MainsMobilePaperExplorer({
       </div>
 
       {/* Main content list */}
-      <div className="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-28 pt-20">
+      <div className="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-28 pt-32">
         <Accordion type="multiple" defaultValue={defaultOpenUnits} className="space-y-3">
           {units.map((unit, unitIdx) => {
             const hue = MAIN_SYLLABUS_CARD_HUES[unitIdx % 4];
             const tileSkin = mainsSyllabusTileSkin(hue, false); // false = light mode styles
-            const unitLocked = !vaultUnlocked && !!freeUnitId && unit.id !== freeUnitId;
+            // Only Paper 1, Unit 1 is free to expand for guests
+            const isFreeUnit = paperNumber === 1 && unitIdx === 0;
+            const unitLocked = !vaultUnlocked && !isFreeUnit;
 
             return (
               <AccordionItem
@@ -176,14 +183,25 @@ export function MainsMobilePaperExplorer({
                           <Button
                             type="button"
                             size="xs"
-                            className="h-6 gap-1 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 hover:brightness-110 text-slate-950 font-black px-2.5 rounded-full text-[10px] transition-all active:scale-95 shrink-0 border border-amber-500/30 shadow-sm shadow-amber-500/10"
+                            className={cn(
+                              "relative h-7 overflow-hidden gap-1.5 px-3 rounded-full text-[10px] font-black transition-all active:scale-95 shrink-0",
+                              "bg-gradient-to-br from-[#FFD700] via-[#FDB931] to-[#D4AF37]",
+                              "text-slate-950 border border-amber-400/40 shadow-[0_2px_10px_rgba(212,175,55,0.3)]",
+                              "hover:brightness-110 hover:shadow-[0_4px_15px_rgba(212,175,55,0.5)]"
+                            )}
                             onClick={(e) => {
                               e.stopPropagation();
                               setVaultModalOpen(true);
                             }}
                           >
-                            <Lock className="h-3 w-3 text-slate-950 fill-slate-950/10" />
-                            <span>{hi ? 'प्रीमियम' : 'Premium'}</span>
+                            {/* 💡 Shimmer/Glimmer Light Effect */}
+                            <motion.div
+                              animate={{ x: ['-100%', '200%'] }}
+                              transition={{ repeat: Infinity, duration: 2.2, ease: "linear" }}
+                              className="absolute inset-0 z-0 bg-gradient-to-r from-transparent via-white/45 to-transparent w-1/2 -skew-x-20"
+                            />
+                            <Lock className="relative z-10 h-3 w-3 text-slate-950 fill-slate-900/10" />
+                            <span className="relative z-10">{hi ? 'प्रीमियम अनलॉक' : 'Premium'}</span>
                           </Button>
                         </div>
                         <p className="text-sm font-bold text-slate-400 dark:text-slate-500 leading-snug whitespace-normal break-words">{hi ? unit.titleHi : unit.titleEn}</p>
@@ -212,17 +230,34 @@ export function MainsMobilePaperExplorer({
                             
                             <div className="relative inline-flex items-center gap-1.5 z-20 shrink-0">
                               {unitIdx === 0 && (
-                                <div className="absolute right-[102%] top-1/2 -translate-y-1/2 flex items-center pointer-events-none select-none z-30 -rotate-12">
-                                  <div className="text-xl filter drop-shadow-md">
+                                <motion.div 
+                                  initial={{ opacity: 0, y: -10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ duration: 0.6 }}
+                                  className="absolute right-[30px] top-[-68px] flex flex-col items-start pointer-events-none select-none z-30"
+                                >
+                                  {/* 🤚 Hand - Points right-downwards at the arrow tail */}
+                                  <div className="text-3xl filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.15)] rotate-[35deg] mb-[-12px] ml-[-26px]">
                                     👉
                                   </div>
-                                  <div className="ml-0.5 filter drop-shadow-[0_2px_4px_rgba(236,72,153,0.6)]">
-                                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="-rotate-90">
-                                      <path d="M10 2C7 8 7 12 10 17" stroke="#ec4899" strokeWidth="2.5" strokeLinecap="round" />
-                                      <path d="M7 14L10 18L13 14" stroke="#ec4899" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
-                                  </div>
-                                </div>
+                                  
+                                  {/* 🎨 Curvy Sharp Arrow - Positioned to receive the finger's point */}
+                                  <svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg" className="filter drop-shadow-[0_2px_5px_rgba(236,72,153,0.4)]">
+                                    <path 
+                                      d="M10 2C15 12 30 20 22 42" 
+                                      stroke="#ec4899" 
+                                      strokeWidth="3.5" 
+                                      strokeLinecap="round" 
+                                    />
+                                    <path 
+                                      d="M13 35L22 43L31 35" 
+                                      stroke="#ec4899" 
+                                      strokeWidth="3.5" 
+                                      strokeLinecap="round" 
+                                      strokeLinejoin="round" 
+                                    />
+                                  </svg>
+                                </motion.div>
                               )}
                               {/* Pill Size Open Button */}
                               <Button
@@ -250,17 +285,25 @@ export function MainsMobilePaperExplorer({
                     </AccordionTrigger>
                     <AccordionContent className="border-t border-slate-200/50 bg-white/40 px-2 pb-3 pt-1">
                       <div className="space-y-1.5">
-                        {unit.topics.map((topic) => {
+                        {unit.topics.map((topic, topicIdx) => {
                           const open = openTopicId === topic.id;
                           const packed = cache[topic.id];
                           const loading = loadingId === topic.id;
                           const isPublished = topic.status === 'published';
+
+                          // Rock solid rule: Only Paper 1, Unit 1, Topic 1 is open for guests
+                          const isFreeTopic = paperNumber === 1 && unitIdx === 0 && topicIdx === 0;
+                          const topicLocked = !vaultUnlocked && !isFreeTopic;
 
                           const handleTopicToggle = () => {
                             if (!isPublished) {
                               toast.info(hi ? 'यह टॉपिक जल्द ही उपलब्ध होगा!' : 'This topic will be available soon!', {
                                 description: hi ? 'हम इस पर एक्सपर्ट कंटेंट तैयार कर रहे हैं।' : 'We are preparing expert content for this section.'
                               });
+                              return;
+                            }
+                            if (topicLocked) {
+                              setVaultModalOpen(true);
                               return;
                             }
                             toggleTopic(topic, unit.id);
@@ -327,7 +370,7 @@ export function MainsMobilePaperExplorer({
                                       <MainsTopicContentClient
                                         topic={packed.topic}
                                         content={packed.content}
-                                        vaultLocked={!vaultUnlocked && freeUnitId !== unit.id && !!packed.content}
+                                        vaultLocked={!vaultUnlocked && !isFreeTopic && !!packed.content}
                                       />
                                     </div>
                                   ) : (

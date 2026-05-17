@@ -464,27 +464,18 @@ export function useQuizLogic({
    * - Question times (empty)
    */
   useEffect(() => {
-    setAnswers({});
-    setMarkedForReview([]);
+    // 🛡️ Optimization: Only reset if not already reset to avoid cascading renders
+    if (Object.keys(answers).length > 0) setAnswers({});
+    if (markedForReview.length > 0) setMarkedForReview([]);
 
     // 🛡️ SECURITY FIX: Always use server-defined time limit
-    // ─────────────────────────────────────────────────────────
-    // Bhai, PEHLE yahan localStorage se timer restore ho raha tha:
-    //   const savedTime = localStorage.getItem(`quiz-time-${testId}`);
-    //   setTimeLeft(savedTime ? parseInt(savedTime) : timeLimitInMinutes * 60);
-    //
-    // PROBLEM: User DevTools console mein jaake ye likh sakta tha:
-    //   localStorage.setItem('quiz-time-xyz', '999999');
-    //   → Infinite time mil jayega! ⏰💀
-    //
-    // FIX: Hamesha server se aaye timeLimitInMinutes use karo.
-    // Timer client pe chalta hai, par starting value TRUSTED source se hai.
-    // Server-side bhi durationSeconds validate hota hai (submission.ts mein).
-    setTimeLeft(timeLimitInMinutes * 60);
+    const targetTime = timeLimitInMinutes * 60;
+    if (timeLeft !== targetTime) setTimeLeft(targetTime);
 
-    setCurrentQuestionIndex(0);
-    setIsSubmitted(false);
-    setQuestionTimes({});
+    if (currentQuestionIndex !== 0) setCurrentQuestionIndex(0);
+    if (isSubmitted) setIsSubmitted(false);
+    if (Object.keys(questionTimes).length > 0) setQuestionTimes({});
+    
     questionStartTimeRef.current = Date.now();
   }, [testId, timeLimitInMinutes]);
 

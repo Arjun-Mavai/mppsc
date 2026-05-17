@@ -9,7 +9,7 @@
 import { unstable_cache } from 'next/cache';
 import { CACHE, revalidateMainsOnUpload } from '@/lib/cache';
 import { db } from '@/db';
-import { mainsTopics, mainsUnits } from '@/db/schema';
+import { mainsTopics, mainsUnits, mainsPapers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
 /**
@@ -58,14 +58,16 @@ export const getCachedMainsTopicsByUnit = (unitId: string) =>
 export const getCachedMainsTopicsByPaper = (paperNumber: number) =>
   unstable_cache(
     async () => {
-      return db.query.mainsTopics.findMany({
-        with: {
-          unit: {
-            where: eq(mainsUnits.paperNumber, paperNumber),
-            with: { paper: true },
-          },
-        },
-      });
+      const rows = await db
+        .select({
+          topic: mainsTopics,
+        })
+        .from(mainsTopics)
+        .innerJoin(mainsUnits, eq(mainsTopics.unitId, mainsUnits.id))
+        .innerJoin(mainsPapers, eq(mainsUnits.paperId, mainsPapers.id))
+        .where(eq(mainsPapers.paperNumber, paperNumber));
+
+      return rows.map((row) => row.topic);
     },
     [`mains-paper-${paperNumber}`],
     {

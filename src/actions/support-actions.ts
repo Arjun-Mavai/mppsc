@@ -10,7 +10,7 @@ import { notifyAdminOnSupportTicket } from '@/lib/admin-notify';
 
 export async function submitSupportTicket(data: any) {
   try {
-    const { name, email, phone, category, message, userId } = data;
+    const { name, email, phone, category, message, userId, pagePath } = data;
 
     if (!name || !email || !message) {
       return { success: false, error: 'Missing required fields' };
@@ -36,6 +36,7 @@ export async function submitSupportTicket(data: any) {
       phone,
       category,
       message,
+      pagePath,
     }).catch((err) => {
       logger.error('Support ticket Telegram alert failed (non-blocking catches)', err);
     });

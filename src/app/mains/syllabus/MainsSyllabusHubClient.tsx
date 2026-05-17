@@ -526,7 +526,8 @@ export function MainsSyllabusHubClient({
                                 themeDeep ? 'text-slate-500' : 'text-slate-500'
                               )}
                             >
-                              {matchingDb.publishedTopics}/{matchingDb.totalTopics} {hi ? 'टॉपिक · खोलने के लिए टैप' : 'topics · tap to open'}
+                              {/* {matchingDb.publishedTopics}/{matchingDb.totalTopics} {hi ? 'टॉपिक · खोलने के लिए टैप' : 'topics · tap to open'} */}
+                              {hi ? 'खोलने के लिए टैप' : 'tap to open'}
                             </span>
                           </div>
                         </div>

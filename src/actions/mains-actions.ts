@@ -63,11 +63,11 @@ const MainsContentSchema = z.object({
   conceptEn: z.string().min(1),
   expertStrategyHi: z.string().optional().nullable(),
   expertStrategyEn: z.string().optional().nullable(),
-  modelAnswers: z.record(z.string(), z.any()).default({}),
+  modelAnswers: z.record(z.string(), z.unknown()).default({}),
   keyTermsHi: z.string().optional().nullable(),
   keyTermsEn: z.string().optional().nullable(),
-  practiceQuestions: z.any().optional().nullable(),
-  richPayload: z.record(z.string(), z.any()).optional().nullable(),
+  practiceQuestions: z.unknown().optional().nullable(),
+  richPayload: z.record(z.string(), z.unknown()).optional().nullable(),
   examType: z.enum(['upsc', 'mppsc', 'all', 'mppolice', 'mppsc_mains']).default('mppsc_mains'),
 });
 
@@ -107,7 +107,11 @@ export async function getMainsProgressOverview() {
       .groupBy(mainsUnits.paperId);
 
     // Build lookup map for O(1) access
-    const statsMap = new Map(statsPerPaper.map(s => [s.paperId, s]));
+    const statsMap = new Map<string, typeof statsPerPaper[number]>(
+      statsPerPaper
+        .filter((s): s is typeof s & { paperId: string } => !!s.paperId)
+        .map((s) => [s.paperId, s])
+    );
 
     const overview = papers.map((paper) => {
       const stats = statsMap.get(paper.id) ?? { 
@@ -163,7 +167,7 @@ export async function getMainsDetailedProgressOverview() {
         unitTitleEn: mainsUnits.titleEn,
         totalTopics: count(mainsTopics.id),
         publishedTopics: count(mainsContent.id),
-        lastUpdated: sql<string>`max(${mainsContent.updatedAt})`,
+        lastUpdated: sql<string | null>`max(${mainsContent.updatedAt})`,
       })
       .from(mainsUnits)
       .leftJoin(mainsTopics, eq(mainsTopics.unitId, mainsUnits.id))
@@ -174,9 +178,9 @@ export async function getMainsDetailedProgressOverview() {
       const paperUnits = partStats.filter((s) => s.paperId === paper.id);
       
       const units = paperUnits.map(u => ({
-        part: u.part || 'N/A',
-        unitNumber: u.unitNumber,
-        unitTitleEn: u.unitTitleEn,
+        part: u.part || 'NONE',
+        unitNumber: Number(u.unitNumber ?? 0),
+        unitTitleEn: u.unitTitleEn || 'Untitled',
         totalTopics: Number(u.totalTopics ?? 0),
         publishedTopics: Number(u.publishedTopics ?? 0),
         progress: Number(u.totalTopics ?? 0) > 0 
@@ -276,13 +280,24 @@ export async function upsertMainsContent(topicId: string, rawInput: MainsContent
     if (existing[0]) {
       await db
         .update(mainsContent)
-        .set({ ...content, updatedAt: new Date() })
+        .set({
+          ...content,
+          modelAnswers: content.modelAnswers as any,
+          practiceQuestions: content.practiceQuestions as any,
+          richPayload: content.richPayload as any,
+          examType: content.examType as any,
+          updatedAt: new Date(),
+        })
         .where(eq(mainsContent.topicId, topicId));
     } else {
       await db.insert(mainsContent).values({
         id: uuidv4(),
         topicId,
         ...content,
+        modelAnswers: content.modelAnswers as any,
+        practiceQuestions: content.practiceQuestions as any,
+        richPayload: content.richPayload as any,
+        examType: content.examType as any,
         updatedAt: new Date(),
       });
     }
@@ -351,10 +366,6 @@ export async function getMainsSyllabusTree(paperId: string) {
           },
         },
       });
-    if (process.env.NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console
-      console.log(`[getMainsSyllabusTree] paperId=${paperId} units=${units.length}`);
-    }
     return { success: true, data: units };
   } catch (error: unknown) {
     const blob = `${error instanceof Error ? error.message : ''} ${typeof error === 'object' && error && 'cause' in error ? String((error as { cause?: unknown }).cause) : ''}`;
@@ -396,24 +407,37 @@ export async function getMainsTopicForPage(topicId: string, paperId: string) {
     if (!row?.unit?.paper || row.unit.paper.id !== paperId) {
       return { success: false as const, error: 'not_found' };
     }
-    if (!row.content) {
-      return { success: true as const, data: row };
-    }
-
     const user = await verifyAuth();
     const vaultUnlocked = isMainsVaultUnlockedUser(user);
     const isGuest = !user;
-    const isGuestDemoTopic = isGuest && row.unit.part === 'A' && row.unit.unitNumber === 1;
+
+    // Fetch first topic of the unit to identify it
+    const firstTopic = await db.query.mainsTopics.findFirst({
+      where: eq(mainsTopics.unitId, row.unitId!),
+      orderBy: [asc(mainsTopics.displayOrder)],
+    });
+    const isFirstTopic = firstTopic && firstTopic.id === topicId;
+
+    // Rock solid rule: Only Paper 1, Unit 1, Part A, Topic 1 is open for guests
+    const isGuestDemoTopic = isGuest && 
+      row.unit.paper.paperNumber === 1 && 
+      row.unit.part === 'A' && 
+      row.unit.unitNumber === 1 && 
+      isFirstTopic;
+
+    if (!row.content) {
+      return { success: true as const, data: row, isDemoTopic: !!isGuestDemoTopic };
+    }
 
     if (vaultUnlocked || isGuestDemoTopic) {
-      return { success: true as const, data: row };
+      return { success: true as const, data: row, isDemoTopic: !!isGuestDemoTopic };
     }
 
     const conceptHi = (row.content.conceptHi ?? '').trim();
     const conceptEn = (row.content.conceptEn ?? '').trim();
     
     // 🔒 Type-safe content masking for non-vault users
-    const masked: typeof row.content = {
+    const masked: any = {
       ...row.content,
       conceptHi: conceptHi ? `${conceptHi.slice(0, 220)}...` : '',
       conceptEn: conceptEn ? `${conceptEn.slice(0, 220)}...` : '',
@@ -425,7 +449,7 @@ export async function getMainsTopicForPage(topicId: string, paperId: string) {
       richPayload: null,
     };
 
-    return { success: true as const, data: { ...row, content: masked } };
+    return { success: true as const, data: { ...row, content: masked }, isDemoTopic: false };
   } catch (error) {
     logger.error('getMainsTopicForPage: failed to fetch topic', error, {
       category: 'content',
@@ -487,7 +511,7 @@ export async function getAllMainsPapersWithSyllabus() {
       units: p.units.map((u) => ({
         id: u.id,
         unitNumber: u.unitNumber,
-        part: u.part as MainsUnitPart,
+        part: (u.part || 'NONE') as MainsUnitPart,
         titleHi: u.titleHi,
         titleEn: u.titleEn,
         topics: u.topics.map((t) => ({

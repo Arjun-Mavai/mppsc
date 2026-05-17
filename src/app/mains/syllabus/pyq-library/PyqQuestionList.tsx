@@ -516,19 +516,35 @@ const PyqQuestionRow = memo(({
                             {effectiveHi ? 'एक्सपर्ट टिप्स' : 'Expert Tips'}
                           </div>
                           {!insightsOpen && (
-                            <div className="absolute left-[105%] top-1/2 -translate-y-1/2 flex items-center pointer-events-none select-none z-30 rotate-12">
-                              <div className="mr-1 filter drop-shadow-[0_2px_4px_rgba(236,72,153,0.6)]">
-                                <svg width="24" height="24" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="rotate-90">
-                                  <path d="M10 2C7 8 7 12 10 17" stroke="#ec4899" strokeWidth="2.5" strokeLinecap="round" />
-                                  <path d="M7 14L10 18L13 14" stroke="#ec4899" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                              </div>
-                              <div className="text-3xl filter drop-shadow-md">
-                                👈
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                            <motion.div 
+                               initial={{ opacity: 0, x: 10, scale: 0.9 }}
+                               animate={{ opacity: 1, x: 0, scale: 1 }}
+                               transition={{ duration: 0.6 }}
+                               className="absolute left-[102%] top-[-15px] flex flex-col-reverse items-end pointer-events-none select-none z-30"
+                             >
+                               {/* 🤚 Hand - Tilted sharply up-left, finger tip touches arrow base */}
+                               <div className="text-3xl filter drop-shadow-md rotate-[45deg] mr-[-10px] mb-[-12px] z-10">
+                                 👈
+                               </div>
+
+                               {/* 🎨 Curvy Sharp Arrow - Curves from finger tip up to the button */}
+                               <svg width="54" height="54" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg" className="filter drop-shadow-[0_2px_6px_rgba(236,72,153,0.45)]">
+                                 <path 
+                                   d="M45 48C38 30 18 15 6 6" 
+                                   stroke="#ec4899" 
+                                   strokeWidth="4.5" 
+                                   strokeLinecap="round" 
+                                 />
+                                 <path 
+                                   d="M22 6L6 6L10 22" 
+                                   stroke="#ec4899" 
+                                   strokeWidth="4.5" 
+                                   strokeLinecap="round" 
+                                   strokeLinejoin="round" 
+                                 />
+                               </svg>
+                             </motion.div>
+                           )}                        </div>
                       </div>
                       
                         <div className={cn(!insightsOpen && "hidden", "w-full")}>

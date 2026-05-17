@@ -36,6 +36,8 @@ export const mppscUsers = sqliteTable(
       .notNull(),
     /** Product entitlements JSON string, e.g. `["mppsc_pre","mppsc_mains"]`. Plain `text` — parse with `parseAccessGrants`. */
     accessGrants: text('access_grants').$type<string | null>().default(sql`'["mppsc_pre"]'`),
+    // Session version for single-device login enforcement
+    sessionVersion: integer('session_version').default(1),
   },
   (table) => [index('idx_users_email').on(table.email)]
 );
@@ -742,7 +744,7 @@ export const mppscUserActivities = sqliteTable(
     userName: text('user_name'),
     adminId: text('admin_id'), // Who performed the action
     action: text('action', {
-      enum: ['PLAN_CHANGE', 'DELETE', 'GRANT', 'UPDATE', 'LOGIN'],
+      enum: ['PLAN_CHANGE', 'DELETE', 'GRANT', 'UPDATE', 'LOGIN', 'LOGOUT'],
     }).notNull(),
     details: text('details', { mode: 'json' }), // Store old/new values
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
@@ -819,6 +821,8 @@ export const mppscMainsUsers = sqliteTable(
     planTier: text('plan_tier').default('free'), // e.g., 'mains_pro'
     accessExpiresAt: integer('access_expires_at', { mode: 'timestamp' }),
     isActive: integer('is_active', { mode: 'boolean' }).default(true),
+    // Session version for single-device login enforcement
+    sessionVersion: integer('session_version').default(1),
     metadata: text('metadata', { mode: 'json' }),
     deletedAt: integer('deleted_at', { mode: 'timestamp' }),
   },

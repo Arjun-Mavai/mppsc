@@ -18,7 +18,7 @@ interface ProfileClientProps {
     name: string | null;
     email: string;
     planTier: string | null;
-    createdAt: Date | null;
+    createdAt?: string | Date | null;
   };
 }
 

@@ -12,20 +12,21 @@ import { mainsPapers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { MainsSyllabusPaperMobileGate } from '@/components/mains/MainsSyllabusPaperMobileGate';
 import { QuickFeedback } from '@/features/tests/components/QuickFeedback';
+import { Suspense } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
-export default async function MainsPaperIndexPage({
-  params,
-}: {
-  params: Promise<{ paperId: string }>;
-}) {
-  const { paperId } = await params;
+// ⚡ PERFORMANCE: Revalidate every 10 mins (Balance between speed and real-time status)
+export const revalidate = 600;
 
-  const paper = await db.query.mainsPapers.findFirst({
-    where: eq(mainsPapers.id, paperId),
-  });
+async function MainsPaperIndexData({ paperId }: { paperId: string }) {
+  // 🚀 CONCURRENT FETCHING: Fetch everything in parallel
+  const [paper, tree, user] = await Promise.all([
+    db.query.mainsPapers.findFirst({ where: eq(mainsPapers.id, paperId) }),
+    getMainsSyllabusTree(paperId),
+    verifyAuth(),
+  ]);
+
   if (!paper) notFound();
-
-  const tree = await getMainsSyllabusTree(paperId);
 
   let firstTopicId: string | null = null;
   if (tree.success && tree.data?.length) {
@@ -76,7 +77,7 @@ export default async function MainsPaperIndexPage({
                 <span>जल्द आ रहा है · Coming Soon</span>
               </div>
 
-              <h2 className="text-3xl font-black text-slate-900 dark:text-white leading-tight">
+              <h2 className="text-3xl font-black text-slate-900 dark:white leading-tight">
                 {paper.titleHi ? `पेपर ${paper.paperNumber}: ${paper.titleHi}` : `Paper ${paper.paperNumber}: ${paper.titleEn}`}
               </h2>
 
@@ -125,7 +126,6 @@ export default async function MainsPaperIndexPage({
     })),
   }));
 
-  const user = await verifyAuth();
   const vaultUnlocked = isMainsVaultUnlockedUser(user);
 
   return (
@@ -138,5 +138,34 @@ export default async function MainsPaperIndexPage({
       vaultUnlocked={vaultUnlocked}
       allowGuestPreview={!user}
     />
+  );
+}
+
+export default async function MainsPaperIndexPage({
+  params,
+}: {
+  params: Promise<{ paperId: string }>;
+}) {
+  const { paperId } = await params;
+  return (
+    <Suspense fallback={<PaperSkeleton />}>
+      <MainsPaperIndexData paperId={paperId} />
+    </Suspense>
+  );
+}
+
+function PaperSkeleton() {
+  return (
+    <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
+      <div className="space-y-2 pt-14">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-8 w-64" />
+      </div>
+      <div className="space-y-4">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Skeleton key={i} className="h-24 w-full rounded-2xl" />
+        ))}
+      </div>
+    </div>
   );
 }

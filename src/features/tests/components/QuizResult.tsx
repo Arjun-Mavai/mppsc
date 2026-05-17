@@ -339,8 +339,8 @@ export function QuizResult({
       .map((q) => q.id);
 
     if (wrongQIds.length === 0 && !testId) {
-      setPyqInsights([]);
-      setPyqFacts([]);
+      if (pyqInsights.length > 0) setPyqInsights([]);
+      if (pyqFacts.length > 0) setPyqFacts([]);
       return;
     }
 

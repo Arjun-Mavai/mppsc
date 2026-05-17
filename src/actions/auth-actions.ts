@@ -1,14 +1,31 @@
 'use server';
 
-import { verifyAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { mppscUsers } from '@/db/schema';
+import { mppscUsers, mppscUserActivities } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { cookies, headers } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { logger } from '@/lib/logger';
 import { parseAccessGrants, serializeAccessGrants } from '@/lib/access-grants';
+import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
+import { v4 as uuidv4 } from 'uuid';
+import { hasActiveAuthSession, touchAuthLoginMetadata } from '@/lib/auth-session-metadata';
 
+import { AuthenticatedUser } from '@/types/auth';
+
+/**
+ * Auth Actions - Street Map (Server Side)
+ * - getCurrentUser(): current cookie session ka clean user snapshot deta hai.
+ * - loginUserAction():
+ *   a) credentials verify
+ *   b) active-session marker check (metadata.authSession)
+ *   c) force na ho to confirmation mangta hai
+ *   d) force/normal login pe sessionVersion bump + login marker set
+ *
+ * Analogy:
+ * sessionVersion = purana pass cancel karne ka "gate number change"
+ * authSession metadata = "last in / last out" register.
+ */
 /**
  * 🔐 Get Current User (Server Action)
  *
@@ -21,24 +38,28 @@ import { parseAccessGrants, serializeAccessGrants } from '@/lib/access-grants';
  * - Automatic cookie handling
  */
 export async function getCurrentUser() {
-  const user = await verifyAuth();
+  const { verifyAuthInternal } = await import('@/lib/auth');
+  const user = await verifyAuthInternal();
 
   if (!user) {
     return { user: null };
   }
 
-  const grants = parseAccessGrants(user.accessGrants);
+  // 🛡️ Detected session version mismatch
+  if (user._mismatch) {
+    return { user: null, reason: 'multi_device' };
+  }
 
   return {
     user: {
       id: user.id,
       email: user.email,
       name: user.name,
-      isSubscribed: !!user.isSubscribed,
-      planTier: (user.planTier as any) || 'free',
-      role: user.role ?? undefined,
+      isSubscribed: user.isSubscribed,
+      planTier: user.planTier,
+      role: user.role,
       accessExpiresAt: user.accessExpiresAt ?? undefined,
-      accessGrants: grants.length ? grants : ['mppsc_pre'],
+      accessGrants: user.accessGrants,
     },
   };
 }
@@ -46,6 +67,7 @@ export async function getCurrentUser() {
 interface LoginParams {
   email?: string;
   password?: string;
+  force?: boolean;
 }
 
 /**
@@ -55,7 +77,7 @@ interface LoginParams {
  * API route se move kiya gaya taaki security aur consistency bani rahe.
  */
 export async function loginUserAction(formData: LoginParams) {
-  const { email, password } = formData;
+  const { email, password, force } = formData;
 
   try {
     // ── Rate Limiting ───────────────────────────────────────────
@@ -151,11 +173,89 @@ export async function loginUserAction(formData: LoginParams) {
       return { error: 'Invalid credentials' };
     }
 
+    // ── Active Session Detection ────────────────────────────────
+    // A takeover is active if the last login is newer than the last logout.
+    if (!force) {
+      if (hasActiveAuthSession(user.metadata)) {
+        return {
+          requiresConfirmation: true,
+          message:
+            'An active session was detected. Logging in here will disconnect your other devices. Continue?',
+        };
+      }
+    }
+
+    // ── Single Device Login Logic ──────────────────────────────
+    // Bhai, we increment sessionVersion to invalidate all previous JWTs.
+    // If they were logged in elsewhere, their next request will fail verifyAuth.
+    const newVersion = (user.sessionVersion || 0) + 1;
+
+    await db
+      .update(mppscUsers)
+      .set({
+        sessionVersion: newVersion,
+        metadata: touchAuthLoginMetadata(user.metadata),
+      })
+      .where(eq(mppscUsers.id, user.id));
+
+    // ── Audit Log ──────────────────────────────────────────────
+    try {
+      await db.insert(mppscUserActivities).values({
+        id: uuidv4(),
+        userId: user.id,
+        userEmail: user.email,
+        userName: user.name,
+        action: 'LOGIN',
+        details: {
+          ip,
+          userAgent: headersList.get('user-agent'),
+          sessionVersion: newVersion,
+          forced: !!force,
+        },
+      });
+    } catch (e) {
+      logger.error('Failed to log login activity', e, { category: 'auth' });
+    }
+
+    // ── Telegram Notification ───────────────────────────────────
+    try {
+      const userAgent = headersList.get('user-agent') || 'Unknown Device';
+      const grants = Array.isArray(user.accessGrants)
+        ? user.accessGrants
+        : typeof user.accessGrants === 'string'
+          ? JSON.parse(user.accessGrants)
+          : ['mppsc_pre'];
+
+      const telegramMessage =
+        `🔑 <b>New Login Detected</b> ${force ? '(FORCED)' : ''}\n\n` +
+        `👤 <b>User:</b> ${escapeHTML(user.name || 'Anonymous')}\n` +
+        `📧 <b>Email:</b> ${escapeHTML(user.email)}\n` +
+        `📞 <b>Phone:</b> ${escapeHTML(user.phone || 'Not Provided')}\n` +
+        `🏆 <b>Plan:</b> ${escapeHTML(user.planTier?.toUpperCase() || 'FREE')}\n` +
+        `🔓 <b>Grants:</b> ${escapeHTML(Array.isArray(grants) ? grants.join(', ') : 'None')}\n` +
+        `📱 <b>Device:</b> ${escapeHTML(userAgent.slice(0, 100))}\n` +
+        `🌐 <b>IP:</b> ${escapeHTML(ip)}\n` +
+        `🔢 <b>Session v:</b> ${newVersion}\n` +
+        `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST\n\n` +
+        `⚠️ <i>Previous sessions on other devices have been invalidated.</i>`;
+
+      // 🚀 Send Telegram alert asynchronously (fully non-blocking)
+      sendTelegramNotification(telegramMessage).catch((e) => {
+        logger.error('Telegram login notification failed (non-blocking)', e, {
+          category: 'telegram',
+        });
+      });
+    } catch (e) {
+      // Catch for construction errors
+      logger.error('Error building Telegram notification', e, { category: 'telegram' });
+    }
+
     // ── Sign JWT Token ──────────────────────────────────────────
     const payload = {
       userId: user.id,
       email: user.email,
       role: user.role,
+      sessionVersion: newVersion,
     };
 
     const { signToken } = await import('@/lib/jwt');
@@ -184,13 +284,16 @@ export async function loginUserAction(formData: LoginParams) {
 
     return {
       success: true,
+      message: force
+        ? 'Login forced. All other sessions have been logged out.'
+        : 'Logged in successfully. Other sessions have been logged out for security.',
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
         isSubscribed: currentIsSubscribed,
         planTier: currentPlanTier,
-        role: user.role ?? undefined,
+        role: user.role as any,
         accessExpiresAt: user.accessExpiresAt ?? undefined,
         accessGrants: freshGrants.length ? freshGrants : ['mppsc_pre'],
       },

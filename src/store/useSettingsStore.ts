@@ -1,32 +1,19 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { AuthenticatedUser } from '@/types/auth';
 
 type Language = 'en' | 'hi';
-
-export interface User {
-  id?: string;
-  name?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  image?: string | null;
-  role?: string; // 'admin' | 'user'
-  isSubscribed?: boolean; // Fixed: camelCase to match DB
-  isPro?: boolean; // Legacy flag support
-  planTier?: 'free' | 'lite' | 'pro'; // Fixed: camelCase to match DB
-  /** Product entitlements from DB */
-  accessGrants?: string[];
-}
 
 interface SettingsState {
   language: Language;
   setLanguage: (lang: Language) => void;
-  user: User | null;
+  user: AuthenticatedUser | null;
   isSubscribed: boolean;
   isLockModalOpen: boolean;
   setLockModalOpen: (isOpen: boolean) => void;
   authCheckStatus: 'idle' | 'loading' | 'checked';
   setAuthCheckStatus: (status: 'idle' | 'loading' | 'checked') => void;
-  setUser: (user: User | null, isSubscribed: boolean) => void;
+  setUser: (user: AuthenticatedUser | null, isSubscribed: boolean) => void;
   uiMode: 'classic' | 'modern';
   setUiMode: (mode: 'classic' | 'modern') => void;
 }

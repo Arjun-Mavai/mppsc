@@ -2,6 +2,18 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
+/**
+ * Mumbai Gatekeeper (Proxy/Middleware) - Fast Flow Index
+ * 1) Token signature check karta hai (bouncer ID check).
+ * 2) Sirf protected routes pe login enforce karta hai.
+ * 3) Agar token valid dikh raha ho, phir bhi /api/auth/me se poochta hai:
+ *    "session asli hai ya dusre device ne kick kar diya?"
+ * 4) mismatch mile to seedha /login?reason=multi_device.
+ *
+ * User journey visualize:
+ * Device A login -> Device B "kick others" -> Device A protected page hit ->
+ * middleware me mismatch detect -> login redirect + reason param.
+ */
 // Bhai, ye proxy hi apna main gatekeeper (Middleware) hai.
 // Bina valid token ke protected routes pe entry mana hai!
 const FREE_TEST_IDS = [
@@ -16,18 +28,33 @@ const JWT_SECRET = process.env.JWT_SECRET || 'bhai-ka-secret-key-change-kar-le-j
 const SECRET_KEY = new TextEncoder().encode(JWT_SECRET);
 
 // Protected Routes: Jahan bina login ke nahi ja sakte
-const PROTECTED_ROUTES = ['/profile'];
-// Note: /feedback is PUBLIC.
+const PROTECTED_ROUTES = [
+  '/dashboard',
+  '/profile',
+  '/admin',
+  '/syllabus/test-history',
+  '/syllabus/analytics',
+  '/syllabus/quiz/pyq/intelligence/*',
+];
+
+const matchesRoutePattern = (pathname: string, pattern: string) => {
+  if (pattern.endsWith('/*')) {
+    const base = pattern.slice(0, -2);
+    return pathname === base || pathname.startsWith(`${base}/`);
+  }
+  return pathname === pattern || pathname.startsWith(`${pattern}/`);
+};
+
+const startsWithAny = (pathname: string, routes: string[]) =>
+  routes.some((route) => matchesRoutePattern(pathname, route));
 
 // Auth Routes: Jahan login hone ke baad nahi jana chahiye
 const AUTH_ROUTES = ['/login', '/signup', '/forgot-password'];
 
 export async function proxy(request: NextRequest) {
-  console.log('middleware running for the path', request.nextUrl.pathname);
   const { pathname, searchParams } = request.nextUrl;
   const token = request.cookies.get('mppsc_token')?.value;
   const testId = searchParams.get('testId');
-  console.log('middleware running for the path', pathname);
   // 1. Verify Token (Agar token hai to check karo valid hai ya nahi)
   let isValidToken = false;
 
@@ -44,7 +71,7 @@ export async function proxy(request: NextRequest) {
   // 2. Handle Protected Routes
   // Agar route protected hai aur token nahi hai/invalid hai -> Login pe bhejo
   // Also check dynamic routes under /syllabus
-  const isProtectedRoute = PROTECTED_ROUTES.some((route) => pathname.startsWith(route));
+  const isProtectedRoute = startsWithAny(pathname, PROTECTED_ROUTES);
 
   if (isProtectedRoute) {
     if (!isValidToken) {
@@ -53,6 +80,10 @@ export async function proxy(request: NextRequest) {
         headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' },
       });
     }
+
+    // Bhai, yahan pehle fetch('/api/auth/me') hota tha jo app ko slow kar raha tha.
+    // Ab hum directly page rendering phase me verifyAuth se check karenge.
+    // Isse extra internal HTTP request bach jayegi aur app 100% light chalegi!
   }
   // Agar testId free wali list mein hai, toh jaane do (Allow)
   if (testId && FREE_TEST_IDS.includes(testId)) {
@@ -75,14 +106,6 @@ export async function proxy(request: NextRequest) {
   }
 
   // 4. Admin Access
-  if (pathname.startsWith('/admin')) {
-    if (!isValidToken) {
-      return NextResponse.redirect(new URL('/login', request.url), {
-        headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' },
-      });
-    }
-  }
-
   return NextResponse.next();
 }
 

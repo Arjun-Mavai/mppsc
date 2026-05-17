@@ -2,7 +2,7 @@ import { db } from '@/db';
 import { mppscUserActivities } from '@/db/schema';
 import { nanoid } from 'nanoid';
 
-export type ActivityAction = 'PLAN_CHANGE' | 'DELETE' | 'GRANT' | 'UPDATE' | 'LOGIN';
+export type ActivityAction = 'PLAN_CHANGE' | 'DELETE' | 'GRANT' | 'UPDATE' | 'LOGIN' | 'LOGOUT';
 
 interface LogActivityParams {
   userId?: string | null;

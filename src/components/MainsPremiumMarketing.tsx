@@ -32,20 +32,11 @@ export function MainsPremiumMarketing({ onClose }: MainsPremiumMarketingProps) {
   const p = pricingData?.pricing ?? PRICING_DEFAULTS;
   const mppscCopy = pricingData?.mppscProductCopy ?? DEFAULT_MPPSC_PRODUCT_COPY;
 
-  const baseFeatures = mppscCopy.mains.bulletsEn.map((en, i) => ({
+  const mainsFeatures: PlanFeatureWithIcon[] = mppscCopy.mains.bulletsEn.map((en, i) => ({
     en,
     hi: mppscCopy.mains.bulletsHi[i] ?? en,
     icon: 'Target' as const,
   }));
-
-  const mainsFeatures: PlanFeatureWithIcon[] = [
-    ...baseFeatures,
-    {
-      en: '⚡ Fast 1-Click Syllabus Navigator — No more opening 10 PDFs! Our Syllabus Menu is so fast that students can switch between any unit or topic of Paper 1 to 6 in 1 click without page reloads.',
-      hi: '⚡ 1-क्लिक फास्ट सिलेबस नेविगेटर — सिलेबस चेक करने में 10 PDFs खोलने का झंझट खत्म! हमारा "सिलेबस मेन्यू" इतना फास्ट है कि छात्र बिना पेज रीलोड किए, पेपर 1 से पेपर 6 के किसी भी टॉपिक पर 1 क्लिक में स्विच कर सकते हैं।',
-      icon: 'Target',
-    },
-  ];
 
   if (isLoading) {
     return (

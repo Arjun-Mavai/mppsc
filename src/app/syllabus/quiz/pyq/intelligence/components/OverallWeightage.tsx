@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, ChevronUp, Eye, ExternalLink } from 'lucide-react';
+import { ChevronDown, ChevronUp, Eye, ExternalLink, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -26,9 +27,9 @@ export function OverallWeightage({
   theme = 'dark',
 }: OverallWeightageProps) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [isMainExpanded, setIsMainExpanded] = useState(false);
   const [expandedSubjects, setExpandedSubjects] = useState<string[]>([]);
-  const viewAllHref = '/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject';
 
   // Get total questions from simple stats (same as PYQ page)
   const totalQuestions = useMemo(
@@ -64,8 +65,14 @@ export function OverallWeightage({
   };
 
   useEffect(() => {
-    router.prefetch(viewAllHref);
-  }, [router, viewAllHref]);
+    router.prefetch('/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject');
+  }, [router]);
+
+  const handleViewAll = () => {
+    startTransition(() => {
+      router.push('/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject');
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -77,23 +84,6 @@ export function OverallWeightage({
         <h2 className={cn("text-xl font-black tracking-tight sm:text-2xl", theme === 'light' ? "text-[#1D1D1F]" : "text-white")}>
           {isHindi ? 'कुल महत्व (2020-2026)' : 'Overall Weightage (2020-2026)'}
         </h2>
-      </div>
-
-      <div className="sm:hidden">
-        <TransitionLink
-          href={viewAllHref}
-          transitionTypes={['slide']}
-          className={cn(
-            "inline-flex h-12 w-full items-center justify-center rounded-2xl px-5 text-[11px] font-black tracking-[0.1em] uppercase transition-all active:scale-95",
-            theme === 'light'
-              ? "border border-indigo-100 bg-white text-indigo-600 hover:bg-[#F5F5F7]"
-              : "border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 hover:text-emerald-400"
-          )}
-        >
-          <Eye className="mr-2 h-4 w-4" />
-          {isHindi ? 'सभी विषय प्रश्न देखें' : 'View All Subject Questions'}
-          <ExternalLink className="ml-2 h-4 w-4 opacity-50" />
-        </TransitionLink>
       </div>
 
       {/* Main Overall Weightage Section - Same style as Paper Analysis */}
@@ -319,21 +309,27 @@ export function OverallWeightage({
         </Card>
       </div>
 
-      <div className="hidden justify-center pt-8 sm:flex">
-        <TransitionLink
-          href={viewAllHref}
-          transitionTypes={['slide']}
+      <div className="flex justify-center pt-8">
+        <Button
+          variant="outline"
+          size="lg"
+          onClick={handleViewAll}
+          disabled={isPending}
           className={cn(
-            "inline-flex h-14 w-full items-center justify-center rounded-2xl px-10 text-xs font-black tracking-[0.1em] uppercase transition-all active:scale-95 sm:w-fit sm:min-w-[360px]",
+            "h-14 w-full rounded-2xl px-10 text-xs font-black tracking-[0.1em] uppercase transition-all active:scale-95 sm:w-fit sm:min-w-[360px]",
             theme === 'light'
               ? "border-indigo-100 bg-white text-indigo-600 hover:bg-[#F5F5F7] hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)]"
               : "border-emerald-500/20 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 hover:text-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]"
           )}
         >
-          <Eye className="mr-3 h-4 w-4" />
+          {isPending ? (
+            <Loader2 className="mr-3 h-4 w-4 animate-spin" />
+          ) : (
+            <Eye className="mr-3 h-4 w-4" />
+          )}
           {isHindi ? 'सभी विषय प्रश्न देखें' : 'View All Subject Questions'}
-          <ExternalLink className="ml-3 h-4 w-4 opacity-50" />
-        </TransitionLink>
+          {!isPending && <ExternalLink className="ml-3 h-4 w-4 opacity-50" />}
+        </Button>
       </div>
     </div>
   );

@@ -39,30 +39,45 @@ export function MainsMarkdownBody({
   bulletClassName?: string;
   bodyTextClassName?: string;
 }) {
-  function wrapNoWrap(text: string) {
-    const regex = /('[^']+'|\([^)]+\))/g;
-    const parts = text.split(regex);
-    
-    return parts.map((part, i) => {
-      if (!part) return null;
-      if ((part.startsWith("'") && part.endsWith("'")) || (part.startsWith("(") && part.endsWith(")"))) {
-        return <span key={i} className="whitespace-nowrap">{part}</span>;
-      }
-      return part;
-    });
-  }
-
-  function parseBold(text: string) {
+  function parseBoldOnly(text: string) {
     const parts = text.split(/(\*\*.+?\*\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
         return (
           <strong key={i} className={cn("font-extrabold", strongClassName || "text-emerald-800 dark:text-emerald-200")}>
-            {wrapNoWrap(part.slice(2, -2))}
+            {part.slice(2, -2)}
           </strong>
         );
       }
-      return <span key={i}>{wrapNoWrap(part.replace(/\*+/g, ''))}</span>;
+      return <span key={i}>{part.replace(/\*+/g, '')}</span>;
+    });
+  }
+
+  function parseBold(text: string) {
+    const regex = isHindi 
+      ? /(\(जैसे-[^)]+\))/g 
+      : /(\((?:e\.g\.|eg)[^)]+\))/g;
+      
+    const parts = text.split(regex);
+    
+    return parts.map((part, i) => {
+      if (!part) return null;
+      
+      const match = isHindi 
+        ? part.match(/^\((जैसे-)(.+)\)$/)
+        : part.match(/^\(((?:e\.g\.|eg),?\s*)(.+)\)$/);
+        
+      if (match) {
+        const content = match[2];
+        return (
+          <span key={`ex-${i}`} className="block mt-1 mb-1 text-[13px] sm:text-[14px] font-semibold text-slate-600 dark:text-slate-400">
+            <span className="font-extrabold text-pink-600 dark:text-pink-400">{isHindi ? '💡 जैसे: ' : '💡 e.g., '}</span>
+            {parseBoldOnly(content.trim())}
+          </span>
+        );
+      }
+      
+      return <span key={`p-${i}`}>{parseBoldOnly(part)}</span>;
     });
   }
 
@@ -151,7 +166,7 @@ export function MainsMarkdownBody({
                 >
                   {prefix ? (
                     <div>
-                      <span className={cn("inline-flex items-center rounded-lg px-3 py-1 text-xs uppercase tracking-wider font-extrabold shadow-sm font-[family-name:var(--font-pyq-dev)]", badgeSkin)}>
+                      <span className={cn("inline-flex items-center rounded-lg px-3 py-1 text-xs uppercase tracking-wider font-extrabold shadow-sm", isHindi ? "font-[family-name:var(--font-pyq-dev)]" : "font-[family-name:var(--font-pyq-serif)]", badgeSkin)}>
                         {prefix}
                       </span>
                     </div>

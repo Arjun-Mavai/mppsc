@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useOptimistic, useTransition } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThumbsUp, Lightbulb, ThumbsDown, HelpCircle, Check, Loader2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -28,15 +28,19 @@ export function QuickFeedback({
 }: QuickFeedbackProps) {
   const { isSubscribed, user } = useSettingsStore();
   const [reaction, setReaction] = useState<IntelligenceReaction | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [submittingReaction, setSubmittingReaction] = useState<IntelligenceReaction | null>(null);
+  const [isPending, startTransition] = useTransition();
+  
+  // ⚡ OPTIMISTIC UI: Show reaction instantly
+  const [optimisticReaction, setOptimisticReaction] = useOptimistic<IntelligenceReaction | null, IntelligenceReaction | null>(
+    reaction,
+    (_, newState) => newState
+  );
+
   const [showFeedbackBox, setShowFeedbackBox] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState('');
 
   const onReact = async (type: IntelligenceReaction) => {
-    if (submitting) return;
-
-    // Toggle logic for Unhelpful and Doubt
+    // Toggle logic for Unhelpful and Doubt (need comment box, so not purely backgrounded yet)
     if (type === 'unhelpful' || type === 'doubt') {
       if (reaction === type) {
         setShowFeedbackBox(!showFeedbackBox);
@@ -47,13 +51,22 @@ export function QuickFeedback({
       return;
     }
 
-    // Normal submission for others
+    // Normal submission (Helpful / Insightful)
     if (reaction === type) return;
 
-    setSubmitting(true);
-    setSubmittingReaction(type);
+    // 🚀 INSTANT UI UPDATE
+    startTransition(() => {
+      setOptimisticReaction(type);
+      setReaction(type);
+      toast.success('Thanks for the feedback!', {
+        icon: <Check className="h-4 w-4 text-emerald-500" />,
+        duration: 2000,
+      });
+    });
+
     try {
-      const res = await submitIntelligenceFeedback({
+      // FIRE AND FORGET (Background)
+      submitIntelligenceFeedback({
         questionId,
         questionText,
         testId,
@@ -64,29 +77,23 @@ export function QuickFeedback({
         userName: user?.name || undefined,
         userEmail: user?.email || undefined,
         guestMobile: guestMobile || user?.phone || undefined,
-      });
-
-      if (res.success) {
-        setReaction(type);
-        toast.success('Thanks for the feedback!', {
-          icon: <Check className="h-4 w-4 text-emerald-500" />,
-          duration: 2000,
-        });
-        setShowFeedbackBox(false);
-      }
+      }).catch(e => console.error('Reaction submission failed', e));
     } catch (e) {
-      toast.error('Could not save reaction');
-    } finally {
-      setSubmitting(false);
-      setSubmittingReaction(null);
+      // Construction error
     }
   };
 
   const submitWithComment = async () => {
-    if (submitting) return;
-    setSubmitting(true);
+    if (isPending) return;
+    
+    // Optimistic close
+    setShowFeedbackBox(false);
+    toast.success('Feedback saved. We will improve this!', {
+      icon: <Check className="h-4 w-4 text-rose-500" />,
+    });
+
     try {
-      const res = await submitIntelligenceFeedback({
+      submitIntelligenceFeedback({
         questionId,
         questionText,
         testId,
@@ -98,19 +105,11 @@ export function QuickFeedback({
         userName: user?.name || undefined,
         userEmail: user?.email || undefined,
         guestMobile: guestMobile || user?.phone || undefined,
-      });
-
-      if (res.success) {
-        toast.success('Feedback saved. We will improve this!', {
-          icon: <Check className="h-4 w-4 text-rose-500" />,
-        });
-        setShowFeedbackBox(false);
-        setFeedbackMsg('');
-      }
+      }).catch(e => console.error('Comment submission failed', e));
+      
+      setFeedbackMsg('');
     } catch (e) {
-      toast.error('Failed to save feedback');
-    } finally {
-      setSubmitting(false);
+      // Fail
     }
   };
 
@@ -124,34 +123,34 @@ export function QuickFeedback({
         <div className="flex items-center gap-1">
           <ReactionButton
             icon={<ThumbsUp className="h-3.5 w-3.5" />}
-            active={reaction === 'helpful'}
+            active={optimisticReaction === 'helpful'}
             onClick={() => void onReact('helpful')}
-            submitting={submittingReaction === 'helpful'}
-            disabled={submitting}
+            submitting={false}
+            disabled={false}
             activeColor="bg-emerald-500"
           />
           <ReactionButton
             icon={<Lightbulb className="h-3.5 w-3.5" />}
-            active={reaction === 'insightful'}
+            active={optimisticReaction === 'insightful'}
             onClick={() => void onReact('insightful')}
-            submitting={submittingReaction === 'insightful'}
-            disabled={submitting}
+            submitting={false}
+            disabled={false}
             activeColor="bg-amber-400"
           />
           <ReactionButton
             icon={<ThumbsDown className="h-3.5 w-3.5" />}
-            active={reaction === 'unhelpful'}
+            active={optimisticReaction === 'unhelpful'}
             onClick={() => void onReact('unhelpful')}
-            submitting={submittingReaction === 'unhelpful'}
-            disabled={submitting}
+            submitting={false}
+            disabled={false}
             activeColor="bg-rose-500"
           />
           <ReactionButton
             icon={<HelpCircle className="h-3.5 w-3.5" />}
-            active={reaction === 'doubt'}
+            active={optimisticReaction === 'doubt'}
             onClick={() => void onReact('doubt')}
-            submitting={submittingReaction === 'doubt'}
-            disabled={submitting}
+            submitting={false}
+            disabled={false}
             activeColor="bg-blue-500"
           />
         </div>
@@ -182,11 +181,10 @@ export function QuickFeedback({
             />
             <Button
               size="sm"
-              disabled={submitting || !feedbackMsg.trim()}
+              disabled={!feedbackMsg.trim()}
               onClick={submitWithComment}
               className="h-9 w-full rounded-xl bg-rose-600 text-[10px] font-black uppercase tracking-wider text-white hover:bg-rose-700 shadow-lg shadow-rose-500/20"
             >
-              {submitting ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : null}
               Submit Feedback
             </Button>
           </motion.div>

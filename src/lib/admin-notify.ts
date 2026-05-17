@@ -127,7 +127,8 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
       `📧 Email: ${escapeHTML(userEmail)}\n` +
       `🎟️ Plan: ${planTier.toUpperCase()}${isUpgrade ? ' (Upgrade)' : ''}\n` +
       `💵 Amount: <b>₹${amountInRupees}</b>\n` +
-      `🆔 PayID: <code>${paymentId}</code>` +
+      `🆔 PayID: <code>${paymentId}</code>\n` +
+      `⏱️ Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST` +
       `${data.error ? `\n\n❌ Error: ${escapeHTML(data.error!)}` : ''}`;
 
     try {
@@ -229,7 +230,8 @@ export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) 
       `👤 User: ${escapeHTML(userName)}\n` +
       `📧 Email: ${escapeHTML(userEmail)}\n` +
       `🆔 PayID: <code>${paymentId}</code>\n` +
-      `❌ Error: ${escapeHTML(errorMessage)}`;
+      `❌ Error: ${escapeHTML(errorMessage)}\n` +
+      `⏱️ Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
 
     await sendTelegramNotification(telegramMessage);
   } catch (error) {
@@ -262,7 +264,8 @@ export async function notifyAdminOnVerificationFailure(data: {
       `👤 User ID: <code>${userId}</code>\n` +
       `🆔 Order ID: <code>${orderId}</code>\n` +
       `${paymentId ? `🆔 PayID: <code>${paymentId}</code>\n` : ''}` +
-      `❌ Error: ${escapeHTML(error)}`;
+      `❌ Error: ${escapeHTML(error)}\n` +
+      `⏱️ Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
 
     await sendTelegramNotification(telegramMessage);
 
@@ -309,9 +312,10 @@ export async function notifyAdminOnSupportTicket(data: {
   phone?: string | null;
   category?: string | null;
   message: string;
+  pagePath?: string | null;
 }) {
   try {
-    const { name, email, phone, category, message } = data;
+    const { name, email, phone, category, message, pagePath } = data;
 
     // 🎯 Map category to emoji and label
     const categoryMap: Record<string, { emoji: string; label: string }> = {
@@ -332,9 +336,11 @@ export async function notifyAdminOnSupportTicket(data: {
       `👤 <b>Student:</b> ${escapeHTML(name)}\n` +
       `📧 <b>Email:</b> ${escapeHTML(email)}\n` +
       (phone ? `📞 <b>Phone:</b> ${escapeHTML(phone)}\n` : '') +
-      `${catInfo.emoji} <b>Category:</b> ${catInfo.label}\n\n` +
+      `${catInfo.emoji} <b>Category:</b> ${catInfo.label}\n` +
+      (pagePath ? `🌐 <b>Source:</b> <code>${escapeHTML(pagePath)}</code>\n` : '') +
       `💬 <b>Query Message:</b>\n` +
-      `${escapeHTML(message)}`;
+      `${escapeHTML(message)}\n\n` +
+      `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
 
     await sendTelegramNotification(telegramMessage);
 

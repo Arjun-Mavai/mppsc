@@ -3,7 +3,12 @@
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { GuestLeadModal } from '@/components/guest-lead-modal';
+import dynamic from 'next/dynamic';
+
+const GuestLeadModal = dynamic(
+  () => import('@/components/guest-lead-modal').then((mod) => mod.GuestLeadModal),
+  { ssr: false }
+);
 
 const isProtectionEnabled = process.env.NEXT_PUBLIC_DISABLE_CONTENT_PROTECTION !== 'true';
 

@@ -75,7 +75,7 @@ export async function POST(req: Request) {
         `📞 <b>Phone:</b> ${escapeHTML(body.phone)}\n` +
         (body.email ? `📧 <b>Email:</b> ${escapeHTML(body.email)}\n` : '') +
         `🎯 <b>Module Access:</b> <code>${displayCategory}</code>\n` +
-        `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST\n\n` +
+        `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST\n\n` +
         `${tags}`;
 
       await sendTelegramNotification(telegramMessage);

@@ -11,9 +11,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, LayoutDashboard } from './icons';
+import type { AuthenticatedUser } from '@/types/auth';
 
 interface UserSectionProps {
-  user: any;
+  user: AuthenticatedUser | null;
   authCheckStatus: string;
   isMounted: boolean;
   onLogout: () => Promise<void>;
@@ -71,8 +72,11 @@ export const UserSection = memo(function UserSection({
 
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            className="text-red-600 focus:text-red-600"
-            onClick={onLogout}
+            className="text-red-600 focus:text-red-600 cursor-pointer"
+            onSelect={(e) => {
+              e.preventDefault();
+              onLogout();
+            }}
           >
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>

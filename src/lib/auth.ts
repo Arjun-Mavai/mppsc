@@ -4,7 +4,7 @@ import { mppscUsers } from '@/db/schema';
 import { eq, isNull, and } from 'drizzle-orm';
 import { cache } from 'react';
 import { logger } from '@/lib/logger';
-import type { JWTPayload } from './jwt';
+import type { AuthenticatedUser } from '@/types/auth';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🔐 AUTH VERIFICATION — har server component me use hota h
@@ -24,7 +24,7 @@ import type { JWTPayload } from './jwt';
 // This prevents mid-session kicks which is bad UX.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-export const verifyAuth = cache(async () => {
+export const verifyAuthInternal = cache(async (): Promise<AuthenticatedUser | null> => {
   const cookieStore = await cookies();
   const token = cookieStore.get('mppsc_token');
 
@@ -40,11 +40,25 @@ export const verifyAuth = cache(async () => {
   }
 
   const userId = decoded.userId;
+  const tokenVersion = decoded.sessionVersion;
 
   try {
-    // Only fetch active users — soft-deleted + inactive users are treated as non-existent
+    // ⚡ Optimization: Only fetch columns needed for verification
     const users = await db
-      .select()
+      .select({
+        id: mppscUsers.id,
+        email: mppscUsers.email,
+        name: mppscUsers.name,
+        role: mppscUsers.role,
+        planTier: mppscUsers.planTier,
+        isSubscribed: mppscUsers.isSubscribed,
+        accessExpiresAt: mppscUsers.accessExpiresAt,
+        accessGrants: mppscUsers.accessGrants,
+        sessionVersion: mppscUsers.sessionVersion,
+        isActive: mppscUsers.isActive,
+        deletedAt: mppscUsers.deletedAt,
+        examType: mppscUsers.examType,
+      })
       .from(mppscUsers)
       .where(
         and(
@@ -55,7 +69,35 @@ export const verifyAuth = cache(async () => {
         )
       )
       .limit(1);
-    return users[0] || null;
+    
+    const dbUser = users[0];
+    if (!dbUser) return null;
+
+    // Map to AuthenticatedUser type
+    const user: AuthenticatedUser = {
+      id: dbUser.id,
+      email: dbUser.email,
+      name: dbUser.name,
+      role: (dbUser.role as UserRole) || 'guest',
+      planTier: (dbUser.planTier as PlanTier) || 'free',
+      isSubscribed: !!dbUser.isSubscribed,
+      accessExpiresAt: dbUser.accessExpiresAt,
+      accessGrants: dbUser.accessGrants ? JSON.parse(dbUser.accessGrants) : ['mppsc_pre'],
+      sessionVersion: dbUser.sessionVersion,
+    };
+
+    // 🛡️ Single-Device Login Check
+    if (user.sessionVersion !== tokenVersion) {
+      logger.warn('Session version mismatch — remote logout triggered', {
+        category: 'auth',
+        userId,
+        tokenVersion,
+        dbVersion: user.sessionVersion,
+      });
+      return { ...user, _mismatch: true };
+    }
+
+    return user;
   } catch (error) {
     // DB errors → null (graceful degradation, user redirected to login)
     logger.error('Database error during auth verification:', error, {
@@ -64,6 +106,18 @@ export const verifyAuth = cache(async () => {
     });
     return null;
   }
+});
+
+/**
+ * 🔐 Standard Auth Verification
+ * Returns user if valid, null if not (including session mismatch).
+ */
+export const verifyAuth = cache(async (): Promise<AuthenticatedUser | null> => {
+  const user = await verifyAuthInternal();
+  if (user && user._mismatch) {
+    return null;
+  }
+  return user;
 });
 
 /**

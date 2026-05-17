@@ -254,7 +254,17 @@ export function MainsHistoryRichViewer({
   const pyqMd = useMemo(() => {
     const raw = pick(payload, 'pyq_trend_analysis', hi).trim();
     if (!raw) return '';
-    const coerced = coerceMarkdownBulletsLoose(raw);
+    
+    // Split by newlines or specific separators like ,- or .- commonly found in the data
+    const lines = raw.split(/\n|,\s*-\s*|\.\s*-\s*|;\s*-\s*/).map(l => l.trim()).filter(Boolean);
+    
+    // Format as bullet points if not already
+    const bulleted = lines.map(l => {
+      if (/^[-*•]/.test(l)) return l;
+      return `- ${l}`;
+    }).join('\n');
+
+    const coerced = coerceMarkdownBulletsLoose(bulleted);
     if (!/^#{1,3}\s/m.test(coerced)) {
       return `## ${hi ? 'ट्रेंड · मांग · कोण' : 'Trend · demand · angle'}\n${coerced}`;
     }
@@ -518,7 +528,7 @@ export function MainsHistoryRichViewer({
           </details>
 
           {/* PYQ / examiner demand */}
-          <details className="group rounded-2xl border-2 border-pink-200/80 bg-pink-50/40 p-3 sm:p-4 shadow-sm dark:border-pink-500/20 dark:bg-[#1a0e1c] transition-all hover:border-pink-400/60">
+          <details className="group rounded-2xl border-2 border-pink-200/80 bg-pink-50/40 p-3 sm:p-4 shadow-sm dark:border-pink-500/20 dark:bg-[#1a0e1c] transition-all hover:border-pink-400/60 overflow-hidden">
             <summary className="mb-3 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-3 border-b border-pink-200/50 dark:border-pink-500/20">
               <h2 className="text-lg font-black sm:text-xl text-pink-900 dark:text-pink-200">📈 {hi ? 'PYQ ट्रेंड व मांग डिकोडर' : 'PYQ Trend & Demand Decoder'}</h2>
               <ChevronDown className="h-5 w-5 shrink-0 text-pink-400 transition-transform group-open:rotate-180" />
@@ -528,6 +538,7 @@ export function MainsHistoryRichViewer({
                 <MainsMarkdownBody
                   markdown={pyqMd}
                   isHindi={hi}
+                  flashLineBullets={true}
                   itemClassName="border-pink-200 bg-white/70 dark:border-pink-900/40 dark:bg-pink-950/20"
                   bulletClassName="bg-pink-500 shadow-[0_0_12px_rgba(236,72,153,0.4)] ring-pink-500/15"
                 />
@@ -655,7 +666,7 @@ export function MainsHistoryRichViewer({
                   <Network className="h-4 w-4 shrink-0" /> {hi ? '🔗 अंतर-पेपर जुड़ाव' : '🔗 Interlinking'}
                 </h3>
                 <MainsMarkdownBody
-                  markdown={coerceMarkdownBulletsLoose(bulletizeOnComma(pickInterlinkingMarkdown(payload, hi ? 'hi' : 'en')))}
+                  markdown={coerceMarkdownBulletsLoose(pickInterlinkingMarkdown(payload, hi ? 'hi' : 'en'))}
                   isHindi={hi}
                   itemClassName="border-indigo-100 bg-white/70 dark:border-indigo-900/40 dark:bg-indigo-950/20"
                   bulletClassName="bg-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.4)] ring-indigo-500/15"

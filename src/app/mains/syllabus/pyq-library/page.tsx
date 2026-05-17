@@ -12,6 +12,8 @@ import {
   MAINS_PYQ_DEMO_YEAR,
 } from '@/lib/mains-vault-demo';
 import type { QRow } from '@/app/mains/syllabus/pyq-library/PyqQuestionList';
+import { Suspense } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,11 +23,15 @@ export const metadata: Metadata = {
     'Official MPPSC Mains previous-year questions with bilingual model answers and expert pointers — practise by paper and section.',
 };
 
-export default async function MainsPyqLibraryPage() {
-  const user = await verifyAuth();
+async function PyqLibraryData() {
+  // 🚀 CONCURRENT FETCHING: Auth + Paper List in parallel
+  const [user, papersRes] = await Promise.all([
+    verifyAuth(),
+    listMainsPyqPapersLibrarySummary()
+  ]);
+
   const vaultUnlocked = isMainsVaultUnlockedUser(user);
 
-  const papersRes = await listMainsPyqPapersLibrarySummary();
   const initialPapers = papersRes.success
     ? papersRes.data.map((p) => ({
         id: p.id,
@@ -66,5 +72,38 @@ export default async function MainsPyqLibraryPage() {
       initialPaperId={initialPaperId}
       initialQuestions={initialQuestions}
     />
+  );
+}
+
+export default function MainsPyqLibraryPage() {
+  return (
+    <Suspense fallback={<PyqLibrarySkeleton />}>
+      <PyqLibraryData />
+    </Suspense>
+  );
+}
+
+function PyqLibrarySkeleton() {
+  return (
+    <div className="flex h-screen bg-background animate-in fade-in duration-500">
+      {/* Sidebar Skeleton */}
+      <div className="w-80 border-r p-4 space-y-4 hidden md:block">
+        <Skeleton className="h-8 w-32" />
+        <div className="space-y-2 pt-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-12 w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+      {/* Content Skeleton */}
+      <div className="flex-1 p-6 space-y-6">
+        <Skeleton className="h-10 w-1/3" />
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-40 w-full rounded-2xl" />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

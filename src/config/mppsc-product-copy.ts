@@ -77,6 +77,7 @@ export const DEFAULT_MPPSC_PRODUCT_COPY: MppscProductCopyV1 = {
       'Deep Syllabus Detailing — Every single topic mapped with conceptual structures, breakdowns, high-yield facts, state-specific acts, and case studies',
       'Expert Strategy & Value Addition — Deeply researched constitutional articles, landmark judgments, MP-specific data & retention tricks',
       'Premium Mains PYQ Library — Standard PYQ patterns with best-explained dual-style model answers & expert analytical insights',
+      '⚡ Fast 1-Click Syllabus Navigator — No more opening 10 PDFs! Our Syllabus Menu is so fast that students can switch between any unit or topic of Paper 1 to 6 in 1 click without page reloads.',
     ],
     bulletsHi: [
       'डबल-स्टाइल उत्तर वेरिएशन — हर प्रश्न के 2 अलग-अलग तरीकों और एंगल्स से लिखे मॉडल उत्तर (एक ही उत्तर को दो अलग दृष्टिकोणों से समझने की शैली)',
@@ -84,6 +85,7 @@ export const DEFAULT_MPPSC_PRODUCT_COPY: MppscProductCopyV1 = {
       'डीप सिलेबस डिटेलिंग — सिलेबस के हर टॉपिक की स्पष्ट व सूक्ष्म संरचनात्मक समझ, विषय-वार व्याख्या, विस्तृत फैक्ट्स, राज्य विशेष अधिनियम और डीप केस स्टडीज के साथ',
       'रणनीतिक मूल्यवर्धन व विशेषज्ञ रणनीति — गहरी रिसर्च वाले संवैधानिक अनुच्छेद, प्रमुख कोर्ट फैसले, MP-विशिष्ट प्रामाणिक डेटा और याद रखने की ट्रिक्स',
       'मेंस PYQ लाइब्रेरी — सर्वश्रेष्ठ विश्लेषण, हिंदी व इंग्लिश में 2 अलग-अलग स्टाइल के सटीक मॉडल उत्तर और एक्सपर्ट इनसाइट्स के साथ पिछले वर्षों के प्रश्नों (PYQs) का संपूर्ण संग्रह',
+      '⚡ 1-क्लिक फास्ट सिलेबस नेविगेटर — सिलेबस चेक करने में 10 PDFs खोलने का झंझट खत्म! हमारा "सिलेबस मेन्यू" इतना फास्ट है कि छात्र बिना पेज रीलोड किए, पेपर 1 से पेपर 6 के किसी भी टॉपिक पर 1 क्लिक में स्विच कर सकते हैं।',
     ],
     thankYouBadgeEn: 'Mains Gyan Kosh live',
     thankYouBadgeHi: 'मेंस ज्ञानकोश लाइव',

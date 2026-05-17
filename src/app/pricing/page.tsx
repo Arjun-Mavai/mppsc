@@ -200,18 +200,18 @@ const mainsValueCards = [
     highlight: true,
   },
   {
-    icon: BookOpen,
-    label: { en: 'Strategic Expert Blueprint', hi: 'रणनीतिक रूपरेखा' },
-    sub: { en: 'What to study & how to secure marks', hi: 'क्या पढ़ना है और कैसे स्कोर बढ़ाना है' },
-    highlight: true,
-  },
-  {
     icon: Zap,
     label: { en: '⚡ Ultra-Fast 1-Click Syllabus Navigator', hi: '⚡ अल्ट्रा-फास्ट 1-क्लिक सिलेबस नेविगेटर' },
     sub: { 
       en: 'No more opening 10 PDFs! Our Syllabus Menu is so fast you can switch between any unit or topic of Paper 1-6 in 1 click without page reloads. Zero context switch time.', 
       hi: 'सिलेबस चेक करने में 10 PDFs खोलने का झंझट खत्म! हमारा "सिलेबस मेन्यू" इतना फास्ट है कि छात्र बिना पेज रीलोड किए, पेपर 1 से पेपर 6 के किसी भी टॉपिक पर 1 क्लिक में स्विच कर सकते हैं।' 
     },
+    highlight: true,
+  },
+  {
+    icon: BookOpen,
+    label: { en: 'Strategic Expert Blueprint', hi: 'रणनीतिक रूपरेखा' },
+    sub: { en: 'What to study & how to secure marks', hi: 'क्या पढ़ना है और कैसे स्कोर बढ़ाना है' },
     highlight: true,
   },
   {

@@ -4,10 +4,10 @@ import {
   effectiveAccessGrants,
   type MppscUserRow,
 } from '@/lib/access-grants';
+import type { AuthenticatedUser } from '@/types/auth';
 
 /** Fields needed to decide what nav / surfaces to show per product (Pre / Mains / Combo). */
-export type PortalPolicyUser = Pick<MppscUserRow, 'accessGrants' | 'planTier' | 'isSubscribed'> & {
-  isSubscribed?: boolean;
+export type PortalPolicyUser = (Pick<MppscUserRow, 'accessGrants' | 'planTier' | 'isSubscribed'> | AuthenticatedUser) & {
   is_subscribed?: boolean;
 };
 
@@ -39,7 +39,7 @@ export function getProductPortalNavVisibility(
     };
   }
 
-  const grants = effectiveAccessGrants(user);
+  const grants = effectiveAccessGrants(user as any);
   const hasPre = grants.includes(ACCESS_PRE);
   const hasMains = grants.includes(ACCESS_MAINS);
 
@@ -52,8 +52,8 @@ export function getProductPortalNavVisibility(
 
 /** Server layouts: mains-only subscribers should not stay on pre syllabus tree. */
 export function shouldRedirectPreSyllabusToMains(
-  user: Pick<MppscUserRow, 'accessGrants' | 'planTier' | 'isSubscribed'>
+  user: PortalPolicyUser
 ): boolean {
-  const grants = effectiveAccessGrants(user);
+  const grants = effectiveAccessGrants(user as any);
   return grants.includes(ACCESS_MAINS) && !grants.includes(ACCESS_PRE);
 }

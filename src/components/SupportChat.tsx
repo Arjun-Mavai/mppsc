@@ -45,8 +45,8 @@ const FAQS: QA[] = [
       hi: 'क्या आप इसमें पारंपरिक टेक्स्टबुक नोट्स भी देते हैं?',
     },
     answer: {
-      en: 'No. We do NOT provide boring, bulky, or outdated textbook notes to memorize blindly. Instead, we offer complete conceptual clarity, structural topic-wise breakdowns, and exam-focused blueprinting for both Prelims & Mains.',
-      hi: 'नहीं! हम रटने वाली पारंपरिक और भारी-भरकम पीडीएफ नोट्स नहीं देते हैं। इसके बजाय, हम आपको प्रारंभिक (Prelims) और मुख्य (Mains) परीक्षा दोनों के लिए उत्कृष्ट वैचारिक स्पष्टता (conceptual clarity) और सटीक लेखन रणनीति (blueprints) प्रदान करते हैं।',
+      en: 'No. We do NOT provide boring, bulky textbook notes to memorize. Mains is not cleared by just collecting piles of notes! We eliminate the hassle of checking 10 different PDFs just to navigate the syllabus. Instead, we offer complete conceptual clarity mapped to the syllabus tree and exam-focused answer frameworks.',
+      hi: 'नहीं! हम रटने वाली पारंपरिक और भारी-भरकम पीडीएफ नोट्स नहीं देते हैं। सिर्फ नोट्स जमा करने से मेंस क्लियर नहीं होता है! यहां आपको सिलेबस चेक करने के लिए 10 अलग-अलग PDFs देखने के झंझट से मुक्ति मिलती है। हम आपको पूरे सिलेबस ट्री के अनुसार प्रत्येक टॉपिक की गहरी वैचारिक समझ और मॉडल उत्तर प्रारूप प्रदान करते हैं।',
     },
   },
   {
@@ -136,8 +136,8 @@ export function SupportChat() {
         {
           question: { en: 'Do you provide textbook syllabus notes for Mains?', hi: 'क्या आप मुख्य परीक्षा (Mains) के लिए टेक्स्टबुक नोट्स भी देते हैं?' },
           answer: {
-            en: 'No. We do NOT sell boring, outdated textbook notes to memorize. Instead, we provide entire syllabus topic-by-topic deep structural clarity mapped directly to the syllabus tree, strategically enriched with constitutional articles, landmark cases, MP context data, and high-scoring model answer frameworks!',
-            hi: 'नहीं, हम रटने वाले पारंपरिक पीडीएफ नोट्स नहीं देते हैं। इसके बजाय, हम आपको सिलेबस ट्री के अनुसार प्रत्येक टॉपिक की गहरी वैचारिक समझ, रणनीतिक मूल्यवर्धन (संवैधानिक अनुच्छेद, कोर्ट फैसले, MP-विशिष्ट डेटा) और मॉडल उत्तर प्रारूप प्रदान करते हैं।',
+            en: 'No! We do NOT sell boring, outdated textbook notes to memorize. Mains is not cleared by just collecting piles of notes! We eliminate the hassle of checking 10 different PDFs just to navigate the syllabus. Instead, we provide entire syllabus topic-by-topic deep structural clarity mapped directly to the syllabus tree, strategically enriched with constitutional articles, landmark cases, and high-scoring model answer frameworks!',
+            hi: 'नहीं! हम रटने वाले पारंपरिक पीडीएफ नोट्स नहीं देते हैं। सिर्फ नोट्स जमा करने से मेंस क्लियर नहीं होता है! यहां आपको सिलेबस चेक करने के लिए 10 अलग-अलग PDFs देखने के झंझट से मुक्ति मिलती है। हम आपको पूरे सिलेबस ट्री के अनुसार प्रत्येक टॉपिक की गहरी वैचारिक समझ, रणनीतिक मूल्यवर्धन और मॉडल उत्तर प्रारूप प्रदान करते हैं।',
           }
         },
         {
@@ -238,25 +238,28 @@ export function SupportChat() {
       return;
     }
 
-    setIsSubmitting(true);
+    // 🚀 INSTANT UI FEEDBACK
+    // Bhai, user ko lagega kaam ho gaya, logic background mein chalti rahegi.
+    setIsOpen(false);
+    toast.success("Message sent! We'll get back to you shortly.");
+    
+    // Exact path at the time of click
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : pathname;
+
     try {
-      const result = await submitSupportTicket({
+      // Non-blocking background call
+      submitSupportTicket({
         ...formData,
         userId: user?.id || null,
         category: getSupportCategory(),
+        pagePath: currentPath,
+      }).catch(err => {
+        console.error('Background support submission failed', err);
       });
-
-      if (result.success) {
-        toast.success("Message sent! We'll get back to you shortly.");
-        setFormData({ ...formData, message: '' });
-        setIsOpen(false);
-      } else {
-        toast.error('Something went wrong. Try WhatsApp instead.');
-      }
+      
+      setFormData({ ...formData, message: '' });
     } catch (error) {
-      toast.error('Failed to send message.');
-    } finally {
-      setIsSubmitting(false);
+      // Construction failed
     }
   };
 

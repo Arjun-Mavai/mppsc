@@ -29,14 +29,6 @@ import { PLAN_LIMITS, type PlanType } from '@/config/plans';
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /**
- * User Type
- * ─────────────────────────────────────────────────────────────────────
- * Database schema se match karta hai.
- * Null ho sakta hai (guest user ke case mein)
- */
-export type User = typeof mppscUsers.$inferSelect | null;
-
-/**
  * Test Type
  * ─────────────────────────────────────────────────────────────────────
  * Test ka complete object structure
@@ -73,6 +65,13 @@ export interface AccessControlUser {
   /** `mppsc_pre` | `mppsc_mains` — from `mppsc_users.access_grants` */
   accessGrants?: unknown;
 }
+
+/**
+ * User Type
+ * ─────────────────────────────────────────────────────────────────────
+ * Accepts either the raw DB row or the normalized auth/store shape.
+ */
+export type User = typeof mppscUsers.$inferSelect | AccessControlUser | null;
 
 /**
  * Access Result
