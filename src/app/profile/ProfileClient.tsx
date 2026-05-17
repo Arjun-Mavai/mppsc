@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -133,8 +134,8 @@ export default function ProfileClient({ user }: ProfileClientProps) {
 
         {/* Profile Header */}
         <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-900 text-2xl font-black text-white">
-            {user.name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+          <div className="relative h-16 w-16 overflow-hidden rounded-full border-2 border-slate-200">
+            <Image src="/default-avatar.png" alt={user.name || 'User'} fill className="object-cover scale-150" />
           </div>
           <div>
             <h1 className="text-xl font-black tracking-tight text-slate-900">

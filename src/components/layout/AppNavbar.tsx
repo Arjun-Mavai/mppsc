@@ -373,7 +373,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                           <div className="flex items-center gap-3">
                             <div className="relative">
                               <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
-                                <AvatarImage src={user.image || ''} />
+                                <AvatarImage src={user.image || '/default-avatar.png'} className="scale-150" />
                                 <AvatarFallback className="bg-slate-900 font-bold text-white">
                                   {user.name?.charAt(0).toUpperCase() || 'U'}
                                 </AvatarFallback>
