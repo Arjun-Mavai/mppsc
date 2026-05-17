@@ -350,7 +350,7 @@ export default function PYQPageClient({
 
         {/* Topic Wise View */}
         <div className={viewMode !== 'subject' ? 'hidden' : 'grid gap-6 sm:grid-cols-2 lg:grid-cols-3'}>
-          {SUBJECTS.map((sub) => (
+          {SUBJECTS.filter((sub) => (subjectStats[sub.name] || 0) > 0).map((sub) => (
             <PYQCard
               key={sub.name}
               title={sub.name}

@@ -309,7 +309,7 @@ export default function PYQFactsClient({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent position="popper" sideOffset={5} className="w-[320px] max-w-[90vw] rounded-2xl border-slate-200 bg-white text-slate-700 max-h-[280px] overflow-auto no-scrollbar shadow-2xl z-[100]">
-                      {subjects.map((s) => (
+                      {subjects.filter((s) => s.factCount > 0).map((s) => (
                         <SelectItem key={s.subject} value={s.subject} className="rounded-xl focus:bg-rose-50 focus:text-rose-600 py-3">
                           {s.subject} ({s.factCount})
                         </SelectItem>
