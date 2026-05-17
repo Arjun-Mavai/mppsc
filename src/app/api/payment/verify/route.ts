@@ -3,7 +3,8 @@ import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
 import { db } from '@/db';
-import { payments, verificationTokens, mppscUsers, pricingConfig } from '@/db/schema';
+import { payments, verificationTokens, mppscUsers } from '@/db/schema';
+import { fetchPricingConfigRow } from '@/lib/pricing-db';
 import { eq } from 'drizzle-orm';
 import { Resend } from 'resend';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,7 +12,11 @@ import { addHours } from 'date-fns';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { appPath } from '@/lib/app-url';
 import { renderWelcomeSetPasswordEmailHtml } from '@/lib/render-welcome-set-password-email';
-import { PRICING_DEFAULTS } from '@/config/pricing';
+import { mergeMppscProductCopy, paymentLabelToMppscSegment } from '@/config/mppsc-product-copy';
+import { renderMppscPaymentWelcomeEmail } from '@/lib/welcome-payment-email';
+import { mergePricingRow } from '@/lib/pricing-merge';
+import { resolveVerifiedPayment } from '@/lib/payment-access-resolve';
+import { serializeAccessGrants } from '@/lib/access-grants';
 import {
   notifyAdminOnPayment,
   notifyAdminOnEmailFailure,
@@ -125,7 +130,7 @@ export async function POST(req: Request) {
       key_secret: secret,
     });
     const order = await instance.orders.fetch(razorpay_order_id);
-    const paidAmount = order.amount as number; // amount in paise
+    const amountInPaise = Number(order.amount); // paise
 
     // 🛡️ CRITICAL FIX: Order Ownership Verification (IDOR Prevention)
     // Bhai, ye sabse important check hai! Agar order kisi aur user ka hai,
@@ -149,28 +154,38 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Order does not belong to this user' }, { status: 403 });
     }
 
-    // 🏷️ Step 5: Logic to assign Plan based on Amount
-    // Recover examType from order notes
     const examType = (order.notes?.examType as 'upsc' | 'mppsc' | 'mppolice') || 'mppsc';
 
-    const pricingRows = await db
-      .select()
-      .from(pricingConfig)
-      .where(eq(pricingConfig.examType, examType))
-      .limit(1);
-    const p = pricingRows[0] || PRICING_DEFAULTS;
-    const proAmountPaise = (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100;
-    const planTier = paidAmount >= proAmountPaise ? 'pro' : 'lite';
+    const pricingCfgRow = await fetchPricingConfigRow(examType);
+    const pricing = mergePricingRow(pricingCfgRow);
 
-    // 📅 Calculate Expiry Date
-    const months =
-      planTier === 'pro'
-        ? (p.proMonths ?? PRICING_DEFAULTS.proMonths)
-        : (p.liteMonths ?? PRICING_DEFAULTS.liteMonths);
+    const paidUserBefore = await db.query.mppscUsers.findFirst({
+      where: eq(mppscUsers.id, userId),
+      columns: { accessGrants: true, planTier: true },
+    });
+
+    const resolved = resolveVerifiedPayment(
+      amountInPaise,
+      order.notes?.planType as string | undefined,
+      pricing,
+      paidUserBefore?.accessGrants,
+      paidUserBefore?.planTier as string | undefined
+    );
+
+    if (!resolved.allowedAmount) {
+      return NextResponse.json({ error: 'Payment amount does not match any valid plan' }, { status: 400 });
+    }
+
     const accessExpiresAt = new Date();
-    accessExpiresAt.setMonth(accessExpiresAt.getMonth() + months);
+    accessExpiresAt.setMonth(accessExpiresAt.getMonth() + resolved.months);
 
-    // 💾 Step 6: Persist Payment in DB + Update User Plan (ATOMIC TRANSACTION)
+    const planTier = resolved.planTier;
+    const subscribedNow =
+      planTier === 'lite' ||
+      planTier === 'pro' ||
+      resolved.paymentLabel === 'mains' ||
+      resolved.paymentLabel === 'combo';
+
     await db.transaction(async (tx) => {
       await tx.insert(payments).values({
         id: `pay_${uuidv4()}`,
@@ -178,19 +193,21 @@ export async function POST(req: Request) {
         orderId: razorpay_order_id,
         paymentId: razorpay_payment_id,
         signature: razorpay_signature,
-        amount: paidAmount,
-        planTier,
+        amount: amountInPaise,
+        planTier: resolved.paymentLabel,
         status: 'captured',
         currency: 'INR',
+        examType,
       });
 
       await tx
         .update(mppscUsers)
         .set({
-          planTier: planTier as 'lite' | 'pro',
-          isSubscribed: true,
+          planTier,
+          isSubscribed: subscribedNow,
           isActive: true,
           accessExpiresAt,
+          accessGrants: serializeAccessGrants(resolved.accessGrants),
           deletedAt: null,
         })
         .where(eq(mppscUsers.id, userId));
@@ -219,11 +236,42 @@ export async function POST(req: Request) {
 
     const actionUrl = `${appPath('auth/set-password')}?token=${token}`;
 
-    const emailHtml = await renderWelcomeSetPasswordEmailHtml({
-      name: user.name || 'Student',
-      actionUrl,
-      planTier: planTier as 'lite' | 'pro',
-    });
+    const welcomePlan: 'lite' | 'pro' =
+      resolved.paymentLabel === 'mains' || resolved.paymentLabel === 'combo'
+        ? 'pro'
+        : planTier === 'lite'
+          ? 'lite'
+          : 'pro';
+
+    const mergedMppscCopy =
+      examType === 'mppsc'
+        ? mergeMppscProductCopy(
+            (pricingCfgRow as Record<string, unknown> | null)?.mppscProductCopyJson as
+              | string
+              | null
+              | undefined
+          )
+        : null;
+
+    let emailHtml: string;
+    let emailSubject = '🎉 Welcome to MPPSC ZEN — Set Your Password';
+    if (examType === 'mppsc' && mergedMppscCopy) {
+      const segmentCopy =
+        mergedMppscCopy[paymentLabelToMppscSegment(resolved.paymentLabel)];
+      const rend = await renderMppscPaymentWelcomeEmail({
+        name: user.name || 'Student',
+        actionUrl,
+        segmentCopy,
+      });
+      emailHtml = rend.html;
+      emailSubject = rend.subject;
+    } else {
+      emailHtml = await renderWelcomeSetPasswordEmailHtml({
+        name: user.name || 'Student',
+        actionUrl,
+        planTier: welcomePlan,
+      });
+    }
 
     if (!resendApiKey) {
       logger.error('RESEND_API_KEY missing — welcome email skipped after payment', undefined, {
@@ -242,7 +290,7 @@ export async function POST(req: Request) {
       const { error: emailError } = await resend.emails.send({
         from: fromEmail,
         to: [user.email!],
-        subject: '🎉 Welcome to MPPSC ZEN — Set Your Password',
+        subject: emailSubject,
         html: emailHtml,
       });
 
@@ -271,8 +319,8 @@ export async function POST(req: Request) {
       type: 'new_payment',
       userName: user.name || 'Unknown',
       userEmail: user.email!,
-      planTier,
-      amountInRupees: paidAmount / 100,
+      planTier: resolved.paymentLabel,
+      amountInRupees: amountInPaise / 100,
       orderId: razorpay_order_id,
       paymentId: razorpay_payment_id,
     }).catch(() => {}); // Fire and forget, don't block response
@@ -288,7 +336,7 @@ export async function POST(req: Request) {
         action: 'PLAN_CHANGE',
         details: {
           plan: planTier,
-          amount: paidAmount / 100,
+          amount: amountInPaise / 100,
           orderId: razorpay_order_id,
           paymentId: razorpay_payment_id,
           reason: 'Initial Payment',

@@ -16,8 +16,7 @@ import { getYearFromTestId } from '@/lib/pyq-constants';
 import { normalizeCorrectAnswer } from '@/lib/quiz-scoring';
 import { mapRawQuestionToClientQuestion } from '@/lib/quiz-question-normalize';
 
-// Cache for 1 hour
-export const revalidate = 3600;
+// Removed page-level revalidate to avoid 2MB cache limit on large payloads
 
 interface PageProps {
   searchParams: Promise<{
@@ -31,8 +30,8 @@ interface PageProps {
 }
 
 /** Next.js `unstable_cache` rejects serialized payloads >2MB. 
- * We increase it to 800 but we will be careful with columns. */
-const MAX_QUESTION_IDS_FOR_DATA_CACHE = 800;
+ * Reduced to 200 to ensure data fits within the limit. */
+const MAX_QUESTION_IDS_FOR_DATA_CACHE = 200;
 
 async function fetchQuestionsWithDetailsFromDb(questionIds: string[]) {
   if (questionIds.length === 0) return [];

@@ -639,6 +639,7 @@ npm run db:migrate
 ```
 
 Why:
+
 - `drizzle-kit push` can try to drop tables that exist in DB but are not represented in `schema.ts` (for example FTS virtual tables like `questions_fts*`).
 - `migrate` only runs explicit SQL migration files, so unmanaged tables are not dropped unless you intentionally write a drop statement.
 
@@ -676,10 +677,12 @@ npm run db:push
 ## 🧠 Migration Kya Hai?
 
 Migration ek SQL instruction file hoti hai jo batati hai:
+
 - kaunsa table/column add hua
 - kaunsa index/constraint change hua
 
 Simple words:
+
 - `db:generate` = instruction banana
 - `db:migrate` = instruction chalana
 
@@ -1484,3 +1487,91 @@ It was a simple fix of re-routing the import using your root alias!
 typescript
 // ✅ FIXED
 import { CANONICAL_TEST_IDS } from "@/lib/pyq-constants";
+
+# users
+
+🎉 AB SAHI H! Ab ye credentials se login kar sakte ho:
+
+📧 Email: pre.test@mppsc.in
+🔑 Password: PreTest@123456
+
+📧 Email: mains.test@mppsc.in
+🔑 Password: MainsTest@123456
+
+📧 Email: combo.test@mppsc.in
+🔑 Password: ComboTest@123456
+
+┌──────────┬──────────────────────────────────────────────┐
+│ Field │ Credentials │
+├──────────┼──────────────────────────────────────────────┤
+│ Email │ arjun.admin@mppsc.in │
+│ Password │ AdminCombo@2026 │
+│ Role │ Admin (Boss Mode) │
+│ Grants │ Combo (Prelims + Mains Full Access) │
+│ Validity │ 1 Year (Extension available via Admin panel) │
+└──────────┴──────────────────────────────────────────────┘
+
+🎯 इस यूज़र के पास क्या-क्या पावर है?
+
+1.  Mains Full Access: पेपर 1-6 के सभी टॉपिक्स, मॉडल आंसर और PYQ लाइब्रेरी पूरी खुली (Unlocked) मिलेगी।
+2.  Prelims Full Access: सभी FLTs, Unit Tests और PYQ एनालिसिस का एक्सेस होगा।
+3.  Admin Dashboard: आप /admin सेक्शन में जाकर कंटेंट अपलोड, यूज़र्स मैनेज और सिस्टम कंट्रोल कर सकते हैं।
+
+~/.copilot/session-state/18f9bf97-9df5-4964-8703-178c02302a26/files/
+
+1.  DOCUMENTATION-INDEX.md - Master guide
+2.  TEST-USER-CREDENTIALS.md - Quick reference
+3.  DEEP-TESTING-FLOWS.md - Complete user journeys
+4.  BUG-CHECK-RESULTS.md - Security review ✅ NO BUGS!
+5.  DATABASE-FIELDS-DETAILED.md - Schema reference
+6.  PRE-MAINS-COMBO-COMPLETE-SUMMARY.md - Architecture
+7.  PAYMENT-FLOW-GUIDE.md - Payment mapping
+8.  TESTING-CHECKLIST.md - QA steps
+
+✅ Three Test Users Created
+
+- Pre-only: pre.test@mppsc.in / PreTest@123456
+- Mains-only: mains.test@mppsc.in / MainsTest@123456
+- Combo: combo.test@mppsc.in / ComboTest@123456
+
+/tmp/PROTECTION_SUMMARY.txt entire copy protection code md file
+/tmp/PROTECTION_SUMMARY.txt
+
+📂 DOCUMENTATION SAVED
+
+- CODE_REVIEW.md — 10 issues identified + fixes
+- PRODUCTION_READINESS.md — Full deployment checklist
+- SUMMARY.md — This executive summary
+
+All in: /Users/arjun/.copilot/session-state/ffe4bbdf-1ecd-4b95-ad8b-d46b188af9cd/
+
+4 lines for md file or llm
+https://levelup.gitconnected.com/the-4-lines-every-claude-md-needs-2717a46866f6
+
+1. Don’t assume. Don’t hide confusion. Surface tradeoffs.
+
+2. Minimum code that solves the problem. Nothing speculative.
+
+3. Touch only what you must. Clean up only your own mess.
+
+4. Define success criteria. Loop until verified.
+
+✨ ACCESS MATRIX (FINAL)
+
+Free: [] → Locked Pre + Locked Mains
+Pre-Only: ["mppsc_pre"] → Full Pre + Locked Mains ← arjun@gmail.com
+Mains-Only: ["mppsc_mains"] → Locked Pre + Full Mains
+Combo: ["mppsc_pre","mppsc_mains"] → Full Pre + Full Mains
+
+ROOT CAUSE BUG:
+
+// src/lib/access-grants.ts line 57
+
+- return [ACCESS_PRE]; // ❌ Everyone got pre access!
+
+* return []; // ✅ Free users get nothing
+
+This was giving every user (even free) pre access by default, letting pre-only users bypass mains checks.
+
+mppsc mains syllabus path
+/Users/arjun/.gemini/antigravity/brain/01c2e148-60a4-44e1-a57f-a6ab0c355658/mppsc_2026_mains_analysis.md.resolved

@@ -28,7 +28,8 @@ import { logger } from '@/lib/logger';
 import Razorpay from 'razorpay';
 import { z } from 'zod';
 import { db } from '@/db';
-import { mppscUsers, pricingConfig } from '@/db/schema';
+import { mppscUsers } from '@/db/schema';
+import { fetchPricingConfigRow } from '@/lib/pricing-db';
 import { eq, sql, and } from 'drizzle-orm';
 import { PRICING_DEFAULTS } from '@/config/pricing';
 import { checkRateLimit } from '@/lib/rate-limit';
@@ -129,12 +130,7 @@ export async function POST(req: Request) {
       throw new Error('Razorpay keys not configured');
     }
 
-    const rows = await db
-      .select()
-      .from(pricingConfig)
-      .where(eq(pricingConfig.examType, examType))
-      .limit(1);
-    const p = rows[0] || PRICING_DEFAULTS;
+    const p = (await fetchPricingConfigRow(examType)) ?? PRICING_DEFAULTS;
 
     const PLAN_AMOUNTS: Record<string, number> = {
       lite: (p.litePrice ?? PRICING_DEFAULTS.litePrice) * 100,

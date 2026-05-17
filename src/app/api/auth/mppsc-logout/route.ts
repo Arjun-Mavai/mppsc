@@ -1,11 +1,73 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { db } from '@/db';
+import { mppscUsers, mppscUserActivities } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import { logger } from '@/lib/logger';
+import { v4 as uuidv4 } from 'uuid';
+import { touchAuthLogoutMetadata } from '@/lib/auth-session-metadata';
 
+/**
+ * Logout API - clean exit choreography
+ * 1) current token decode
+ * 2) sessionVersion bump (old token invalid)
+ * 3) metadata me logout marker
+ * 4) cookie delete
+ *
+ * Isse user dubara protected route khole to seedha login flow trigger hota hai.
+ */
 // Logout must never be cached
 export const dynamic = 'force-dynamic';
 
 export async function POST() {
   const cookieStore = await cookies();
+  const token = cookieStore.get('mppsc_token')?.value;
+
+  try {
+    if (token) {
+      const { verifyToken } = await import('@/lib/jwt');
+      const decoded = verifyToken(token);
+
+      if (decoded?.userId) {
+        const user = await db.query.mppscUsers.findFirst({
+          where: eq(mppscUsers.id, decoded.userId),
+          columns: {
+            sessionVersion: true,
+            metadata: true,
+          },
+        });
+
+        if (user) {
+          await db
+            .update(mppscUsers)
+            .set({
+              sessionVersion: (user.sessionVersion || 0) + 1,
+              metadata: touchAuthLogoutMetadata(user.metadata),
+            })
+            .where(eq(mppscUsers.id, decoded.userId));
+
+          await db.insert(mppscUserActivities).values({
+            id: uuidv4(),
+            userId: decoded.userId,
+            userEmail: decoded.email || '',
+            userName: null,
+            action: 'LOGOUT',
+            details: {
+              reason: 'manual_logout',
+            },
+          });
+        }
+      }
+    }
+  } catch (error) {
+    logger.error('Logout session clear failed', error, {
+      category: 'auth',
+    });
+    cookieStore.delete('mppsc_token');
+    const response = NextResponse.json({ success: false }, { status: 500 });
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    return response;
+  }
 
   // Clear the JWT auth cookie
   cookieStore.delete('mppsc_token');

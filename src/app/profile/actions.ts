@@ -12,6 +12,7 @@ import {
   passwordChangeLimiter,
   checkRateLimit,
 } from '@/lib/rate-limit';
+import { touchAuthLogoutMetadata } from '@/lib/auth-session-metadata';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🔒 PROFILE ACTIONS — Rate limited & validated
@@ -107,6 +108,10 @@ export async function updateUserName(newName: string): Promise<UpdateNameResult>
 /**
  * Update user's password
  * Rate limited: 3 per 15 minutes (strict - brute force protection)
+ *
+ * Important flow:
+ * password change ke turant baad purane sessions invalidate hote hain
+ * (sessionVersion bump + logout metadata), taaki old device silently logged-in na rahe.
  */
 export async function updateUserPassword(
   currentPassword: string,
@@ -179,7 +184,11 @@ export async function updateUserPassword(
 
     await db
       .update(mppscUsers)
-      .set({ password: hashedPassword })
+      .set({
+        password: hashedPassword,
+        sessionVersion: (authUser.sessionVersion || 0) + 1,
+        metadata: touchAuthLogoutMetadata(authUser.metadata),
+      })
       .where(eq(mppscUsers.id, authUser.id));
 
     await db.insert(mppscUserActivities).values({
@@ -192,6 +201,17 @@ export async function updateUserPassword(
         type: 'PASSWORD_CHANGE',
         changedBy: 'self',
         timestamp: new Date().toISOString(),
+      },
+    });
+
+    await db.insert(mppscUserActivities).values({
+      id: uuidv4(),
+      userId: authUser.id,
+      userEmail: authUser.email,
+      userName: authUser.name,
+      action: 'LOGOUT',
+      details: {
+        reason: 'password_change',
       },
     });
 

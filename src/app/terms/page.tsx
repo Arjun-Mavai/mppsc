@@ -20,7 +20,7 @@ export default function TermsOfServicePage() {
         </Link>
 
         <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">Terms of Service</h1>
-        <p className="mt-2 text-sm text-slate-500">Last updated: June 2025</p>
+        <p className="mt-2 text-sm text-slate-500">Last updated: May 2026</p>
 
         <div className="mt-10 space-y-10 leading-relaxed text-slate-700">
           <section>
@@ -35,7 +35,7 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-slate-900">2. Account Responsibility</h2>
+            <h2 className="text-xl font-semibold text-slate-900">2. Account Responsibility & Usage Policy</h2>
             <ul className="mt-3 list-disc space-y-2 pl-5">
               <li>Users must provide authentic and verifiable information during registration.</li>
               <li>
@@ -43,7 +43,10 @@ export default function TermsOfServicePage() {
                 password.
               </li>
               <li>
-                Account sharing is strictly prohibited. Each subscription is for a single user only.
+                <strong>Single Device Usage:</strong> Each subscription is for a single user only. To maintain platform integrity, the Platform enforces a <strong>Single Device Login</strong> policy. Accessing your account on a new device will automatically terminate the session on any previously logged-in device.
+              </li>
+              <li>
+                <strong>Account Sharing:</strong> Sharing your login credentials or account access with third parties is strictly prohibited. Any pattern indicating unauthorized sharing or industrial usage may result in permanent suspension.
               </li>
               <li>
                 We reserve the unilateral right to terminate accounts that engage in fraudulent
@@ -54,14 +57,25 @@ export default function TermsOfServicePage() {
 
           <section>
             <h2 className="text-xl font-semibold text-slate-900">
-              3. Intellectual Property Rights
+              3. Intellectual Property Rights &amp; Copyright Protection
             </h2>
-            <p className="mt-3">
-              All content hosted on the Platform—including but not limited to study materials, test
-              series, mnemonics, and software—is the exclusive intellectual property of Mindful
-              MPPSC. Unauthorized reproduction, distribution, or commercial exploitation of any
-              material is strictly prohibited and may result in legal action.
-            </p>
+            <div className="mt-3 space-y-3">
+              <p>
+                All content hosted on the Platform—including but not limited to study materials, syllabus breakdowns, mock test questions, explanatory notes, mnemonics, UI/UX designs, graphics, and codebase—is the exclusive intellectual property of <strong>Mindful MPPSC</strong> and is protected under applicable Indian and International Copyright and Trademark laws.
+              </p>
+              <p>
+                <strong>Prohibited Activities:</strong> Users and third parties are strictly prohibited from:
+              </p>
+              <ul className="list-disc space-y-2 pl-5 text-sm text-slate-600">
+                <li>Copying, scraping, reproducing, republishing, or redistributing any content or questions, either manually or via automated means (such as bots, spiders, or scrapers).</li>
+                <li>Using our data or content to train AI models, language models, or machine learning algorithms without explicit written permission.</li>
+                <li>Claiming false copyright or ownership over our original intellectual property or submitting fraudulent takedown notices.</li>
+                <li>Commercial exploitation, creating derivative works, or selling our study material under a different brand name.</li>
+              </ul>
+              <p className="text-sm font-semibold text-rose-600">
+                Any violation of these intellectual property rights will result in immediate permanent account termination without refund and vigorous legal proceedings under the Copyright Act, 1957 and the Information Technology Act, 2000.
+              </p>
+            </div>
           </section>
 
           <section>
@@ -108,7 +122,7 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-slate-900">9. Contact Us</h2>
+            <h2 className="text-xl font-semibold text-slate-900">7. Contact Us</h2>
             <p className="mt-3">
               Questions about these terms? Visit our{' '}
               <Link href="/contact" className="text-slate-900 underline hover:text-slate-600">

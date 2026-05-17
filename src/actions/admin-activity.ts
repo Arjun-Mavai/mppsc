@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { freeQuizAttempts, tests, feedbacks, supportTickets, mppscUsers, userAttempts, guests } from '@/db/schema';
-import { desc, sql, eq } from 'drizzle-orm';
+import { desc, sql, eq, and } from 'drizzle-orm';
 import { assertAdmin } from '@/lib/auth';
 
 export interface ActivityEvent {
@@ -31,6 +31,7 @@ export async function getLiveActivity(): Promise<ActivityEvent[]> {
       .from(freeQuizAttempts)
       .innerJoin(tests, eq(freeQuizAttempts.testId, tests.id))
       .leftJoin(guests, eq(freeQuizAttempts.guestId, guests.id))
+      .where(eq(freeQuizAttempts.examType, 'mppsc')) // 🔒 Isolation
       .orderBy(desc(freeQuizAttempts.completedAt))
       .limit(10);
 
@@ -46,7 +47,12 @@ export async function getLiveActivity(): Promise<ActivityEvent[]> {
       .from(userAttempts)
       .innerJoin(tests, eq(userAttempts.testId, tests.id))
       .innerJoin(mppscUsers, eq(userAttempts.userId, mppscUsers.id))
-      .where(eq(userAttempts.isCompleted, true))
+      .where(
+        and(
+          eq(userAttempts.isCompleted, true),
+          eq(userAttempts.examType, 'mppsc') // 🔒 Isolation
+        )
+      )
       .orderBy(desc(userAttempts.endTime))
       .limit(10);
 
@@ -60,6 +66,7 @@ export async function getLiveActivity(): Promise<ActivityEvent[]> {
         timestamp: feedbacks.createdAt,
       })
       .from(feedbacks)
+      .where(eq(feedbacks.examType, 'mppsc')) // 🔒 Isolation
       .orderBy(desc(feedbacks.createdAt))
       .limit(10);
 
@@ -72,6 +79,7 @@ export async function getLiveActivity(): Promise<ActivityEvent[]> {
         timestamp: supportTickets.createdAt,
       })
       .from(supportTickets)
+      .where(eq(supportTickets.examType, 'mppsc')) // 🔒 Isolation
       .orderBy(desc(supportTickets.createdAt))
       .limit(10);
 

@@ -1,0 +1,36 @@
+{
+  "mppsc_mains_sample_2026": {
+    "paper_number": 1,
+    "exam": "MPPSC Mains 2026 — sample import test",
+    "paper_title_hi": "नमूना पेपर (टेस्ट)",
+    "paper_title_en": "Sample paper (testing only)",
+    "parts": [
+      {
+        "part": "A",
+        "units": [
+          {
+            "unit_number": 1,
+            "unit_title_hi": "नमूना यूनिट १",
+            "unit_title_en": "Sample unit 1 (must match seeded syllabus unit 1)",
+            "questions": [
+              {
+                "question_number": "1",
+                "marks": 2,
+                "type": "अतिलघु",
+                "question_hi": "उदाहरण: MPPSC की २ अंकीय शैली का प्रश्न।",
+                "question_en": "Example: a 2-mark style question for testing."
+              },
+              {
+                "question_number": "2",
+                "marks": 7,
+                "type": "लघु",
+                "question_hi": "उदाहरण: ७ अंकीय प्रश्न — इकाई १ के लिए PYQ ब्लॉक में दिखना चाहिए।",
+                "question_en": "Example: 7-mark question — should appear in PYQ block for unit 1."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

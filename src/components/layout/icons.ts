@@ -19,6 +19,7 @@ export {
   Download,
   Zap,
   RefreshCw,
+  Library,
 } from 'lucide-react';
 
 // Type exports for better TypeScript support

@@ -438,7 +438,8 @@ export async function submitTestAttempt(
       `<b>Test:</b> ${escapeHTML(testTitle || test?.title || 'N/A')}\n` +
       `<b>User:</b> ${escapeHTML(session?.name || 'Student')}\n` +
       `<b>Score:</b> <code>${totalScore}/${totalTestMarks}</code> (${accuracy}% accuracy)\n` +
-      `<b>Stats:</b> ✅${correctCount} (+${correctCount * SCORING_CONFIG.MARKS_PER_QUESTION}) | ❌${incorrectCount} (-${incorrectCount * SCORING_CONFIG.NEGATIVE_MARKING}) | ⏱️${Math.floor(validDuration / 60)}m`;
+      `<b>Stats:</b> ✅${correctCount} (+${correctCount * SCORING_CONFIG.MARKS_PER_QUESTION}) | ❌${incorrectCount} (-${incorrectCount * SCORING_CONFIG.NEGATIVE_MARKING}) | ⏱️${Math.floor(validDuration / 60)}m\n` +
+      `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
 
     postSubmissionTasks.push(sendTelegramNotification(telegramMessage));
 

@@ -78,6 +78,10 @@ self.addEventListener('fetch', (event) => {
   // Only handle GET requests
   if (request.method !== 'GET') return;
 
+  // Only handle http and https schemes (ignores chrome-extension://, etc.)
+  const url = new URL(request.url);
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
+
   // RULE 1: Auth & API routes → ALWAYS go to network, NEVER cache
   if (shouldNeverCache(request.url)) {
     event.respondWith(fetch(request));
@@ -89,13 +93,18 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(request).then((cached) => {
         if (cached) return cached;
-        return fetch(request).then((response) => {
-          if (response && response.status === 200) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          }
-          return response;
-        });
+        return fetch(request)
+          .then((response) => {
+            if (response && response.status === 200) {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            }
+            return response;
+          })
+          .catch((err) => {
+            console.warn(`Fetch failed for ${request.url}:`, err);
+            return new Response('Resource not available', { status: 404 });
+          });
       })
     );
     return;
@@ -117,7 +126,15 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => {
           // Offline → try cache, then offline page
-          return caches.match(request).then((cached) => cached || caches.match('/offline'));
+          return caches.match(request).then((cached) => {
+            if (cached) return cached;
+            return caches.match('/offline').then((offlineResponse) => {
+              return offlineResponse || new Response('<h1>Offline</h1><p>You are offline and this page is not cached.</p>', {
+                status: 503,
+                headers: { 'Content-Type': 'text/html' }
+              });
+            });
+          });
         })
     );
     return;
@@ -133,6 +150,10 @@ self.addEventListener('fetch', (event) => {
         }
         return response;
       })
-      .catch(() => caches.match(request))
+      .catch(() => {
+        return caches.match(request).then((cached) => {
+          return cached || new Response('Resource not available offline', { status: 503 });
+        });
+      })
   );
 });

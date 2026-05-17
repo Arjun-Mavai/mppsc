@@ -1,0 +1,1064 @@
+{
+  "papers": [
+    {
+      "paper_number": 1,
+      "paper_title_hi": "प्रथम प्रश्न पत्र",
+      "paper_title_en": "FIRST PAPER",
+      "total_marks": 300,
+      "duration_minutes": 180,
+      "parts": [
+        {
+          "part": "A",
+          "part_title_hi": "इतिहास",
+          "part_title_en": "HISTORY",
+          "units": [
+            {
+              "unit_number": 1,
+              "unit_title_hi": "भारतीय इतिहास (हड़प्पा से 10वीं शताब्दी तक)",
+              "unit_title_en": "Indian History (Harappa to 10th Century)",
+              "topics_hi": [
+                "भारतीय इतिहास - भारत का राजनैतिक, आर्थिक, सामाजिक एवं सांस्कृतिक इतिहास, हड़प्पा सभ्यता से 10वीं शताब्दी तक।",
+                "11वीं से 18वीं शताब्दी तक भारत का राजनैतिक, आर्थिक, सामाजिक एवं सांस्कृतिक इतिहास ।",
+                "सल्तनत एवं मुगल शासक और उनका प्रषासन एवं मध्यकालीन संस्कृति का अभ्युद्य ।"
+              ],
+              "topics_en": [
+                "Indian History- Political, Economic, Social and Cultural History of India from Harappan civilization to 10th Century A.D.",
+                "Political, Economic, Social and Cultural History of India from 11th to 18th Century A.D.",
+                "Sultanate and Mughal Rulers and their Adminitration and Evolution of Medieval Culture."
+              ]
+            },
+            {
+              "unit_number": 2,
+              "unit_title_hi": "मध्यकालीन इतिहास एवं मध्यप्रदेश के प्रमुख राजवंश",
+              "unit_title_en": "Medieval History and Major Dynasties of MP",
+              "topics_hi": [
+                "प्रागेतिहासिक एवं आद्य ऐतिहासिक मध्यप्रदेश, मध्यप्रदेश के प्रमुख राजवंश, गर्दभिल्ल वंश, नागवंश, औलिंकर, परिव्राजक राजवंश, उच्च कल्प वंश, गुर्जर-प्रतिहार, कल्चुरी, चंदेल, परमार, तोमर, गोंडवंश, कच्छपघात वंश।"
+              ],
+              "topics_en": [
+                "Pre-historic and Protohistoric Madhya Pradesh, Major Dynasties of Madhya Pradesh- Gardbhill, Nag, Olinkar and Parivrajak, Uccha Kalp, Gurjar-Pratihara, Kalchuri, Chandel, Parmar, Tomar, Gond and Kacchapghaat Dynasty."
+              ]
+            },
+            {
+              "unit_number": 3,
+              "unit_title_hi": "ब्रिटिश शासन एवं मध्यप्रदेश में स्वतंत्रता आंदोलन",
+              "unit_title_en": "British Rule & Freedom Movement in MP",
+              "topics_hi": [
+                "ब्रिटिश शासन का भारतीय अर्थव्यवस्था एवं समाज पर प्रभाव।",
+                "ब्रिटिष उपनिवेश के प्रति भारतीयों की प्रतिक्रिया- कृषक एवं जनजातियों का विद्रोह, प्रथम स्वतंत्रता आंदोलन / संग्राम। भारतीय पुनर्जागरण- राष्ट्रीय स्वतंत्रता आंदोलन एवं इसके नेतृत्वकर्ता।",
+                "मध्यप्रदेश में स्वतंत्रता आंदोलन ।"
+              ],
+              "topics_en": [
+                "Impact of British Rule on Indian Economy and Society.",
+                "Reactions of Indians against British Colonial Rule- Peasant and Tribal Revolts, the First Freedom Movement of Independence. Indian Renaissance- National Freedom Movement and its leaders.",
+                "Freedom Movement in Madhya Pradesh."
+              ]
+            },
+            {
+              "unit_number": 4,
+              "unit_title_hi": "स्वतंत्रता पश्चात भारत एवं मध्यप्रदेश की सांस्कृतिक विरासत",
+              "unit_title_en": "Post-Independence India & MP Cultural Heritage",
+              "topics_hi": [
+                "गणतंत्र के रूप में भारत का उदय, राज्यों का पुनर्गठन, मध्यप्रदेष राज्य के रूप में गठन, स्वतंत्रता प्राप्ति के पश्चात् की प्रमुख घटनाएँ।",
+                "भारतीय सांस्कृतिक विरासत (मध्यप्रदेश के विशेष संदर्भ में)- प्राचीन काल से आधुनिक काल तक विभिन्न कला प्रारूपों, साहित्य, पर्व (उत्सव) एवं वास्तुकला के प्रमुख पक्ष ।",
+                "म.प्र. में विश्व धरोहर स्थल एवं पर्यटन ।"
+              ],
+              "topics_en": [
+                "Emergence of India as a Republic Nation, Reorganization of States, Formation of Madhya Pradesh. Major events of the post independence period.",
+                "Indian Cultural Heritage (with special reference to Madhya Pradesh)-Salient aspects of Art Forms, Literature, Festivals and Architecture from ancient to modern time.",
+                "World Heritage Sites and Tourism in Madhya Pradesh."
+              ]
+            },
+            {
+              "unit_number": 5,
+              "unit_title_hi": "मध्यप्रदेश की रियासतें एवं जनजातीय नायक",
+              "unit_title_en": "Princely States and Tribal Heroes of MP",
+              "topics_hi": [
+                "मध्यप्रदेश की प्रमुख रियासतें - गोंडवाना, बुंदेली, बघेली, होल्कर, सिंधिया एव भोपाल रियासत (स्वतंत्रता प्राप्ति तक)।",
+                "मध्यप्रदेश के जनजातीय नायकों का संघर्ष एवं इतिहास में योगदान- राजा शंकरशाह, रघुनाथ शाह, रानी दुर्गावती, भीमाजी नायक, खाज्यानायक, टंट्या भील, गंजनसिंह कोरकू, बादल भोई, पेma फाल्या।"
+              ],
+              "topics_en": [
+                "Major Princely States of Madhya Pradesh- Gondwana, Bundeli, Bagheli, Holkar, Scindia and Bhopal State (till independence).",
+                "Struggle of Tribal Heroes of Madhya Pradesh and contribution in History- Shankar Shah, Raghunath Shah, Bhimaji Nayak, Khajya Nayak, Tantya Bhil, Ganjan Singh Korku, Badal Bhoe, Pema Falya."
+              ]
+            }
+          ]
+        },
+        {
+          "part": "B",
+          "part_title_hi": "भूगोल",
+          "part_title_en": "GEOGRAPHY",
+          "units": [
+            {
+              "unit_number": 1,
+              "unit_title_hi": "भारत का भौतिक स्वरूप एवं जलवायु",
+              "unit_title_en": "Physical Features and Climate of India",
+              "topics_hi": [
+                "प्राचीन भारत में भौगोलिक ज्ञान।",
+                "भारत के प्रमुख भू-आकृतिक (भौतिक) विभाग- हिमालय पर्वत, उत्तर भारत का विशाल मैदान और प्रायद्वीपीय पठार।",
+                "प्रमुख पहाड़ियाँ, पठार, नदियाँ और झीलें।",
+                "भारत में मिट्टियाँ - प्रकार एवं वितरण।",
+                "जलवायु - ऋतुएँ, तापमान, वर्षा, मानसून की उत्पत्ति, ऊपरी वायु परिसंचरण - जेट स्ट्रीम ।",
+                "जलवायु घटनाएँ- अल-नीनो, ला-नीना, दक्षिणी दोलन, पश्चिमी विक्षोभ, हिंद महासागर, द्विध्रुव, जलवायु परिवर्तन के परिणाम।"
+              ],
+              "topics_en": [
+                "Geographical Knowledge in Ancient India.",
+                "Major Physiographic (Physical) Divisions of India- the Himalayan Mountains, The Great Plain of North India, The Peninsular Plateau.",
+                "Major Hills, Plateaus, Rivers and Lakes.",
+                "Soils of India- Types and distribution.",
+                "Climate- Seasons, Temperature, Rainfall, Origin of Monsoon, Upper Air Circulation- Jet Stream.",
+                "Climatic Phenomena- El-Nino, La-Nina, Southern Oscillation, Western Disturbances, Indian Ocean Dipole (IOD), Consequences of Climate Change."
+              ]
+            },
+            {
+              "unit_number": 2,
+              "unit_title_hi": "भारत- कृषि एवं जल संसाधन",
+              "unit_title_en": "India- Agriculture and Water Resources",
+              "topics_hi": [
+                "कृषि- प्रमुख फसलें और श्रीअन्न (मोटे अनाज), उनका उत्पादन और वितरण।",
+                "सिंचाई - सिंचाई तकनीकों के प्रकार, सिंचाई के स्रोत और बहुउद्देशीय परियोजनाएँ।",
+                "खाद्य सुरक्षा, हरित क्रांति, द्वितीय हरित क्रांति और सतत् कृषि के लिए रणनीतियाँ।",
+                "जल संसाधनों का संरक्षण और संवर्धन, वर्षा जल संचयन, जल संरक्षण के तरीके, नदियों को आपस में जोड़ना, राष्ट्रीय जल नीति।"
+              ],
+              "topics_en": [
+                "Agriculture- Production and Distribution of Major crops and Millets.",
+                "Irrigation- Types of Irrigation Techniques, Sources of Irrigation and Multipurpose Projects.",
+                "Food Security, Green Revolution, Strategies for Second Green Revolution and Sustainable Agriculture.",
+                "Conservation and Augmentation of Water Resources- Rainwater Harvesting, Methods of Water Conservation, Interlinking the Rivers, National Water Policy."
+              ]
+            },
+            {
+              "unit_number": 3,
+              "unit_title_hi": "भारत- प्राकृतिक संसाधन एवं उद्योग",
+              "unit_title_en": "India- Natural Resources and Industries",
+              "topics_hi": [
+                "वन संसाधन, इनके प्रकार और वितरण।",
+                "प्रमुख खनिज और ऊर्जा संसाधन ।",
+                "ऊर्जा संकट और ऊर्जा के गैर-पारंपरिक स्रोत।",
+                "प्रमुख उद्योग - लोहा और इस्पात, सीमेंट, कागज, शक्कर, सूती वस्त्र उद्योग।",
+                "प्रमुख खाद्य प्रसंस्करण उद्योग।"
+              ],
+              "topics_en": [
+                "Forest Resources- Their Types and Distribution.",
+                "Major Minerals and Energy Resources.",
+                "Energy Crises and Non-Conventional Sources of Energy.",
+                "Major industries- Iron and Steel, Cement, Paper, Sugar, Cotton Textile Industry.",
+                "Major Food Processing Industries."
+              ]
+            },
+            {
+              "unit_number": 4,
+              "unit_title_hi": "आपदाएँ और तकनीकें",
+              "unit_title_en": "Disasters and Techniques",
+              "topics_hi": [
+                "भारत में प्राकृतिक खतरे और आपदाएँ- भूकंप, सुनामी, सूखा, बाढ़, ओलावृष्टि, कोहरा, बादल फटना, तड़ित झंझा, भारत में उष्णकटिबंधीय चक्रवात।",
+                "पर्यावरण प्रदूषण - वायु प्रदूषण, जल प्रदूषण, मिट्टी या भूमि प्रदूषण एवं उनका रोकथाम, नियंत्रण और प्रबंधन, प्रदूषण को कम करने के उपाय।",
+                "भारत में जनसंख्या वृद्धि, संसाधनों पर जनसंख्या का दबाव, ग्रामीण-शहरी प्रवास।",
+                "भूगोल में उन्नत तकनीकें- सुदूर संवेदन, भौगोलिक सूचना प्रणाली (जी.आई.एस.), भौगोलिक स्थिति निर्धारण प्रणाली (जी.पी.एस.) तथा इनके अनुप्रयोग। उपग्रहो के प्रकार ।"
+              ],
+              "topics_en": [
+                "Natural Hazards and Disasters in India- Earthquake, Tsunamis, Droughts, Floods, Hailstorm, Fog, Cloud burst, Thunderstorm, Tropical Cyclones in India.",
+                "Environmental Pollution- Air Pollution, Water Pollution, Soil or Land Pollution and their Prevention, Control and Management, Measures to Mitigate Pollution.",
+                "Population Growth in India, Population Pressure on Resources, Rural-urban Migration.",
+                "Advanced Techniques in Geography- Remote Sensing, Geographical Information System (GIS), Global Positioning System (GPS) and their Applications. Types of Satellites."
+              ]
+            },
+            {
+              "unit_number": 5,
+              "unit_title_hi": "मध्यप्रदेश का भूगोल",
+              "unit_title_en": "Geography of Madhya Pradesh",
+              "topics_hi": [
+                "प्रमुख भू-आकृतिक (भौतिक) विभाग- मालवा का पठार, मध्य भारत का पठार, बुन्देलखण्ड पठार, विंध्याचल श्रेणी, बघेलखंड पठार, नर्मदा-सोन घाटी, सतपुड़ा श्रेणी।",
+                "प्रमुख नदियाँ और उनकी सहायक नदियाँ।",
+                "जलवायु - ऋतुएँ, तापमान, वर्षा ।",
+                "मध्यप्रदेश की मिट्टियाँ, प्रकार एवं वितरण, मृदा अपरदन एवं मृदा संरक्षण।",
+                "प्राकृतिक वनस्पति- वनों के प्रकार और वितरण, प्रमुख वनोपज ।",
+                "प्रमुख फसलें, सिंचाई एवं सिंचाई परियोजनाएँ।",
+                "प्रमुख खनिज और ऊर्जा संसाधन, ऊर्जा के गैर-पारंपरिक स्रोत ।",
+                "प्रमुख उद्योग, लघु एवं कुटीर उद्योग।",
+                "जनसंख्या वृद्धि, वितरण और घनत्व, नगरीकरण ।"
+              ],
+              "topics_en": [
+                "Major Physiographic (Physical) Divisions- Malwa Plateau, Madhya Bharat Plateau, Bundelkhand Plateau, Vindhyachal Range, Baghelkhand Plateau, Narmada-Son Valley, Satpura Range.",
+                "Major Rivers and Their Tributaries.",
+                "Climate- Seasons, Temperature, Rainfall.",
+                "Soils of Madhya Pradesh- Types and Distribution, Soil Erosion and Soil Conservation.",
+                "Natural Vegetation- Types and Distribution of Forests, Major Forest Produce.",
+                "Major Crops, Irrigation and Irrigation Projects.",
+                "Major Minerals and Energy Resources, Non-Conventional Sources of Energy.",
+                "Major Industries, Small and Cottage Industries.",
+                "Populatin Growth, Distribution and Density, Urbanisation."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "paper_number": 2,
+      "paper_title_hi": "द्वितीय प्रश्न पत्र",
+      "paper_title_en": "SECOND PAPER",
+      "total_marks": 300,
+      "duration_minutes": 180,
+      "parts": [
+        {
+          "part": "A",
+          "part_title_hi": "संविधान, शासन व्यवस्था, राजनैतिक एवं प्रशासनिक संरचना",
+          "part_title_en": "Constitution, Governance, Political and Administrative Structure",
+          "units": [
+            {
+              "unit_number": 1,
+              "unit_title_hi": "भारतीय संविधान: निर्माण, दर्शन एवं संघवाद",
+              "unit_title_en": "Indian Constitution: Formation, Philosophy and Federalism",
+              "topics_hi": [
+                "भारतीय संविधान - निर्माण, विशेषताएँ, मूल ढाँचा एवं प्रमुख संशोधन ।",
+                "वैचारिक तत्व- उद्देशिका, मूल अधिकार, मूल कर्तव्य एवं राज्य के नीति-निदेशक तत्व ।",
+                "संघवाद- केन्द्र-राज्य संबंध, उच्चतम न्यायालय, उच्च न्यायालय, न्यायिक पुनरावलोकन, न्यायिक सक्रियता, लोक अदालत एवं जनहित याचिका।"
+              ],
+              "topics_en": [
+                "Constitution of India- Its Formation, characteristics, Basic Structure and important amendments.",
+                "Conceptual elements- Objectives, Fundamental Rights, fundamental Duties and directive principles of state policy.",
+                "Federalism- Central State Relations, Supreme Court, High Court, Judicial Review, Judicial Activism, Lok Adalat and Public Interest Litigation."
+              ]
+            },
+            {
+              "unit_number": 2,
+              "unit_title_hi": "प्रमुख आयोग एवं राजनैतिक गतिशीलता",
+              "unit_title_en": "Key Commissions and Political Dynamics",
+              "topics_hi": [
+                "भारत निर्वाचन आयोग, नियंत्रक एवं महालेखा परीक्षक, संघ लोक सेवा आयोग, मध्यप्रदेश लोक सेवा आयोग एवं नीति आयोग।",
+                "भारतीय राजनीति में जाति, धर्म, वर्ग, नृजातीयता, भाषा एवं लिंग की भूमिका, भारतीय राजनीति में राजनीतिक दल एवं मतदान व्यवहार, सिविल सोसायटी एवं जन आंदोलन, राष्ट्रीय अखंडता तथा सुरक्षा से जुड़े मुद्दे।"
+              ],
+              "topics_en": [
+                "Election Commission of India, Comptroller and Auditor General of India, Union Public Service Commission, Madhya Pradesh Public Service Commission and NITI Aayog.",
+                "Role of caste, Religion, class, Ethnicity, language and gender in Indian politics, Political parties and voting behavior in Indian politics, civil society and Mass movement, Issues related to National Integrity and security."
+              ]
+            },
+            {
+              "unit_number": 3,
+              "unit_title_hi": "लोकतंत्र, गैर-सरकारी संगठन एवं मीडिया",
+              "unit_title_en": "Democracy, NGOs and Media",
+              "topics_hi": [
+                "लोकतंत्र की विशेषताएँ- राजनीतिक प्रतिनिधित्व, निर्णय प्रक्रिया में नागरिकों की भागीदारी।",
+                "समुदाय आधारित संगठन (CBO), गैर सरकारी संगठन (NGO) एवं स्व-सहायता समूह (SHG)",
+                "मीडिया की भूमिका एवं समस्याएँ (इलेक्ट्रॉनिक, प्रिन्ट एवं सोशल मीडिया)।"
+              ],
+              "topics_en": [
+                "Salient Features of democracy- Political Representations, Participation of Citizens in the Decision making Process.",
+                "Community Based Organizations (CBO), Non Government Organizations (NGOs) and Self Help Groups (SHG).",
+                "Role of Media and Problems (Electronic, Print and Social Media)."
+              ]
+            },
+            {
+              "unit_number": 4,
+              "unit_title_hi": "राजनैतिक विचारक एवं मध्यप्रदेश की शासन संरचना",
+              "unit_title_en": "Political Thinkers and MP Governance Structure",
+              "topics_hi": [
+                "भारतीय राजनीतिक विचारक- कौटिल्य, देवी अहिल्याबाई होलकर, महात्मा गाँधी, जवाहरलाल नेहरु, सरदार वल्लभ भाई पटेल, राममनोहर लोहिया, डॉ. भीमराव आम्बेडकर, पंडित दीनदयाल उपाध्याय, जयप्रकाश नारायण।",
+                "राज्यों का पुनर्गठन 1956 तथा मध्यप्रदेश का निर्माण, मध्यप्रदेश का विभाजन (2000)।",
+                "राज्यपाल- नियुक्ति, शक्ति, स्थिति, मुख्यमंत्री एवं मंत्रिपरिषद - संगठन, कार्य एवं भूमिका।",
+                "मध्यप्रदेश की विधानसभा- संगठन एवं शक्तियाँ, अध्यक्ष की भूमिका, विपक्ष की भूमिका।",
+                "मध्यप्रदेश उच्च न्यायालय, संगठन, क्षेत्राधिकार एवं भूमिका।",
+                "जवाबदेही एवं अधिकार- प्रतिस्पर्धा आयोग, अनुसूचित जाति आयोग, अनुसूचित जनजाति आयोग, पिछड़ा वर्ग आयोग, केन्द्रीय सतर्कता आयोग, मानव अधिकार आयोग, सूचना आयोग, उपभोक्ता फोरम, बाल आयोग, महिला आयोग।"
+              ],
+              "topics_en": [
+                "Indian Political Thinkers- Kautilya, Devi Ahilya Bai Holkar, Mahatma Gandhi, Jawaharlal Nehru, Sardar Vallabh Bhai Patel, Ram Manohar Lohia, Dr. Bhimrao Ambedkar, Pandit Deendayal Upadhyaya, Jayaprakash Narayan.",
+                "Reorganization of State 1956 and Foundation of Madhya Pradesh, Partition of Madhya Pradesh (2000).",
+                "Governor- Appointment, Powers, Status, Chief Minister and Council of Ministers- Structure, Function and Role.",
+                "The State Legislature of Madhya Pradesh- Constitution and Powers, Role of Speaker, Role of Opposition.",
+                "High Court of Madhya Pradesh, Constitution Jurisdiction and Role.",
+                "Accountability and Rights- Competition Commission, Scheduled Caste Commission, Scheduled Tribes Commission and Other Backword Caste Commission, Central Vigilance Commission, Human Rights Commission, Information Commission, Consumer Forum, Children's Commission, Women's Commission."
+              ]
+            },
+            {
+              "unit_number": 5,
+              "unit_title_hi": "मध्यप्रदेश का प्रशासन एवं स्थानीय स्वशासन",
+              "unit_title_en": "MP Administration and Local Self-Government",
+              "topics_hi": [
+                "मध्यप्रदेश का प्रशासन- सचिवालय, मुख्य सचिव, सचिव तथा आयुक्त, मध्यप्रदेश में जिला प्रशासन, जिलाधीश की भूमिका।",
+                "मध्यप्रदेश में ग्रामीण स्थानीय स्वशासन- पंचायतीराज संगठन एवं शक्तियाँ, शहरी स्थानीय स्वशासन - संगठन एवं शक्तियाँ, स्थानीय स्वशासन में वित्त नौकरशाही एवं स्वायत्तता का महत्व ।",
+                "मध्यप्रदेश का राजनीतिक परिदृश्य - जनजातीय, पिछड़े एवं वंचित वर्ग का उत्थान एवं नक्सली समस्या से जुड़े मुद्दे ।",
+                "मध्यप्रदेश की राजनीति में महिलाओं का योगदान ।",
+                "मध्यप्रदेश की राजनीति में समसामयिक मुद्दे ।"
+              ],
+              "topics_en": [
+                "Administration of Madhya Pradesh- Secretariat, Chief Secretary, Secretary and Commissioner, District Administration in Madhya Pradesh, Role of District Collector.",
+                "Rural Local Self Government in Madhya Pradesh- Panchayati Raj organization and Powers, Urban Local Self Government- Organization and Power, Finance Bureaucracy in Local Self Government and importance of autonomy.",
+                "Political Scenerio of Madhya Pradesh- Upliftment of Tribal, Backward and Deprived classes and issues related to Naxalite problem.",
+                "Contribution of Women in Politics of Madhya Pradesh.",
+                "Current Issues in the Politics of Madhya Pradesh."
+              ]
+            }
+          ]
+        },
+        {
+          "part": "B",
+          "part_title_hi": "समाजशास्त्र",
+          "part_title_en": "SOCIOLOGY",
+          "units": [
+            {
+              "unit_number": 1,
+              "unit_title_hi": "समाजशास्त्र की आधारभूत अवधारणा",
+              "unit_title_en": "Basic Consepts of Sociology",
+              "topics_hi": [
+                "समाज की भारतीय संकल्पना- कुटुम्ब, परिवार, नातेदारी, वंश, गोत्र परंपरा ।",
+                "समुदाय, संस्था, संघ, संस्कृति, मानदंड और मूल्य ।",
+                "सामाजिक समरसता के तत्व, सभ्यता एवं संस्कृति की अवधारणा। भारतीय संस्कृति की विशेषताएँ ।",
+                "सामाजिक संस्थाएँ- परिवार, शिक्षा, धर्म, वर्ण, ऋण, यज्ञ, संस्कार।",
+                "अनुष्ठान - विभिन्न संदर्भ, जाति व्यवस्था। आश्रम, पुरुषार्थ, समाज और विवाह पर धर्म और संप्रदायों का प्रभाव।"
+              ],
+              "topics_en": [
+                "Indian Concept of Society- Joint Family, Family, Kinship, Lineage, Clan, Gotra tradition.",
+                "Community, Institution, Association, Culture, Norms and Values.",
+                "Elements of Social Harmony, Concept of Civilisation and Culture. Salient Features of Indian Culture.",
+                "Social Institutions- Family, Education, Religion, Varna, Rin, Yagya, Sanskar.",
+                "Rituals- Various references, Caste system. Ashram, Purushartha, Impact of Religion and Sects on society and marriage."
+              ]
+            },
+            {
+              "unit_number": 2,
+              "unit_title_hi": "भारतीय समाज में विविधता और चुनौतियाँ",
+              "unit_title_en": "Diversity and Challenges in Indian Society",
+              "topics_hi": [
+                "भारतीय समाज की संकल्पना- भारत के लोग, विविधता में एकता।",
+                "सांस्कृतिक विविधता - क्षेत्रीय, भाषायी, धार्मिक and जनजातीय।",
+                "अपराध का बदलता परिदृश्य- नशीली दवाओं की लत, आत्महत्या, साइबर अपराध, महिलाओं के प्रति अपराध एवं घरेलू हिंसा।",
+                "वर्तमान बहस - भारत में परंपरा और आधुनिकता।",
+                "राष्ट्र निर्माण की समस्याएँ- धर्मनिरपेक्षता, बहुलवाद और राष्ट्र निर्माण।"
+              ],
+              "topics_en": [
+                "Conceptualizing Indian Society- People of India, Unity in diversity.",
+                "Cultural diversity- Regional, Linguistic, Religious, and Tribal.",
+                "Changing scenario of Crime- Drug addiction, Suicide, Cyber Crime, Crimes against Women and Domestic Violence.",
+                "Current Debate- Tradition and Modernity in India.",
+                "Problems of Nation Building- Secularism, Pluralism and Nation building."
+              ]
+            },
+            {
+              "unit_number": 3,
+              "unit_title_hi": "ग्रामीण एवं नगरीय समाजशास्त्र",
+              "unit_title_en": "Rural and Urban Sociology",
+              "topics_hi": [
+                "ग्रामीण समाज के अध्ययन के उपागम- ग्रामीण-शहरी अंतर, ग्रामीणवाद और नगरवाद ।",
+                "किसान अध्ययन, 73वें संशोधन से पहले और बाद में पंचायती राज व्यवस्था, ग्रामीण नेतृत्व, गुटबाजी, लोक सशक्तीकरण।",
+                "ग्रामीण विकास के सामाजिक मुद्दे और रणनीतियाँ- बंधुआ और प्रवासी मजदूर, ग्रामीण समाज में बदलाव के रुझान ।",
+                "नगरीय समुदाय की विशेषताएँ, नगरीय समुदाय में परिवर्तन, नगरीकरण के कारण एवं प्रभाव।",
+                "नगर नियोजन की अवधारणा, नगर नियोजन को प्रभावित करने वाले कारक, भारत में नगरीय प्रबंध की समस्याएँ।"
+              ],
+              "topics_en": [
+                "Approaches to the study of Rural Society- Rural-Urban differences, Ruralism, and Urbanism.",
+                "Peasant studies, Panchayati Raj System before and after the 73rd Amendment, Rural Leadership, Factionalism, Empowerment of People.",
+                "Social issues and Strategies for Rural Development- Bonded and Migrant labours, Trends of changes in rural society.",
+                "Characteristics of Urban Community, Changes in Urban Commuity, Causes and Impact of Urbanization.",
+                "Concept of Town Planning, Factors affecting to Urban Planning, Problems of Urban Management in India."
+              ]
+            },
+            {
+              "unit_number": 4,
+              "unit_title_hi": "औद्योगीकरण, वैश्वीकरण, सामाजिक विकास और जनसंख्या",
+              "unit_title_en": "Industrialization, Globalization, Social Development and Population",
+              "topics_hi": [
+                "भारत में औद्योगीकरण और सामाजिक परिवर्तन परिवार, शिक्षा, स्तरीकरण पर प्रभाव । औद्योगिक समाज में वर्ग और वर्ग संघर्ष।",
+                "वैश्वीकरण की चुनौतियाँ, समाजशास्त्र का भारतीयकरण, शिक्षा का निजीकरण।",
+                "सामाजिक संरचना और विकास, सुविधाप्रदाता, अवरोधक, विकास और सामाजिक-आर्थिक असमानताएँ।",
+                "संस्कृति और विकास - सहायक / बाधक के रूप में संस्कृति, उत्तर-आधुनिकीकरण, पश्चिमीकरण ।",
+                "भारत में जनसंख्या वृद्धि और वितरण- 1901 से वृद्धि, कारण और प्रभाव।",
+                "अवधारणाएँ- प्रजनन क्षमता, मृत्यु दर, रुग्णता, प्रवास, आयु and लिंग संरचना।"
+              ],
+              "topics_en": [
+                "Industrialization and Social Change in India- Impact on Family, Education, Stratification. Class and Class Conflict in Industrial Society.",
+                "The Challenges of Globalization, Indianization of Sociology, Privatization of Education.",
+                "Social Structure and Development, Facilitators, Inhibitors, Development and Socio-Economic disparities.",
+                "Culture and Development- Culture as aid and impediment, Post-Modernization, Westernization.",
+                "Population Growth and Distribution in India- Growth since 1901, Causes and Effects.",
+                "Concepts- Fertility, Mortality, Morbidity, Migration, Age and Sex composition."
+              ]
+            },
+            {
+              "unit_number": 5,
+              "unit_title_hi": "मानव संसाधन विकास और सामाजिक कल्याण की योजनाएँ",
+              "unit_title_en": "Human Resource Development and Social Welfare Schemes",
+              "topics_hi": [
+                "राष्ट्रीय शिक्षा नीति 2020- विजन, सिद्धांत, स्कूली शिक्षा, उच्च शिक्षा, व्यावसायिक शिक्षा, ऑनलाइन और डिजिटल शिक्षा, वयस्क शिक्षा और जीवन-पर्यन्त सीखना।",
+                "सामाजिक वर्गों और उनके कल्याण कार्यक्रमों से संबंधित मुद्दे- वरिष्ठ नागरिक, बच्चे, महिलाएँ, विशेषाधिकार प्राप्त वर्ग और विकासात्मक परियोजनाओं से उत्पन्न विस्थापित समूह, बालिकाओं की शिक्षा से जुड़े मुद्दे।",
+                "सामुदायिक विकास कार्यक्रम, विस्तार शिक्षा, पंचायती राज, सामुदायिक विकास में गैर-सरकारी संगठनों (एन.जी.ओ.) की भूमिका।",
+                "मध्यप्रदेश में जनजातियों की स्थिति एवं सामाजिक संरचना, रीति-रिवाज ।",
+                "जनजातियों में विश्वास, विवाह, रिश्तेदारी, धार्मिक विश्वास, परंपराएँ, त्यौहार और उत्सव ।",
+                "मध्यप्रदेश की लोक संस्कृति।"
+              ],
+              "topics_en": [
+                "National Education Policy 2020- Vision, Principles, School Education, Higher Education, Professional Education, Online and Digital Education, Adult Education and Lifelong learning.",
+                "Issues related to Social Classes and their Welfare Programmes- Senior Citizens, Children, Women, UnderPrivileged Classes and Displaced groups arising out of Developmental Projects. Issues related to Girl's Education.",
+                "Community Development Programme, Extension Education, Panchayati Raj, Role of Non-Governmental Organizations (NGO's) in Community Development.",
+                "Status of Tribes in Madhya Pradesh and their Social Structure, Customs.",
+                "Beliefs, Marriage, Kinship, Religious Beliefs, Traditions, Festivals and Celebrations.",
+                "Folk Culture of Madhya Pradesh."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "paper_number": 3,
+      "paper_title_hi": "तृतीय प्रश्न पत्र",
+      "paper_title_en": "THIRD PAPER",
+      "total_marks": 300,
+      "duration_minutes": 180,
+      "parts": [
+        {
+          "part": "A",
+          "part_title_hi": "अर्थशास्त्र",
+          "part_title_en": "ECONOMICS",
+          "units": [
+            {
+              "unit_number": 1,
+              "unit_title_hi": "भारतीय अर्थव्यवस्था के मौलिक पहलू",
+              "unit_title_en": "Fundamental Aspects of the Indian Economy",
+              "topics_hi": [
+                "भारतीय अर्थव्यवस्था की प्रमुख विशेषताएँ ।",
+                "विकसित भारत@2047।",
+                "कृषि, उद्योग और सेवा क्षेत्र का क्षेत्रीय योगदान ।",
+                "राष्ट्रीय आय की विभिन्न अवधारणाएँ।",
+                "प्रमुख फसलें और फसल पैटर्न।",
+                "चुनौतियाँ- घटती उत्पादकता, किसान संकट और मौसम पर निर्भरता ।",
+                "सरकारी पहल - पीएम-किसान, एनएमएसए और विभिन्न योजनाएँ।",
+                "कृषि मूल्य नीति, विपणन और वित्त ।",
+                "मूल्यवर्धन के लिए कृषि स्टार्ट-अप और कृषि-प्रसंस्करण।",
+                "भारत में औद्योगिक नीतियाँ और औद्योगिक विकास ।",
+                "विनिर्माण और अधोसंरचना मेक इन इंडिया और अधोसंरचना परियोजनाएँ।",
+                "आतिथ्य और पर्यटन- विदेशी मुद्रा आय में योगदान।",
+                "भारत में वस्तु व सेवाओं का मानकीकरण ।"
+              ],
+              "topics_en": [
+                "Salient features of Indian economy.",
+                "Viksit Bharat @2047.",
+                "Sectoral contribution of Agriculture, Industry and Service Sector.",
+                "Different concepts of National Income.",
+                "Major Crops and Cropping Patterns.",
+                "Challenges- Declining Productivity, Farmer Distress, and Weather Dependency.",
+                "Government Initiatives- PM-KISAN, NMSA and various schemes.",
+                "Agriculture Price Policy, Marketing and Finance.",
+                "Agri Start-ups and Agro-Processing for Value Addition.",
+                "Industrial Policies and Industrial Development in India.",
+                "Manufacturing and Infrastructure- Make in India and Infrastructure Projects.",
+                "Hospitality and Tourism- Contribution to Foreign Exchange Earnings.",
+                "Standandisation of Goods and Services in India."
+              ]
+            },
+            {
+              "unit_number": 2,
+              "unit_title_hi": "कराधान और नीति परिदृश्य",
+              "unit_title_en": "Taxation and Policy Landscape",
+              "topics_hi": [
+                "राजकोषीय नीति- लोक व्यय, आगम, कराधान और घाटा प्रबंधन ।",
+                "मौद्रिक नीति और भारत में वित्तीय समावेशन ।",
+                "अनौपचारिक अर्थव्यवस्था पर नकद लेनदेन का प्रभाव ।",
+                "खाद्य सुरक्षा एवं लोक वितरण प्रणाली ।",
+                "गरीबी, बेरोजगारी और क्षेत्रीय असंतुलन ।",
+                "भारत का विदेशी व्यापार- मूल्य, संरचना और दिशा।",
+                "निर्यात प्रोत्साहन, आयात प्रतिस्थापन और विदेशी पूँजी।",
+                "अंतर्राष्ट्रीय वित्तीय संस्थानों की भूमिकाएँ- आई.एम.एफ., विश्व बैंक, ए.डी.बी. और डब्ल्यू.टी.ओ. ।"
+              ],
+              "topics_en": [
+                "Fiscal Policy- Public Expenditure, Revenue Taxation and Deficit Management.",
+                "Monetary Policy and Financial Inclusion in India.",
+                "Impact of Cash Transactions on Informal Economy.",
+                "Food Security and Public Distribution System.",
+                "Poverty, Unemployment and Regional Imbalances.",
+                "India's Foreign trade: Value, Composition and Direction.",
+                "Export Promotion, Import Substitution and Foreign Capital.",
+                "Role of International Financial Institutions: IMF, World Bank, ADB and WTO."
+              ]
+            },
+            {
+              "unit_number": 3,
+              "unit_title_hi": "मध्य प्रदेश की अर्थव्यवस्था का अवलोकन",
+              "unit_title_en": "Overview of Madhya Pradesh Economy",
+              "topics_hi": [
+                "मध्यप्रदेश में राज्य घरेलू उत्पाद और प्रति व्यक्ति आय में वृद्धि। आत्मनिर्भर मध्यप्रदेश (ANMP)। एक जिला एक उत्पाद कार्यक्रम (ODOP)।",
+                "प्रमुख फसलें और फसल पैटर्न तथा जोत।",
+                "खाद्य सुरक्षा, वितरण प्रणाली और भंडारण ।",
+                "उद्यानिकी, पशुधन, डेयरी व मत्स्य पालन ।",
+                "औद्योगिक क्षेत्र की स्थिति, अधोसंरचना का विकास।",
+                "एम.एस.एम.ई. और पारंपरिक उद्योगों का विकास और समर्थन।",
+                "मध्यप्रदेश में ग्रामीण एवं शहरी विकास, जनजातीय अर्थव्यवस्था- कृषि पद्धति, प्रमुख वनोपज, हस्तशिल्प एवं हाट बाजार।",
+                "पर्यटन, व्यापार and निवेश प्रोत्साहन।"
+              ],
+              "topics_en": [
+                "Growth in State Domestic Product and Per Capita Income in Madhya Pradesh. Self Reliant/Aatm Nirbhar Madhya Pradesh (ANMP). One District One Product. (ODOP).",
+                "Major Crops, Cropping Patterns and Holdings.",
+                "Food Security, Distribution Systems and Storage.",
+                "Horticulture, Livestock, Dairy and Fisheries.",
+                "Industrial Sector's Status, Infrastructure Development.",
+                "MSME and Growth of Traditional Industries and Support.",
+                "Rural and Urban Development in Madhya Pradesh, Tribal Economy- Farming Methods, Major Forest Produce, Handicrafts and Haat Bazaar.",
+                "Tourism, Trade and Investment Promotion."
+              ]
+            },
+            {
+              "unit_number": 4,
+              "unit_title_hi": "मध्य प्रदेश में सामाजिक एवं आर्थिक विकास",
+              "unit_title_en": "Social and Economic Development in Madhya Pradesh",
+              "topics_hi": [
+                "स्वास्थ्य अधोसंरचना, शिक्षा और कौशल विकास ।",
+                "प्राकृतिक संसाधन प्रबंधन के लिए नीतियाँ- वन, जल और खनिज ।",
+                "वित्तीय, सामाजिक समावेशन एवं कल्याणकारी योजनाएँ।",
+                "मध्यप्रदेश की जनसांख्यिकी का प्रभाव।",
+                "मानव संसाधन की उत्पादकता और रोजगार ।",
+                "मध्यप्रदेश में बौद्धिक सम्पदा अधिकारों की प्रगति ।",
+                "राज्य का राजस्व, व्यय, ऋण एवं राजकोषीय अनुशासन।"
+              ],
+              "topics_en": [
+                "Health Infrastructure, Education and Skill Development.",
+                "Policies for Natural Resource Management- Forests, Water and Minerals.",
+                "Financial and Social Inclusion and Welfare Schemes.",
+                "Influence of Demography of Madhya Pradesh.",
+                "Productivity of Human Resources and Employment.",
+                "Progress of Intellectual Property Rights (IPR) in Madhya Pradesh.",
+                "State Revenue, Expenditure, Debt and Financial Discipline."
+              ]
+            },
+            {
+              "unit_number": 5,
+              "unit_title_hi": "सांख्यिकी, डेटा विश्लेषण और प्रायिकता",
+              "unit_title_en": "Statistics, Data Analysis and Probability",
+              "topics_hi": [
+                "समंक संकलन की विधियाँ।",
+                "माध्य, माध्यिका और बहुलक- गणना और व्याख्याएँ।",
+                "डेटा विश्लेषण के प्रकार- वर्णनात्मक बनाम अनुमानात्मक ।",
+                "प्रतिचयन की विधियाँ।",
+                "डेटा प्रस्तुति तकनीक टेबल, चार्ट, ग्राफ ।",
+                "प्रायिकता की बुनियादी अवधारणाएँ।"
+              ],
+              "topics_en": [
+                "Data collection techniques.",
+                "Mean, Median and Mode- Calculations and Interpretations.",
+                "Types of data analysis- Descriptive vs. Inferential.",
+                "Sampling techniques.",
+                "Data presentation techniques- Tables, charts, graphs.",
+                "Basic concepts of probability."
+              ]
+            }
+          ]
+        },
+        {
+          "part": "B",
+          "part_title_hi": "विज्ञान, तकनीकी एवं जन स्वास्थ्य",
+          "part_title_en": "SCIENCE, TECHNOLOGY AND PUBLIC HEALTH",
+          "units": [
+            {
+              "unit_number": 1,
+              "unit_title_hi": "सामान्य विज्ञान",
+              "unit_title_en": "General Science",
+              "topics_hi": [
+                "विज्ञान के साधारण अनुप्रयोग।",
+                "सूक्ष्मजीव संरचना एवं प्रकार, जैविक कृषि ।",
+                "कोशिका-संरचना, प्रकार, विभाजन एवं कार्य, जन्तुओं एवं पौधों का वर्गीकरण।",
+                "पौधों, पशुओं एवं मनुष्यों में पोषण, संतुलित आहार, विटामिन, हीनताजन्य रोग, हार्मोन्स, मानव शरीर के अंग, संरचना एवं कार्य-प्रणाली ।",
+                "जैव प्रौद्योगिकी- परिभाषा, स्वास्थ्य और चिकित्सा, कृषि, उद्यानिकी, पशुपालन, उद्योग और पर्यावरण जैसे क्षेत्रों में उपयोग।",
+                "ईथनोबायोलॉजी के अनुप्रयोग।",
+                "प्राचीन समय में आर्यभट्ट, वराहमिहिर, ब्रह्मगुप्त एवं भास्कर प्रथम एवं द्वितीय द्वारा खगोल शास्त्र में योगदान। प्राचीन एवं आधुनिक भारतीय वेधशालाओं से संबंधित प्रारंभिक जानकारी ।",
+                "बौद्धिक संपदा के अधिकार एवं पेटेंट (ट्रिप्स, ट्रिम्स)।"
+              ],
+              "topics_en": [
+                "Simple Aplication of Science.",
+                "Micro-organism- sturcture and types and Organic Farming.",
+                "Cell-Structure, Types, Division and Function, Classification of Animals and Plants.",
+                "Nutrition in Plants, Animals and Human beings, Balanced Diet, Vitamins, Deficiency Diseases, Hormones, Body Organs of Human Beings- Structure and Functioning.",
+                "Biotechnology- Definition and its uses in sectors like Health and Medicine, Agriculture, Horticulture, Animal Husbandry, Industry and Environment.",
+                "Aplication of Ethonobiology.",
+                "Contribution in Astronomy by Arya Bhatta, Varahmihir, Brahmagupta and Bhaskar First and Second. Initial Informaton of Ancient and Modern Observatories.",
+                "Patents and Intellectual Property Rights (Trips, Trims)."
+              ]
+            },
+            {
+              "unit_number": 2,
+              "unit_title_hi": "कंप्यूटर विज्ञान एवं गणितीय विज्ञान",
+              "unit_title_en": "Computer Science & Mathematical Science",
+              "topics_hi": [
+                "कंप्यूटर के प्रकार, विशेषताएँ एवं पीढ़ी (जनरेशन)।",
+                "मेमोरी, इनपुट और आउटपुट डिवाइसेस, स्टोरेज डिवाइस, सॉफ्टवेयर और हार्डवेयर, ऑपरेटिंग सिस्टम, विंडोज, माइक्रोसॉफ्ट ऑफिस के उपयोग।",
+                "कंप्यूटर की भाषाओं का सामान्य ज्ञान, (सी, सी++, जावा), ट्रांसलेटर, इन्टरपिटर तथा एसेंबलर ।",
+                "इन्टरनेट एवं ई-मेल।",
+                "सोशल मीडिया ।",
+                "ई-गवर्नेस ।",
+                "कृत्रिम बुद्धिमता का आधारभूत ज्ञान (ए.आई.), क्लाउड कम्प्यूटिंग, विभिन्न उपयोगी पोर्टल और वेबसाइट तथा वेबपेजेस ।",
+                "संख्याएँ एवं इसके प्रकार इकाई मापन की विधियाँ समीकरण एवं गुणनखंड, लाभ-हानि, प्रतिशत, साधारण एवं चक्रवृद्धि ब्याज, अनुपात समानुपात ।",
+                "ज्यामितीय आकृतियों का क्षेत्रफल एवं पृष्ठीय क्षेत्रफल ।"
+              ],
+              "topics_en": [
+                "Types of Computers, Characteristics and Generation.",
+                "Memory, Input and Output Devices, Storage Devices, Software and Hardware, Operating systems, Windows, Uses of Microsoft office.",
+                "Fundamental Knowledge of Computer Languages (C, C++, Java), Translators, Interpreters and Assemblers.",
+                "Internet and E-mail.",
+                "Social Media.",
+                "E-Governance.",
+                "Fundamental Knowledge of Artificial Intelligence (AI), Cloud Computing, Diffrent useful Portals, Websites and Webpages.",
+                "Numbers and its type, Methods of Unit Measurement, Equations and Factors, Profit loss, Percentage, Simple and Compound Interest, Ratio-Proportion.",
+                "Area and Volume of Geometric shapes and Surface area."
+              ]
+            },
+            {
+              "unit_number": 3,
+              "unit_title_hi": "आयुष एवं राष्ट्रीय स्वास्थ्य नीति",
+              "unit_title_en": "AYUSH & National Health Policy",
+              "topics_hi": [
+                "आयुष (AYUSH)- आयुर्वेद, योग एवं प्राकृतिक चिकित्सा, यूनानी, सिद्धा, सोवा रिग्पा, होम्योपैथी चिकित्सा पद्धतियों के मूल सिद्धांत।",
+                "वन नेशन वन हेल्थ सिस्टम / पॉलिसी-2030।",
+                "आयुर्वेद- त्रिदोष, पंचमहाभूत (आकाश, वायु, अग्नि, जल, पृथ्वी), दिनचर्या, ऋतुचर्या, पंचकर्म की प्रारंभिक जानकारी। जैविक घड़ी।",
+                "केन्द्र, राज्य, जिला एवं ग्राम स्तर पर आयुष सहित स्वास्थ्य प्रशासन। राष्ट्रीय स्वास्थ्य नीति (NHP) एवं इसमें आयुर्वेद का क्षेत्र।"
+              ],
+              "topics_en": [
+                "AYUSH- Basic Principle of Ayurveda, Yoga and Naturopathy, Unani, Siddha, Sowa-rigpa, Basic Principles of Homeopathic Treatment.",
+                "One Nation One Health System/Policy-2030.",
+                "Ayurveda- Basic knowlegde of Tridosh, Panchamahabhut, (Aakash, Vayu, Agni, Jal, Prathvi) Dincharya, Ritucharaya, Panchkarma. Biological Clock.",
+                "Health Management including AYUSH at the Central, State, District and Village level. National Health Policy (NHP) and scope of Ayurveda in NHP."
+              ]
+            },
+            {
+              "unit_number": 4,
+              "unit_title_hi": "योग, प्राकृतिक चिकित्सा एवं स्वास्थ्य कार्यक्रम",
+              "unit_title_en": "Yoga, Naturopathy & Health Programs",
+              "topics_hi": [
+                "योग- पंचकोष सिद्धांत, अष्टांग योग, षट्कर्म, मुद्रा की प्रारंभिक जानकारी। प्राकृतिक चिकित्सा- मिट्टी चिकित्सा, धूप सेवन (Sun Bath), जल चिकित्सा के चिकित्सकीय प्रभाव एवं प्रकार।",
+                "षोडश संस्कार- नामकरण, निष्क्रमण, कर्णवेध आदि का सामान्य ज्ञान एवं इनका वैज्ञानिक महत्व ।",
+                "राष्ट्रीय स्वास्थ्य कार्यक्रम- स्वास्थ्य स्वच्छता एवं बीमारियाँ, कुष्ठ (एन.एल.ई.पी.), एड्स (एन.ए.सी.पी.), अंधत्व (एन.पी.सी.बी.), पोलियो, राष्ट्रीय क्षय निवारण कार्यक्रम, वेक्टर जनित रोग नियंत्रण कार्यक्रम, प्रजनन एवं बाल स्वास्थ्य (आर.सी.एच.) कार्यक्रम, इंटीग्रेटेड चाइल्ड डेव्हलपमेंट स्कीम (आई.सी.डी.एस.), सार्वभौमिक एवं राष्ट्रीय टीकाकरण कार्यक्रम। राष्ट्रीय आयुष मिशन (एनएएम), राष्ट्रीय परिवार स्वास्थ्य सर्वेक्षण (एन.एफ.एच.एस.)।",
+                "स्वच्छ भारत मिशन, आयुष्मान भारत योजना, राष्ट्रीय स्वास्थ्य मिशन (एन.आर.एच.एम. और एन.यू.एच.एम.), मध्यप्रदेश में मातृ मृत्यु दर।",
+                "विभिन्न बायोमार्कर यथा हेमेटोलॉजी, बायोकेमिस्ट्री, सीरोलॉजी के सामान्य स्तर की जानकारी।",
+                "प्राथमिक स्वास्थ्य देखभाल- प्राथमिक स्वास्थ्य देखभाल का सिद्धांत और तत्व, स्वास्थ्य देखभाल का स्तर, उपकेन्द्र एवं ग्राम स्तर पर प्राथमिक स्वास्थ्य देखभाल की संरचना, प्राथमिक स्वास्थ्य देखभाल केन्द्र (PHC), सामुदायिक स्वास्थ्य केन्द्र (CHC) और ग्रामीण चिकित्सालयों के स्तर।"
+              ],
+              "topics_en": [
+                "Yoga Preliminary knowlegde of Panchkosh Principles, Ashtanga Yoga, Shatkarma, Mudra. Naturopathy- Therepeutic effect of Soil treatment, Sun Bath, Hydrotherapy and its types.",
+                "Shodasha Sanskar- General Knowledge of Namkarana, Nishkramana, Karnavedha etc and its scientific importance.",
+                "National Health Programme- Health Hygiene and Disease, Leprosy (NLEP), AIDS (NACP), Blindness (NPCB), Polio, National TB Elimination Program, Vector Born Disease Control Program, Reproductive and Child Health (RCH) Program, Integrated Child Development Scheme (ICDS), Universal and National Immunization Program, National Ayush Mission (NAM), National Family Health Survey (NFHS).",
+                "Swachh Bharat Mission, Ayushmana Bharat Yojana, National Health Mission (NRHM and NUHM), Maternal Mortality Rate in Madhya Pradesh.",
+                "Different Biomarkers such as normal range of Hematology, Biochemistry, Serology.",
+                "Primary Health Care- Principles and Elements of Primary Health Care, levels of Health Care, Structure of Primary Health Care at Village and Sub center, Primary Health Center (PHC), Community Health Center (CHC) and levels of Rural Hospitals."
+              ]
+            },
+            {
+              "unit_number": 5,
+              "unit_title_hi": "पर्यावरण संरक्षण एवं अपशिष्ट प्रबंधन",
+              "unit_title_en": "Environment & Waste Management",
+              "topics_hi": [
+                "भारतीय परंपरा और संस्कृति में पर्यावरण की अवधारणा। जनपदोध्वंस- वायु, जल, देश, काल की विकृतियाँ।",
+                "मानव गतिविधियों का पर्यावरण पर प्रभाव, पर्यावरण से संबंधित नैतिकता और मूल्य, जैव-विविधता (विशेष रूप से मध्यप्रदेश के संदर्भ में), पर्यावरण- प्रदूषण, जलवायु परिवर्तन। लुप्तप्राय एवं विलुप्त प्रजातियाँ।",
+                "पर्यावरण से संबंधित समस्याएँ और चुनौतियाँ, पर्यावरणीय क्षरण के कारण और प्रभाव।",
+                "पर्यावरण शिक्षा- सार्वजनिक जन जागरुकता के कार्यक्रम, पर्यावरण शिक्षा एवं उसका स्वास्थ्य एवं सुरक्षा से संबंध।",
+                "पर्यावरण अनुकूल प्रौद्योगिकी, पर्यावरण संरक्षण के संवैधानिक प्रावधान। पर्यावरण संरक्षण नीतियाँ और नियामक ढाँचा ।",
+                "पर्यावरण संरक्षण में मध्यप्रदेश की जनजातियों की भूमिका (बैगा, सहरिया, भारिया, भील, गोंड इत्यादि ।",
+                "ठोस अपशिष्ट प्रबन्धन नगरीय और औद्योगिक अपशिष्ट के कारण, प्रभाव एवं नियंत्रण के उपाय।",
+                "स्वच्छता सर्वेक्षण अभियान- उद्देश्य, विभिन्न चरण, उपलब्धियाँ तथा भविष्य ।",
+                "जल सुरक्षा ।",
+                "जल संरक्षण के क्षेत्र में किए जाने वाले विभिन्न प्रयास।"
+              ],
+              "topics_en": [
+                "Concept of Environment in Indian Tradition and Culture. Janapadodhvansh- Distortions of Air, Water, land, Time.",
+                "Impact of Human activities on Environment, Ethics and Values related to environment, bio-diversity (especially in the context of Madhya Pradesh), Environment- Pollution, Climate change. Endangered and Extinct Species.",
+                "Problems and Challenges Related to Environment, Causes and Effects of Environmental Degradation.",
+                "Environmental Education- Public Awareness Programs, Environmental Education and its Relationship with Health and Safety.",
+                "Environment friendly Technology, Constitutional Provisions for Environmental Protection. Environmental Protection Policies and Regulatory Framework.",
+                "Role of tribes of Madhya Pradesh (Baiga, Sahariya, Bhariya, Bhil, Gond. etc.) in Environmental Conservation.",
+                "Solid Waste Management- Causes, Effects and Control measures of Urban and Industrial Waste.",
+                "Cleanliness Survey Campaign- Objective, Various Stages, Achievements and Future.",
+                "Water Security.",
+                "Various efforts in the field of Water Conservation."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "paper_number": 4,
+      "paper_title_hi": "चतुर्थ प्रश्नपत्र",
+      "paper_title_en": "FOURTH PAPER",
+      "total_marks": 300,
+      "duration_minutes": 180,
+      "parts": [
+        {
+          "part": "A",
+          "part_title_hi": "दर्शनशास्त्र, मनोविज्ञान, लोक प्रशासन एवं केस स्टडी",
+          "part_title_en": "PHILOSOPHY, PSYCHOLOGY, PUBLIC ADMINISTRATION AND CASE STUDY",
+          "units": [
+            {
+              "unit_number": 1,
+              "unit_title_hi": "भारतीय षड्दर्शन, दार्शनिक / विचारक, समाज सुधारक",
+              "unit_title_en": "Indian Shaddarshan, Philosophers/Thinkers, Social Reformers",
+              "topics_hi": [
+                "भारतीय षड्दर्शन।",
+                "सुकरात, प्लेटो, अरस्तू ।",
+                "महावीर, बुद्ध, आचार्य शंकर, चार्वाक, भर्तृहरि ।",
+                "गुरुनानक, कबीर, तुलसीदास, संत रविदास ।",
+                "रवीन्द्रनाथ टैगोर, राजा राममोहन राय, देवी अहिल्याबाई होलकर, सावित्रीबाई फुले।",
+                "स्वामी दयानंद सरस्वती, स्वामी विवेकानंद, महर्षि अरविन्द, सर्वपल्ली राधाकृष्णन, डॉ. भीमराव आम्बेडकर, पंडित दीनदयाल उपाध्याय ।"
+              ],
+              "topics_en": [
+                "Indian Shaddarshan.",
+                "Socrates, Plato, Aristotle.",
+                "Mahavir, Buddha, Acharya Shankar, Charwak, Bharthari.",
+                "Gurunanak, Kabir, Tulsidas, Sant Ravidas.",
+                "Ravindra Nath Tagore, Raja Rammohan Roy, Devi Ahilyabai Holkar, Savitribai Phule.",
+                "Swami Dayanand Saraswati, Swami Vivekanand, Maharshi Arvind and Sarvpalli Radhakrishnan, Dr. Bhimrao Ambedkar, Pandit Deendayal Upadhyay."
+              ]
+            },
+            {
+              "unit_number": 2,
+              "unit_title_hi": "राष्ट्र निर्माण एवं नैतिक अवधारणाएँ",
+              "unit_title_en": "Nation Building and Moral Concepts",
+              "topics_hi": [
+                "राष्ट्र की अवधारणा, शक्ति एवं घटक ।",
+                "राष्ट्रीय सुरक्षा, हित एवं चरित्र।",
+                "राष्ट्रीय सुरक्षा संचालन, सशस्त्र सैन्य बल, अंग एवं प्रकार तथा गुप्तचर एजेंसियाँ।",
+                "मूल नैतिक अवधारणाएँ- शुभ, सद्‌गुण, अहिंसा, उत्तरदायित्व ।",
+                "भगवद्गीता का नीतिशास्त्र एवं प्रशासन में उसकी भूमिका।"
+              ],
+              "topics_en": [
+                "Concept of Nation, Powers and Constituents.",
+                "National Security, Interests and Character.",
+                "National Security Operations, Armed forces, Bodies, Divisons and Spy Agencies.",
+                "Basic Morality Concepts- Goodness, Virtues, Non-Violence, Responsibility.",
+                "Role of Bhagawat Geeta in Ethics and Administration."
+              ]
+            },
+            {
+              "unit_number": 3,
+              "unit_title_hi": "मानवीय व्यवहार एवं मनोचिकित्सा",
+              "unit_title_en": "Human Behaviour and Psychotherapy",
+              "topics_hi": [
+                "मनोवृत्ति - विषयवस्तु, तत्त्व, प्रकार्य, मनोवृत्ति का निर्माण, मनोवृत्ति में परिवर्तन, प्रबोधक संप्रेषण, पूर्वाग्रह तथा भेदभाव, भारतीय संदर्भ में रुढ़िवादिता ।",
+                "अभिक्षमता - अभिक्षमता एवं लोक सेवा हेतु आधारभूत मूल्य, सत्यनिष्ठा, निष्पक्षता एवं असमर्थकवादी, वस्तुनिष्ठता, लोक सेवा के प्रति समर्पण, समानुभूति, सहिष्णुता एवं कमजोर वर्गों के प्रति संवेदना ।",
+                "सांवेगिक बुद्धि - सम्प्रत्यय, शासन-प्रशासन में इसकी उपयोगिता एवं अनुप्रयोग।",
+                "व्यक्तिगत भिन्नताएँ- कारक, सिद्धांत एवं व्यवहार भिन्नताएँ।",
+                "मनोविकार एवं मनोचिकित्सा अवसाद, सामाजिक दुश्चिंता मनोविकार, सिजोफ्रेनिया, सामाजिक दुर्भीति, द्विध्रुवी मनोविकार। मनोचिकित्सा व्यक्ति केन्द्रित चिकित्सा, व्यवहार चिकित्सा, तर्क संगत भावनात्मक व्यवहार चिकित्सा, संज्ञानात्मक व्यवहार चिकित्सा, सकारात्मक चिकित्सा एवं पारिवारिक चिकित्सा।"
+              ],
+              "topics_en": [
+                "Attitude- Subject-matter, Elements, Function, Formation of Attitude, Attitudinal Change, Persuasive Communication, Prejudice and Discrimination, Stereotypeness in Indian context.",
+                "Aptitude- Aptitude and fundamental values for Civil Service, Integrity, Impartiality and Non-partnership, Objectivity, Dedication to Public Service, Empathy, Tolerance and Compassion towards the weaker-Sections.",
+                "Emotional Intelligence- Concepts, their utilities and application in Administration and Governance.",
+                "Individual differences- Factors, Theories and Behaviour Differences.",
+                "Mental Disorders and Psychotherapy Depression, Social anxiety Disorder, Schizophrenia, Social Phobia, Bipolar Disorder. Psychotherapy- Person Centered Therapy, Behaviour Therapy, Rational Emotive Behaviour Therapy, Cognitive Behaviour Therapy, Positive Therapy and Family Therapy."
+              ]
+            },
+            {
+              "unit_number": 4,
+              "unit_title_hi": "लोक प्रशासन में नैतिक मूल्य",
+              "unit_title_en": "Moral Value in Public Administration",
+              "topics_hi": [
+                "मानवीय आवश्यकताएँ एवं अभिप्रेरणा- मानव व्यक्तित्व को प्रभावित करने वाले विभिन्न तत्व, कर्तव्यपरायणता, मूल्यबोध, जीवन मूल्य, संवेदनशीलता, टेक्नोलॉजी एवं नैतिक मूल्य।",
+                "लोक प्रशासन में नैतिक सद्गुण एवं मूल्य- प्रशासन में नैतिक तत्व-सत्यनिष्ठा, उत्तरदायित्व एवं पारदर्शिता, नैतिक तर्क एवं नैतिक दुविधा तथा नैतिक मार्गदर्शन के रूप में अंतरात्मा, लोक सेवकों हेतु आचरण संहिता, शासन में उच्च मूल्यों का पालन ।",
+                "भ्रष्टाचार - भ्रष्टाचार के प्रकार एवं कारण, भ्रष्टाचार का प्रभाव, भ्रष्टाचार को अल्पतम करने के उपाय, समाज, सूचनातंत्र, परिवार एवं व्हिसिलब्लोअर की भूमिका, भ्रष्टाचार पर राष्ट्रसंघ की घोषणा, भ्रष्टाचार का मापन, ट्रांसपरेंसी इन्टरनेशनल, लोकपाल एवं लोकायुक्त ।"
+              ],
+              "topics_en": [
+                "Human Need and Motivation- Elements affecting Human Personalities, dutifulness, sense of Values, Lifevalue, Sensivity, Technology and Moral Values.",
+                "Ethical elements in governance-Integrity, Accountability and Transparency, Ethical Reasoning and Moral Dilemmas, Conscience as a source of ethical guidance. Code of Conduct for Civil Servants, Implementation of Higher Values in Governance.",
+                "Corruption- Types and Causes of Corruption, Effects of Corruption, Approaches to minimizing Corruption, Role of Society, Media, Family and Whistleblower, United Nation Convention on Corruption, Measuring corruption, Transparency International, Lokpal and Lokayukt."
+              ]
+            },
+            {
+              "unit_number": 5,
+              "unit_title_hi": "केस स्टडी",
+              "unit_title_en": "Case Study",
+              "topics_hi": [
+                "केस स्टडी- प्रश्नपत्र के खण्ड (अ) में सम्मिलित विषयवस्तु पर आधारित पाठ्यक्रम।"
+              ],
+              "topics_en": [
+                "Case Study- Based on the contents of the syllabus in Part-A of question Paper."
+              ]
+            }
+          ]
+        },
+        {
+          "part": "B",
+          "part_title_hi": "उद्यमिता, प्रबंधन, व्यक्तित्व विकास एवं केस स्टडी",
+          "part_title_en": "Entrepreneurship, Management, Personality Development and Case Study",
+          "units": [
+            {
+              "unit_number": 1,
+              "unit_title_hi": "उद्यमिता अवधारणा एवं विकास",
+              "unit_title_en": "Entrepreneurship Concept and Development",
+              "topics_hi": [
+                "उद्यमिता की अवधारणा एवं महत्व ।",
+                "उद्यमशीलता के लक्षण, सिद्धांत, विशेषताएँ एवं नवाचार का महत्व।",
+                "उद्यमशीलता की प्रक्रिया सृजनशीलता, विचार सृजन, अनुवीक्षण एवं व्यवसाय योजना ।",
+                "नए उद्यम प्रबंधन में मुख्य मुद्दे एवं वैधानिक आवश्यकताएँ, महिला उद्यमियों के सामने आने वाली चुनौतियाँ।",
+                "भारत में उद्यमिता का विकास- स्टार्टअप इंडिया, मेक इन इंडिया, भारत में उद्यमिता विकास को बढ़ावा देने वाले संस्थान।"
+              ],
+              "topics_en": [
+                "Concept and Significance of Entrepreneurship,",
+                "Symptoms of Entrepreneurship, Principles, Characteristics and Importance of Innovation.",
+                "Process of Entrepreneurship- Creativity, Idea Generation, Analysis and Business Plan.",
+                "Important factors and statutory requirements for new Enterprise Management, Challenges faced by Women Entrepreneurs.",
+                "Development of Entrepreneurship in India- Startup India, Make in India, Organizations for promoting Entrepreneurial development in India."
+              ]
+            },
+            {
+              "unit_number": 2,
+              "unit_title_hi": "व्यावसायिक संगठन एवं प्रबंधन",
+              "unit_title_en": "Business Organizations and Management",
+              "topics_hi": [
+                "प्रबंध - अवधारणा, महत्व, क्षेत्र, प्रबंध एवं प्रशासन । क्रय तथा सामग्री प्रबंधन ।",
+                "प्रबंध प्रक्रिया, संसाधन प्रबंधन एवं प्रबंध के कार्य नियोजन, संगठन, निर्देशन, नियंत्रण, समन्वय, निर्णयन, अभिप्रेरणा, नेतृत्व एवं संचार।",
+                "समय प्रबंधन एवं संगठन।",
+                "ब्रांडिंग, मार्केटिंग एवं नेटवर्किंग।"
+              ],
+              "topics_en": [
+                "Business- Concept and Significance, Scope, Administration and Management, Purchase and Material, Management.",
+                "Management Process, Resource Management and functions of Management- Plan, Organization, Direction, Control, Coordination, Decision Making, Motivation, Leadership and Communication.",
+                "Time Management and Organization.",
+                "Branding, Marketing and Networking."
+              ]
+            },
+            {
+              "unit_number": 3,
+              "unit_title_hi": "प्रशासन व प्रबंधन",
+              "unit_title_en": "Administration and Management",
+              "topics_hi": [
+                "लोक प्रशासन में प्रबंध के महत्त्वपूर्ण आयाम। मानव संसाधन प्रबंध।",
+                "वित्तीय प्रबंध लोक प्रशासन में उनका कार्यक्षेत्र एवं महत्व।",
+                "लोक कार्य क्षेत्र में तनाव प्रबंधन एवं विवाद प्रबंधन की विभिन्न तकनीकें एवं उनका महत्व ।",
+                "बहुलता (अनेकता) का प्रबंधन एवं प्रशासन, जन प्रबंधन के अवसर एवं चुनौतियाँ।",
+                "आपदा प्रबंधन ।"
+              ],
+              "topics_en": [
+                "Important dimensions of Management in Public Administration. Human Resource Management.",
+                "Financial Management- Its scope and significance in Public Administration.",
+                "Stress and Conflict Management Techniques and their significance in Public Service Domain.",
+                "Administration and Management of Plurality, Opportunities and Challenges in Public Administration.",
+                "Diasaster Management."
+              ]
+            },
+            {
+              "unit_number": 4,
+              "unit_title_hi": "समग्र व्यक्तित्व विकास",
+              "unit_title_en": "Overall Personality Development",
+              "topics_hi": [
+                "समग्र व्यक्तित्व एवं राष्ट्रीय विकास ।",
+                "व्यक्तित्व विकास के विभिन्न घटक ।",
+                "सफलता की अवधारणा।",
+                "सफलता प्राप्त करने में बाधाएँ।",
+                "सफलता के लिए जिम्मेदार कारक।",
+                "असफलता से सीखना असफलताओं को मूल्यवान अंतर्दृष्टि और निरंतर सुधार के अवसर के रूप में स्वीकार करना।",
+                "सरकारी योजनाओं का कियान्वयन- सरकारी योजनाओं के सफल क्रियान्वयन को सुनिश्चित करने के लिए प्रभावी रणनीतियों को कियान्वित करना।",
+                "निम्नांकित मुद्दों से संबंधित तथ्य और दृष्टिकोण नागरिक बोध, संस्था के प्रति निष्ठा, मतदाता जागरूकता कार्यक्रम, यातायात प्रबंधन, नशाखोरी की प्रवृत्ति, खाद्य पदार्थों में मिलावट, नाइट कल्चर, मूल्य आधारित जीवन एवं विधिक जागरुकता कार्यक्रम ।"
+              ],
+              "topics_en": [
+                "Overall Personality and National Development.",
+                "Different component of Personality Development.",
+                "Concepts of successfulness.",
+                "Impediments in achieving success.",
+                "Factors responsible for success.",
+                "Learning from failure- accepting failure as an opportunity for continuous improvment and valuable introspection",
+                "Implementation of Government Programme- Planning effective strategy to ensure successful implementation of Government Programme.",
+                "Approch and facts regarding following issues- Civic Sense, Loyalty to the Institution, Voter Awareness Programme. Transport Management, Trend of Drug abuse, Adulteration in food items, Night Culture, Value based life and Legal Awareness Programme."
+              ]
+            },
+            {
+              "unit_number": 5,
+              "unit_title_hi": "केस स्टडी",
+              "unit_title_en": "Case Study",
+              "topics_hi": [
+                "केस स्टडी- प्रश्नपत्र के खण्ड (ब) में सम्मिलित विषयवस्तु पर आधारित पाठ्यक्रम।"
+              ],
+              "topics_en": [
+                "Case Study - Based on the Contents of the Syllabus in Part-B Question Paper."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "paper_number": 5,
+      "paper_title_hi": "पंचम प्रश्न पत्र",
+      "paper_title_en": "FIFTH PAPER",
+      "total_marks": 200,
+      "duration_minutes": 180,
+      "parts": [
+        {
+          "part": "A",
+          "part_title_hi": "सामान्य हिन्दी एवं व्याकरण",
+          "part_title_en": "General Hindi and Grammar",
+          "units": [
+            {
+              "unit_number": 1,
+              "unit_title_hi": "खण्ड (क): लघुत्तरीय प्रश्न",
+              "unit_title_en": "Section (A): Short Answer Questions",
+              "topics_hi": [
+                "लघुत्तरीय प्रश्न- निर्धारित सम्पूर्ण पाठ्यक्रम के अंतर्गत ही पूछे जाएँगे"
+              ],
+              "topics_en": [
+                "Short answer questions- will be asked from the entire prescribed syllabus"
+              ]
+            },
+            {
+              "unit_number": 2,
+              "unit_title_hi": "खण्ड (ख): रस एवं छंद",
+              "unit_title_en": "Section (B): Ras and Chhand",
+              "topics_hi": [
+                "रस- अंग एवं प्रकार।",
+                "छंद- दोहा, सोरठा, चौपाई"
+              ],
+              "topics_en": [
+                "Ras- Elements and Types.",
+                "Chhand (Meter)- Doha, Sortha, Chaupai"
+              ]
+            },
+            {
+              "unit_number": 3,
+              "unit_title_hi": "खण्ड (ग): अनुवाद",
+              "unit_title_en": "Section (C): Translation",
+              "topics_hi": [
+                "अनुवाद वाक्यों का- हिन्दी से अँग्रेजी",
+                "अनुवाद वाक्यों का- अँग्रेजी से हिन्दी",
+                "प्रशासनिक मानक शब्दों के अर्थ- हिन्दी से अँग्रेजी शब्द (05 शब्द), अँग्रेजी से हिन्दी शब्द (05 शब्द)"
+              ],
+              "topics_en": [
+                "Translation of sentences- Hindi to English",
+                "Translation of sentences- English to Hindi",
+                "Meaning of standard administrative words- Hindi to English words, English to Hindi words"
+              ]
+            },
+            {
+              "unit_number": 4,
+              "unit_title_hi": "खण्ड (घ): संधि, समास एवं मुहावरे",
+              "unit_title_en": "Section (D): Sandhi, Samas and Idioms",
+              "topics_hi": [
+                "संधि एवं समास",
+                "मुहावरे एवं कहावतें"
+              ],
+              "topics_en": [
+                "Sandhi (Joining) and Samas (Compounding)",
+                "Idioms and Proverbs"
+              ]
+            },
+            {
+              "unit_number": 5,
+              "unit_title_hi": "खण्ड (ङ): प्रारंभिक व्याकरण एवं शब्दावलियाँ",
+              "unit_title_en": "Section (E): Basic Grammar and Vocabulary",
+              "topics_hi": [
+                "विराम चिह्न",
+                "शब्द शक्तियाँ",
+                "विलोम शब्द",
+                "अनेक शब्दों के लिए एक शब्द",
+                "तत्सम एवं तद्भव शब्द",
+                "पर्यायवाची शब्द",
+                "शब्द-युग्म",
+                "वर्तनी शोधन",
+                "वाक्य संरचना एवं प्रकार",
+                "शब्दार्थ"
+              ],
+              "topics_en": [
+                "Punctuation marks",
+                "Word powers",
+                "Antonyms",
+                "One word for many words",
+                "Tatsam and Tadbhav words",
+                "Synonyms",
+                "Word-pairs",
+                "Spelling correction",
+                "Sentence structure and types",
+                "Word meanings"
+              ]
+            },
+            {
+              "unit_number": 6,
+              "unit_title_hi": "खण्ड (च): पल्लवन",
+              "unit_title_en": "Section (F): Pallavan",
+              "topics_hi": [
+                "पल्लवन- रेखांकित अथवा दी गई पंक्तियों का भाव पल्लवन"
+              ],
+              "topics_en": [
+                "Pallavan- Expansion of meaning of underlined or given lines"
+              ]
+            },
+            {
+              "unit_number": 7,
+              "unit_title_hi": "खण्ड (छ): मध्यप्रदेश की प्रमुख बोलियाँ",
+              "unit_title_en": "Section (G): Major Dialects of Madhya Pradesh",
+              "topics_hi": [
+                "मध्यप्रदेश की प्रमुख बोलियाँ- मालवी, निमाड़ी, बघेली और बुंदेली"
+              ],
+              "topics_en": [
+                "Major dialects of Madhya Pradesh- Malvi, Nimadi, Bagheli and Bundeli"
+              ]
+            },
+            {
+              "unit_number": 8,
+              "unit_title_hi": "खण्ड (ज): अपठित गद्यांश",
+              "unit_title_en": "Section (H): Unseen Passage",
+              "topics_hi": [
+                "अपठित गद्यांश"
+              ],
+              "topics_en": [
+                "Unseen Passage"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "paper_number": 6,
+      "paper_title_hi": "षष्ठ प्रश्न-पत्र",
+      "paper_title_en": "SIXTH PAPER",
+      "total_marks": 100,
+      "duration_minutes": 120,
+      "parts": [
+        {
+          "part": "A",
+          "part_title_hi": "हिन्दी निबंध एवं प्रारूप लेखन",
+          "part_title_en": "Hindi Essay and Draft Writing",
+          "units": [
+            {
+              "unit_number": 1,
+              "unit_title_hi": "प्रथम निबंध",
+              "unit_title_en": "First Essay",
+              "topics_hi": [
+                "प्रथम निबंध (लगभग 1000 शब्दों में)- निम्नांकित विषय क्षेत्रों से निबंध पूछा जा सकता है।",
+                "विषय: भारतीय ज्ञान-विज्ञान परंपरा, विकसित भारत @2047, आत्मनिर्भर भारत की संकल्पना, स्वर्णिम मध्यप्रदेश, अंतरिक्ष में भारत के बढ़ते कदम, मध्यप्रदेश का गौरवशाली इतिहास, पर्यावरण, विज्ञान, धर्म-आध्यात्म, विश्व ग्राम की संकल्पना, शिक्षा में गुणवत्ता, राष्ट्रीय शिक्षा नीति- 2020, परंपरागत कौशल आधारित व्यवसाय, आधुनिकीकरण, भूमंडलीकरण, उदारीकरण, कृत्रिम बुद्धिमता, परंपरागत खेल, सांस्कृतिक विरासत, सभ्यता एवं संस्कृति, धार्मिक-सांस्कृतिक पर्यटन, युवा नीति, योग एवं स्वास्थ्य, ई-मार्केटिंग, ई-कॉमर्स, नेतृत्व एवं विकास, सुशासन, नौकरशाही, लोकतंत्र में सिविल सेवाओं की भूमिका, जनजातीय विकास, स्वदेशी, स्वभाषा, राष्ट्रीयता के विभिन्न मुद्दे, राष्ट्रीय एकता एवं सामाजिक समरसता, सामुदायिक जीवन, सामाजिक सरोकार, नवीनीकरणीय ऊर्जा, सतत् विकास लक्ष्य, समावेशी विकास, ग्राहक जागरुकता आज की आवश्यकता, मादक पदार्थों का सेवन एवं दुष्प्रभाव, घरेलू हिंसा, बाह्य एवं आंतरिक सुरक्षा के मुद्दे, व्यवसायगत सरलता, सोशल मीडिया का मानव जीवन पर प्रभाव, गौरवशाली भारतीय संस्कृति, वसुधैव कुटुम्बकम्, मानवीय जीवन में संस्कार और जीवन मूल्य, वन नेशन वन हेल्थ सिस्टम / पॉलिसी - 2030"
+              ],
+              "topics_en": [
+                "First Essay (approx. 1000 words)- Essays can be asked from the following subject areas.",
+                "Topics: Indian knowledge-science tradition, Viksit Bharat @2047, Concept of Aatmanirbhar Bharat, Golden Madhya Pradesh, India's growing steps in space, Glorious history of Madhya Pradesh, Environment, Science, Religion-spirituality, Concept of Global Village, Quality in education, National Education Policy- 2020, Traditional skill-based occupation, Modernization, Globalization, Liberalization, Artificial Intelligence, Traditional sports, Cultural heritage, Civilization and culture, Religious-cultural tourism, Youth policy, Yoga and health, E-marketing, E-commerce, Leadership and development, Good governance, Bureaucracy, Role of civil services in democracy, Tribal development, Swadeshi, Mother tongue, Various issues of nationality, National integration and social harmony, Community life, Social concerns, Renewable energy, Sustainable Development Goals, Inclusive development, Consumer awareness today's need, Drug abuse and side effects, Domestic violence, Issues of external and internal security, Ease of doing business, Impact of social media on human life, Glorious Indian culture, Vasudhaiva Kutumbakam, Sanskars and life values in human life, One Nation One Health System / Policy - 2030"
+              ]
+            },
+            {
+              "unit_number": 2,
+              "unit_title_hi": "द्वितीय निबंध",
+              "unit_title_en": "Second Essay",
+              "topics_hi": [
+                "द्वितीय निबंध - समसामयिक समस्याएँ एवं निदान (लगभग 500 शब्दों में)"
+              ],
+              "topics_en": [
+                "Second Essay - Contemporary problems and solutions (approx. 500 words)"
+              ]
+            },
+            {
+              "unit_number": 3,
+              "unit_title_hi": "प्रारूप लेखन",
+              "unit_title_en": "Draft Writing",
+              "topics_hi": [
+                "प्रारूप लेखन - शासकीय व अर्धशासकीय पत्र, परिपत्र (सर्क्युलर), प्रपत्र, विज्ञापन, आदेश, पृष्ठांकन, अनुस्मारक (स्मरण पत्र)। (लगभग-250 शब्दों में)।"
+              ],
+              "topics_en": [
+                "Draft Writing - Government and semi-government letters, circulars, forms, advertisements, orders, endorsements, reminders. (approx. 250 words)."
+              ]
+            },
+            {
+              "unit_number": 4,
+              "unit_title_hi": "प्रतिवेदन एवं अन्य लेखन",
+              "unit_title_en": "Report and Other Writing",
+              "topics_hi": [
+                "प्रतिवेदन (रिपोर्ट राइटिंग), अधिसूचना (नोटिफिकेशन), ज्ञापन (मेमोरेण्डम) टिप्पण लेखन। (लगभग-250 शब्दों में)"
+              ],
+              "topics_en": [
+                "Report writing, Notification, Memorandum, Note writing. (approx. 250 words)"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

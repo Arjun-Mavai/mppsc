@@ -1,7 +1,7 @@
 'use client';
 
 import { useTransition } from 'react';
-import { BookOpen, Sparkles, Zap, ChevronRight, Star, ShieldCheck } from 'lucide-react';
+import { BookOpen, Sparkles, Zap, ChevronRight, Star, ShieldCheck, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useRouter } from 'next/navigation';
@@ -19,30 +19,30 @@ export function HeroSection() {
 
   const content = {
     en: {
-      badge: 'MPPSC 2026 : Elite Selection',
+      badge: 'MPPSC : Elite Selection',
       welcome: 'Welcome back,',
       ready: 'Ready for today\'s challenge?',
-      title1: 'Master the New',
-      title2: 'MPPSC Pattern.',
-      subtitle: 'The ultimate data-driven platform with Bilingual Mnemonics, Smart PYQ Analysis & High-Performance Test Series.',
+      title1: 'Master Both',
+      title2: 'Prelims & Mains.',
+      subtitle: 'Hoarding textbooks won\'t clear the exam. Master the exact syllabus demand, unlock retention mnemonics, and learn the science of dual-style model answers.',
       primaryBtn: 'Practice Free Test',
       pyqBtn: 'Practice PYQs',
       /** Kept for when we re-enable the `/free-quiz` hero CTA (currently commented below). */
       secondaryBtn: 'Free Mock Test',
-      openPrelimsHeroBtn: '2026 Prelims paper',
+      openPrelimsHeroBtn: 'Prelims Paper',
       stats: ['100+ Topic Tests', 'Smart PYQ Analytics', 'Retention Mnemonics']
     },
     hi: {
-      badge: 'MPPSC 2026 : एलीट सिलेक्शन',
+      badge: 'MPPSC : एलीट सिलेक्शन',
       welcome: 'स्वागत है,',
       ready: 'क्या आप आज की चुनौती के लिए तैयार हैं?',
-      title1: 'नए पैटर्न में',
+      title1: 'प्रारंभिक और मुख्य परीक्षा दोनों में',
       title2: 'महारत हासिल करें।',
-      subtitle: 'मेमोनिक्स, स्मार्ट PYQ विश्लेषण और हाई-परफॉरमेंस टेस्ट सीरीज़ के साथ अपनी तैयारी को एलीट लेवल पर ले जाएं।',
+      subtitle: 'सिर्फ किताबें और पीडीएफ जमा करने से सिलेक्शन नहीं होता। जानिए हर प्रश्न की असली डिमांड, स्मार्ट मेमोनिक्स से याद रखने की कला, और 2 अलग-अलग स्टाइल में उत्तर लिखने का विज्ञान।',
       primaryBtn: 'फ्री टेस्ट प्रैक्टिस करें',
       pyqBtn: 'PYQs प्रैक्टिस करें',
       secondaryBtn: 'फ्री मॉक टेस्ट',
-      openPrelimsHeroBtn: '2026 प्रारंभिक पेपर',
+      openPrelimsHeroBtn: 'प्रारंभिक परीक्षा पेपर',
       stats: ['100+ टॉपिक टेस्ट', 'स्मार्ट PYQ एनालिसिस', 'स्मार्ट मेमोनिक्स']
     }
   };
@@ -50,7 +50,58 @@ export function HeroSection() {
   const t = content[language === 'hi' ? 'hi' : 'en'];
 
   return (
-    <section className="relative flex min-h-[100dvh] w-full flex-col items-center justify-center overflow-hidden bg-[#020408] px-4 py-12 selection:bg-amber-500/30 md:px-6">
+    <section className="relative flex min-h-[100dvh] w-full flex-col items-center justify-center overflow-hidden bg-[#020408] px-4 pt-16 pb-28 selection:bg-amber-500/30 md:px-6 md:pb-20">
+      <style>{`
+        @keyframes curved-arrow-down-anim {
+          0%, 100% {
+            transform: rotate(-15deg) scale(1);
+          }
+          50% {
+            transform: rotate(-11deg) scale(1.08);
+          }
+        }
+
+        .premium-curved-arrow-down {
+          animation: curved-arrow-down-anim 2s infinite ease-in-out;
+          transform-origin: 27px 4px;
+        }
+
+        @keyframes curved-arrow-up-anim {
+          0%, 100% {
+            transform: rotate(15deg) scale(1);
+          }
+          50% {
+            transform: rotate(11deg) scale(1.08);
+          }
+        }
+
+        .premium-curved-arrow-up {
+          animation: curved-arrow-up-anim 2s infinite ease-in-out;
+          transform-origin: 27px 50px;
+        }
+
+        @keyframes crystal-shimmer {
+          0% {
+            background-position: -200% 0;
+          }
+          100% {
+            background-position: 200% 0;
+          }
+        }
+
+        .shimmer-bg {
+          background: linear-gradient(
+            120deg,
+            rgba(239, 68, 68, 0) 30%,
+            rgba(239, 68, 68, 0.12) 40%,
+            rgba(255, 255, 255, 0.22) 50%,
+            rgba(239, 68, 68, 0.12) 60%,
+            rgba(239, 68, 68, 0) 70%
+          );
+          background-size: 200% 100%;
+          animation: crystal-shimmer 5s infinite linear;
+        }
+      `}</style>
       
       {/* 🎭 BEYOND-PREMIUM ATMOSPHERE */}
       <div className="pointer-events-none absolute inset-0 z-0">
@@ -71,28 +122,9 @@ export function HeroSection() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#020408_90%)]" />
       </div>
 
-      <div className="relative z-10 flex w-full max-w-6xl flex-col items-center justify-center text-center">
+      <div className="relative z-10 flex w-full max-w-6xl flex-col items-center justify-center text-center -translate-y-4 md:-translate-y-6">
         
-        {/* 👤 PERSONALIZED HUB - Standardized Position */}
-        <AnimatePresence mode="wait">
-          {user?.name && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="mb-10 flex flex-col items-center gap-1.5"
-            >
-              <div className="flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/5 px-3 py-1 backdrop-blur-sm">
-                 <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-                 <span className="text-[11px] font-black tracking-[0.2em] text-amber-500 uppercase">
-                    {t.welcome} {user.name.split(' ')[0]}
-                 </span>
-              </div>
-              <span className="text-[10px] font-medium tracking-tight text-slate-500">
-                {t.ready}
-              </span>
-            </motion.div>
-          )}
-        </AnimatePresence>
+
 
         {/* Status Badge */}
         <motion.div
@@ -100,7 +132,7 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-5 py-2 backdrop-blur-xl transition-colors hover:border-white/10"
         >
-          <Sparkles size={14} className="text-amber-500 animate-pulse" />
+          <Trophy size={15} className="text-amber-400 animate-bounce" />
           <span className="text-[11px] font-black tracking-[0.25em] text-slate-200 uppercase">
             {t.badge}
           </span>
@@ -113,11 +145,102 @@ export function HeroSection() {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="space-y-4"
         >
-          <h1 className="flex flex-col gap-1 text-5xl font-black tracking-tighter text-white sm:text-7xl md:text-9xl md:leading-[0.9]">
-            <span className="opacity-80 mix-blend-overlay">{t.title1}</span>
-            <span className="bg-gradient-to-b from-amber-200 via-amber-400 to-orange-600 bg-clip-text text-transparent filter drop-shadow-[0_10px_40px_rgba(245,158,11,0.25)]">
-              {t.title2}
-            </span>
+          <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter text-white leading-[1.3] md:leading-[1.15]">
+            {language === 'hi' ? (
+              <span className="block opacity-95">
+                प्रारंभिक और{' '}
+                <span className="inline-block relative align-middle my-1">
+                  {/* Clean direct arrow placed at bottom-left pointing up-right towards the button */}
+                  <div className="absolute -bottom-6 left-2 z-20 pointer-events-none filter drop-shadow-[0_2px_8px_rgba(245,158,11,0.5)] animate-bounce">
+                    <svg
+                      width="32"
+                      height="32"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M5 19L19 5M19 5H9M19 5V15"
+                        stroke="#f59e0b"
+                        strokeWidth="3.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleNavigation('/mains', 'hero_mains_badge_clicked')}
+                    disabled={isPending}
+                    className="relative inline-flex items-center gap-2 rounded-2xl border border-red-500/50 bg-red-950/30 px-6 py-2 sm:px-8 sm:py-3.5 text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-white shadow-[0_0_25px_rgba(239,68,68,0.25)] transition-all hover:scale-[1.05] hover:border-red-400 hover:bg-red-950/50 hover:shadow-[0_0_40px_rgba(239,68,68,0.45)] active:scale-95 cursor-pointer select-none mx-3 group overflow-hidden"
+                  >
+                    {/* Shimmer background */}
+                    <div className="absolute inset-0 shimmer-bg" />
+
+                    {/* Micro-sparkles inside the box */}
+                    <Sparkles size={16} className="absolute -top-2 -right-2 text-amber-400 animate-pulse z-10" />
+                    
+                    <span className="relative z-10 text-white font-black filter drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">
+                      मुख्य परीक्षा
+                    </span>
+                  </button>
+                </span>
+                {' '}दोनों में
+              </span>
+            ) : (
+              <span className="block opacity-80 mix-blend-overlay">
+                Master Both
+              </span>
+            )}
+
+            {language === 'hi' ? (
+              <span className="block bg-gradient-to-b from-amber-200 via-amber-400 to-orange-600 bg-clip-text text-transparent filter drop-shadow-[0_10px_40px_rgba(245,158,11,0.25)] mt-2">
+                महारत हासिल करें।
+              </span>
+            ) : (
+              <span className="block bg-gradient-to-b from-amber-200 via-amber-400 to-orange-600 bg-clip-text text-transparent filter drop-shadow-[0_10px_40px_rgba(245,158,11,0.25)]">
+                Prelims &{' '}
+                <span className="inline-block relative align-middle my-1">
+                  {/* Clean direct arrow placed at bottom-left pointing up-right towards the button */}
+                  <div className="absolute -bottom-6 left-2 z-20 pointer-events-none filter drop-shadow-[0_2px_8px_rgba(245,158,11,0.5)] animate-bounce">
+                    <svg
+                      width="32"
+                      height="32"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M5 19L19 5M19 5H9M19 5V15"
+                        stroke="#f59e0b"
+                        strokeWidth="3.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleNavigation('/mains', 'hero_mains_badge_clicked')}
+                    disabled={isPending}
+                    className="relative inline-flex items-center gap-2 rounded-2xl border border-red-500/50 bg-red-950/30 px-6 py-2 sm:px-8 sm:py-3.5 text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-white shadow-[0_0_25px_rgba(239,68,68,0.25)] transition-all hover:scale-[1.05] hover:border-red-400 hover:bg-red-950/50 hover:shadow-[0_0_40px_rgba(239,68,68,0.45)] active:scale-95 cursor-pointer select-none mx-3 group overflow-hidden"
+                  >
+                    {/* Shimmer background */}
+                    <div className="absolute inset-0 shimmer-bg" />
+
+                    {/* Micro-sparkles inside the box */}
+                    <Sparkles size={16} className="absolute -top-2 -right-2 text-amber-400 animate-pulse z-10" />
+                    
+                    <span className="relative z-10 text-white font-black filter drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">
+                      Mains
+                    </span>
+                  </button>
+                </span>
+                .
+              </span>
+            )}
           </h1>
           
           <motion.p 
@@ -142,7 +265,7 @@ export function HeroSection() {
             type="button"
             onClick={() => handleNavigation('/open/2026-mppsc-prelims', 'hero_open_2026_prelims_clicked')}
             disabled={isPending}
-            className="group relative flex h-16 w-full items-center justify-center gap-4 overflow-hidden rounded-2xl bg-white px-10 font-black text-black transition-all hover:scale-[1.03] hover:shadow-[0_0_50px_rgba(255,255,255,0.15)] active:scale-[0.97] sm:w-auto"
+            className="group relative flex h-16 w-full items-center justify-center gap-4 overflow-hidden rounded-2xl bg-gradient-to-r from-amber-200 via-white to-amber-100 px-10 font-black text-black shadow-[0_0_30px_rgba(251,191,36,0.1)] transition-all hover:scale-[1.03] hover:shadow-[0_0_40px_rgba(251,191,36,0.25)] active:scale-[0.97] sm:w-auto"
           >
             <BookOpen size={22} className="text-amber-600" />
             <span className="text-lg tracking-tighter">{t.openPrelimsHeroBtn}</span>
@@ -150,26 +273,12 @@ export function HeroSection() {
             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-black/5 to-transparent group-hover:animate-shimmer" />
           </button>
 
-          {/*
-            Secondary CTA (Free mock at /free-quiz) — commented 2026-04-26: hero priority is the
-            open 2026 prelims PYQ paper at /open/2026-mppsc-prelims. Restore this block and swap
-            the button below if free quiz should lead the hero again.
-            <button
-              onClick={() => handleNavigation('/free-quiz', 'hero_free_test_clicked')}
-              disabled={isPending}
-              className="group flex h-16 w-full items-center justify-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] px-10 font-bold text-white backdrop-blur-2xl transition-all hover:bg-white/[0.08] hover:border-white/20 active:scale-[0.97] sm:w-auto"
-            >
-              <Rocket size={20} className="text-amber-500 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
-              <span className="text-lg tracking-tighter">{t.secondaryBtn}</span>
-            </button>
-          */}
-
           {/* Secondary CTA: PYQs */}
           <button
             type="button"
             onClick={() => handleNavigation(user ? '/syllabus/quiz/pyq' : '/free-quiz', user ? 'hero_pyq_clicked' : 'hero_free_test_clicked')}
             disabled={isPending}
-            className="group flex h-16 w-full items-center justify-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] px-10 font-bold text-white backdrop-blur-2xl transition-all hover:bg-white/[0.08] hover:border-white/20 active:scale-[0.97] sm:w-auto"
+            className="group flex h-16 w-full items-center justify-center gap-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 px-10 font-bold text-white backdrop-blur-2xl transition-all hover:bg-amber-500/10 hover:border-amber-500/40 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)] active:scale-[0.97] sm:w-auto"
           >
             <Zap size={20} className="text-amber-500 transition-transform group-hover:translate-x-0.5" />
             <span className="text-lg tracking-tighter">{user ? t.pyqBtn : t.primaryBtn}</span>

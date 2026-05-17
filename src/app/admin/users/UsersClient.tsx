@@ -59,7 +59,7 @@ interface ActivityLog {
   userId?: string; // Add this
   userEmail: string;
   userName: string | null;
-  action: 'PLAN_CHANGE' | 'DELETE' | 'GRANT' | 'UPDATE' | 'LOGIN';
+  action: 'PLAN_CHANGE' | 'DELETE' | 'GRANT' | 'UPDATE' | 'LOGIN' | 'LOGOUT';
   details: string | null; // JSON string
   createdAt: string;
   adminId: string;
@@ -229,6 +229,25 @@ export default function UsersClient() {
       } else toast.error(data.error);
     } catch {
       toast.error('Failed');
+    }
+  };
+
+  // ── Force Logout ──
+  const handleForceLogout = async (userId: string) => {
+    if (!confirm('Are you sure you want to force logout this user from all devices?')) return;
+    try {
+      const res = await fetch('/api/admin/update-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, forceLogout: true }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success('User forcefully logged out from all devices');
+        fetchUsers();
+      } else toast.error(data.error);
+    } catch {
+      toast.error('Failed to force logout');
     }
   };
 
@@ -856,6 +875,14 @@ export default function UsersClient() {
                                 <Key className="h-3 w-3" /> Link
                               </button>
                             )}
+                            {/* Force Logout */}
+                            <button
+                              onClick={() => handleForceLogout(user.id)}
+                              className="flex h-7 items-center gap-0.5 rounded-md border border-orange-200 bg-orange-50 px-2 text-[10px] font-bold text-orange-600 hover:bg-orange-100"
+                              title="Force Logout All Devices"
+                            >
+                              <AlertTriangle className="h-3 w-3" /> Logout
+                            </button>
                             {/* Delete Button */}
                             <button
                               onClick={() => handleDeleteUser(user.id)}

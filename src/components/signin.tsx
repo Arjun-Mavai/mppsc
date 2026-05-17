@@ -1,43 +1,86 @@
 'use client';
 
 import type React from 'react';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Quote, Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { Quote, Loader2, ArrowLeft, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { logger } from '@/lib/logger';
 import { loginUserAction } from '@/actions/auth-actions';
+import { shouldRedirectPreSyllabusToMains } from '@/lib/product-portal-policy';
+import { AuthenticatedUser } from '@/types/auth';
 
+/**
+ * Login Screen Flow (Client)
+ * 1) Normal login submit
+ * 2) Server बोले requiresConfirmation -> inline dialog open
+ * 3) "Kick others" confirm -> force login
+ * 4) reason=multi_device ke saath aaye to stale client auth state turant saaf
+ *    so navbar/menu/avatar instantly logged-out dikhte hain.
+ */
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // 🛡️ Handle redirect reasons (e.g. normal logout / multi-device logout)
+  useEffect(() => {
+    const reason = searchParams.get('reason');
+    if (reason === 'multi_device' || reason === 'logged_out') {
+      // Login screen par aate hi stale client auth state ko hard reset.
+      useSettingsStore.getState().setUser(null, false);
+      useSettingsStore.getState().setAuthCheckStatus('checked');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('settings-storage');
+      }
+      if (reason === 'multi_device') {
+        toast.error('Security Alert', {
+          description: 'You have been logged out because someone else logged in to your account from another device.',
+          duration: 8000,
+        });
+        setError('You were logged out due to another login session.');
+      }
+    }
+  }, [searchParams]);
+
+  const handleSubmit = async (e?: React.FormEvent, force: boolean = false) => {
+    if (e) e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      const data = await loginUserAction({ email, password });
+      const data = await loginUserAction({ email, password, force });
 
-      if (data.success) {
+      if (data.requiresConfirmation) {
+        setShowConfirmDialog(true);
+        setLoading(false);
+        return;
+      }
+
+      if (data.success && data.user) {
+        setShowConfirmDialog(false);
         // Update Global Store with fresh user data
-        useSettingsStore.getState().setUser(data.user, true);
+        const storeUser = data.user as AuthenticatedUser;
+        useSettingsStore.getState().setUser(storeUser, !!storeUser.isSubscribed);
+
         toast.success('Welcome back!', {
-          description: 'Accessing your syllabus...',
+          description: data.message || 'Accessing your syllabus...',
         });
 
         // Wait a bit for store to sync then redirect
         setTimeout(() => {
-          if (data.user?.isSubscribed) {
+          if (storeUser && shouldRedirectPreSyllabusToMains(storeUser as any)) {
+            window.location.href = '/mains';
+          } else if (storeUser.isSubscribed) {
             window.location.href = '/syllabus/quiz/pyq';
           } else {
             window.location.href = '/';
@@ -131,7 +174,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={(e) => handleSubmit(e)} className="space-y-5">
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-slate-700">Email Address</label>
               <input
@@ -173,19 +216,57 @@ export default function LoginPage() {
               </div>
             )}
 
-            <Button
-              type="submit"
-              disabled={loading}
-              className="h-11 w-full bg-slate-900 font-bold text-white hover:bg-slate-800"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing in...
-                </>
-              ) : (
-                'Sign In'
-              )}
-            </Button>
+            {/* 🛡️ Login Confirmation Dialog */}
+            {showConfirmDialog && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-3"
+              >
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-amber-900">Active Session Detected</p>
+                    <p className="text-xs text-amber-700 leading-relaxed">
+                      You are already logged in on another device. Logging in here will <b>instantly logout</b> all other sessions. Continue?
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    onClick={() => handleSubmit(undefined, true)}
+                    className="h-8 flex-1 bg-amber-600 text-xs font-bold text-white hover:bg-amber-700 shadow-sm"
+                  >
+                    Yes, Login & Kick Others
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowConfirmDialog(false)}
+                    className="h-8 flex-1 border-amber-200 bg-white text-xs font-bold text-amber-700 hover:bg-amber-100"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
+            {!showConfirmDialog && (
+              <Button
+                type="submit"
+                disabled={loading}
+                className="h-11 w-full bg-slate-900 font-bold text-white hover:bg-slate-800 shadow-lg shadow-slate-900/20"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing in...
+                  </>
+                ) : (
+                  'Sign In'
+                )}
+              </Button>
+            )}
           </form>
 
           <div className="space-y-2 pt-2 text-center">

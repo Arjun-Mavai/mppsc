@@ -339,8 +339,8 @@ export function QuizResult({
       .map((q) => q.id);
 
     if (wrongQIds.length === 0 && !testId) {
-      setPyqInsights([]);
-      setPyqFacts([]);
+      if (pyqInsights.length > 0) setPyqInsights([]);
+      if (pyqFacts.length > 0) setPyqFacts([]);
       return;
     }
 
@@ -500,6 +500,7 @@ export function QuizResult({
                 <div className="text-base leading-relaxed font-bold text-slate-900 md:text-lg lg:text-xl">
                   <FormattedQuestionText
                     text={cleanMatchingQuestionText(q.question, q)}
+                    questionId={q.id}
                     className="block"
                   />
 
@@ -523,7 +524,10 @@ export function QuizResult({
 
                 {q.questionEn && (
                   <div className="mt-2 text-sm text-slate-500 md:text-base">
-                    <FormattedQuestionText text={cleanMatchingQuestionText(q.questionEn, q)} />
+                    <FormattedQuestionText 
+                      text={cleanMatchingQuestionText(q.questionEn, q)} 
+                      questionId={q.id}
+                    />
 
                     {q.type === 'matching' && (
                       <RenderTableQuestion

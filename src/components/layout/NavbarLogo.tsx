@@ -1,6 +1,6 @@
 import { memo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { cn } from '@/lib/utils';
+import { getProductPortalNavVisibility } from '@/lib/product-portal-policy';
 
 interface NavbarLogoProps {
   user: any;
@@ -11,7 +11,14 @@ export const NavbarLogo = memo(function NavbarLogo({ user }: NavbarLogoProps) {
   
   const handleLogoClick = useCallback(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    router.push(user ? '/syllabus/quiz/pyq' : '/');
+    if (!user) {
+      router.push('/');
+      return;
+    }
+    const v = getProductPortalNavVisibility(user);
+    if (v.showPrePortalNav) router.push('/syllabus/quiz/pyq');
+    else if (v.showMainsNav) router.push('/mains/syllabus');
+    else router.push('/dashboard');
   }, [router, user]);
 
   return (

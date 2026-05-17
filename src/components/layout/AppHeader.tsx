@@ -3,15 +3,5 @@ import { AppNavbar } from '@/components/layout/AppNavbar';
 
 export async function AppHeader() {
   const user = await verifyAuth();
-
-  // Transform user object if needed to match AppNavbar props
-  const userData = user
-    ? {
-        name: user.name,
-        email: user.email, // Ensure email is available in user object from verifyAuth
-        image: null, // Add image if available in DB
-      }
-    : null;
-
-  return <AppNavbar user={userData} />;
+  return <AppNavbar user={user} />;
 }

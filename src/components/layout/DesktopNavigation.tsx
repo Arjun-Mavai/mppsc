@@ -84,19 +84,6 @@ export const DesktopNavigation = memo(function DesktopNavigation({
             <span className="text-[10px] font-black tracking-wide uppercase">Lite</span>
           </div>
         </div>
-      ) : user ? (
-        /* Free user — "Upgrade" Button with Premium Seamless Rainbow Border */
-        <div className="group relative overflow-hidden rounded-full p-[1.5px]">
-          {/* Static Rainbow Gradient for 'Award Winning' look - Only animate opacity/scale on hover if needed */}
-          <div className="absolute inset-0 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 opacity-80 transition-opacity duration-300 group-hover:opacity-100" />
-          <Link
-            href="/upgrade"
-            className="relative flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2 text-sm font-bold text-white transition-all duration-200 hover:bg-slate-800 hover:shadow-lg hover:shadow-purple-500/20"
-          >
-            <Sparkles size={14} className="fill-white/20 text-yellow-400" />
-            <span className="tracking-wide">Upgrade</span>
-          </Link>
-        </div>
       ) : null}
     </nav>
   );

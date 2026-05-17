@@ -95,9 +95,16 @@ export async function submitIntelligenceFeedback(data: IntelligenceFeedbackData)
       studentInfo = `<b>Student:</b> ${displayName}`;
     }
 
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const dayStr = now.toLocaleDateString('en-IN', { weekday: 'long' });
+
     const studentLabel = isPro ? '💎 Subscribed Pro User' : '👤 Guest Student';
     const sourceLabel = source === 'expert_analysis' ? '🧠 Intelligence Analysis' : 
                        source === 'open_paper_view' ? '📄 Paper Solutions' : 
+                       source === 'mains_pyq' ? '📝 Mains PYQ Library' :
+                       source === 'mains_syllabus_paper' ? '📚 Mains Syllabus Hub' :
                        source || 'Generic Page';
 
     await sendTelegramNotification(
@@ -107,11 +114,12 @@ export async function submitIntelligenceFeedback(data: IntelligenceFeedbackData)
       `<b>Source:</b> <code>${sourceLabel}</code>\n` +
       `<b>Status:</b> ${studentLabel}\n` +
       `${studentInfo}\n` +
+      `<b>When:</b> ${dayStr}, ${dateStr} at ${timeStr}\n` +
       `<b>Question ID:</b> <code>${questionId}</code>\n` +
       `<b>Content:</b> <i>"${escapeHTML(questionText).slice(0, 150)}${questionText.length > 150 ? '...' : ''}"</i>\n` +
       (message ? `\n<b>Feedback:</b> ${escapeHTML(message)}\n` : '') +
       `━━━━━━━━━━━━━━━━\n` +
-      `#SolutionIntelligence #MPPSC2026 ${isPro ? '#ProUser' : ''}`
+      `#SolutionIntelligence ${source === 'mains_pyq' ? '#MainsPYQ' : source === 'mains_syllabus_paper' ? '#MainsSyllabus' : '#MPPSC2026'} ${isPro ? '#ProUser' : ''}`
     );
 
     return { success: true };

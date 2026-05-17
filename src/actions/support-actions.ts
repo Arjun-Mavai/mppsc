@@ -6,10 +6,11 @@ import { eq, desc } from 'drizzle-orm';
 import { verifyAuth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { logger } from '@/lib/logger';
+import { notifyAdminOnSupportTicket } from '@/lib/admin-notify';
 
 export async function submitSupportTicket(data: any) {
   try {
-    const { name, email, phone, category, message, userId } = data;
+    const { name, email, phone, category, message, userId, pagePath } = data;
 
     if (!name || !email || !message) {
       return { success: false, error: 'Missing required fields' };
@@ -26,6 +27,18 @@ export async function submitSupportTicket(data: any) {
       status: 'open',
       createdAt: new Date(),
       examType: 'mppsc' as const, // 🔒 Explicitly tag as MPPSC
+    });
+
+    // 🚀 Send Telegram alert asynchronously (fully non-blocking)
+    notifyAdminOnSupportTicket({
+      name,
+      email,
+      phone,
+      category,
+      message,
+      pagePath,
+    }).catch((err) => {
+      logger.error('Support ticket Telegram alert failed (non-blocking catches)', err);
     });
 
     // revalidatePath('/admin/dashboard'); // If we show tickets there

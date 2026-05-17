@@ -2,10 +2,13 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { pricingConfig } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { fetchPricingConfigRow } from '@/lib/pricing-db';
 import { cookies } from 'next/headers';
 import { revalidateTag } from 'next/cache';
 import { logger } from '@/lib/logger';
 import { PRICING_DEFAULTS } from '@/config/pricing';
+import { mergePricingRow } from '@/lib/pricing-merge';
+import { pickPricingPutPayload } from '@/lib/pricing-api-allowlist';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 💰 PRICING API — GET (public) + PUT (admin-only)
@@ -17,9 +20,6 @@ import { PRICING_DEFAULTS } from '@/config/pricing';
 // Single-row table pattern: id='default' always
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-// Default pricing values from centralized config
-const DEFAULTS = { id: 'default' as const, ...PRICING_DEFAULTS };
-
 // ── GET — Public, cached ────────────────────────────────────
 export async function GET(request: Request) {
   let examType: 'upsc' | 'mppsc' | 'mppolice' = 'mppsc';
@@ -30,15 +30,17 @@ export async function GET(request: Request) {
       examType = rawExamType as 'upsc' | 'mppsc' | 'mppolice';
     }
 
-    const rows = await db
-      .select()
-      .from(pricingConfig)
-      .where(eq(pricingConfig.examType, examType))
-      .limit(1);
-    const pricing = rows[0] || { ...PRICING_DEFAULTS, examType };
+    const row = await fetchPricingConfigRow(examType);
+    const pricing = { ...mergePricingRow(row), examType };
 
     return NextResponse.json(
-      { pricing },
+      examType === 'mppsc'
+        ? {
+            pricing,
+            mppscProductCopyJson:
+              ((row ?? {}) as Record<string, unknown>)?.mppscProductCopyJson ?? null,
+          }
+        : { pricing },
       {
         headers: {
           'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
@@ -47,7 +49,10 @@ export async function GET(request: Request) {
     );
   } catch (error) {
     logger.error('Pricing GET error:', error);
-    return NextResponse.json({ pricing: { ...PRICING_DEFAULTS, examType } });
+    return NextResponse.json({
+      pricing: { ...mergePricingRow(null), examType },
+      ...(examType === 'mppsc' ? { mppscProductCopyJson: null } : {}),
+    });
   }
 }
 
@@ -81,20 +86,26 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'examType is required' }, { status: 400 });
     }
 
+    const safeUpdates = pickPricingPutPayload(data as Record<string, unknown>);
+
     // Upsert — insert if not exists, update if exists
     const existing = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.examType, examType))
+      .where(eq(pricingConfig.id, examType))
       .limit(1);
 
     if (existing.length === 0) {
-      await db.insert(pricingConfig).values({ examType, ...data, updatedAt: new Date() });
+      await db.insert(pricingConfig).values({
+        id: examType as string,
+        ...(safeUpdates as Record<string, never>),
+        updatedAt: new Date(),
+      });
     } else {
       await db
         .update(pricingConfig)
-        .set({ ...data, updatedAt: new Date() })
-        .where(eq(pricingConfig.examType, examType));
+        .set({ ...(safeUpdates as Record<string, never>), updatedAt: new Date() })
+        .where(eq(pricingConfig.id, examType as string));
     }
 
     // Bust pricing cache

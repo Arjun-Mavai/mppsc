@@ -1,29 +1,37 @@
 import { defineConfig } from 'drizzle-kit';
 import path from 'path';
+import { config as loadEnv } from 'dotenv';
 
-const localDbPath = `file:${path.resolve(process.cwd(), 'mppsc_local_dev.db')}`;
-const isDev = process.env.NODE_ENV === 'development';
-// src/db/index.ts (ya jahan client banate ho)
-if (process.env.NODE_ENV === 'development') {
-  console.log('🛠️ App is talking to LOCAL SQLite');
+loadEnv({ path: '.env' });
+loadEnv({ path: '.env.local', override: true });
+
+const localDbPath = `file:${path.resolve(
+  process.cwd(),
+  'backups/turso-backup-20260513-095501/mppsc-mains-target-2026-arjun-gurjar.sqlite'
+)}`;
+/** Same rule as `src/db/index.ts` (NEXT: NODE_ENV defaults to development when unset; tsx/cli often omits it). */
+const nodeEnv = process.env.NODE_ENV || 'development';
+const useLocalSqlite =
+  nodeEnv === 'development' && (process.env.USE_PROD_DB || '').trim() !== 'true';
+
+if (useLocalSqlite) {
+  console.log('🛠️ drizzle-kit: LOCAL SQLite', localDbPath);
 } else {
-  console.log('🌐 App is talking to TURSO CLOUD');
+  console.log('🌐 drizzle-kit: Turso / remote');
 }
-// drizzle.config.ts mein export se pehle dalo
-console.log('🚀 DB Connection Type:', isDev ? 'LOCAL (SQLite File)' : 'PRODUCTION (Turso Cloud)');
-console.log('📍 Connection URL:', isDev ? localDbPath : process.env.TURSO_DATABASE_URL);
+// Staging: point `TURSO_DATABASE_URL` (and token) at a Turso **branch** URL; production uses the primary DB URL.
+console.log('📍 Target:', useLocalSqlite ? localDbPath : process.env.TURSO_DATABASE_URL);
 
-// Fail fast in production if Turso credentials are missing
-if (!isDev && !process.env.TURSO_DATABASE_URL) {
-  throw new Error('TURSO_DATABASE_URL is required in production');
+if (!useLocalSqlite && !process.env.TURSO_DATABASE_URL) {
+  throw new Error('TURSO_DATABASE_URL is required when not using local SQLite');
 }
 
 export default defineConfig({
   schema: './src/db/schema.ts',
   out: './drizzle',
-  dialect: isDev ? 'sqlite' : 'turso',
+  dialect: useLocalSqlite ? 'sqlite' : 'turso',
   dbCredentials: {
-    url: isDev ? localDbPath : process.env.TURSO_DATABASE_URL!,
-    authToken: isDev ? undefined : process.env.TURSO_AUTH_TOKEN,
+    url: useLocalSqlite ? localDbPath : process.env.TURSO_DATABASE_URL!,
+    authToken: useLocalSqlite ? undefined : process.env.TURSO_AUTH_TOKEN,
   },
 });

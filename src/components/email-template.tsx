@@ -2,13 +2,37 @@ interface EmailTemplateProps {
   name: string;
   actionUrl: string;
   planName?: string;
+  /** When provided (MPpsc dynamic funnel), replaces the hero title. */
+  headerLine1?: string;
+  headerSubtitle?: string;
+  /** Replaces default welcome paragraphs — full sentence(s). */
+  welcomeLead?: string;
+  /** Feature table rows — may already include ✅ prefix. */
+  featureRows?: string[];
 }
 
 export default function EmailTemplate({
   name,
   actionUrl,
   planName = 'Premium',
+  headerLine1,
+  headerSubtitle,
+  welcomeLead,
+  featureRows,
 }: EmailTemplateProps) {
+  const h1 = headerLine1 ?? 'MPPSC Prelims - 2026';
+  const sub = headerSubtitle ?? 'Smart Test Series';
+  const features =
+    featureRows && featureRows.length > 0
+      ? featureRows
+      : [
+          '✅ Topic-wise & Unit-wise Tests',
+          '✅ Full Length Mock Tests (100 Questions)',
+          '✅ PYQ Papers with Smart Explanations',
+          '✅ Bilingual — Hindi & English',
+          '✅ Performance Analytics Dashboard',
+        ];
+
   return (
     <div
       style={{
@@ -38,7 +62,7 @@ export default function EmailTemplate({
             letterSpacing: '-0.5px',
           }}
         >
-          MPPSC Prelims - 2026
+          {h1}
         </h1>
         <p
           style={{
@@ -50,7 +74,7 @@ export default function EmailTemplate({
             textTransform: 'uppercase',
           }}
         >
-          Smart Test Series
+          {sub}
         </p>
       </div>
 
@@ -76,16 +100,22 @@ export default function EmailTemplate({
 
         <p style={{ fontSize: '16px', marginBottom: '8px', fontWeight: '600' }}>Hi {name},</p>
 
-        <p style={{ fontSize: '15px', marginBottom: '16px', color: '#374151' }}>
-          Welcome aboard! Your <strong style={{ color: '#0a0a0a' }}>{planName}</strong> plan is
-          activated. You&apos;ve taken the first step towards cracking MPPSC — and that takes
-          courage. 💪
-        </p>
+        {welcomeLead ? (
+          <p style={{ fontSize: '15px', marginBottom: '24px', color: '#374151' }}>{welcomeLead}</p>
+        ) : (
+          <>
+            <p style={{ fontSize: '15px', marginBottom: '16px', color: '#374151' }}>
+              Welcome aboard! Your <strong style={{ color: '#0a0a0a' }}>{planName}</strong> plan is
+              activated. You&apos;ve taken the first step towards cracking MPPSC — and that takes
+              courage. 💪
+            </p>
 
-        <p style={{ fontSize: '15px', marginBottom: '24px', color: '#374151' }}>
-          Set your password below to unlock your full access — topic-wise tests, full-length mocks,
-          PYQ papers, smart analytics, and everything you need to succeed.
-        </p>
+            <p style={{ fontSize: '15px', marginBottom: '24px', color: '#374151' }}>
+              Set your password below to unlock your full access — topic-wise tests, full-length
+              mocks, PYQ papers, smart analytics, and everything you need to succeed.
+            </p>
+          </>
+        )}
 
         {/* CTA Button */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
@@ -140,21 +170,11 @@ export default function EmailTemplate({
           </p>
           <table style={{ width: '100%', fontSize: '14px', color: '#4b5563' }}>
             <tbody>
-              <tr>
-                <td style={{ padding: '4px 0' }}>✅ Topic-wise &amp; Unit-wise Tests</td>
-              </tr>
-              <tr>
-                <td style={{ padding: '4px 0' }}>✅ Full Length Mock Tests (100 Questions)</td>
-              </tr>
-              <tr>
-                <td style={{ padding: '4px 0' }}>✅ PYQ Papers with Smart Explanations</td>
-              </tr>
-              <tr>
-                <td style={{ padding: '4px 0' }}>✅ Bilingual — Hindi &amp; English</td>
-              </tr>
-              <tr>
-                <td style={{ padding: '4px 0' }}>✅ Performance Analytics Dashboard</td>
-              </tr>
+              {features.map((row, i) => (
+                <tr key={i}>
+                  <td style={{ padding: '4px 0' }}>{row}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -169,8 +189,8 @@ export default function EmailTemplate({
           }}
         >
           <p style={{ fontSize: '13px', color: '#92400e', margin: '0', fontWeight: '500' }}>
-            ⏰ This link expires in <strong>1 hour</strong>. Set your password now to avoid
-            requesting a new one.
+            ⏰ This link expires in <strong>1 hour</strong>. Set your password now to avoid requesting
+            a new one.
           </p>
         </div>
 

@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { logger } from '@/lib/logger';
 
 export async function uploadSyllabusData(jsonData: string, secretKey: string) {
-  if (secretKey !== process.env.ADMIN_SECRET_KEY && secretKey !== 'mppsc_admin_2026') {
+  if (secretKey !== process.env.ADMIN_SECRET_KEY) {
     return { success: false, message: 'Invalid Admin Key' };
   }
 

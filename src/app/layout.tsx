@@ -90,11 +90,13 @@ export const metadata: Metadata = {
   },
 };
 
-import { verifyAuth } from '@/lib/auth';
+import { verifyAuthInternal } from '@/lib/auth';
+import { parseAccessGrants } from '@/lib/access-grants';
 import { AppNavbar } from '@/components/layout/AppNavbar';
 import { MainContentWrapper } from '@/components/layout/MainContentWrapper';
+import type { AuthenticatedUser } from '@/types/auth';
 
-// ... imports ...
+// ... rest of imports ...
 
 export default async function RootLayout({
   children,
@@ -102,19 +104,17 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   // 1. Fetch User on Server (Once per request)
-  const user = await verifyAuth();
+  const user = await verifyAuthInternal();
 
   // 2. Transform for Navbar
   const navbarUser = user
-    ? {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        image: null,
-        role: user.role || undefined,
-        is_subscribed: user.isSubscribed ?? false,
-        plan_tier: user.planTier ?? 'free',
-      }
+    ? (() => {
+        if (user._mismatch) return null;
+        return {
+          ...user,
+          accessExpiresAt: user.accessExpiresAt?.toString() || null,
+        } as AuthenticatedUser;
+      })()
     : null;
 
   // JSON-LD structured data — helps Google show rich results
@@ -176,6 +176,17 @@ export default async function RootLayout({
       <body
         className={`bg-gray-50 font-sans text-gray-900 antialiased`}
       >
+        {process.env.NEXT_PUBLIC_DISABLE_CONTENT_PROTECTION !== 'true' && (
+          <Script id="global-content-protection" strategy="afterInteractive">
+            {`
+              document.addEventListener('copy', (e) => e.preventDefault());
+              document.addEventListener('cut', (e) => e.preventDefault());
+              document.addEventListener('contextmenu', (e) => e.preventDefault());
+              document.body.style.userSelect = 'none';
+              document.body.style.webkitUserSelect = 'none';
+            `}
+          </Script>
+        )}
         <GlobalErrorBoundary>
           <PwaRegistry />
           <Providers>

@@ -4,6 +4,8 @@ export const GUEST_LEAD_SOURCE = {
   FREE_QUIZ: 'free_quiz',
   INTELLIGENCE_REACTION: 'intelligence_reaction',
   SUBJECT_QUESTIONS_VIEW: 'subject_questions_view',
+  MAINS_SYLLABUS: 'mains-syllabus',
+  MAINS_PYQ_LIBRARY: 'mains-pyq-library',
 } as const;
 
 export type GuestLeadSource = (typeof GUEST_LEAD_SOURCE)[keyof typeof GUEST_LEAD_SOURCE];
@@ -20,6 +22,12 @@ export function getGuestLeadSourceLabel(source: string | null | undefined): stri
   }
   if (source === GUEST_LEAD_SOURCE.SUBJECT_QUESTIONS_VIEW) {
     return 'Subject Questions View';
+  }
+  if (source === GUEST_LEAD_SOURCE.MAINS_SYLLABUS) {
+    return 'Mains Syllabus Library';
+  }
+  if (source === GUEST_LEAD_SOURCE.MAINS_PYQ_LIBRARY) {
+    return 'Mains PYQ Library';
   }
   if (!source) return '—';
   return source;

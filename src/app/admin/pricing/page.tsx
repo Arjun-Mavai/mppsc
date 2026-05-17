@@ -18,6 +18,8 @@ type ExamType = 'upsc' | 'mppsc' | 'mppolice';
 export default function AdminPricingPage() {
   const [activeExam, setActiveExam] = useState<ExamType>('mppsc');
   const [data, setData] = useState<PricingData>(PRICING_DEFAULTS);
+  /** Only sent for `examType === 'mppsc'` — JSON merged with defaults in-app. */
+  const [mppscProductCopyJson, setMppscProductCopyJson] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -29,10 +31,13 @@ export default function AdminPricingPage() {
       if (json.pricing) {
         // Remove examType from data if it exists to match PricingData interface
         const { examType: _, ...cleanPricing } = json.pricing;
-        setData(cleanPricing);
+        setData({ ...PRICING_DEFAULTS, ...cleanPricing });
       }
+      const rawCopy = typeof json.mppscProductCopyJson === 'string' ? json.mppscProductCopyJson : '';
+      setMppscProductCopyJson(exam === 'mppsc' ? rawCopy : '');
     } catch {
       setData(PRICING_DEFAULTS);
+      setMppscProductCopyJson('');
     } finally {
       setLoading(false);
     }
@@ -48,7 +53,11 @@ export default function AdminPricingPage() {
       const res = await fetch(API.PRICING, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, examType: activeExam }),
+        body: JSON.stringify({
+          ...data,
+          examType: activeExam,
+          ...(activeExam === 'mppsc' ? { mppscProductCopyJson: mppscProductCopyJson || null } : {}),
+        }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
@@ -212,6 +221,121 @@ export default function AdminPricingPage() {
           </span>
         </div>
       </div>
+
+      {/* ── Mains + Combo (MPPSC only; ignored for UPSC / MP Police saves) ── */}
+      {activeExam === 'mppsc' && (
+        <>
+          <div className="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 shadow-sm md:p-6">
+            <h2 className="font-bold text-emerald-900">📗 Mains vault SKU</h2>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className={labelClass}>Price (₹)</label>
+                <input
+                  type="number"
+                  value={data.mainsPrice}
+                  onChange={(e) => updateField('mainsPrice', Number(e.target.value))}
+                  className={inputClass}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className={labelClass}>Strike (₹)</label>
+                <input
+                  type="number"
+                  value={data.mainsOriginalPrice}
+                  onChange={(e) => updateField('mainsOriginalPrice', Number(e.target.value))}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className={labelClass}>Validity text</label>
+                <input
+                  type="text"
+                  value={data.mainsValidityText}
+                  onChange={(e) => updateField('mainsValidityText', e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className={labelClass}>Months</label>
+                <input
+                  type="number"
+                  value={data.mainsMonths}
+                  onChange={(e) => updateField('mainsMonths', Number(e.target.value))}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50/40 p-4 shadow-sm md:p-6">
+            <h2 className="font-bold text-amber-950">🎁 Combo SKU (Pre + Mains)</h2>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className={labelClass}>Price (₹)</label>
+                <input
+                  type="number"
+                  value={data.comboPrice}
+                  onChange={(e) => updateField('comboPrice', Number(e.target.value))}
+                  className={inputClass}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className={labelClass}>Strike (₹)</label>
+                <input
+                  type="number"
+                  value={data.comboOriginalPrice}
+                  onChange={(e) => updateField('comboOriginalPrice', Number(e.target.value))}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className={labelClass}>Validity text</label>
+                <input
+                  type="text"
+                  value={data.comboValidityText}
+                  onChange={(e) => updateField('comboValidityText', e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className={labelClass}>Months</label>
+                <input
+                  type="number"
+                  value={data.comboMonths}
+                  onChange={(e) => updateField('comboMonths', Number(e.target.value))}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2 rounded-xl border border-indigo-200 bg-white p-4 shadow-sm md:p-6">
+            <h2 className="font-bold text-slate-800">✉️ MPPSC copy JSON (pricing + thank-you + email)</h2>
+            <p className="text-[11px] leading-relaxed text-slate-500">
+              Optional partial JSON: merge keys{' '}
+              <code className="rounded bg-slate-100 px-1 py-0.5">{'{ pre, mains, combo }'}</code>{' '}
+              with shipped defaults (<code className="rounded bg-slate-100 px-1 py-0.5">
+                bulletsEn
+              </code>
+              , <code className="rounded bg-slate-100 px-1 py-0.5">thankYou*</code>,{' '}
+              <code className="rounded bg-slate-100 px-1 py-0.5">email*</code>). Wrong JSON safely
+              falls back server-side — UPSC/M Police rows never read this column.
+            </p>
+            <textarea
+              value={mppscProductCopyJson}
+              onChange={(e) => setMppscProductCopyJson(e.target.value)}
+              spellCheck={false}
+              placeholder='{ "mains": { "bulletsEn": ["..."] } }'
+              rows={12}
+              className="font-mono w-full rounded-xl border border-slate-200 p-3 text-xs leading-relaxed focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            />
+          </div>
+        </>
+      )}
 
       {/* ── Upgrade Pricing Card ───────────────────────────── */}
       <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">

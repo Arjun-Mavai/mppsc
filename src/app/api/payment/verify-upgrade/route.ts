@@ -3,8 +3,14 @@ import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
 import { db } from '@/db';
-import { payments, mppscUsers, pricingConfig } from '@/db/schema';
+import { payments, mppscUsers } from '@/db/schema';
+import { fetchPricingConfigRow } from '@/lib/pricing-db';
 import { eq } from 'drizzle-orm';
+import {
+  mergeGrantsAfterPrePurchase,
+  parseAccessGrants,
+  serializeAccessGrants,
+} from '@/lib/access-grants';
 import { Resend } from 'resend';
 import { v4 as uuidv4 } from 'uuid';
 import { checkRateLimit } from '@/lib/rate-limit';
@@ -133,12 +139,7 @@ export async function POST(req: Request) {
     const examType = (order.notes?.examType as 'upsc' | 'mppsc' | 'mppolice') || 'mppsc';
 
     // 🏷️ Plan Verification (Allows Upgrade Price OR Full Pro Price)
-    const pricingRows = await db
-      .select()
-      .from(pricingConfig)
-      .where(eq(pricingConfig.examType, examType))
-      .limit(1);
-    const p = pricingRows[0] || PRICING_DEFAULTS;
+    const p = (await fetchPricingConfigRow(examType)) ?? PRICING_DEFAULTS;
 
     // We expect user to pay at least upgrade price
     const upgradeAmountPaise = (p.upgradePrice ?? PRICING_DEFAULTS.upgradePrice) * 100;
@@ -173,6 +174,8 @@ export async function POST(req: Request) {
         currency: 'INR',
       });
 
+      const grants = mergeGrantsAfterPrePurchase(parseAccessGrants(user.accessGrants));
+
       await tx
         .update(mppscUsers)
         .set({
@@ -180,6 +183,7 @@ export async function POST(req: Request) {
           isSubscribed: true,
           isActive: true,
           accessExpiresAt,
+          accessGrants: serializeAccessGrants(grants),
           deletedAt: null,
         })
         .where(eq(mppscUsers.id, userId));

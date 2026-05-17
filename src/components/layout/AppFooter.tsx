@@ -25,6 +25,7 @@ export function AppFooter() {
   // 🚫 Quiz pages pe footer nahi dikhana — user test de raha hai ya prepare kar raha hai!
   if (pathname.startsWith('/syllabus/quiz')) return null;
   if (pathname.startsWith('/free-quiz')) return null;
+  if (pathname.startsWith('/mains/syllabus')) return null;
 
   return (
     <footer className="min-h-[250px] border-t border-slate-200 bg-slate-50 py-12 pb-24 sm:min-h-[200px] md:pb-12">
@@ -32,7 +33,7 @@ export function AppFooter() {
         {/* Brand Section */}
         <div className="order-last w-full text-center md:order-first md:w-auto md:text-left">
           <p className="text-lg font-bold text-slate-900">Mindful MPPSC</p>
-          <p className="mt-1 text-sm text-slate-500">© 2026 All rights reserved.</p>
+          <p className="mt-1 text-sm text-slate-500">© 2026 Mindful MPPSC. All rights reserved.</p>
           <p className="mt-2 text-[10px] font-medium text-slate-400">Made with ❤️ for MP</p>
         </div>
 

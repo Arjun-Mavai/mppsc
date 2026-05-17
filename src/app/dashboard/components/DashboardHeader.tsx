@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useRouter } from 'next/navigation';
@@ -21,10 +22,8 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
     <div className="sticky top-6 z-50 mx-auto max-w-5xl px-4">
       <div className="flex h-16 items-center justify-between rounded-[2rem] border border-indigo-100/50 bg-white/80 px-6 shadow-sm backdrop-blur-xl">
         <div className="flex items-center gap-4">
-          <div className="relative">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-50 border border-indigo-100 text-xs font-black text-indigo-700 shadow-inner">
-              {user.name?.[0]}
-            </div>
+          <div className="relative h-10 w-10 overflow-hidden rounded-full border border-indigo-100 shadow-inner">
+            <Image src="/default-avatar.png" alt={user.name || 'User'} fill className="object-cover scale-150" />
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">

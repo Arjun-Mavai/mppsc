@@ -11,9 +11,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, LayoutDashboard } from './icons';
+import type { AuthenticatedUser } from '@/types/auth';
 
 interface UserSectionProps {
-  user: any;
+  user: AuthenticatedUser | null;
   authCheckStatus: string;
   isMounted: boolean;
   onLogout: () => Promise<void>;
@@ -42,7 +43,7 @@ export const UserSection = memo(function UserSection({
             className="relative hidden h-10 w-10 rounded-full p-0 ring-2 ring-slate-100 transition-all hover:ring-slate-200 md:flex"
           >
             <Avatar className="h-10 w-10">
-              <AvatarImage src={user.image || ''} alt={user.name || 'User'} />
+              <AvatarImage src={user.image || '/default-avatar.png'} alt={user.name || 'User'} className="scale-150" />
               <AvatarFallback className="border border-slate-100 bg-slate-50 font-bold text-slate-700">
                 {user.name?.charAt(0).toUpperCase() || 'U'}
               </AvatarFallback>
@@ -71,8 +72,11 @@ export const UserSection = memo(function UserSection({
 
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            className="text-red-600 focus:text-red-600"
-            onClick={onLogout}
+            className="text-red-600 focus:text-red-600 cursor-pointer"
+            onSelect={(e) => {
+              e.preventDefault();
+              onLogout();
+            }}
           >
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>

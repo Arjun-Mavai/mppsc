@@ -22,7 +22,8 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { type PricingData, calcDiscount, calcMonthly, PlanFeatureWithIcon } from '@/config/pricing';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Target,
@@ -39,7 +40,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 };
 
 interface PricingCardProps {
-  planType: 'lite' | 'pro' | 'upgrade';
+  planType: 'lite' | 'pro' | 'upgrade' | 'mains' | 'combo';
   pricing: PricingData;
   features: PlanFeatureWithIcon[];
   language: 'en' | 'hi';
@@ -64,56 +65,131 @@ export function PricingCard({
   const isLite = planType === 'lite';
   const isPro = planType === 'pro';
   const isUpgrade = planType === 'upgrade';
+  const isMains = planType === 'mains';
+  const isCombo = planType === 'combo';
+  const isProShell = isPro || isUpgrade || isMains || isCombo;
 
-  const price = isLite ? p.litePrice : isPro ? p.proPrice : p.upgradePrice;
+  const price = isLite
+    ? p.litePrice
+    : isPro
+      ? p.proPrice
+      : isUpgrade
+        ? p.upgradePrice
+        : isMains
+          ? p.mainsPrice
+          : isCombo
+            ? p.comboPrice
+            : 0;
   const originalPrice = isLite
     ? p.liteOriginalPrice
     : isPro
       ? p.proOriginalPrice
-      : p.upgradeOriginalPrice;
+      : isUpgrade
+        ? p.upgradeOriginalPrice
+        : isMains
+          ? p.mainsOriginalPrice
+          : isCombo
+            ? p.comboOriginalPrice
+            : 0;
   const discount = calcDiscount(price, originalPrice);
-  const months = isLite ? p.liteMonths : isPro ? p.proMonths : 1; // months only relevant for full plans
+  const months = isLite
+    ? p.liteMonths
+    : isPro
+      ? p.proMonths
+      : isUpgrade
+        ? 1
+        : isMains
+          ? p.mainsMonths
+          : isCombo
+            ? p.comboMonths
+            : 1;
   const monthly = calcMonthly(price, months);
-  const validityText = isLite ? p.liteValidityText : p.proValidityText;
+  const validityText = isLite
+    ? p.liteValidityText
+    : isPro
+      ? p.proValidityText
+      : isUpgrade
+        ? p.proValidityText
+        : isMains
+          ? p.mainsValidityText
+          : isCombo
+            ? p.comboValidityText
+            : p.proValidityText;
 
-  // Card Specific Styling
+  // Card shell: Pro card look; mains = emerald border; combo = slightly deeper amber border
   const cardClasses = cn(
     'relative flex flex-col h-full transition-all duration-300',
-    isPro || isUpgrade
-      ? 'border-2 border-amber-500 shadow-[0_20px_50px_rgba(245,158,11,0.15)] overflow-hidden scale-[1.02] z-10'
-      : 'border border-amber-100 shadow-sm hover:shadow-md'
+    isLite
+      ? 'border border-amber-100 shadow-sm hover:shadow-md'
+      : isMains
+        ? 'border-2 border-amber-500 shadow-[0_20px_50px_rgba(245,158,11,0.15)] overflow-hidden scale-[1.02] z-10'
+        : isCombo
+          ? 'border-2 border-amber-600 shadow-[0_20px_50px_rgba(245,158,11,0.15)] overflow-hidden scale-[1.02] z-10'
+          : isPro || isUpgrade
+            ? 'border-2 border-amber-500 shadow-[0_20px_50px_rgba(245,158,11,0.15)] overflow-hidden scale-[1.02] z-10'
+            : 'border border-amber-100 shadow-sm hover:shadow-md'
   );
 
   const titleIcon = isLite ? (
     <Zap className="h-5 w-5 text-amber-500" />
-  ) : isPro ? (
+  ) : isMains ? (
+    <BookOpen className="h-5 w-5 text-amber-600" />
+  ) : isCombo || isPro ? (
     <Crown className="h-5 w-5 text-amber-600" />
   ) : (
     <Star className="h-5 w-5 fill-amber-500 text-amber-500" />
   );
-  const title = isLite ? 'Lite' : isPro ? 'Pro' : hi ? 'प्रो में अपग्रेड' : 'Upgrade to Pro';
+  const title = isLite
+    ? 'Lite'
+    : isPro
+      ? 'Pro'
+      : isMains
+        ? hi
+          ? 'मेंस ज्ञानकोश'
+          : 'Mains Gyan Kosh'
+        : isCombo
+          ? hi
+            ? 'प्री + मेंस'
+            : 'Pre + Mains'
+          : hi
+            ? 'प्रो में अपग्रेड'
+            : 'Upgrade to Pro';
   const subtitle = isLite
     ? hi
-      ? 'स्मार्ट शुरुआत — प्रीलिम्स तक'
-      : 'Smart start — till Prelims'
+      ? 'स्मार्ट शुरुआत — 6 महीने'
+      : 'Smart start — 6 Months'
     : isPro
       ? hi
-        ? 'पूरी ताकत — मेन्स तक'
-        : 'Full power — till Mains'
-      : hi
-        ? 'लाइट से प्रो — सिर्फ़ अंतर भरें'
-        : 'Lite → Pro — Just pay the difference';
+        ? 'पूरी ताकत — 6 महीने'
+        : 'Full power — 6 Months'
+      : isMains
+        ? hi
+          ? 'सिलेबस, मॉडल उत्तर व PYQ डेस्क'
+          : 'Syllabus, model answers & mains PYQ desk'
+        : isCombo
+          ? hi
+            ? 'प्रो प्रीलिम्स + पूरा मेंस एक साथ'
+            : 'Pro prelims stack + full Mains Gyan Kosh'
+          : hi
+            ? 'लाइट से प्रो — सिर्फ़ अंतर भरें'
+            : 'Lite → Pro — Just pay the difference';
+
+  const featureIconTone = isLite
+    ? 'text-amber-500'
+    : 'text-amber-600';
 
   return (
     <div className="group relative h-full">
-      {/* Pro/Upgrade Glow Effect */}
-      {(isPro || isUpgrade) && (
+      {(isPro || isUpgrade || isCombo) && (
+        <div className="absolute -inset-0.5 animate-pulse rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 opacity-20 blur-md" />
+      )}
+      {isMains && (
         <div className="absolute -inset-0.5 animate-pulse rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 opacity-20 blur-md" />
       )}
 
       <Card className={cn(cardClasses, 'bg-white')}>
         {/* Most Popular Badge */}
-        {isPopular && isPro && (
+        {isPopular && (isPro || isCombo) && (
           <div className="absolute top-0 right-0 z-20 rounded-bl-lg bg-amber-600 px-4 py-1.5 text-[10px] font-black tracking-widest text-white uppercase">
             {hi ? 'सबसे लोकप्रिय' : 'MOST POPULAR'}
           </div>
@@ -132,7 +208,7 @@ export function PricingCard({
               <h3
                 className={cn(
                   'text-xl font-bold',
-                  isPro || isUpgrade ? 'text-amber-900' : 'text-slate-900'
+                  isPro || isUpgrade || isCombo || isMains ? 'text-amber-900' : 'text-slate-900'
                 )}
               >
                 {title}
@@ -146,7 +222,9 @@ export function PricingCard({
             <p
               className={cn(
                 'text-sm font-medium',
-                isPro || isUpgrade ? 'text-amber-700/80' : 'text-slate-500'
+                isPro || isUpgrade || isCombo || isMains
+                  ? 'text-amber-700/80'
+                  : 'text-slate-500'
               )}
             >
               {subtitle}
@@ -200,47 +278,34 @@ export function PricingCard({
 
           {/* Features List */}
           <ul className="mb-8 flex-1 space-y-3.5 text-left">
-            {features.map((f, i) => {
-              const IconComp = ICON_MAP[f.icon || ''] || CheckCircle2;
-              return (
-                <li
-                  key={f.en}
-                  className={cn(
-                    'flex items-start gap-3 text-sm font-medium',
-                    isPro || isUpgrade ? 'text-slate-900' : 'text-slate-700',
-                    isPro && i === 0 && 'font-bold'
-                  )}
-                >
-                  <IconComp
-                    className={cn(
-                      'mt-0.5 h-4.5 w-4.5 shrink-0',
-                      isLite ? 'text-amber-500' : 'text-amber-600'
-                    )}
-                  />
-                  <span>{hi ? f.hi : f.en}</span>
-                </li>
-              );
-            })}
+            {features.map((f, i) => (
+              <FeatureItem 
+                key={f.en} 
+                f={f} 
+                i={i} 
+                isLite={isLite} 
+                isProShell={isProShell} 
+                isUpgrade={isUpgrade} 
+                featureIconTone={featureIconTone} 
+                language={language}
+              />
+            ))}
             {/* Validity Item if not in features already */}
             {!isUpgrade && (
               <li
                 className={cn(
                   'flex items-start gap-3 text-sm font-medium',
-                  isPro || isUpgrade ? 'text-slate-900' : 'text-slate-700'
+                  isProShell ? 'text-slate-900' : 'text-slate-700'
                 )}
               >
                 <Clock
                   className={cn(
                     'mt-0.5 h-4.5 w-4.5 shrink-0',
-                    isLite ? 'text-blue-500' : 'text-amber-600'
+                    isLite ? 'text-blue-500' : featureIconTone
                   )}
                 />
                 <span>
-                  {hi
-                    ? isLite
-                      ? 'MPPSC 2026 प्रीलिम्स तक वैध'
-                      : 'MPPSC 2026 मेन्स तक वैध'
-                    : validityText}
+                  {hi ? (isLite ? '6 महीने तक वैध' : validityText) : validityText}
                 </span>
               </li>
             )}
@@ -256,11 +321,13 @@ export function PricingCard({
                   'h-12 w-full rounded-xl font-bold transition-all',
                   isLite &&
                     'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900',
-                  (isPro || isUpgrade) &&
+                  (isProShell && !isMains) &&
+                    'bg-slate-950 text-white shadow-lg shadow-amber-900/20 hover:bg-black border border-amber-500/30',
+                  isMains &&
                     'bg-slate-950 text-white shadow-lg shadow-amber-900/20 hover:bg-black border border-amber-500/30'
                 )}
               >
-                <Link href={href} prefetch={true}>
+                <Link href={href} prefetch={true} onClick={onBuy}>
                   {isLite
                     ? hi
                       ? `₹${price} में लाइट लें`
@@ -269,9 +336,17 @@ export function PricingCard({
                       ? hi
                         ? `₹${price} में प्रो लें`
                         : `Upgrade to Pro — ₹${price}`
-                      : hi
-                        ? `₹${price} में प्रो लें`
-                        : `Get Pro — ₹${price}`}
+                      : isMains
+                        ? hi
+                          ? `मेंस लाइब्रेरी सक्रिय करें — ₹${price}`
+                          : `Activate Mains Library — ₹${price}`
+                        : isCombo
+                          ? hi
+                            ? `₹${price} में कॉम्बो लें`
+                            : `Get Combo — ₹${price}`
+                          : hi
+                            ? `₹${price} में प्रो लें`
+                            : `Get Pro — ₹${price}`}
                 </Link>
               </Button>
             </motion.div>
@@ -284,7 +359,9 @@ export function PricingCard({
                   'h-12 w-full rounded-xl font-bold transition-all',
                   isLite &&
                     'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900',
-                  (isPro || isUpgrade) &&
+                  (isProShell && !isMains) &&
+                    'bg-slate-950 text-white shadow-lg shadow-amber-900/20 hover:bg-black border border-amber-500/30',
+                  isMains &&
                     'bg-slate-950 text-white shadow-lg shadow-amber-900/20 hover:bg-black border border-amber-500/30'
                 )}
               >
@@ -296,14 +373,135 @@ export function PricingCard({
                     ? hi
                       ? `₹${price} में प्रो लें`
                       : `Upgrade to Pro — ₹${price}`
-                    : hi
-                      ? `₹${price} में प्रो लें`
-                      : `Get Pro — ₹${price}`}
+                    : isMains
+                      ? hi
+                        ? `मेंस लाइब्रेरी सक्रिय करें — ₹${price}`
+                        : `Activate Mains Library — ₹${price}`
+                      : isCombo
+                        ? hi
+                          ? `₹${price} में कॉम्बो लें`
+                          : `Get Combo — ₹${price}`
+                        : hi
+                          ? `₹${price} में प्रो लें`
+                          : `Get Pro — ₹${price}`}
               </Button>
             </motion.div>
           )}
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function FeatureItem({ 
+  f, 
+  i, 
+  isLite, 
+  isProShell, 
+  isUpgrade, 
+  featureIconTone, 
+  language 
+}: { 
+  f: PlanFeatureWithIcon; 
+  i: number; 
+  isLite: boolean; 
+  isProShell: boolean; 
+  isUpgrade: boolean; 
+  featureIconTone: string; 
+  language: 'en' | 'hi';
+}) {
+  const [expanded, setExpanded] = React.useState(false);
+  const hi = language === 'hi';
+  const text = hi ? f.hi : f.en;
+  
+  /**
+   * Split logic: 
+   * We look for " — " (em-dash with space) or " - " (hyphen with space).
+   * This avoids splitting hyphenated words like "Double-Style".
+   */
+  const separatorRegex = /\s+[\u2014-]\s+/;
+  const parts = text.split(separatorRegex);
+  const hasDetails = parts.length > 1;
+
+  let headline = parts[0] || '';
+  let details = parts.slice(1).join(' — ');
+
+  /**
+   * User Exception: If we have multiple dashes (e.g. Double-Style - Variations — Detail),
+   * we might want to include the first dash in the headline if it was a false positive.
+   * But with the improved regex above, "Double-Style" won't split.
+   * However, the user specifically asked: "agar two dash h to fisrt skip karna h".
+   */
+  if (parts.length > 2) {
+    headline = `${parts[0]} — ${parts[1]}`;
+    details = parts.slice(2).join(' — ');
+  }
+
+  const IconComp = ICON_MAP[f.icon || ''] || CheckCircle2;
+
+  return (
+    <li
+      className={cn(
+        'group/feat flex flex-col gap-1',
+        hasDetails && 'cursor-pointer select-none'
+      )}
+      onClick={() => hasDetails && setExpanded(!expanded)}
+    >
+      <div className="flex items-start gap-3">
+        <IconComp
+          className={cn(
+            'mt-0.5 h-4 w-4 shrink-0 transition-transform duration-300',
+            isLite ? 'text-amber-500' : featureIconTone,
+            expanded && 'scale-110'
+          )}
+        />
+        <div className="flex flex-1 flex-col gap-0.5 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <span className={cn(
+              'text-[13.5px] font-semibold leading-snug',
+              isProShell ? 'text-slate-900' : 'text-slate-700',
+              isProShell && !isUpgrade && i === 0 && 'font-bold'
+            )}>
+              {headline}
+            </span>
+            {hasDetails && (
+              <div className="flex items-center gap-1 opacity-60 transition-opacity group-hover/feat:opacity-100">
+                {!expanded && (
+                  <motion.div 
+                    animate={{ y: [0, -2, 0] }} 
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    className="flex items-center gap-1"
+                  >
+                    <span className="text-[9px] font-bold uppercase tracking-tight text-slate-400">
+                      {hi ? 'देखें' : 'More'}
+                    </span>
+                    <Sparkles className="h-2.5 w-2.5 text-amber-500" />
+                  </motion.div>
+                )}
+                <ChevronDown className={cn(
+                  'h-3.5 w-3.5 text-slate-400 transition-transform duration-300',
+                  expanded && 'rotate-180'
+                )} />
+              </div>
+            )}
+          </div>
+          
+          <AnimatePresence>
+            {expanded && hasDetails && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <p className="pb-1 text-[12.5px] font-medium leading-relaxed text-slate-500/90 italic">
+                  {details}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </li>
   );
 }

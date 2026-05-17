@@ -6,10 +6,7 @@ import { env } from '@/lib/env';
 export async function POST(request: NextRequest) {
   try {
     const { secret, tag } = await request.json();
-    console.log('secret', secret);
-    console.log('tag', tag);
 
-    console.log('admin secret key', process.env.ADMIN_SECRET_KEY);
     // Check for secret to prevent abuse
     if (secret !== env.JWT_SECRET && secret !== process.env.ADMIN_SECRET_KEY) {
       return NextResponse.json({ message: 'Invalid secret' }, { status: 401 });

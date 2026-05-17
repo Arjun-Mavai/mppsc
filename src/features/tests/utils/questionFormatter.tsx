@@ -63,9 +63,10 @@ export function cleanMatchingQuestionText(
 interface FormattedQuestionTextProps {
   text: string;
   className?: string;
+  questionId?: string;
 }
 
-export function FormattedQuestionText({ text, className }: FormattedQuestionTextProps) {
+export function FormattedQuestionText({ text, className, questionId }: FormattedQuestionTextProps) {
   if (!text) return null;
   const normalized = normalizeMultilineText(text);
 
@@ -76,7 +77,7 @@ export function FormattedQuestionText({ text, className }: FormattedQuestionText
     (normalized.includes('सूची-1') && normalized.includes('सूची-2')) ||
     (normalized.includes('सूची- I') && normalized.includes('सूची- II'));
   if (hasListPattern) {
-    return <RenderTableQuestion text={normalized} className={className} />;
+    return <RenderTableQuestion text={normalized} className={className} questionId={questionId} />;
   }
 
   // 2. Check for "Assertion (A)" and "Reason (R)" or "Statement I" & "Statement II"
@@ -104,6 +105,7 @@ export interface RenderTableQuestionProps {
   matchPairs?: any[];
   language?: string;
   darkMode?: boolean;
+  questionId?: string;
 }
 
 export function RenderTableQuestion({
@@ -112,12 +114,47 @@ export function RenderTableQuestion({
   matchPairs,
   language = 'hi',
   darkMode = false,
+  questionId,
 }: RenderTableQuestionProps) {
+  // 🎲 Deterministic seeded shuffle based on questionId
+  const seededShuffle = <T,>(arr: T[]): T[] => {
+    if (!questionId) return arr;
+    const result = [...arr];
+    let seed = 0;
+    for (let i = 0; i < questionId.length; i++) {
+      seed = (seed << 5) - seed + questionId.charCodeAt(i);
+      seed |= 0;
+    }
+    
+    for (let i = result.length - 1; i > 0; i--) {
+      seed = (Math.imul(16807, seed) | 0) % 2147483647;
+      const j = Math.abs(seed % (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+  };
   // If we have structured matchPairs, use them directly
   if (matchPairs && Array.isArray(matchPairs) && matchPairs.length > 0) {
     const isHindi = language === 'hi';
     const h1 = isHindi ? 'सूची - I' : 'List - I';
     const h2 = isHindi ? 'सूची - II' : 'List - II';
+
+    // 🚀 FIX: Prevent obvious answers by separating and sorting List 2
+    // List 1 items stay in their original order (usually 1, 2, 3, 4)
+    const list1 = matchPairs.map((p) => ({
+      id: p.id,
+      label: isHindi ? p.label : p.labelEn || p.label,
+    }));
+
+    // List 2 items are extracted and SHUFFLED deterministically
+    // This ensures that List 2 does NOT align perfectly with List 1, 
+    // and stays consistent across SSR and Hydration.
+    const list2ItemsRaw = matchPairs.map((p) => ({
+      matchId: p.matchId,
+      match: isHindi ? p.match : p.matchEn || p.match,
+    }));
+    
+    const list2 = seededShuffle(list2ItemsRaw);
 
     // Dark mode styles
     const borderColor = darkMode ? 'border-slate-600' : 'border-slate-800';
@@ -144,33 +181,36 @@ export function RenderTableQuestion({
             {h2}
           </div>
         </div>
-        {matchPairs.map((pair, i) => (
-          <div
-            key={i}
-            className={cn(
-              'grid w-full grid-cols-2',
-              rowBg,
-              i !== matchPairs.length - 1 && cn('border-b', borderColor)
-            )}
-          >
-            <div className={cn('flex items-center border-r-2', borderColor)}>
-              <div className={cn('min-w-[2rem] border-r px-2 py-2 text-center text-xs font-bold sm:min-w-[3rem] sm:px-3 sm:py-3 sm:text-sm', cellBorder, cellBg, cellText)}>
-                {pair.id}
+        {list1.map((item1, i) => {
+          const item2 = list2[i] || { matchId: '', match: '' };
+          return (
+            <div
+              key={i}
+              className={cn(
+                'grid w-full grid-cols-2',
+                rowBg,
+                i !== list1.length - 1 && cn('border-b', borderColor)
+              )}
+            >
+              <div className={cn('flex items-center border-r-2', borderColor)}>
+                <div className={cn('min-w-[2rem] border-r px-2 py-2 text-center text-xs font-bold sm:min-w-[3rem] sm:px-3 sm:py-3 sm:text-sm', cellBorder, cellBg, cellText)}>
+                  {item1.id}
+                </div>
+                <div className={cn('flex-1 px-2 py-2 text-xs sm:px-3 sm:py-3 sm:text-sm', cellText)}>
+                  {item1.label}
+                </div>
               </div>
-              <div className={cn('flex-1 px-2 py-2 text-xs sm:px-3 sm:py-3 sm:text-sm', cellText)}>
-                {isHindi ? pair.label : pair.labelEn || pair.label}
+              <div className="flex items-center">
+                <div className={cn('min-w-[2rem] border-r px-2 py-2 text-center text-xs font-bold sm:min-w-[3rem] sm:px-3 sm:py-3 sm:text-sm', cellBorder, cellBg, cellText)}>
+                  {item2.matchId}
+                </div>
+                <div className={cn('flex-1 px-2 py-2 text-xs sm:px-3 sm:py-3 sm:text-sm', cellText)}>
+                  {item2.match}
+                </div>
               </div>
             </div>
-            <div className="flex items-center">
-              <div className={cn('min-w-[2rem] border-r px-2 py-2 text-center text-xs font-bold sm:min-w-[3rem] sm:px-3 sm:py-3 sm:text-sm', cellBorder, cellBg, cellText)}>
-                {pair.matchId}
-              </div>
-              <div className={cn('flex-1 px-2 py-2 text-xs sm:px-3 sm:py-3 sm:text-sm', cellText)}>
-                {isHindi ? pair.match : pair.matchEn || pair.match}
-              </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }
@@ -337,7 +377,11 @@ export function RenderTableQuestion({
         }
       }
     }
-    return renderTable(intro, list1Items, list2Items);
+
+    // 🚀 FIX: Shuffle List 2 for text-based fallback deterministically!
+    const shuffledList2 = seededShuffle([...list2Items]);
+
+    return renderTable(intro, list1Items, shuffledList2);
   }
 
   // Try the old format: separate List-I and List-II sections
@@ -380,7 +424,11 @@ export function RenderTableQuestion({
     const intro = lines.slice(0, list1Index);
     const list1Items = lines.slice(list1Index + 1, list2Index);
     const list2Items = lines.slice(list2Index + 1);
-    return renderTable(intro, list1Items, list2Items);
+
+    // 🚀 FIX: Shuffle List 2 here too deterministically!
+    const shuffledList2 = seededShuffle([...list2Items]);
+
+    return renderTable(intro, list1Items, shuffledList2);
   }
 
   // Fallback if parsing fails

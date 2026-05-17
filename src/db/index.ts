@@ -1,5 +1,6 @@
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
+import path from 'path';
 import * as schema from './schema';
 import { env } from '@/lib/env';
 
@@ -9,8 +10,9 @@ const globalForDb = globalThis as unknown as {
 };
 
 const isDev = env.NODE_ENV === 'development' && env.USE_PROD_DB.trim() !== 'true';
-const connectionUrl = isDev 
-  ? 'file:mppsc_local_dev.db' 
+const localDbPath = path.resolve(process.cwd(), 'mppsc_local_dev.db');
+const connectionUrl = isDev
+  ? `file:${localDbPath}`
   : env.TURSO_DATABASE_URL;
 
 const connectionAuthToken = isDev
@@ -24,6 +26,11 @@ export const client =
     authToken: connectionAuthToken,
     // syncUrl: process.env.TURSO_SYNC_URL, // Optional: Enable if using embedded replica
   });
+
+if (!globalForDb.client && env.NODE_ENV === 'development') {
+  const targetLabel = isDev ? 'LOCAL_SQLITE' : 'TURSO_REMOTE';
+  console.log(`🗄️ DB connected [${targetLabel}]: ${connectionUrl}`);
+}
 
 if (env.NODE_ENV !== 'production') {
   globalForDb.client = client;
