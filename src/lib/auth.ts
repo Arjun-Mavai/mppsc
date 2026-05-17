@@ -4,7 +4,7 @@ import { mppscUsers } from '@/db/schema';
 import { eq, isNull, and } from 'drizzle-orm';
 import { cache } from 'react';
 import { logger } from '@/lib/logger';
-import type { AuthenticatedUser } from '@/types/auth';
+import type { AuthenticatedUser, UserRole, PlanTier } from '@/types/auth';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🔐 AUTH VERIFICATION — har server component me use hota h

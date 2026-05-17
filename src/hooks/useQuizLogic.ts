@@ -466,7 +466,7 @@ export function useQuizLogic({
   useEffect(() => {
     // 🛡️ Optimization: Only reset if not already reset to avoid cascading renders
     if (Object.keys(answers).length > 0) setAnswers({});
-    if (markedForReview.length > 0) setMarkedForReview([]);
+    if (markedforReview.length > 0) setMarkedForReview([]);
 
     // 🛡️ SECURITY FIX: Always use server-defined time limit
     const targetTime = timeLimitInMinutes * 60;
