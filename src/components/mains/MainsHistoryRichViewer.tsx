@@ -14,6 +14,7 @@ import { CheckCircle, BookOpen, Filter, Network, Brain, Palette, AlertTriangle, 
 import Link from 'next/link';
 import { MainsMobileSyllabusDrawer } from '@/components/mains/MainsMobileSyllabusDrawer';
 import { MainsKeyTermsFlash } from '@/components/mains/MainsKeyTermsFlash';
+import { QuickFeedback } from '@/features/tests/components/QuickFeedback';
 
 function parseBoldInline(text: string) {
   const parts = text.split(/(\*\*.+?\*\*)/g);
@@ -101,7 +102,7 @@ function models(payload: Record<string, unknown>, lang: 'hi' | 'en') {
 }
 
 function MainsSyllabusGraspRenderer({ text, hi }: { text: string; hi: boolean }) {
-  const rawLines = text.split('\n').map(l => l.trim()).filter(l => Boolean(l) && l !== '-' && l !== '*' && l !== '•');
+  const rawLines = text.split(/\n|,\s*-\s*/).map(l => l.trim()).filter(l => Boolean(l) && l !== '-' && l !== '*' && l !== '•');
 
   const editorialProse = cn(
     "text-[15.5px] sm:text-[17px] leading-[1.85] sm:leading-[1.9] tracking-[0.015em] font-medium text-slate-100",
@@ -114,13 +115,71 @@ function MainsSyllabusGraspRenderer({ text, hi }: { text: string; hi: boolean })
         let clean = line.replace(/^(?:#+|\-|\*+|\•)\s*/, '').replace(/\*+/g, '').trim();
         if (!clean) return null;
 
-        const colonIdx = clean.indexOf(':');
+        // Find separator (? or :)
+        const qIdx = clean.indexOf('?');
+        const cIdx = clean.indexOf(':');
+        
+        let splitIdx = -1;
+        if (qIdx !== -1 && qIdx < 55) {
+          splitIdx = qIdx;
+        } else if (cIdx !== -1 && cIdx < 55) {
+          splitIdx = cIdx;
+        }
+
         let prefix = '';
         let rest = clean;
 
-        if (colonIdx !== -1 && colonIdx < 55) {
-          prefix = clean.substring(0, colonIdx).trim();
-          rest = clean.substring(colonIdx + 1).trim();
+        if (splitIdx !== -1) {
+          prefix = clean.substring(0, splitIdx + 1).trim();
+          rest = clean.substring(splitIdx + 1).trim();
+        } else if (clean.length < 55 || /^\(\d+\)/.test(clean)) {
+          // If no separator but short, OR it's a numbered list item, make it a standalone heading (badge)
+          prefix = clean;
+          rest = '';
+        } else {
+          prefix = '';
+          rest = clean;
+        }
+
+        const headingPatterns = [
+          'what is this topic',
+          'what is it',
+          'why is it in the syllabus',
+          'why it\'s here',
+          'syllabus decoding & exam prediction',
+          'syllabus decoding and exam prediction',
+          'syllabus decoding',
+          'quick lens',
+          'यह टॉपिक क्या है',
+          'सिलेबस में क्यों है',
+          'संक्षिप्त खुलासा',
+          'सिलेबस डिकोडिंग (संभावित प्रश्न)',
+          'सिलेबस डिकोडिंग'
+        ];
+
+        // Check if prefix contains any pattern
+        const isHeading = prefix && headingPatterns.some(p => prefix.toLowerCase().includes(p));
+
+        if (isHeading) {
+          const headerText = prefix || clean;
+          return (
+            <div key={idx} className="mt-6 mb-3">
+              <h3 className={cn(
+                "inline-flex items-center rounded-lg px-4 py-1.5 text-sm sm:text-base uppercase tracking-wider font-extrabold shadow-md shadow-black/40 ring-1 ring-white/10",
+                "bg-gradient-to-r from-amber-500/30 to-amber-500/10 text-amber-300 border-b-[3px] border-r border-amber-500/60 font-[family-name:var(--font-pyq-dev)]"
+              )}>
+                {headerText}
+              </h3>
+              {rest && (
+                <div className="flex items-start gap-2.5 mt-2.5 text-slate-100">
+                  <span className="mt-2 size-2 shrink-0 rounded-full bg-amber-500" />
+                  <p className={cn(editorialProse, "flex-1 min-w-0")}>
+                    {rest}
+                  </p>
+                </div>
+              )}
+            </div>
+          );
         }
 
         const cardSkin = [
@@ -153,12 +212,16 @@ function MainsSyllabusGraspRenderer({ text, hi }: { text: string; hi: boolean })
                 </span>
               </div>
             ) : null}
-            <div className="flex items-start gap-2.5">
-              <span className={cn("mt-2 inline-block size-2 shrink-0 rounded-full", dotSkin)} />
-              <p className={cn(editorialProse, "flex-1 min-w-0")}>
-                {rest}
-              </p>
-            </div>
+            {rest && (
+              <div className="flex items-start gap-2.5">
+                {!/^\(\d+\)/.test(rest.trim()) && (
+                  <span className={cn("mt-2 inline-block size-2 shrink-0 rounded-full", dotSkin)} />
+                )}
+                <p className={cn(editorialProse, "flex-1 min-w-0")}>
+                  {rest}
+                </p>
+              </div>
+            )}
           </div>
         );
       })}
@@ -664,6 +727,25 @@ export function MainsHistoryRichViewer({
               isHindi={hi}
             />
           </details>
+
+          <div className="mx-auto max-w-4xl px-4 py-16 text-center border-t border-slate-200/50 dark:border-slate-800/50 mt-12">
+            <div className="mb-8 space-y-3">
+              <p className="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-[0.2em]">
+                {hi ? 'आपका फीडबैक' : 'Your Feedback'}
+              </p>
+              <h3 className="text-xl font-black text-slate-800 dark:text-slate-100 sm:text-2xl">
+                {hi ? 'यह कंटेंट आपके लिए कितना मददगार रहा?' : 'How helpful was this content for you?'}
+              </h3>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                {hi ? 'आपके सुझाव हमें बेहतर बनाने में मदद करेंगे।' : 'Your feedback will help us improve our expert content.'}
+              </p>
+            </div>
+            <QuickFeedback 
+              questionId={topic.id}
+              questionText={hi ? topic.titleHi : topic.titleEn}
+              source="mains_syllabus_topic"
+            />
+          </div>
         </div>
       </div>
     </div>

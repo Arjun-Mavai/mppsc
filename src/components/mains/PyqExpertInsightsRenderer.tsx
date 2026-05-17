@@ -38,8 +38,8 @@ export function PyqExpertInsightsRenderer({
     const rawString = coerceExplanationToString(s, hi ? 'hi' : 'en');
     let cleaned = rawString;
 
-    // Strip bold/italic asterisks (e.g. **bold**)
-    cleaned = cleaned.replace(/\*{1,3}/g, '');
+    // Strip all asterisks (*) aggressively to prevent any markdown residue
+    cleaned = cleaned.replace(/\*/g, '');
     
     // Strip markdown headers (e.g. ### Header or # Header)
     cleaned = cleaned.replace(/^#{1,6}\s+/gm, '');
@@ -97,7 +97,7 @@ export function PyqExpertInsightsRenderer({
 
         if (headingMatch) {
           const num = parseInt(headingMatch[1], 10);
-          let title = headingMatch[2].replace(/^\*+|\*+$/g, '').trim(); // clean markdown bold
+          let title = headingMatch[2].replace(/\*/g, '').trim(); // aggressively clean all stars
           
           // Strip any leading emoji / symbol from the parsed title
           title = title.replace(/^[\p{Emoji}\p{Symbol}\s\u200d\ufe0f]+/gu, '').trim();
@@ -173,9 +173,9 @@ export function PyqExpertInsightsRenderer({
                   </div>
 
                   {/* Bullet Points with tight left alignment & alternating colorful dots */}
-                  <ul className="space-y-3 pl-0">
+                  <ul className="space-y-4 pl-0">
                     {sec.content.map((point, pIdx) => {
-                      const cleanedPoint = point.replace(/^[\s:*•\-~]+/g, '').trim();
+                      const cleanedPoint = point.replace(/\*/g, '').replace(/^[\s:*•\-~]+/g, '').trim();
                       if (!cleanedPoint) return null;
 
                       const isExample = cleanedPoint.startsWith('उदाहरण:') || cleanedPoint.startsWith('Example:');

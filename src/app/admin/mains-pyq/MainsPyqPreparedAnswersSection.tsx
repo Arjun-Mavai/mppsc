@@ -22,9 +22,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Copy, Sparkles, Save, BarChart3 } from 'lucide-react';
+import { Loader2, Copy, Sparkles, Save, BarChart3, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { RecentPyqPrepActivity } from '@/app/admin/mains-pyq/RecentPyqPrepActivity';
 import type { AdminMainsPyqPaperOption } from '@/app/admin/mains-pyq/MainsPyqAdminClient';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -143,191 +144,265 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
       ? Math.round((detail.progress.done / detail.progress.total) * 100)
       : 0;
 
+  const [showPrepGuide, setShowPrepGuide] = useState(false);
+  const [showTracker, setShowTracker] = useState(true);
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setCurrentTime(new Date());
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const timeStr = currentTime?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) ?? '';
+  const dateStr = currentTime?.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) ?? '';
+
   return (
     <div className="space-y-6">
-      <div>
+      <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-xl font-black text-slate-900">
           <Sparkles className="h-6 w-6 text-amber-500" />
           Ready-to-write answers (2 variants × bilingual)
         </h2>
-        <p className="mt-2 text-sm text-slate-600">
-          Batch prompt → AI → paste JSON here. Uses{' '}
-          <strong>paper-wise expert scratch</strong> + official stems — rows land in{' '}
-          <code className="rounded bg-slate-100 px-1 text-xs">mains_pyq_prepared_variants</code>.
-        </p>
-        <p className="mt-2 text-sm">
-          <Link
-            href="/mains/syllabus/pyq-library"
-            className="font-bold text-indigo-600 underline"
-            target="_blank"
-            rel="noopener noreferrer"
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-xs font-bold text-slate-500 hover:text-indigo-600"
+            onClick={() => setShowTracker(!showTracker)}
           >
-            Student PYQ library →
-          </Link>
-        </p>
-      </div>
-
-      <Card className="border-amber-100 bg-gradient-to-r from-amber-50/80 to-white p-4">
-        <div className="flex flex-wrap items-center gap-4">
-          <BarChart3 className="h-8 w-8 text-amber-600" />
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-black uppercase tracking-wider text-amber-900/70">Global tracker</p>
-            <p className="text-sm font-bold text-slate-800">
-              {overview ? (
-                <>
-                  Both variants:{' '}
-                  <span className="tabular-nums">
-                    {overview.questionsWithTwoVariants} / {overview.totalQuestions}
-                  </span>{' '}
-                  ({pctBoth}%)
-                </>
-              ) : (
-                'Loading…'
-              )}
-            </p>
-            {overview?.questionsWithAnyVariant != null ? (
-              <p className="mt-1 text-xs font-semibold text-amber-900/80">
-                At least one variant saved:{' '}
-                <span className="tabular-nums">
-                  {overview.questionsWithAnyVariant} / {overview.totalQuestions}
-                </span>{' '}
-                ({pctAny}%){' '}
-                <span className="font-normal opacity-90">
-                  (PYQ desk shows partial answers once you expand a stem.)
-                </span>
-              </p>
-            ) : null}
-            <Progress value={pctBoth} className="mt-2 h-2" />
-          </div>
-        </div>
-      </Card>
-
-      <Card className="border-slate-200 bg-slate-50/90 p-4 text-sm leading-relaxed text-slate-700">
-        <p className="font-black text-slate-900">Parallel batches (same 70-Q paper)</p>
-        <p className="mt-2">
-          Use tabs <strong>Batch 1–4</strong>: each slot keeps its own prompt + pasted JSON — open four AI chats,
-          paste four different prompts, paste results back without overwriting.{' '}
-          <strong>Generate prompt</strong> picks stems <strong>9–16</strong> for Batch&nbsp;2, <strong>17–24</strong> for Batch&nbsp;3,
-          etc. (after sorting incomplete-first), so parallel tabs no longer all request the same first eight questions.
-          Same paper can be selected in every slot or mix papers.
-        </p>
-      </Card>
-
-      <Card className="border-indigo-100 bg-indigo-50/70 p-4 text-sm leading-relaxed text-slate-700">
-        <p className="font-black text-indigo-950">“Some rows skipped” / row-wise recovery — kya regenerate se phir aaenge?</p>
-        <p className="mt-2">
-          <strong>Haan:</strong>{' '}
-          <strong>Generate prompt</strong> pehle un stems ko prefer karta hai jin par abhi kam se kam ek bhi variant
-          complete nahi (dono slots nahi bharne tak wo “incomplete” pool mein rahenge). Paste me jo row corrupt thi /
-          skip hui wo DB par save{' '}
-          <em>nahi</em> hoti — iska matlab us stem par kuch corrupt data add nahi hua.
-        </p>
-        <p className="mt-2">
-          Dobara sirf jo q fix karna hai: usi skipped block ko JSON-safe bana kar alag paste karo,{' '}
-          <strong>ya</strong>
-          dubara Generate prompt dabao — jab tak us stem par dono variants DB mein confirm nahi, wo incomplete list se
-          phir prompt me select ho sakti hai (batch size tak). Sab complete ho gaye aur phir generate karo → same
-          70 me se phir repeat pool (already done wale) aa sakte hain; tab partial JSON sirf wo rows dalo jo change
-          chahiye.
-        </p>
-      </Card>
-
-      <Card className="border-slate-200 bg-slate-50/90 p-4 text-sm leading-relaxed text-slate-700">
-        <p className="font-black text-slate-900">Tables & connections (prepared answers)</p>
-        <ol className="mt-2 list-decimal space-y-2 pl-5">
-          <li>
-            <code className="rounded bg-white px-1 text-xs">mains_pyq_papers</code> — one row per imported exam year
-            + paper number (JSON import creates/updates here first).
-          </li>
-          <li>
-            <code className="rounded bg-white px-1 text-xs">mains_pyq_questions</code> — each stem;{' '}
-            <code className="text-xs">paper_id</code> → that paper. Optional coaching text in{' '}
-            <code className="text-xs">expert_insights_hi</code> / <code className="text-xs">expert_insights_en</code>{' '}
-            when your batch JSON includes <code className="text-xs">expert_patch</code>.
-          </li>
-          <li>
-            <code className="rounded bg-white px-1 text-xs">mains_pyq_prepared_variants</code> — model answers only;
-            each row has <code className="text-xs">pyq_question_id</code> → stem, plus <code className="text-xs">variant_slot</code>{' '}
-            1 or 2 (unique together). Student library reads stems from questions and joins these variants.
-          </li>
-        </ol>
-        <p className="mt-3 text-xs text-slate-500">
-          Clearing variants below does not delete papers, stems, or expert_insights — only removes stored answer
-          variants so the tracker goes back to 0.
-        </p>
-      </Card>
-
-      <Card className="border-rose-200 bg-rose-50/60 p-4">
-        <p className="text-xs font-black uppercase tracking-wider text-rose-900/80">Reset prepared answers only</p>
-        <p className="mt-1 text-sm text-slate-700">
-          Type{' '}
-          <code className="rounded bg-white px-1 font-mono text-xs text-rose-800">
-            {MAINS_PYQ_PREPARED_VARIANTS_PURGE_PHRASE}
-          </code>{' '}
-          exactly, then confirm — wipes every row in <code className="text-xs">mains_pyq_prepared_variants</code>{' '}
-          (fresh start for this workflow).
-        </p>
-        <div className="mt-3 flex flex-wrap items-end gap-2">
-          <div className="min-w-[220px] flex-1">
-            <Label className="text-xs font-bold text-slate-600">Confirmation</Label>
-            <Input
-              value={variantPurgeText}
-              onChange={(e) => setVariantPurgeText(e.target.value)}
-              placeholder={MAINS_PYQ_PREPARED_VARIANTS_PURGE_PHRASE}
-              className="mt-1 font-mono text-xs"
-              autoComplete="off"
-            />
-          </div>
-          <div className="min-w-[200px]">
-            <Label className="text-xs font-bold text-slate-600">Target Paper</Label>
-            <Select value={purgeTargetId} onValueChange={setPurgeTargetId}>
-              <SelectTrigger className="mt-1 font-semibold text-xs h-9">
-                <SelectValue placeholder="All Papers" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All Papers (Global Wipe)</SelectItem>
-                {papers.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.examYear} · Paper {p.paperNumber}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <Button
-            type="button"
-            variant="destructive"
-            className="font-black"
-            disabled={variantPurging}
-            onClick={async () => {
-              setVariantPurging(true);
-              let r;
-              if (purgeTargetId === 'ALL') {
-                r = await purgeAllMainsPyqPreparedVariantsConfirm(variantPurgeText);
-              } else {
-                if (variantPurgeText !== MAINS_PYQ_PREPARED_VARIANTS_PURGE_PHRASE) {
-                  toast.error('Confirmation phrase does not match');
-                  setVariantPurging(false);
-                  return;
-                }
-                r = await purgeMainsPyqPreparedVariantsForPaper(purgeTargetId);
-              }
-              setVariantPurging(false);
-              if (!r.success) {
-                toast.error((r as { error?: string }).error ?? 'Clear failed');
-                return;
-              }
-              toast.success(purgeTargetId === 'ALL' ? 'All prepared answer variants removed' : 'Paper variants removed');
-              setVariantPurgeText('');
-              await loadOverview();
-              if (paperId) await loadDetail(paperId);
-            }}
+            {showTracker ? 'Hide Tracker ↑' : 'Show Tracker ↓'}
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-xs font-bold text-slate-500 hover:text-amber-600"
+            onClick={() => setShowPrepGuide(!showPrepGuide)}
           >
-            {variantPurging ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            {purgeTargetId === 'ALL' ? 'Clear all variants' : 'Clear for this paper'}
+            {showPrepGuide ? 'Hide Help & Purge Tools ↑' : 'Show Help & Purge Tools ↓'}
           </Button>
         </div>
+      </div>
+
+      <Card className="border-amber-100 bg-gradient-to-r from-amber-50/80 to-white p-4 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4 flex-1 min-w-[200px]">
+            <BarChart3 className="h-8 w-8 text-amber-600" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-black uppercase tracking-wider text-amber-900/70">Global tracker</p>
+              <p className="text-sm font-bold text-slate-800">
+                {overview ? (
+                  <>
+                    Both variants:{' '}
+                    <span className="tabular-nums">
+                      {overview.questionsWithTwoVariants} / {overview.totalQuestions}
+                    </span>{' '}
+                    ({pctBoth}%)
+                  </>
+                ) : (
+                  'Loading…'
+                )}
+              </p>
+              <Progress value={pctBoth} className="mt-2 h-2" />
+            </div>
+          </div>
+        </div>
       </Card>
+
+      <RecentPyqPrepActivity />
+
+      <Card 
+        className="border-indigo-100 bg-white shadow-sm overflow-hidden transition-all duration-300"
+      >
+        <div 
+          className="bg-indigo-50/50 px-4 py-3 border-b border-indigo-100 flex items-center justify-between cursor-pointer hover:bg-indigo-100/50 transition-colors"
+          onClick={() => setShowTracker(!showTracker)}
+        >
+           <div className="flex items-center gap-2">
+             <div className="p-1.5 rounded-md bg-indigo-600">
+               <BarChart3 className="h-4 w-4 text-white" />
+             </div>
+             <div>
+               <div className="flex items-center gap-2">
+                 <h3 className="text-sm font-black text-indigo-900 uppercase tracking-wider">Model Answers Tracker</h3>
+                 {showTracker ? <ChevronUp className="h-4 w-4 text-indigo-400" /> : <ChevronDown className="h-4 w-4 text-indigo-400" />}
+               </div>
+               <p className="text-[10px] font-bold text-indigo-600/60 uppercase">Real-time completion status across all papers</p>
+             </div>
+           </div>
+           <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200 text-[10px] font-black uppercase">
+             {papers.length} Papers Active
+           </Badge>
+        </div>
+        {showTracker && (
+          <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            {papers.map((p) => {
+              const total = p.qCount ?? 0;
+              const done = p.doneCount ?? 0;
+              const missing = total - done;
+              const isComplete = total > 0 && done === total;
+              const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+              
+              return (
+                <div key={p.id} className={`p-4 rounded-2xl border transition-all hover:shadow-md ${isComplete ? 'border-emerald-200 bg-emerald-50/40' : 'border-slate-100 bg-slate-50/50'}`}>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className={`h-1.5 w-1.5 rounded-full ${isComplete ? 'bg-emerald-500' : 'bg-amber-400 animate-pulse'}`} />
+                        <p className="text-xs font-black text-slate-900 truncate">{p.examYear} · Paper {p.paperNumber}</p>
+                      </div>
+                      <p className="text-[9px] text-slate-500 font-bold uppercase truncate pl-3">{p.titleEn || p.slug.slice(0, 25)}</p>
+                    </div>
+                    {isComplete ? (
+                      <div className="flex flex-col items-end gap-1">
+                        <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                        <span className="text-[8px] font-black text-emerald-600 uppercase">Success</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="text-[10px] font-black text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">{pct}%</span>
+                        <span className="text-[8px] font-bold text-slate-400 uppercase">In Progress</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-end">
+                      <div className="flex flex-col">
+                         <span className="text-[10px] font-black text-slate-700">DONE: {done}</span>
+                         <span className={`text-[9px] font-bold ${missing > 0 ? 'text-rose-500' : 'text-slate-400'}`}>
+                           MISSING: {missing}
+                         </span>
+                      </div>
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Total {total} Qs</span>
+                    </div>
+                    <div className="relative h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+                       <div 
+                         className={`absolute inset-y-0 left-0 transition-all duration-1000 ${isComplete ? 'bg-emerald-500' : 'bg-indigo-500'}`}
+                         style={{ width: `${pct}%` }}
+                       />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+
+      {showPrepGuide && (
+        <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+          <Card className="border-slate-200 bg-slate-50/90 p-4 text-sm leading-relaxed text-slate-700">
+            <p className="font-black text-slate-900">Parallel batches (same 70-Q paper)</p>
+            <p className="mt-2 text-xs">
+              Use tabs <strong>Batch 1–4</strong>: each slot keeps its own prompt + pasted JSON — open four AI chats,
+              paste four different prompts, paste results back without overwriting.{' '}
+              <strong>Generate prompt</strong> picks stems <strong>9–16</strong> for Batch&nbsp;2, <strong>17–24</strong> for Batch&nbsp;3,
+              etc. (after sorting incomplete-first), so parallel tabs no longer all request the same first eight questions.
+              Same paper can be selected in every slot or mix papers.
+            </p>
+          </Card>
+
+          <Card className="border-indigo-100 bg-indigo-50/70 p-4 text-sm leading-relaxed text-slate-700">
+            <p className="font-black text-indigo-950">“Some rows skipped” / row-wise recovery — kya regenerate se phir aaenge?</p>
+            <p className="mt-2 text-xs">
+              <strong>Haan:</strong>{' '}
+              <strong>Generate prompt</strong> pehle un stems ko prefer karta hai jin par abhi kam se kam ek bhi variant
+              complete nahi (dono slots nahi bharne tak wo “incomplete” pool mein rahenge). Paste me jo row corrupt thi /
+              skip hui wo DB par save{' '}
+              <em>nahi</em> hoti — iska matlab us stem par kuch corrupt data add nahi hua.
+            </p>
+          </Card>
+
+          <Card className="border-slate-200 bg-slate-50/90 p-4 text-sm leading-relaxed text-slate-700">
+            <p className="font-black text-slate-900">Tables & connections (prepared answers)</p>
+            <ol className="mt-2 list-decimal space-y-2 pl-5 text-xs">
+              <li>
+                <code className="rounded bg-white px-1 text-xs">mains_pyq_papers</code> — one row per imported exam year
+                + paper number.
+              </li>
+              <li>
+                <code className="rounded bg-white px-1 text-xs">mains_pyq_questions</code> — each stem;{' '}
+                <code className="text-xs">paper_id</code> → that paper.
+              </li>
+              <li>
+                <code className="rounded bg-white px-1 text-xs">mains_pyq_prepared_variants</code> — model answers only;
+                each row has <code className="text-xs">pyq_question_id</code> → stem, plus <code className="text-xs">variant_slot</code> 1 or 2.
+              </li>
+            </ol>
+          </Card>
+
+          <Card className="border-rose-200 bg-rose-50/60 p-4">
+            <p className="text-xs font-black uppercase tracking-wider text-rose-900/80">Reset prepared answers only</p>
+            <p className="mt-1 text-xs text-slate-700">
+              Type{' '}
+              <code className="rounded bg-white px-1 font-mono text-xs text-rose-800">
+                {MAINS_PYQ_PREPARED_VARIANTS_PURGE_PHRASE}
+              </code>{' '}
+              exactly, then confirm — wipes every row in <code className="text-xs">mains_pyq_prepared_variants</code>.
+            </p>
+            <div className="mt-3 flex flex-wrap items-end gap-2">
+              <div className="min-w-[220px] flex-1">
+                <Label className="text-[10px] font-bold text-slate-600 uppercase">Confirmation</Label>
+                <Input
+                  value={variantPurgeText}
+                  onChange={(e) => setVariantPurgeText(e.target.value)}
+                  placeholder={MAINS_PYQ_PREPARED_VARIANTS_PURGE_PHRASE}
+                  className="mt-1 font-mono text-xs h-8"
+                  autoComplete="off"
+                />
+              </div>
+              <div className="min-w-[180px]">
+                <Label className="text-[10px] font-bold text-slate-600 uppercase">Target Paper</Label>
+                <Select value={purgeTargetId} onValueChange={setPurgeTargetId}>
+                  <SelectTrigger className="mt-1 font-semibold text-xs h-8">
+                    <SelectValue placeholder="All Papers" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">All Papers (Global Wipe)</SelectItem>
+                    {papers.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.examYear} · Paper {p.paperNumber}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                type="button"
+                variant="destructive"
+                className="font-black text-xs h-8"
+                disabled={variantPurging}
+                onClick={async () => {
+                  setVariantPurging(true);
+                  let r;
+                  if (purgeTargetId === 'ALL') {
+                    r = await purgeAllMainsPyqPreparedVariantsConfirm(variantPurgeText);
+                  } else {
+                    if (variantPurgeText !== MAINS_PYQ_PREPARED_VARIANTS_PURGE_PHRASE) {
+                      toast.error('Confirmation phrase does not match');
+                      setVariantPurging(false);
+                      return;
+                    }
+                    r = await purgeMainsPyqPreparedVariantsForPaper(purgeTargetId);
+                  }
+                  setVariantPurging(false);
+                  if (!r.success) {
+                    toast.error((r as { error?: string }).error ?? 'Clear failed');
+                    return;
+                  }
+                  toast.success(purgeTargetId === 'ALL' ? 'All prepared answer variants removed' : 'Paper variants removed');
+                  setVariantPurgeText('');
+                  await loadOverview();
+                  if (paperId) await loadDetail(paperId);
+                }}
+              >
+                {variantPurging ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {purgeTargetId === 'ALL' ? 'Wipe All' : 'Wipe Paper'}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {papers.length === 0 ? (
         <p className="text-slate-500">Import a PYQ paper first.</p>
@@ -344,22 +419,52 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
           {[0, 1, 2, 3].map((i) => (
             <TabsContent key={i} value={String(i)} className="space-y-4">
               <div className="flex flex-wrap items-end gap-3">
-                <div className="min-w-[220px] flex-1">
+                <div className="min-w-[320px] flex-1 sm:max-w-[450px]">
                   <label className="mb-1 block text-xs font-bold text-slate-600">Imported paper</label>
                   <Select
                     value={workspaces[i]?.paperId ?? ''}
                     onValueChange={(v) => patchWorkspace(i, { paperId: v })}
                   >
-                    <SelectTrigger className="font-semibold">
+                    <SelectTrigger className="font-semibold h-11 border-slate-300 shadow-sm">
                       <SelectValue placeholder="Pick paper" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {papers.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.examYear} · Paper {p.paperNumber}
-                          {p.qCount != null ? ` · ${p.qCount} Q` : ''}
-                        </SelectItem>
-                      ))}
+                    <SelectContent
+                      position="popper"
+                      sideOffset={5}
+                      viewportClassName="max-h-[300px] overflow-y-auto"
+                      className="w-[var(--radix-select-trigger-width)]"
+                    >
+                      {papers.map((p) => {
+                        const total = p.qCount ?? 0;
+                        const done = p.doneCount ?? 0;
+                        const isComplete = total > 0 && done === total;
+                        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+                        
+                        return (
+                          <SelectItem key={p.id} value={p.id} className="py-2 cursor-pointer">
+                            <div className="flex items-center justify-between w-full gap-8">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-sm">
+                                  {p.examYear} · Paper {p.paperNumber}
+                                </span>
+                                <span className="text-[10px] text-slate-500 font-medium">
+                                  {p.titleEn || p.slug.slice(0, 30)}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className={`text-[11px] font-black tabular-nums ${isComplete ? 'text-emerald-600' : 'text-slate-500'}`}>
+                                  {done}/{total} ({pct}%)
+                                </span>
+                                {isComplete ? (
+                                  <CheckCircle2 className="h-4 w-4 text-emerald-500 fill-emerald-50" />
+                                ) : (
+                                  <div className="h-4 w-4 rounded-full border-2 border-slate-200 border-t-amber-400" />
+                                )}
+                              </div>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>

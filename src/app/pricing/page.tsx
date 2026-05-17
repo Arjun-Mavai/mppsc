@@ -196,7 +196,7 @@ const mainsValueCards = [
   {
     icon: Sparkles,
     label: { en: 'Double-Style Answer Variations', hi: 'डबल-स्टाइल उत्तर वेरिएशन' },
-    sub: { en: 'Every question has 2 completely distinct model answers (compare multiple structures & styles)', hi: 'हर प्रश्न के 2 अलग-अलग तरीकों व angles से लिखे मॉडल उत्तर (एक ही उत्तर को दो अलग दृष्टिकोणों से समझने की शैली)' },
+    sub: { en: 'Every question has 2 completely distinct model answers (compare multiple structures & styles)', hi: 'हर प्रश्न के 2 alag तरीकों व angles से लिखे मॉडल उत्तर (एक ही उत्तर को दो alag दृष्टिकोणों से समझने की शैली)' },
     highlight: true,
   },
   {
@@ -207,13 +207,22 @@ const mainsValueCards = [
   },
   {
     icon: Zap,
-    label: { en: 'Bilingual Mnemonics', hi: 'द्विभाषी मेमोनिक्स' },
-    sub: { en: 'Effortless retention keywords & triggers', hi: 'याद रखने की आसान ट्रिक्स व कीवर्ड्स' },
+    label: { en: '⚡ Ultra-Fast 1-Click Syllabus Navigator', hi: '⚡ अल्ट्रा-फास्ट 1-क्लिक सिलेबस नेविगेटर' },
+    sub: { 
+      en: 'No more opening 10 PDFs! Our Syllabus Menu is so fast you can switch between any unit or topic of Paper 1-6 in 1 click without page reloads. Zero context switch time.', 
+      hi: 'सिलेबस चेक करने में 10 PDFs खोलने का झंझट खत्म! हमारा "सिलेबस मेन्यू" इतना फास्ट है कि छात्र बिना पेज रीलोड किए, पेपर 1 से पेपर 6 के किसी भी टॉपिक पर 1 क्लिक में स्विच कर सकते हैं।' 
+    },
+    highlight: true,
   },
   {
-    icon: BarChart3,
-    label: { en: '6-Paper Expert Mind Framework', hi: '6-पेपर एक्सपर्ट माइंड फ्रेमवर्क' },
-    sub: { en: 'All 6 Mains papers handled with dedicated subject-expert perspectives and unique strategies', hi: 'सभी 6 पेपर्स को उनके विषय-विशेषज्ञों के अनूठे नज़रिए और सटीक पेपर-वाइज़ रणनीतियों से हैंडल किया गया है' },
+    icon: History,
+    label: { en: 'Syllabus-Mapped PYQ Matrix', hi: 'सिलेबस-मैप्ड PYQ मैट्रिक्स' },
+    sub: { en: 'See exam patterns evolve directly under the topic you are reading.', hi: 'जो टॉपिक आप पढ़ रहे हैं, उसके ठीक नीचे देखें कि पिछले सालों में क्या पूछा गया।' },
+  },
+  {
+    icon: Zap,
+    label: { en: 'Bilingual Mnemonics', hi: 'द्विभाषी मेमोनिक्स' },
+    sub: { en: 'Effortless retention keywords & triggers', hi: 'याद रखने की आसान ट्रिक्स व कीवर्ड्स' },
   },
 ];
 

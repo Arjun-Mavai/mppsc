@@ -11,6 +11,7 @@ import type { MainsUnitPart } from '@/lib/mains-syllabus-unit-label';
 import { mainsPapers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { MainsSyllabusPaperMobileGate } from '@/components/mains/MainsSyllabusPaperMobileGate';
+import { QuickFeedback } from '@/features/tests/components/QuickFeedback';
 
 export default async function MainsPaperIndexPage({
   params,
@@ -82,6 +83,27 @@ export default async function MainsPaperIndexPage({
               <p className="text-base text-slate-600 dark:text-slate-400 leading-relaxed max-w-lg mx-auto pt-2 font-medium">
                 इस पेपर के सभी यूनिट्स, टॉपिक्स और एक्सपर्ट मॉडल उत्तर तैयार किए जा रहे हैं। जल्द ही पूरे विश्लेषण और मेंस लाइब्रेरी के साथ उपलब्ध होंगे।
               </p>
+
+              <div className="pt-6 border-t border-slate-100 dark:border-slate-800/50 mt-8 space-y-6">
+                <QuickFeedback 
+                  questionId={`MISSING_PAPER_${paper.id}`}
+                  questionText={paper.titleHi ? `पेपर ${paper.paperNumber}: ${paper.titleHi}` : `Paper ${paper.paperNumber}: ${paper.titleEn}`}
+                  source="mains_syllabus_paper_locked"
+                />
+                
+                <div className="pt-2">
+                  <Button
+                    variant="outline"
+                    asChild
+                    className="h-11 rounded-2xl border-slate-200 bg-white px-8 text-sm font-black uppercase tracking-wider text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
+                  >
+                    <Link href="/mains/syllabus">
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      वापस जाएँ · Go Back
+                    </Link>
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

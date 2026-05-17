@@ -1,5 +1,5 @@
 /** Split on Latin or Devanagari sentence enders, but avoid splitting after numbered lists (1., 2.) or abbreviations like vs., Dr., Mr., etc. */
-const SENTENCE_SPLIT = /(?<=(?<!\b(?:\d+|vs|Vs|v|Dr|Mr|Mrs|Prof|etc|e\.g|i\.e))[.!?।])\s+/;
+const SENTENCE_SPLIT = /(?<=(?<!\b(?:[A-Za-z]|\d+|vs|Vs|v|Dr|Mr|Mrs|Prof|etc|e\.g|i\.e))[.!?।])\s+/;
 
 /**
  * Turn plain prose into markdown bullets so UI can render scan-friendly chips

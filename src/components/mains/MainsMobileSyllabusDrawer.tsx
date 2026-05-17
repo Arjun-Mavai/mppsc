@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { MainsSyllabusSidebar } from '@/components/mains/MainsSyllabusSidebar';
-import { Compass, BookOpen } from 'lucide-react';
+import { Compass, BookOpen, XIcon } from 'lucide-react';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { getAllMainsPapersWithSyllabus } from '@/actions/mains-actions';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface MainsMobileSyllabusDrawerProps {
   paperNumber: number;
@@ -92,14 +93,19 @@ export function MainsMobileSyllabusDrawer({
           <span>{hi ? 'सिलेबस मेन्यू' : 'Syllabus Menu'}</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-[320px] p-0 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex flex-col h-full overflow-hidden">
-        <SheetHeader className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/10 text-left">
+      <SheetContent showCloseButton={false} side="right" className="w-[320px] p-0 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex flex-col h-full overflow-hidden">
+        <SheetHeader className="relative p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/10 text-left">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setOpen(false)}
+            className="absolute top-2 right-2 z-50 h-10 w-10 rounded-full border-2 border-emerald-100 bg-white p-2 text-emerald-600 shadow-sm transition-all hover:scale-110 hover:bg-emerald-50 active:scale-95 dark:border-emerald-500/30 dark:bg-slate-900 dark:text-emerald-400"
+          >
+            <XIcon className="h-6 w-6" strokeWidth={3} />
+          </Button>
           <div className="flex items-center justify-between gap-2 mb-1.5">
             <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border border-emerald-500/20 shadow-xs">
               🎯 {hi ? `पेपर ${paperNumber}` : `Paper ${paperNumber}`}
-            </span>
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-              {hi ? 'सिलेबस मेनू' : 'Syllabus Menu'}
             </span>
           </div>
           <SheetTitle className="text-[15px] font-black tracking-tight text-slate-900 dark:text-white leading-snug break-words">
@@ -120,14 +126,38 @@ export function MainsMobileSyllabusDrawer({
               {allPapers.map((paper, paperIdx) => {
                 const isCurrentPaper = paper.paperNumber === paperNumber;
                 const theme = getPaperThemeConfig(paper.paperNumber);
+                const hasPublished = paper.units.some((u: any) => u.topics.some((t: any) => t.status === 'published'));
                 
+                const handlePaperClick = (e: React.MouseEvent) => {
+                  if (!hasPublished) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toast.info(hi ? `पेपर ${paper.paperNumber} जल्द आ रहा है` : `Paper ${paper.paperNumber} Coming Soon`, {
+                      description: hi 
+                        ? 'इस पेपर का सिलेबस और कंटेंट जल्द ही अपडेट किया जाएगा।' 
+                        : `Syllabus and content for Paper ${paper.paperNumber} will be updated soon.`,
+                      icon: <BookOpen className="h-4 w-4 text-amber-500" />
+                    });
+                  }
+                };
+
                 return (
                   <AccordionItem 
                     key={paper.id} 
                     value={`paper-${paper.paperNumber}`}
-                    className="border border-slate-200/60 dark:border-slate-800/60 rounded-2xl overflow-hidden shadow-sm"
+                    className={cn(
+                      "border border-slate-200/60 dark:border-slate-800/60 rounded-2xl overflow-hidden shadow-sm",
+                      !hasPublished && "opacity-60 grayscale-[0.5]"
+                    )}
                   >
-                    <AccordionTrigger className={cn("px-4 py-3 hover:no-underline [&[data-state=open]]:bg-white/40 transition-all duration-200", theme.bg)}>
+                    <AccordionTrigger 
+                      onClickCapture={handlePaperClick}
+                      className={cn(
+                        "px-4 py-3 hover:no-underline [&[data-state=open]]:bg-white/40 transition-all duration-200", 
+                        theme.bg,
+                        !hasPublished && "cursor-not-allowed pointer-events-auto"
+                      )}
+                    >
                       <div className="flex items-center gap-2.5 text-left w-full pr-2">
                         <span className={cn(
                           "flex h-7 px-1.5 shrink-0 items-center justify-center rounded-lg text-[10px] font-black leading-none",
@@ -135,9 +165,16 @@ export function MainsMobileSyllabusDrawer({
                         )}>
                           P{paper.paperNumber}
                         </span>
-                        <span className="text-xs font-black leading-snug whitespace-normal break-words flex-1 pr-1">
-                          {theme.emoji} {hi ? paper.titleHi : paper.titleEn}
-                        </span>
+                        <div className="flex flex-col flex-1 min-w-0">
+                          <span className="text-xs font-black leading-snug whitespace-normal break-words">
+                            {theme.emoji} {hi ? paper.titleHi : paper.titleEn}
+                          </span>
+                          {!hasPublished && (
+                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                              {hi ? 'जल्द आ रहा है' : 'Coming Soon'}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </AccordionTrigger>
                     

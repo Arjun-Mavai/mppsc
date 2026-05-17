@@ -14,6 +14,8 @@ import type { MobileUnit } from '@/components/mains/MainsSyllabusPaperMobileGate
 import { mainsUnitShortBadge, mainsUnitSubtitle } from '@/lib/mains-syllabus-unit-label';
 import { SyllabusLockMainsModal } from '@/features/mains/components/SyllabusLockMainsModal';
 import { MAIN_SYLLABUS_CARD_HUES, mainsSyllabusTileSkin } from '@/components/mains/mainsSyllabusTileSkin';
+import { QuickFeedback } from '@/features/tests/components/QuickFeedback';
+import { toast } from 'sonner';
 
 type TopicRow = MobileUnit['topics'][number];
 
@@ -99,7 +101,7 @@ export function MainsMobilePaperExplorer({
     [paperId, openTopicId]
   );
 
-  const defaultOpenUnits = units.length ? [`unit-${units[0].id}`] : [];
+  const defaultOpenUnits: string[] = [];
   const freeUnitId = allowGuestPreview ? (units[0]?.id ?? null) : null;
 
   return (
@@ -252,24 +254,44 @@ export function MainsMobilePaperExplorer({
                           const open = openTopicId === topic.id;
                           const packed = cache[topic.id];
                           const loading = loadingId === topic.id;
+                          const isPublished = topic.status === 'published';
+
+                          const handleTopicToggle = () => {
+                            if (!isPublished) {
+                              toast.info(hi ? 'यह टॉपिक जल्द ही उपलब्ध होगा!' : 'This topic will be available soon!', {
+                                description: hi ? 'हम इस पर एक्सपर्ट कंटेंट तैयार कर रहे हैं।' : 'We are preparing expert content for this section.'
+                              });
+                              return;
+                            }
+                            toggleTopic(topic, unit.id);
+                          };
+
                           return (
                             <div key={topic.id} className="rounded-xl border border-transparent">
                               <button
                                 type="button"
-                                onClick={() => toggleTopic(topic, unit.id)}
+                                onClick={handleTopicToggle}
                                 className={cn(
                                   'flex w-full items-center justify-between gap-2 rounded-xl px-3 py-3 text-left transition-all border shadow-sm',
+                                  !isPublished && "opacity-40 grayscale cursor-not-allowed",
                                   open
                                     ? 'bg-emerald-50/75 border-emerald-200/80 text-emerald-950'
                                     : 'bg-white/80 hover:bg-white border-slate-200/50 hover:border-slate-300'
                                 )}
                               >
-                                <span className={cn(
-                                  'min-w-0 flex-1 text-sm font-bold leading-snug',
-                                  open ? 'text-emerald-950' : 'text-slate-800'
-                                )}>
-                                  {hi ? topic.titleHi : topic.titleEn}
-                                </span>
+                                <div className="min-w-0 flex-1 flex flex-col gap-0.5">
+                                  <span className={cn(
+                                    'text-sm font-bold leading-snug',
+                                    open ? 'text-emerald-950' : 'text-slate-800'
+                                  )}>
+                                    {hi ? topic.titleHi : topic.titleEn}
+                                  </span>
+                                  {!isPublished && (
+                                    <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-tighter">
+                                      {hi ? 'जल्द आ रहा है' : 'Coming Soon'}
+                                    </span>
+                                  )}
+                                </div>
                                 <ChevronDown
                                   className={cn(
                                     'h-4 w-4 shrink-0 transition-transform',
@@ -331,6 +353,8 @@ export function MainsMobilePaperExplorer({
           <Layers className="h-4 w-4 text-slate-400" />
           {units.reduce((n, u) => n + u.topics.length, 0)} {hi ? 'टॉपिक' : 'topics'}
         </div>
+
+
       </div>
       <SyllabusLockMainsModal open={vaultModalOpen} onOpenChange={setVaultModalOpen} />
     </div>

@@ -5,7 +5,8 @@ import { MainsContentViewer } from '@/components/mains/MainsContentViewer';
 import { MainsHistoryRichViewer } from '@/components/mains/MainsHistoryRichViewer';
 import { MAINS_HISTORY_RICH_VERSION } from '@/lib/mains-history-rich-normalize';
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { FileQuestion, Lock, Sparkles, Hourglass } from 'lucide-react';
+import { FileQuestion, Lock, Sparkles, Hourglass, ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SyllabusLockMainsModal } from '@/features/mains/components/SyllabusLockMainsModal';
@@ -35,6 +36,7 @@ export function MainsTopicContentClient({
   vaultLocked?: boolean;
   standalonePage?: boolean;
 }) {
+  const router = useRouter();
   const { language } = useSettingsStore();
   const lang: 'hi' | 'en' = language === 'hi' ? 'hi' : 'en';
   const [vaultModalOpen, setVaultModalOpen] = useState(false);
@@ -63,6 +65,17 @@ export function MainsTopicContentClient({
                 ? 'इस टॉपिक का गहन विश्लेषण, प्रामाणिक मॉडल उत्तर और टॉपर्स रणनीति जल्द ही मेंस लाइब्रेरी में अपलोड की जा रही है।'
                 : 'Premium analysis, authentic model answers, and topper strategies for this topic are currently being curated and will be uploaded soon.'}
             </p>
+          </div>
+
+          <div className="pt-4">
+            <Button
+              variant="outline"
+              onClick={() => router.back()}
+              className="h-11 rounded-2xl border-slate-200 bg-white px-8 text-sm font-black uppercase tracking-wider text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {hi ? 'वापस जाएँ' : 'Go Back'}
+            </Button>
           </div>
         </div>
       </div>
@@ -146,6 +159,12 @@ export function MainsTopicContentClient({
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white dark:bg-slate-950">
+      <div className="absolute top-2.5 left-3 z-50">
+        <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl" onClick={() => router.back()}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+      </div>
+
       <div className="relative max-h-[min(52vh,560px)] shrink-0 overflow-hidden pointer-events-none select-none">
         <div className="opacity-95">{inner}</div>
         <div

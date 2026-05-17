@@ -1,7 +1,11 @@
 import { getMainsProgressOverview } from '@/actions/mains-actions';
 import { MainsSyllabusHubClient, type MainsSyllabusHubPaper } from '@/app/mains/syllabus/MainsSyllabusHubClient';
+import { verifyAuth } from '@/lib/auth';
 
 export default async function MainsSyllabusPaperPickerPage() {
+  const user = await verifyAuth();
+  const isAdmin = user?.role === 'admin';
+  
   const res = await getMainsProgressOverview();
   const missing =
     !res.success && (res as { error?: string; hint?: string }).error === 'mains_tables_missing'
@@ -21,5 +25,6 @@ export default async function MainsSyllabusPaperPickerPage() {
         }))
       : [];
 
-  return <MainsSyllabusHubClient papers={papers} missing={missing} />;
+  return <MainsSyllabusHubClient papers={papers} missing={missing} isAdmin={isAdmin} />;
 }
+

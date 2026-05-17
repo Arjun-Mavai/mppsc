@@ -852,7 +852,10 @@ export const mainsUnits = sqliteTable('mains_units', {
   examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all', 'mppolice', 'mppsc_mains'] })
     .default('mppsc_mains')
     .notNull(),
-});
+}, (t) => [
+  index('idx_mains_units_paper').on(t.paperId),
+  index('idx_mains_units_order').on(t.paperId, t.part, t.unitNumber)
+]);
 
 // 4. Mains Topics (Specific syllabus points)
 export const mainsTopics = sqliteTable('mains_topics', {
@@ -866,7 +869,10 @@ export const mainsTopics = sqliteTable('mains_topics', {
   examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all', 'mppolice', 'mppsc_mains'] })
     .default('mppsc_mains')
     .notNull(),
-});
+}, (t) => [
+  index('idx_mains_topics_unit').on(t.unitId)
+]);
+
 
 // 5. Mains Content (The Deep Explanation & Model Answers)
 export const mainsContent = sqliteTable('mains_content', {

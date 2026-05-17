@@ -39,17 +39,30 @@ export function MainsMarkdownBody({
   bulletClassName?: string;
   bodyTextClassName?: string;
 }) {
+  function wrapNoWrap(text: string) {
+    const regex = /('[^']+'|\([^)]+\))/g;
+    const parts = text.split(regex);
+    
+    return parts.map((part, i) => {
+      if (!part) return null;
+      if ((part.startsWith("'") && part.endsWith("'")) || (part.startsWith("(") && part.endsWith(")"))) {
+        return <span key={i} className="whitespace-nowrap">{part}</span>;
+      }
+      return part;
+    });
+  }
+
   function parseBold(text: string) {
     const parts = text.split(/(\*\*.+?\*\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
         return (
           <strong key={i} className={cn("font-extrabold", strongClassName || "text-emerald-800 dark:text-emerald-200")}>
-            {part.slice(2, -2)}
+            {wrapNoWrap(part.slice(2, -2))}
           </strong>
         );
       }
-      return <span key={i}>{part.replace(/\*+/g, '')}</span>;
+      return <span key={i}>{wrapNoWrap(part.replace(/\*+/g, ''))}</span>;
     });
   }
 

@@ -35,6 +35,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { MAINS_TOPIC_AI_SYSTEM_PROMPT, buildPaperLevelPromptForExternalAi } from '@/config/mains-topic-ai-prompt';
+import { RecentMainsSyllabusActivity } from './RecentMainsSyllabusActivity';
+import { MainsSyllabusProgressTracker } from './MainsSyllabusProgressTracker';
 
 const WORKFLOW = `BACKEND (paper-wise storage)
 • mains_papers → mains_units (paper + Part A/B + unit_number) → mains_topics (syllabus lines)
@@ -153,7 +155,7 @@ export function MainsAdminClient() {
   const [promptPreview, setPromptPreview] = useState('');
   const [promptMeta, setPromptMeta] = useState<MainsFullPromptMeta | null>(null);
   const [pyqCandidates, setPyqCandidates] = useState<PyqCandidateRow[]>([]);
-  const [showHelp, setShowHelp] = useState(true);
+  const [showHelp, setShowHelp] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [promptLoading, setPromptLoading] = useState(false);
@@ -161,7 +163,13 @@ export function MainsAdminClient() {
   const [linkBusyId, setLinkBusyId] = useState<string | null>(null);
   const [deletingContent, setDeletingContent] = useState(false);
   /** In-page testing steps — open by default so new admins see how to verify. */
-  const [showTestGuide, setShowTestGuide] = useState(true);
+  const [showTestGuide, setShowTestGuide] = useState(false);
+  /** Step 2 guide visibility */
+  const [showStep2Guide, setShowStep2Guide] = useState(false);
+  /** Truncation alert visibility */
+  const [showTruncationAlert, setShowTruncationAlert] = useState(false);
+  /** Admin syllabus accordion state */
+  const [expandedUnits, setExpandedUnits] = useState<Record<string, boolean>>({});
 
   const loadOverview = useCallback(async () => {
     setLoading(true);
@@ -507,6 +515,10 @@ export function MainsAdminClient() {
         )}
       </Card>
 
+      <MainsSyllabusProgressTracker />
+
+      <RecentMainsSyllabusActivity />
+
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
         {overview.map((paper) => (
           <Card
@@ -562,52 +574,63 @@ export function MainsAdminClient() {
                     <div className="whitespace-pre-wrap text-xs">
                       Fix (local):{'\n'}- npm run db:migrate{'\n'}- npm run db:seed:mains{'\n\n'}Fix (Turso/remote):{'\n'}- npm run db:migrate (with USE_PROD_DB=true) OR run one-shot:{'\n'}- npm run db:setup:mains:remote
                     </div>
-                    {migrationHint ? (
-                      <div className="rounded-lg bg-amber-50 p-2 text-xs text-amber-900">{migrationHint}</div>
-                    ) : null}
                   </div>
                 </Card>
-              ) : null}
-              {syllabusTree.map((unit) => (
-                <div key={unit.id} className="rounded-xl border border-slate-100 bg-slate-50/50">
-                  <div className="flex items-center gap-2 border-b border-slate-100 px-3 py-2">
-                    <span className="text-xs font-black text-slate-400">U{unit.unitNumber}</span>
-                    <span className="truncate text-xs font-bold">{unit.titleEn}</span>
-                  </div>
-                  <ul className="divide-y divide-slate-100">
-                    {unit.topics.map((topic) => {
-                      const active = selectedTopic?.id === topic.id;
-                      const has = !!topic.content;
-                      const updatedLabel = has ? formatContentUpdated(topic.content?.updatedAt ?? null) : null;
-                      return (
-                        <li key={topic.id}>
-                          <button
-                            type="button"
-                            onClick={() => selectTopic(topic, unit)}
-                            className={`flex w-full items-start gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                              active ? 'bg-emerald-50 font-semibold text-emerald-900' : 'hover:bg-white'
-                            }`}
-                          >
-                            <span className="flex-1 text-slate-700">{topic.titleEn}</span>
-                            {has ? (
-                              <span className="flex shrink-0 flex-col items-end gap-0.5">
-                                <Badge variant="outline" className="border-emerald-300 text-[10px] text-emerald-700">
-                                  Saved
-                                </Badge>
-                                {updatedLabel ? (
-                                  <span className="text-[9px] font-medium text-slate-500">{updatedLabel}</span>
-                                ) : null}
-                              </span>
-                            ) : (
-                              <span className="shrink-0 text-[10px] text-slate-400">—</span>
-                            )}
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ))}
+              ) : (
+                syllabusTree.map((unit) => {
+                  const isOpen = !!expandedUnits[unit.id];
+                  return (
+                    <div key={unit.id} className="rounded-xl border border-slate-100 bg-slate-50/50 overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedUnits(prev => ({ ...prev, [unit.id]: !isOpen }))}
+                        className="flex w-full items-center justify-between gap-2 border-b border-slate-100 px-3 py-2 text-left hover:bg-slate-100 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-black text-slate-400">U{unit.unitNumber}</span>
+                          <span className="truncate text-xs font-bold">{unit.titleEn}</span>
+                        </div>
+                        {isOpen ? <ChevronUp className="h-3.5 w-3.5 text-slate-400" /> : <ChevronDown className="h-3.5 w-3.5 text-slate-400" />}
+                      </button>
+                      
+                      {isOpen && (
+                        <ul className="divide-y divide-slate-100 bg-white">
+                          {unit.topics.map((topic) => {
+                            const active = selectedTopic?.id === topic.id;
+                            const has = !!topic.content;
+                            const updatedLabel = has ? formatContentUpdated(topic.content?.updatedAt ?? null) : null;
+                            return (
+                              <li key={topic.id}>
+                                <button
+                                  type="button"
+                                  onClick={() => selectTopic(topic, unit)}
+                                  className={`flex w-full items-start gap-2 px-3 py-2 text-left text-sm transition-colors ${
+                                    active ? 'bg-emerald-50 font-semibold text-emerald-900' : 'hover:bg-slate-50'
+                                  }`}
+                                >
+                                  <span className="flex-1 text-slate-700">{topic.titleEn}</span>
+                                  {has ? (
+                                    <span className="flex shrink-0 flex-col items-end gap-0.5">
+                                      <Badge variant="outline" className="border-emerald-300 text-[10px] text-emerald-700">
+                                        Saved
+                                      </Badge>
+                                      {updatedLabel ? (
+                                        <span className="text-[9px] font-medium text-slate-500">{updatedLabel}</span>
+                                      ) : null}
+                                    </span>
+                                  ) : (
+                                    <span className="shrink-0 text-[10px] text-slate-400">—</span>
+                                  )}
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 
@@ -791,55 +814,67 @@ export function MainsAdminClient() {
 
                 <Card
                   id="admin-mains-step2-format"
-                  className="space-y-3 border-2 border-indigo-600 bg-indigo-50 p-4 text-slate-950 shadow-md"
+                  className="overflow-hidden border-2 border-indigo-600 bg-indigo-50 text-slate-950 shadow-md transition-all"
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-2 border-b border-indigo-200 pb-3">
-                    <h3 className="text-base font-black tracking-tight text-indigo-950">
-                      ② Copy / paste format + JSON skeleton (yahi block dekhna — neeche paste box iske turant baad hai)
-                    </h3>
-                    <Badge className="shrink-0 bg-indigo-700 font-black text-white">Step 2</Badge>
-                  </div>
-                  <ol className="list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-900">
-                    <li>
-                      <strong>External AI:</strong> upar wale <em>① Full AI prompt</em> ka saara text copy karke ek
-                      hi user-turn me paste karo.
-                    </li>
-                    <li>
-                      <strong>Jawab:</strong> sirf <strong>ek Expert-Rich JSON</strong> (
-                      <code className="rounded bg-white px-1 text-xs">schema_version</code>,{' '}
-                      <code className="rounded bg-white px-1 text-xs">cognitive_intro_*</code>, nested{' '}
-                      <code className="rounded bg-white px-1 text-xs">model_answers_hi/en</code>) —{' '}
-                      <code className="rounded bg-white px-1.5 py-0.5 text-xs font-mono">{`\`\`\`json`}</code>{' '}
-                      fence aur extra prose hata dena. Purana <code className="text-xs">concept_hi</code> wala shape
-                      optional legacy hai, default target yahi rich schema hai.
-                    </li>
-                    <li>
-                      <strong>Yahan:</strong> niche wale grey box (<em>③ AI se mila JSON</em>) me paste → phir{' '}
-                      <strong className="text-emerald-800">Save JSON to DB</strong> dabao (uska button paste ke turant niche).
-                    </li>
-                  </ol>
-                  <div className="flex flex-wrap items-center gap-2 border-t border-indigo-300 pt-3">
-                    <p className="min-w-[200px] flex-1 text-sm font-bold leading-snug text-indigo-950">
-                      Validator (nested <code className="text-xs">model_answers_hi</code> +{' '}
-                      <code className="text-xs">model_answers_en</code>): P1–P3 →{' '}
-                      <code className="rounded bg-white px-1 text-xs">2×2m+2×7m+2×10m</code> each · P4 →{' '}
-                      <code className="rounded bg-white px-1 text-xs">2×11m</code> · P5–P6 → relaxed (min 2m)
-                    </p>
-                    <Button
-                      type="button"
-                      variant="default"
-                      size="default"
-                      className="h-10 shrink-0 bg-indigo-700 font-black text-white hover:bg-indigo-800"
-                      onClick={() => copy(jsonExampleString(), 'Example JSON skeleton')}
-                    >
-                      <Copy className="mr-2 h-4 w-4" />
-                      Copy example skeleton
-                    </Button>
-                  </div>
-                  <p className="text-xs font-semibold text-indigo-900">Readable skeleton (preview):</p>
-                  <pre className="max-h-[120px] overflow-auto rounded-lg border-2 border-indigo-300 bg-white p-3 font-mono text-[11px] leading-relaxed text-slate-900">
-                    {jsonExampleString()}
-                  </pre>
+                  <button
+                    type="button"
+                    onClick={() => setShowStep2Guide(!showStep2Guide)}
+                    className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left hover:bg-indigo-100/50"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Badge className="shrink-0 bg-indigo-700 font-black text-white">Step 2</Badge>
+                      <h3 className="text-sm font-black tracking-tight text-indigo-950">
+                        ② Copy / paste format + JSON skeleton
+                      </h3>
+                    </div>
+                    {showStep2Guide ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </button>
+
+                  {showStep2Guide && (
+                    <div className="space-y-3 border-t border-indigo-200 p-4">
+                      <ol className="list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-900">
+                        <li>
+                          <strong>External AI:</strong> upar wale <em>① Full AI prompt</em> ka saara text copy karke ek
+                          hi user-turn me paste karo.
+                        </li>
+                        <li>
+                          <strong>Jawab:</strong> sirf <strong>ek Expert-Rich JSON</strong> (
+                          <code className="rounded bg-white px-1 text-xs">schema_version</code>,{' '}
+                          <code className="rounded bg-white px-1 text-xs">cognitive_intro_*</code>, nested{' '}
+                          <code className="rounded bg-white px-1 text-xs">model_answers_hi/en</code>) —{' '}
+                          <code className="rounded bg-white px-1.5 py-0.5 text-xs font-mono">{`\`\`\`json`}</code>{' '}
+                          fence aur extra prose hata dena. Purana <code className="text-xs">concept_hi</code> wala shape
+                          optional legacy hai, default target yahi rich schema hai.
+                        </li>
+                        <li>
+                          <strong>Yahan:</strong> niche wale grey box (<em>③ AI se mila JSON</em>) me paste → phir{' '}
+                          <strong className="text-emerald-800">Save JSON to DB</strong> dabao (uska button paste ke turant niche).
+                        </li>
+                      </ol>
+                      <div className="flex flex-wrap items-center gap-2 border-t border-indigo-300 pt-3">
+                        <p className="min-w-[200px] flex-1 text-sm font-bold leading-snug text-indigo-950">
+                          Validator (nested <code className="text-xs">model_answers_hi</code> +{' '}
+                          <code className="text-xs">model_answers_en</code>): P1–P3 →{' '}
+                          <code className="rounded bg-white px-1 text-xs">2×2m+2×7m+2×10m</code> each · P4 →{' '}
+                          <code className="rounded bg-white px-1 text-xs">2×11m</code> · P5–P6 → relaxed (min 2m)
+                        </p>
+                        <Button
+                          type="button"
+                          variant="default"
+                          size="default"
+                          className="h-10 shrink-0 bg-indigo-700 font-black text-white hover:bg-indigo-800"
+                          onClick={() => copy(jsonExampleString(), 'Example JSON skeleton')}
+                        >
+                          <Copy className="mr-2 h-4 w-4" />
+                          Copy example skeleton
+                        </Button>
+                      </div>
+                      <p className="text-xs font-semibold text-indigo-900">Readable skeleton (preview):</p>
+                      <pre className="max-h-[120px] overflow-auto rounded-lg border-2 border-indigo-300 bg-white p-3 font-mono text-[11px] leading-relaxed text-slate-900">
+                        {jsonExampleString()}
+                      </pre>
+                    </div>
+                  )}
                 </Card>
 
                 <Card
@@ -861,25 +896,37 @@ export function MainsAdminClient() {
                   </div>
 
                   {/* Truncation warning alert banner */}
-                  <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4 text-amber-950 shadow-sm">
-                    <div className="flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600 animate-pulse" />
-                      <strong className="text-base font-black">⚠️ AI Truncation Alert — IMP / MUST READ:</strong>
-                    </div>
-                    <p className="mt-2 text-sm font-semibold leading-relaxed text-amber-900">
-                      Kyunki ye prompt bohot detailed aur premium bilingual content (Syllabus Grasp, 360° Dimensions, Model Answers for both Hindi & English) generate karta hai, <strong>Gemini/ChatGPT aksar likhte-likhte beech me ruk (truncate) jata hai!</strong>
-                    </p>
-                    <p className="mt-1 text-sm font-semibold leading-relaxed text-amber-850">
-                      Aapka JSON me abhi <strong>model_answers_hi/en</strong>, <strong>key_terms_cards</strong>, etc. bilkul missing hain (yeh <code className="rounded bg-white px-1 text-xs">topper_x_factor_hi</code> par hi cut ho gaya hai aur hamara automatic repair engine ise aadhe par hi thik karke band kar de raha hai).
-                    </p>
-                    <p className="mt-2 text-sm font-extrabold text-indigo-950">
-                      💡 Ise thik karne ka tareeqa (Dono blocks ko jodna):
-                    </p>
-                    <ol className="mt-1 list-decimal space-y-1.5 pl-5 text-sm font-semibold leading-relaxed text-slate-800">
-                      <li>Gemini/ChatGPT me jab generation ruk jaye, to likhein: <strong>"continue writing the JSON from topper_x_factor_en key onwards, maintain proper JSON"</strong> or click the <strong>"Continue generating" (लिखना जारी रखें)</strong> button.</li>
-                      <li>Jab wo baaki bacha JSON bhej de, to dono blocks ko aapas me jod (merge) kar dein (taaki ek hi closed curly braces <code className="rounded bg-white px-1 text-xs">{`{ ... }`}</code> ho aur bache hue keys jaise <code className="rounded bg-white px-1 text-xs">model_answers_hi</code> usme shamil ho sakein).</li>
-                      <li>Combined complete JSON ko yahan paste karke save karein!</li>
-                    </ol>
+                  <div className="overflow-hidden rounded-xl border-2 border-amber-300 bg-amber-50 shadow-sm transition-all">
+                    <button
+                      type="button"
+                      onClick={() => setShowTruncationAlert(!showTruncationAlert)}
+                      className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left hover:bg-amber-100/50"
+                    >
+                      <div className="flex items-center gap-2 text-amber-950">
+                        <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600 animate-pulse" />
+                        <strong className="text-sm font-black">⚠️ AI Truncation Alert — READ THIS</strong>
+                      </div>
+                      {showTruncationAlert ? <ChevronUp className="h-4 w-4 text-amber-600" /> : <ChevronDown className="h-4 w-4 text-amber-600" />}
+                    </button>
+
+                    {showTruncationAlert && (
+                      <div className="border-t border-amber-200 p-4">
+                        <p className="text-sm font-semibold leading-relaxed text-amber-900">
+                          Kyunki ye prompt bohot detailed aur premium bilingual content (Syllabus Grasp, 360° Dimensions, Model Answers for both Hindi & English) generate karta hai, <strong>Gemini/ChatGPT aksar likhte-likhte beech me ruk (truncate) jata hai!</strong>
+                        </p>
+                        <p className="mt-1 text-sm font-semibold leading-relaxed text-amber-850">
+                          Aapka JSON me abhi <strong>model_answers_hi/en</strong>, <strong>key_terms_cards</strong>, etc. bilkul missing hain (yeh <code className="rounded bg-white px-1 text-xs">topper_x_factor_hi</code> par hi cut ho gaya hai aur hamara automatic repair engine ise aadhe par hi thik karke band kar de raha hai).
+                        </p>
+                        <p className="mt-2 text-sm font-extrabold text-indigo-950">
+                          💡 Ise thik karne ka tareeqa (Dono blocks ko jodna):
+                        </p>
+                        <ol className="mt-1 list-decimal space-y-1.5 pl-5 text-sm font-semibold leading-relaxed text-slate-800">
+                          <li>Gemini/ChatGPT me jab generation ruk jaye, to likhein: <strong>"continue writing the JSON from topper_x_factor_en key onwards, maintain proper JSON"</strong> or click the <strong>"Continue generating" (लिखना जारी रखें)</strong> button.</li>
+                          <li>Jab wo baaki bacha JSON bhej de, to dono blocks ko aapas me jod (merge) kar dein (taaki ek hi closed curly braces <code className="rounded bg-white px-1 text-xs">{`{ ... }`}</code> ho aur bache hue keys jaise <code className="rounded bg-white px-1 text-xs">model_answers_hi</code> usme shamil ho sakein).</li>
+                          <li>Combined complete JSON ko yahan paste karke save karein!</li>
+                        </ol>
+                      </div>
+                    )}
                   </div>
                   <Textarea
                     value={jsonDraft}

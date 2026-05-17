@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Target } from 'lucide-react';
+import { ArrowLeft, Target, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { listMainsPyqPapersLibrarySummary, getMainsPyqPaperPublic } from '@/actions/mains-pyq-prepared-actions';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -12,36 +12,83 @@ import { PyqDeskControls } from './PyqDeskControls';
 import { PyqLibraryHeader } from './PyqLibraryHeader';
 import { PyqQuestionList, type QRow } from './PyqQuestionList';
 import { PyqLibraryErrorBoundary } from './PyqLibraryErrorBoundary';
-import { MAINS_PYQ_DEMO_YEAR, MAINS_PYQ_DEMO_PAPER_NUMBER } from '@/lib/mains-vault-demo';
+import {
+  isMainsPyqDemoPaper,
+  MAINS_PYQ_DEMO_PAPER_NUMBER,
+  MAINS_PYQ_DEMO_YEAR,
+} from '@/lib/mains-vault-demo';
+import { AnimatePresence, motion } from 'framer-motion';
 
 type Paper = {
   id: string;
   examYear: number;
   paperNumber: number;
+  questionCount: number;
 };
 
 type ReadingTheme = 'deep' | 'paper';
 
 type MainsPyqPaperListResponse =
-  | { success: true; data: Array<{ id: string; examYear: number; paperNumber: number }> }
+  | { success: true; data: Array<{ id: string; examYear: number; paperNumber: number; questionCount: number }> }
   | { success: false; error: 'fetch_failed'; detail?: string };
+
+let pyqPaperListCache: Paper[] | null = null;
+const pyqQuestionsCache = new Map<string, QRow[]>();
+
+function seedModuleCaches(papers: Paper[], paperId: string, questions: QRow[]) {
+  if (papers.length > 0) pyqPaperListCache = papers;
+  if (paperId && questions.length > 0) pyqQuestionsCache.set(paperId, questions);
+}
+
+function isPremiumLockedPaper(paper: Paper | undefined, vaultUnlocked: boolean) {
+  if (!paper || vaultUnlocked) return false;
+  return !isMainsPyqDemoPaper(paper.examYear, paper.paperNumber);
+}
 
 export function PyqLibraryClient({
   vaultUnlocked,
   allowDemoAccess,
+  initialPapers = [],
+  initialPaperId = '',
+  initialQuestions = [],
 }: {
   vaultUnlocked: boolean;
   allowDemoAccess: boolean;
+  initialPapers?: Paper[];
+  initialPaperId?: string;
+  initialQuestions?: QRow[];
 }) {
+  const hasServerSeed = initialPapers.length > 0;
+  const cacheSeeded = useRef(false);
+  if (hasServerSeed && !cacheSeeded.current) {
+    seedModuleCaches(initialPapers, initialPaperId, initialQuestions);
+    cacheSeeded.current = true;
+  }
+
   const { language } = useSettingsStore();
   const hi = language === 'hi';
+  const [, startPaperTransition] = useTransition();
 
-  // State management
-  const [papers, setPapers] = useState<Paper[]>([]);
-  const [paperId, setPaperId] = useState('');
-  const [questions, setQuestions] = useState<QRow[]>([]);
+  const [papers, setPapers] = useState<Paper[]>(() =>
+    hasServerSeed ? initialPapers : (pyqPaperListCache ?? [])
+  );
+  const [paperId, setPaperId] = useState(() => {
+    if (initialPaperId) return initialPaperId;
+    const cached = pyqPaperListCache ?? [];
+    if (!vaultUnlocked) {
+      const demo = cached.find(
+        (p) => p.examYear === MAINS_PYQ_DEMO_YEAR && p.paperNumber === MAINS_PYQ_DEMO_PAPER_NUMBER
+      );
+      if (demo) return demo.id;
+    }
+    return cached[0]?.id ?? '';
+  });
+  const [questions, setQuestions] = useState<QRow[]>(() => {
+    if (initialQuestions.length > 0) return initialQuestions;
+    return paperId ? (pyqQuestionsCache.get(paperId) ?? []) : [];
+  });
 
-  const [loadingList, setLoadingList] = useState(true);
+  const [loadingList, setLoadingList] = useState(!hasServerSeed && (pyqPaperListCache?.length ?? 0) === 0);
   const [loadingQ, setLoadingQ] = useState(false);
   const [papersError, setPapersError] = useState(false);
   const [papersErrorDetail, setPapersErrorDetail] = useState<string | null>(null);
@@ -51,10 +98,13 @@ export function PyqLibraryClient({
   const [deskControlsOpen, setDeskControlsOpen] = useState(false);
   const [partFilter, setPartFilter] = useState<string>('ALL');
   const [vaultModalOpen, setVaultModalOpen] = useState(false);
+  const [showGlobalFilters, setShowGlobalFilters] = useState(true);
 
-  // Load papers list
-  const loadList = useCallback(async () => {
-    setLoadingList(true);
+  const selectedPaper = useMemo(() => papers.find((p) => p.id === paperId), [papers, paperId]);
+  const premiumLockedView = isPremiumLockedPaper(selectedPaper, vaultUnlocked);
+
+  const loadList = useCallback(async (showLoading: boolean) => {
+    if (showLoading) setLoadingList(true);
     const r = (await listMainsPyqPapersLibrarySummary()) as MainsPyqPaperListResponse;
     setLoadingList(false);
     setPapersError(!r.success);
@@ -63,7 +113,13 @@ export function PyqLibraryClient({
       setPapers([]);
       return;
     }
-    const list = r.data ?? [];
+    const list = (r.data ?? []).map((p) => ({
+      id: p.id,
+      examYear: p.examYear,
+      paperNumber: p.paperNumber,
+      questionCount: p.questionCount ?? 0,
+    }));
+    pyqPaperListCache = list;
     setPapers(list);
     if (list.length === 0) {
       setPaperId('');
@@ -72,22 +128,37 @@ export function PyqLibraryClient({
     setPaperId((prev) => {
       if (prev && list.some((p) => p.id === prev)) return prev;
       if (!vaultUnlocked) {
-        const demo = list.find((p) => p.examYear === MAINS_PYQ_DEMO_YEAR && p.paperNumber === MAINS_PYQ_DEMO_PAPER_NUMBER);
+        const demo = list.find(
+          (p) => p.examYear === MAINS_PYQ_DEMO_YEAR && p.paperNumber === MAINS_PYQ_DEMO_PAPER_NUMBER
+        );
         if (demo) return demo.id;
       }
       return list[0]!.id;
     });
+
+    if (!vaultUnlocked) {
+      const demo = list.find(
+        (p) => p.examYear === MAINS_PYQ_DEMO_YEAR && p.paperNumber === MAINS_PYQ_DEMO_PAPER_NUMBER
+      );
+      if (demo && !pyqQuestionsCache.has(demo.id)) {
+        void getMainsPyqPaperPublic(demo.id).then((res) => {
+          if (res.success && res.data) {
+            pyqQuestionsCache.set(demo.id, res.data.questions as QRow[]);
+          }
+        });
+      }
+    }
   }, [vaultUnlocked]);
 
-  // Load questions for selected paper
-  const loadQs = useCallback(async (pid: string) => {
-    if (!pid) return;
-    setLoadingQ(true);
-    setQuestionsLoadIssue('none');
+  const fetchQuestions = useCallback(async (pid: string, showLoading: boolean) => {
+    if (showLoading) setLoadingQ(true);
     const r = await getMainsPyqPaperPublic(pid);
-    setLoadingQ(false);
+    if (showLoading) setLoadingQ(false);
     if (r.success && r.data) {
-      setQuestions(r.data.questions as QRow[]);
+      const next = r.data.questions as QRow[];
+      pyqQuestionsCache.set(pid, next);
+      setQuestions(next);
+      setQuestionsLoadIssue('none');
     } else {
       setQuestions([]);
       if (r.success === false) {
@@ -96,21 +167,93 @@ export function PyqLibraryClient({
     }
   }, []);
 
-  // Initial load
-  useEffect(() => {
-    loadList();
-  }, [loadList]);
+  const applyPremiumLockedPaper = useCallback((paper: Paper) => {
+    setQuestions([]);
+    setQuestionsLoadIssue('none');
+    setLoadingQ(false);
+  }, []);
 
-  // Load questions when paper changes
+  const loadQs = useCallback(
+    async (pid: string, paper?: Paper) => {
+      if (!pid) return;
+      const meta = paper ?? papers.find((p) => p.id === pid);
+
+      if (isPremiumLockedPaper(meta, vaultUnlocked)) {
+        applyPremiumLockedPaper(meta!);
+        return;
+      }
+
+      const cached = pyqQuestionsCache.get(pid);
+      if (cached) {
+        setQuestions(cached);
+        setQuestionsLoadIssue('none');
+        setLoadingQ(false);
+        void fetchQuestions(pid, false);
+        return;
+      }
+
+      setQuestionsLoadIssue('none');
+      await fetchQuestions(pid, true);
+    },
+    [papers, vaultUnlocked, fetchQuestions, applyPremiumLockedPaper]
+  );
+
+  useEffect(() => {
+    void loadList(!hasServerSeed && (pyqPaperListCache?.length ?? 0) === 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (!paperId) return;
-    loadQs(paperId);
-  }, [paperId, loadQs]);
+    void loadQs(paperId, selectedPaper);
+  }, [paperId, selectedPaper, loadQs]);
 
-  // Reset filter on paper change
   useEffect(() => {
     setPartFilter('ALL');
   }, [paperId]);
+
+  // Prefetch all papers in background if vault is unlocked for instant switching
+  useEffect(() => {
+    if (vaultUnlocked && papers.length > 0) {
+      papers.forEach((p) => {
+        if (!pyqQuestionsCache.has(p.id)) {
+          void getMainsPyqPaperPublic(p.id).then((res) => {
+            if (res.success && res.data) {
+              pyqQuestionsCache.set(p.id, res.data.questions as QRow[]);
+            }
+          });
+        }
+      });
+    }
+  }, [papers, vaultUnlocked]);
+
+  const handlePaperChange = useCallback(
+    (nextId: string) => {
+      const nextPaper = papers.find((p) => p.id === nextId);
+      if (isPremiumLockedPaper(nextPaper, vaultUnlocked)) {
+        startPaperTransition(() => {
+          setPaperId(nextId);
+          applyPremiumLockedPaper(nextPaper!);
+        });
+        return;
+      }
+      const cached = pyqQuestionsCache.get(nextId);
+      if (cached) {
+        startPaperTransition(() => {
+          setPaperId(nextId);
+          setQuestions(cached);
+          setQuestionsLoadIssue('none');
+          setLoadingQ(false);
+        });
+        void fetchQuestions(nextId, false);
+        return;
+      }
+      startPaperTransition(() => {
+        setPaperId(nextId);
+      });
+    },
+    [papers, vaultUnlocked, fetchQuestions, applyPremiumLockedPaper, startPaperTransition]
+  );
 
   const themeDeep = readingTheme === 'deep';
   const shell = cn(
@@ -120,7 +263,7 @@ export function PyqLibraryClient({
   const blobClass = 'pointer-events-none absolute rounded-full blur-[100px] opacity-40';
 
   return (
-    <div className={shell} style={{ marginLeft: 'calc(50% - 50vw)', marginRight: 'calc(50% - 50vw)' }}>
+    <motion.div className={shell} style={{ marginLeft: 'calc(50% - 50vw)', marginRight: 'calc(50% - 50vw)' }}>
       {!themeDeep ? (
         <>
           <div className={`${blobClass} top-[-80px] right-[-120px] h-[420px] w-[420px] bg-pink-100`} />
@@ -131,7 +274,7 @@ export function PyqLibraryClient({
       ) : null}
 
       <div className="relative mx-auto max-w-3xl px-1 sm:px-1.5">
-        <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="relative mb-6 flex items-center justify-between gap-4">
           <Button
             variant="ghost"
             className={cn(
@@ -146,36 +289,73 @@ export function PyqLibraryClient({
             </Link>
           </Button>
 
-          <button
-            type="button"
-            onClick={() => setDeskControlsOpen(!deskControlsOpen)}
-            className={cn(
-              'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 shadow-sm transition-transform hover:-translate-y-0.5 active:scale-95',
-              deskControlsOpen
-                ? themeDeep
-                  ? 'border-amber-400 bg-amber-950/60 text-amber-300 shadow-md shadow-amber-500/15'
-                  : 'border-amber-500 bg-amber-500 text-white shadow-md shadow-amber-500/20'
-                : themeDeep
-                  ? 'border-slate-700 bg-slate-900 text-slate-300 hover:border-amber-500/50 hover:text-amber-300'
-                  : 'border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-400 hover:bg-amber-100/50'
-            )}
-            aria-expanded={deskControlsOpen}
-            aria-label={hi ? 'पेपर, थीम व विवरण' : 'Paper, theme & description'}
-          >
-            <Target className="h-[18px] w-[18px]" aria-hidden />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowGlobalFilters(!showGlobalFilters)}
+              className={cn(
+                'group flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 active:scale-90 shadow-md border-2',
+                showGlobalFilters
+                  ? themeDeep
+                    ? 'bg-slate-900 border-slate-700 text-slate-400 hover:text-slate-200'
+                    : 'bg-white border-slate-100 text-slate-400 hover:text-slate-600 shadow-slate-200/40'
+                  : themeDeep
+                    ? 'bg-emerald-950 border-emerald-500 text-emerald-400 shadow-emerald-900/40 ring-4 ring-emerald-500/10'
+                    : 'bg-pink-600 border-pink-500 text-white shadow-pink-200 ring-4 ring-pink-500/10'
+              )}
+              title={hi ? 'फोकस मोड: विवरण दिखाएं/छिपाएं' : 'Focus Mode: Show/Hide details'}
+            >
+              <Sparkles
+                className={cn(
+                  'h-[18px] w-[18px] transition-transform duration-500',
+                  !showGlobalFilters && 'rotate-12 scale-110'
+                )}
+              />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setDeskControlsOpen(!deskControlsOpen)}
+              className={cn(
+                'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 shadow-sm transition-transform hover:-translate-y-0.5 active:scale-95',
+                deskControlsOpen
+                  ? themeDeep
+                    ? 'border-amber-400 bg-amber-950/60 text-amber-300 shadow-md shadow-amber-500/15'
+                    : 'border-amber-500 bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                  : themeDeep
+                    ? 'border-slate-700 bg-slate-900 text-slate-300 hover:border-amber-500/50 hover:text-amber-300'
+                    : 'border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-400 hover:bg-amber-100/50'
+              )}
+              aria-expanded={deskControlsOpen}
+              aria-label={hi ? 'पेपर, थीम व विवरण' : 'Paper, theme & description'}
+            >
+              <Target className="h-[18px] w-[18px]" aria-hidden />
+            </button>
+          </div>
         </div>
 
-        <PyqLibraryHeader readingTheme={readingTheme} />
+        <AnimatePresence>
+          {showGlobalFilters && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <PyqLibraryHeader readingTheme={readingTheme} />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <PyqDeskControls
           papers={papers}
           paperId={paperId}
-          onPaperChange={setPaperId}
+          onPaperChange={handlePaperChange}
           readingTheme={readingTheme}
           onThemeChange={setReadingTheme}
           deskControlsOpen={deskControlsOpen}
           onControlsToggle={setDeskControlsOpen}
+          vaultUnlocked={vaultUnlocked}
         />
 
         <PyqLibraryErrorBoundary
@@ -184,24 +364,28 @@ export function PyqLibraryClient({
           papersErrorDetail={papersErrorDetail}
           questionsLoadIssue={questionsLoadIssue}
           loadingList={loadingList}
-          loadingQ={loadingQ}
+          loadingQ={loadingQ && !premiumLockedView}
           papersCount={papers.length}
-          onRetryPapers={loadList}
+          onRetryPapers={() => loadList(true)}
         >
           <PyqQuestionList
+            key={paperId}
             questions={questions}
-            paperNumber={papers.find((p) => p.id === paperId)?.paperNumber ?? 1}
+            paperNumber={selectedPaper?.paperNumber ?? 1}
+            examYear={selectedPaper?.examYear ?? 0}
+            paperQuestionCount={selectedPaper?.questionCount ?? 0}
             partFilter={partFilter}
             onPartFilterChange={setPartFilter}
             readingTheme={readingTheme}
             vaultUnlocked={vaultUnlocked}
             allowDemoAccess={allowDemoAccess}
             onVaultModalOpen={() => setVaultModalOpen(true)}
+            showGlobalFilters={showGlobalFilters}
           />
         </PyqLibraryErrorBoundary>
       </div>
 
       <SyllabusLockMainsModal open={vaultModalOpen} onOpenChange={setVaultModalOpen} />
-    </div>
+    </motion.div>
   );
 }

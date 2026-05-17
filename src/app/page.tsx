@@ -67,12 +67,12 @@ export default function Home() {
           {/* English Section */}
           <div className="mb-12 border-b border-slate-100 pb-12">
             <h2 className="mb-8 text-3xl font-extrabold text-slate-900 md:text-4xl">
-              Crack MPPSC 2026: The Strategic Preparation Platform
+              Crack MPPSC: The Strategic Preparation Platform
             </h2>
 
             <div className="prose prose-slate max-w-none space-y-6 text-lg leading-relaxed text-slate-600">
               <p>
-                Preparing for the <strong>MPPSC State Service Exam 2026</strong> requires a
+                Preparing for the <strong>MPPSC State Service Exam</strong> requires a
                 data-driven approach. With the introduction of the new{' '}
                 <strong>1/3rd negative marking system</strong> and the shift to{' '}
                 <strong>3 marks per question</strong>, accuracy is now your most valuable asset.
@@ -105,12 +105,12 @@ export default function Home() {
           {/* Hindi SEO Section */}
           <div className="mt-12">
             <h2 className="mb-8 text-3xl font-extrabold text-slate-900 md:text-4xl">
-              MPPSC 2026 की तैयारी: एक स्मार्ट और वैज्ञानिक तरीका
+              MPPSC की तैयारी: एक स्मार्ट और वैज्ञानिक तरीका
             </h2>
 
             <div className="prose prose-slate max-w-none space-y-6 text-lg leading-relaxed text-slate-600">
               <p>
-                <strong>MPPSC राज्य सेवा परीक्षा 2026</strong> के लिए सिर्फ पढ़ाई काफी नहीं है। नए{' '}
+                <strong>MPPSC राज्य सेवा परीक्षा</strong> के लिए सिर्फ पढ़ाई काफी नहीं है। नए{' '}
                 <strong>1/3rd नेगेटिव मार्किंग</strong> और <strong>3 अंक प्रति प्रश्न</strong> वाले
                 पैटर्न के साथ, अब हर सवाल का चुनाव संभलकर करना होगा। माइंडफुल MPPSC छात्रों को इस
                 बदलते पैटर्न के अनुसार ढलने में मदद करता है।

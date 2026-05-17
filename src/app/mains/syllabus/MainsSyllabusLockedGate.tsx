@@ -23,10 +23,13 @@ export function MainsSyllabusLockedGate() {
 
   const mppscCopy = data?.mppscProductCopy ?? DEFAULT_MPPSC_PRODUCT_COPY;
 
-  const tickLines = useMemo(
-    () => (hi ? mppscCopy.mains.bulletsHi : mppscCopy.mains.bulletsEn).slice(0, 5),
-    [mppscCopy, hi]
-  );
+  const tickLines = useMemo(() => {
+    const base = hi ? mppscCopy.mains.bulletsHi : mppscCopy.mains.bulletsEn;
+    const navPoint = hi 
+      ? '⚡ अल्ट्रा-फास्ट 1-क्लिक सिलेबस नेविगेटर (रोज़ 30 मिनट बचाएं)' 
+      : '⚡ Ultra-Fast 1-Click Syllabus Navigator (Save 30 mins daily)';
+    return [navPoint, ...base.slice(0, 4)];
+  }, [mppscCopy, hi]);
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-16 text-slate-100">

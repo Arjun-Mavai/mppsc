@@ -76,52 +76,41 @@ export default function MainsLandingPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#020408_90%)]" />
       </div>
 
-      {/* ── Hero Section (Tightened viewport clearance to bring buttons up) ── */}
-      <section className="relative z-10 flex flex-col items-center justify-center px-4 pt-8 pb-12 text-center md:px-6 md:pt-12 md:pb-16">
+      {/* ── Hero Section (Google & Stripe Designer Edition) ── */}
+      <section className="relative z-10 flex flex-col items-center justify-center px-4 pt-4 pb-12 text-center md:px-6 md:pt-10 md:pb-16">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="max-w-5xl"
         >
-          {/* Glowing Premium Strategy Badge */}
+          {/* Glowing Premium Strategy Pill Badge */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="mb-6"
+            className="mb-4"
           >
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-1.5 text-xs font-black text-amber-300 backdrop-blur-sm shadow-[0_0_30px_rgba(245,158,11,0.15)] uppercase tracking-wider">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-              {hi ? 'MPPSC मुख्य परीक्षा डिकोडर' : 'MPPSC Mains Strategic Decoder'}
+            <div className="inline-flex items-center gap-2.5 rounded-full border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 px-5 py-2 text-xs font-black text-amber-300 backdrop-blur-md shadow-[0_0_35px_rgba(245,158,11,0.2)] uppercase tracking-widest">
+              <span className="h-2 w-2 rounded-full bg-amber-400 animate-ping shadow-[0_0_10px_rgba(245,158,11,1)]" />
+              <span>{hi ? '⭐ MPPSC मुख्य परीक्षा ज्ञान कोष' : '⭐ MPPSC Mains Gyan Kosh'}</span>
             </div>
           </motion.div>
 
-          {/* 
-            💡 MAIN PHILOSOPHY TITLE VARIATIONS FOR SELECTION:
-          */}
           <style>{`
             @keyframes draw-circle {
-              0% {
-                stroke-dashoffset: 400;
-                opacity: 0;
-              }
-              15% {
-                opacity: 1;
-              }
-              100% {
-                stroke-dashoffset: 0;
-                opacity: 1;
-              }
+              0% { stroke-dashoffset: 400; opacity: 0; }
+              15% { opacity: 1; }
+              100% { stroke-dashoffset: 0; opacity: 1; }
             }
           `}</style>
 
-          <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[6.2rem] font-black mb-4 tracking-tighter leading-[1.15] py-2 text-white">
+          <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[6.5rem] font-black mb-2 tracking-tight leading-[1.15] py-2 text-white">
             {hi ? (
               <>
                 रटना छोड़ें,
                 <br />
-                <span className="relative inline-block mt-1 px-8 py-2">
+                <span className="relative inline-block mt-2 px-8 py-2">
                   <svg
                     className="absolute inset-0 w-full h-full pointer-events-none filter drop-shadow-[0_0_15px_rgba(220,38,38,0.55)] drop-shadow-[0_0_15px_rgba(245,158,11,0.4)]"
                     viewBox="0 0 100 100"
@@ -129,7 +118,6 @@ export default function MainsLandingPage() {
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
                   >
-                    {/* First Loop Stroke - Deep Royal Red */}
                     <path
                       d="M6 48 C10 15, 90 12, 94 48 C98 84, 12 88, 6 52"
                       stroke="#dc2626"
@@ -142,7 +130,6 @@ export default function MainsLandingPage() {
                         animation: 'draw-circle 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards'
                       }}
                     />
-                    {/* Second Loop Stroke - Rich Gold / Yellow */}
                     <path
                       d="M12 52 C5 18, 95 18, 92 50 C89 82, 3 80, 10 46"
                       stroke="#fbbf24"
@@ -157,13 +144,13 @@ export default function MainsLandingPage() {
                       }}
                     />
                   </svg>
-                  <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent filter drop-shadow-[0_10px_40px_rgba(16,185,129,0.35)] relative z-10">
-                    रणनीति चुनें
+                  <span className="bg-gradient-to-r from-emerald-400 via-teal-200 to-amber-300 bg-clip-text text-transparent filter drop-shadow-[0_10px_40px_rgba(16,185,129,0.35)] relative z-10 px-2">
+                    लिखना सीखें
                   </span>
                 </span>
               </>
             ) : (
-              <span className="inline-flex flex-wrap items-center justify-center gap-x-4 gap-y-1 leading-none py-2">
+              <span className="inline-flex flex-wrap items-center justify-center gap-x-4 gap-y-1 leading-none py-2 text-[0.9em]">
                 <span>Stop Rote Learning,</span>
                 <span className="relative inline-block px-8 py-2">
                   <svg
@@ -173,7 +160,6 @@ export default function MainsLandingPage() {
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
                   >
-                    {/* First Loop Stroke - Deep Royal Red */}
                     <path
                       d="M6 48 C10 15, 90 12, 94 48 C98 84, 12 88, 6 52"
                       stroke="#dc2626"
@@ -186,7 +172,6 @@ export default function MainsLandingPage() {
                         animation: 'draw-circle 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards'
                       }}
                     />
-                    {/* Second Loop Stroke - Rich Gold / Yellow */}
                     <path
                       d="M12 52 C5 18, 95 18, 92 50 C89 82, 3 80, 10 46"
                       stroke="#fbbf24"
@@ -201,30 +186,30 @@ export default function MainsLandingPage() {
                       }}
                     />
                   </svg>
-                  <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent filter drop-shadow-[0_10px_40px_rgba(16,185,129,0.35)] relative z-10">
-                    Choose Strategy
+                  <span className="bg-gradient-to-r from-emerald-400 via-teal-200 to-amber-300 bg-clip-text text-transparent filter drop-shadow-[0_10px_40px_rgba(16,185,129,0.35)] relative z-10 px-2 text-[0.85em]">
+                    Master Writing
                   </span>
                 </span>
               </span>
             )}
           </h1>
 
-          <p className="mx-auto mb-6 max-w-2xl text-lg font-black text-slate-300 md:text-2xl leading-relaxed">
+          <p className="mx-auto mb-4 max-w-2xl text-lg font-black text-slate-300 md:text-2xl leading-relaxed">
             {hi ? (
               <>
-                सिलेबस की <span className="text-amber-400">असली समझ</span> से <span className="text-emerald-400 font-black bg-emerald-500/10 px-2.5 py-0.5 rounded-lg border border-emerald-500/20 shadow-sm inline-block">मॉडल उत्तरों तक</span>
+                सिलेबस की <span className="text-amber-400">असली समझ</span> से <span className="text-emerald-400 font-black bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20 shadow-sm inline-block">मॉडल उत्तरों तक</span>
               </>
             ) : (
               <>
-                From Deep <span className="text-amber-400">Syllabus Clarity</span> to <span className="text-emerald-400 font-black bg-emerald-500/10 px-2.5 py-0.5 rounded-lg border border-emerald-500/20 shadow-sm inline-block">Model Answers</span>
+                <span className="text-amber-400">Syllabus Decoding</span> to <span className="text-emerald-400 font-black bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20 shadow-sm inline-block">Ranker Answers</span>
               </>
             )}
           </p>
 
-          <p className="mx-auto mt-4 max-w-3xl px-4 text-base sm:text-lg md:text-xl font-bold leading-relaxed text-slate-300">
+          <p className="mx-auto mt-2 max-w-3xl px-4 text-base sm:text-lg md:text-xl font-bold leading-relaxed text-slate-300">
             {hi 
-              ? 'बिना किसी उबाऊ और बोझिल रटने की प्रणाली के — असली सिलेबस डिकोडिंग और प्रत्येक प्रश्न के 2 अलग दृष्टिकोण वाले मॉडल उत्तरों (डबल-स्टाइल वेरिएशन) का एकमात्र विश्वसनीय हब।'
-              : 'Direct analytical syllabus decoding with premium Double-Style Answer Variations — zero textbook and rote-learning clutter.'}
+              ? 'सिर्फ नोट्स जमा करने से मेंस क्लीयर नहीं होता। जानिए हर सिलेबस लाइन की असली डिमांड और सीखिए 2 अलग-अलग स्टाइल में उत्तर लिखने का विज्ञान।'
+              : 'Hoarding textbooks and PDFs won\'t clear the exam. Master the exact syllabus demand, unlock retention mnemonics, and learn the science of dual-style model answers.'}
           </p>
 
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md sm:max-w-2xl md:max-w-3xl mx-auto">
@@ -253,6 +238,27 @@ export default function MainsLandingPage() {
               <ChevronRight size={18} className="text-white/60 transition-transform group-hover:translate-x-0.5" />
             </button>
           </div>
+
+          {/* Floating Feature Anchor Badges */}
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-12 flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-6 border-t border-white/5"
+          >
+            <div className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-1.5 border border-white/10">
+              <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+              <span className="text-xs font-bold text-slate-300">{hi ? '100% सिलेबस डिकोडिंग' : '100% Syllabus Decoded'}</span>
+            </div>
+            <div className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-1.5 border border-white/10">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+              <span className="text-xs font-bold text-slate-300">{hi ? '2 स्टाइल मॉडल उत्तर' : '2 Model Variants'}</span>
+            </div>
+            <div className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-1.5 border border-white/10">
+              <Target className="h-3.5 w-3.5 text-blue-400" />
+              <span className="text-xs font-bold text-slate-300">{hi ? 'परीक्षक जाल व टिप्स' : 'Examiner Traps Decoded'}</span>
+            </div>
+          </motion.div>
         </motion.div>
       </section>
 

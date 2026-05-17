@@ -112,42 +112,57 @@ export function MainsPyqVaultGuideAndManage({
 
   const counts = useMemo(() => ({ n: papers.length }), [papers.length]);
 
+  const [showGuide, setShowGuide] = useState(false);
+
   return (
     <div className="space-y-6">
-      <Card className="border-emerald-200/80 bg-gradient-to-br from-emerald-50/80 via-white to-slate-50 p-5 text-sm leading-relaxed text-slate-800 shadow-sm">
-        <p className="text-base font-black text-emerald-950">Imported paper → konsi table mein kya jata hai (flow)</p>
-        <ol className="mt-4 list-decimal space-y-3 pl-5 marker:font-black">
-          <li>
-            <strong>Admin → Paste JSON → Save:</strong>{' '}
-            <code className="rounded bg-white px-1.5 py-0.5 text-xs shadow-sm">importMainsPyqPaperJson</code> eksath
-            year + paper number se match karti hai.
-          </li>
-          <li>
-            <strong className="text-emerald-900">mains_pyq_papers</strong> — ek row per imported paper (
-            <code className="text-xs">exam_year</code>, <code className="text-xs">paper_number</code>, titles,{' '}
-            <code className="text-xs">raw_json</code> backup). <strong>slug</strong> unique.
-          </li>
-          <li>
-            <strong className="text-emerald-900">mains_pyq_questions</strong> — har sawal stems; FK{' '}
-            <code className="text-xs">paper_id</code> → papers. Part / unit / question # se merge hota re-import par
-            (UUID stable).
-          </li>
-          <li>
-            <strong className="text-emerald-900">mains_pyq_prepared_variants</strong> — slot 1 &amp; 2 model answers; FK{' '}
-            <code className="text-xs">pyq_question_id</code> → questions (admin “batch paste” se).
-          </li>
-          <li>
-            <strong className="text-emerald-900">mains_topic_pyq_links</strong> — optional manual link{' '}
-            <code className="text-xs">topic_id</code> + <code className="text-xs">pyq_question_id</code> (syllabus topic ↔
-            official stem). Alag hai seed syllabus tables se.
-          </li>
-        </ol>
-        <p className="mt-4 rounded-lg border border-slate-200 bg-white/80 p-3 text-xs text-slate-600">
-          <strong className="text-slate-800">Nahi chhoota:</strong> <code>mains_papers</code>,{' '}
-          <code>mains_units</code>, <code>mains_topics</code>, <code>mains_content</code> — yeh syllabus tree hai, PYQ
-          import se alag.
-        </p>
-      </Card>
+      <div className="flex justify-end">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-xs font-bold text-slate-500 hover:text-indigo-600"
+          onClick={() => setShowGuide(!showGuide)}
+        >
+          {showGuide ? 'Hide Table Flow Guide ↑' : 'Show Table Flow Guide ↓'}
+        </Button>
+      </div>
+
+      {showGuide && (
+        <Card className="border-emerald-200/80 bg-gradient-to-br from-emerald-50/80 via-white to-slate-50 p-5 text-sm leading-relaxed text-slate-800 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+          <p className="text-base font-black text-emerald-950">Imported paper → konsi table mein kya jata hai (flow)</p>
+          <ol className="mt-4 list-decimal space-y-3 pl-5 marker:font-black">
+            <li>
+              <strong>Admin → Paste JSON → Save:</strong>{' '}
+              <code className="rounded bg-white px-1.5 py-0.5 text-xs shadow-sm">importMainsPyqPaperJson</code> eksath
+              year + paper number se match karti hai.
+            </li>
+            <li>
+              <strong className="text-emerald-900">mains_pyq_papers</strong> — ek row per imported paper (
+              <code className="text-xs">exam_year</code>, <code className="text-xs">paper_number</code>, titles,{' '}
+              <code className="text-xs">raw_json</code> backup). <strong>slug</strong> unique.
+            </li>
+            <li>
+              <strong className="text-emerald-900">mains_pyq_questions</strong> — har sawal stems; FK{' '}
+              <code className="text-xs">paper_id</code> → papers. Part / unit / question # se merge hota re-import par
+              (UUID stable).
+            </li>
+            <li>
+              <strong className="text-emerald-900">mains_pyq_prepared_variants</strong> — slot 1 &amp; 2 model answers; FK{' '}
+              <code className="text-xs">pyq_question_id</code> → questions (admin “batch paste” se).
+            </li>
+            <li>
+              <strong className="text-emerald-900">mains_topic_pyq_links</strong> — optional manual link{' '}
+              <code className="text-xs">topic_id</code> + <code className="text-xs">pyq_question_id</code> (syllabus topic ↔
+              official stem). Alag hai seed syllabus tables se.
+            </li>
+          </ol>
+          <p className="mt-4 rounded-lg border border-slate-200 bg-white/80 p-3 text-xs text-slate-600">
+            <strong className="text-slate-800">Nahi chhoota:</strong> <code>mains_papers</code>,{' '}
+            <code>mains_units</code>, <code>mains_topics</code>, <code>mains_content</code> — yeh syllabus tree hai, PYQ
+            import se alag.
+          </p>
+        </Card>
+      )}
 
       <Card className="border-rose-200 bg-rose-50/50 p-5">
         <p className="font-black text-rose-950">Fresh start — saara mains PYQ vault khali</p>

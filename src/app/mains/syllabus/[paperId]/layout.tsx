@@ -52,7 +52,7 @@ export default async function MainsPaperSyllabusLayout({
             </Link>
           </Button>
         </div>
-        <MainsSyllabusSidebar paperNumber={paper.paperNumber} titleHi={paper.titleHi} titleEn={paper.titleEn} units={units} language="hi" />
+        <MainsSyllabusSidebar paperNumber={paper.paperNumber} titleHi={paper.titleHi} titleEn={paper.titleEn} units={units} />
       </aside>
 
       <main className="min-h-0 min-w-0 flex-1 flex flex-col h-full overflow-hidden">

@@ -3,32 +3,67 @@
 export const MAINS_PYQ_DEMO_YEAR = 2024;
 export const MAINS_PYQ_DEMO_PAPER_NUMBER = 1;
 
-/** One free teaser per marks band below (2m / 5m / 7m) when the paper has them. */
-export const MAINS_PYQ_FREE_QUESTION_CAP = 3;
+/** Free samples per part (A and B) on demo paper — same bands as before. */
+export const MAINS_PYQ_FREE_QUESTION_CAP_PER_PART = 4;
 
-/** Prefer one question each from these bands (Paper 1, demo year only). Order = pick priority. */
-export const MAINS_PYQ_FREE_MARKS_PRIORITY = [2, 5, 7] as const;
+export function isMainsPyqDemoPaper(examYear: number, paperNumber: number): boolean {
+  return examYear === MAINS_PYQ_DEMO_YEAR && paperNumber === MAINS_PYQ_DEMO_PAPER_NUMBER;
+}
 
-export type PyqMarksPickRow = { id: string; marks: number };
+export type PyqMarksPickRow = { id: string; marks: number; part: string };
+
+function normalizePart(part: string): string {
+  return String(part).trim().toUpperCase();
+}
 
 /**
- * Chooses up to `MAINS_PYQ_FREE_QUESTION_CAP` ids in **display order** of `questions`:
- * first match per preferred mark (2 → 5 → 7), then any extra from the tail if slots remain.
+ * One part (A or B): 2-mark×2, one 5/7-mark, one 10/11-mark; fill to cap if bands missing.
  */
-export function pickMainsPyqFreeDemoQuestionIds(questions: PyqMarksPickRow[]): Set<string> {
-  const ids = new Set<string>();
-  for (const m of MAINS_PYQ_FREE_MARKS_PRIORITY) {
-    if (ids.size >= MAINS_PYQ_FREE_QUESTION_CAP) break;
-    const hit = questions.find((q) => q.marks === m && !ids.has(q.id));
-    if (hit) ids.add(hit.id);
-  }
-  if (ids.size < MAINS_PYQ_FREE_QUESTION_CAP) {
-    for (const q of questions) {
-      if (ids.size >= MAINS_PYQ_FREE_QUESTION_CAP) break;
-      if (!ids.has(q.id)) ids.add(q.id);
+export function pickMainsPyqFreeDemoQuestionIdsForPart(
+  questions: PyqMarksPickRow[],
+  cap = MAINS_PYQ_FREE_QUESTION_CAP_PER_PART
+): Set<string> {
+  const picked = new Set<string>();
+
+  let twoCount = 0;
+  for (const q of questions) {
+    if (q.marks === 2 && !picked.has(q.id)) {
+      picked.add(q.id);
+      twoCount++;
+      if (twoCount >= 2) break;
     }
   }
-  return ids;
+
+  const mid = questions.find((q) => (q.marks === 5 || q.marks === 7) && !picked.has(q.id));
+  if (mid) picked.add(mid.id);
+
+  const high = questions.find((q) => (q.marks === 10 || q.marks === 11) && !picked.has(q.id));
+  if (high) picked.add(high.id);
+
+  if (picked.size < cap) {
+    for (const q of questions) {
+      if (!picked.has(q.id)) picked.add(q.id);
+      if (picked.size >= cap) break;
+    }
+  }
+
+  return picked;
+}
+
+/** Demo paper: same free cap for Part A and Part B (up to 8 questions total). */
+export function pickMainsPyqFreeDemoQuestionIds(questions: PyqMarksPickRow[]): Set<string> {
+  const picked = new Set<string>();
+  const partsPresent = new Set(questions.map((q) => normalizePart(q.part)));
+
+  for (const part of ['A', 'B'] as const) {
+    if (!partsPresent.has(part)) continue;
+    const inPart = questions.filter((q) => normalizePart(q.part) === part);
+    for (const id of pickMainsPyqFreeDemoQuestionIdsForPart(inPart)) {
+      picked.add(id);
+    }
+  }
+
+  return picked;
 }
 
 /** Display order for free strip: preferred marks bands first, then stable by original index. */
@@ -36,6 +71,8 @@ function markTierForDemoSort(marks: number): number {
   if (marks === 2) return 0;
   if (marks === 5) return 1;
   if (marks === 7) return 2;
+  if (marks === 10) return 3;
+  if (marks === 11) return 4;
   return 99;
 }
 

@@ -11,6 +11,7 @@ import { Quote, Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { logger } from '@/lib/logger';
 import { loginUserAction } from '@/actions/auth-actions';
+import { shouldRedirectPreSyllabusToMains } from '@/lib/product-portal-policy';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -37,7 +38,9 @@ export default function LoginPage() {
 
         // Wait a bit for store to sync then redirect
         setTimeout(() => {
-          if (data.user?.isSubscribed) {
+          if (data.user && shouldRedirectPreSyllabusToMains(data.user as any)) {
+            window.location.href = '/mains';
+          } else if (data.user?.isSubscribed) {
             window.location.href = '/syllabus/quiz/pyq';
           } else {
             window.location.href = '/';

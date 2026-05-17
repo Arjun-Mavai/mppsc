@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import { variants as syllabusCardVariants } from '@/components/SyllabusTopicCard';
-import type { ReactNode } from 'react';
+import { memo, type ReactNode } from 'react';
 
 const PALETTE = ['pink', 'emerald', 'amber', 'sky'] as const;
 type PaletteKey = (typeof PALETTE)[number];
@@ -216,7 +216,7 @@ function renderBulletLead(
   );
 }
 
-export function PyqAnswerProse({
+export const PyqAnswerProse = memo(({
   text,
   lang,
   theme,
@@ -244,7 +244,7 @@ export function PyqAnswerProse({
   mainsBoxLayout?: boolean;
   /** Slightly richer tracking/legibility for long-form mains models (light reading). */
   readerAccent?: boolean;
-}) {
+}) => {
   const lines = text.replace(/\r\n/g, '\n').split('\n');
   const tint = sectionTint ?? 0;
   const headingBar =
@@ -447,14 +447,14 @@ export function PyqAnswerProse({
 
       const chip = examSurfaceChrome
         ? cn(
-            compact ? 'rounded-md px-2 py-1.5' : 'my-0.5 rounded-lg border px-2 sm:px-2.5 py-1.5 sm:py-2',
+            compact ? 'rounded-md px-2 py-1.5' : 'rounded-lg border px-2 sm:px-2.5 py-1.5 sm:py-2',
             'shadow-sm break-words min-w-0 overflow-hidden text-pretty',
             theme === 'deep'
               ? 'border-slate-600 bg-slate-950 text-slate-50'
               : 'border-slate-300 bg-white text-slate-950'
           )
         : cn(
-            compact ? 'rounded-lg border px-1.5 py-1 shadow-none' : 'my-0.5 rounded-xl border px-2 sm:px-2.5 py-1.5 sm:py-2 shadow-sm',
+            compact ? 'rounded-lg border px-1.5 py-1 shadow-none' : 'rounded-xl border px-2 sm:px-2.5 py-1.5 sm:py-2 shadow-sm',
             'transition-colors break-words min-w-0 overflow-hidden text-pretty',
             theme === 'deep'
               ? BULLET_DEEP[key]
@@ -539,7 +539,9 @@ export function PyqAnswerProse({
         readerAccent && 'subpixel-antialiased [text-rendering:optimizeLegibility]'
       )}
     >
-      <div className={compact ? '-mx-0.5 space-y-4' : readerAccent ? 'space-y-1' : 'space-y-0.5'}>{nodes}</div>
+      <div className={compact ? '-mx-0.5 space-y-4' : readerAccent ? 'space-y-4' : 'space-y-4'}>{nodes}</div>
     </div>
   );
-}
+});
+
+PyqAnswerProse.displayName = 'PyqAnswerProse';

@@ -263,6 +263,14 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* 🖱️ GLOBAL PRESS EFFECT: Bhai, click karne par buttons aur cards dabte hue dikhenge */
+  button, 
+  a,
+  [role="button"],
+  .interactive-tile {
+    @apply transition-transform duration-100 active:scale-[0.97] cursor-pointer;
+  }
 }
 
 /* Electric Blue Utility Classes */

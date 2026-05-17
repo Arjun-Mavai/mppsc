@@ -9,7 +9,7 @@ import {
   mainsTopics,
   mainsTopicPyqLinks,
 } from '@/db/schema';
-import { eq, and, desc, count, inArray } from 'drizzle-orm';
+import { eq, and, desc, count, inArray, sql } from 'drizzle-orm';
 import { whereMainsPyqPaperListed } from '@/lib/mains-pyq-visibility';
 import { v4 as uuidv4 } from 'uuid';
 import { revalidatePath } from 'next/cache';
@@ -206,6 +206,8 @@ export async function importMainsPyqPaperJson(rawText: string) {
 
   revalidatePath('/admin/mains-pyq');
   revalidatePath('/mains/syllabus/pyq-library');
+  const { revalidatePyqOnUpload } = await import('@/lib/cache');
+  await revalidatePyqOnUpload(parsed.paperNumber);
 
   return {
     success: true as const,
@@ -223,19 +225,174 @@ export async function importMainsPyqPaperJson(rawText: string) {
     return { success: false as const, error: adminReadableError(e) };
   }
 }
+
 export async function listMainsPyqPapers() {
   await assertAdmin();
-  const papers = await db.select().from(mainsPyqPapers).orderBy(desc(mainsPyqPapers.examYear), mainsPyqPapers.paperNumber);
-  const data = await Promise.all(
-    papers.map(async (p) => {
-      const c = await db
-        .select({ n: count() })
-        .from(mainsPyqQuestions)
-        .where(eq(mainsPyqQuestions.paperId, p.id));
-      return { ...p, qCount: Number(c[0]?.n ?? 0) };
+  
+  // Single optimized query for papers and their question counts
+  const papers = await db
+    .select({
+      paper: mainsPyqPapers,
+      qTotal: count(mainsPyqQuestions.id),
     })
-  );
+    .from(mainsPyqPapers)
+    .leftJoin(mainsPyqQuestions, eq(mainsPyqQuestions.paperId, mainsPyqPapers.id))
+    .groupBy(mainsPyqPapers.id)
+    .orderBy(desc(mainsPyqPapers.examYear), mainsPyqPapers.paperNumber);
+
+  // Single optimized query for "done" counts (questions with at least 1 variant)
+  const qDoneCounts = await db
+    .select({
+      paperId: mainsPyqQuestions.paperId,
+      questionId: mainsPyqQuestions.id,
+      variantCount: count(mainsPyqPreparedVariants.id),
+    })
+    .from(mainsPyqQuestions)
+    .innerJoin(
+      mainsPyqPreparedVariants,
+      eq(mainsPyqQuestions.id, mainsPyqPreparedVariants.pyqQuestionId)
+    )
+    .groupBy(mainsPyqQuestions.id, mainsPyqQuestions.paperId);
+
+  // Aggregate done counts per paper
+  const doneMap = new Map<string, number>();
+  for (const row of qDoneCounts) {
+    const current = doneMap.get(row.paperId) || 0;
+    doneMap.set(row.paperId, current + 1);
+  }
+
+  const data = papers.map(({ paper, qTotal }) => ({
+    ...paper,
+    qCount: Number(qTotal),
+    doneCount: doneMap.get(paper.id) || 0,
+  }));
+
   return { success: true as const, data };
+}
+
+/** 📊 PYQ PROGRESS OVERVIEW
+ * Bhai, ye action admin ko batayega ki PYQ side par kya scene hai.
+ * Kitne papers uploaded hain, kitne questions prepare ho gaye hain.
+ */
+export async function getMainsPyqDetailedOverview() {
+  try {
+    await assertAdmin();
+    
+    // 1. Fetch all papers
+    const papers = await db.select().from(mainsPyqPapers).orderBy(desc(mainsPyqPapers.examYear), mainsPyqPapers.paperNumber);
+    
+    // 2. Optimized: Get total question counts per paper in one query
+    const totalCounts = await db
+      .select({
+        paperId: mainsPyqQuestions.paperId,
+        n: count(),
+      })
+      .from(mainsPyqQuestions)
+      .groupBy(mainsPyqQuestions.paperId);
+    
+    const totalMap = new Map(totalCounts.map(c => [c.paperId, Number(c.n)]));
+
+    // 3. Optimized: Get done counts per paper in one query
+    // Done = has at least one prepared variant
+    const qDonePerQuestion = await db
+      .select({
+        paperId: mainsPyqQuestions.paperId,
+        questionId: mainsPyqQuestions.id,
+        variantCount: count(mainsPyqPreparedVariants.id),
+      })
+      .from(mainsPyqQuestions)
+      .innerJoin(
+        mainsPyqPreparedVariants,
+        eq(mainsPyqQuestions.id, mainsPyqPreparedVariants.pyqQuestionId)
+      )
+      .groupBy(mainsPyqQuestions.id, mainsPyqQuestions.paperId);
+
+    const doneMap = new Map<string, number>();
+    for (const row of qDonePerQuestion) {
+      const current = doneMap.get(row.paperId) || 0;
+      doneMap.set(row.paperId, current + 1);
+    }
+
+    // 4. Optimized: Get last activity per paper in one query
+    const lastActivityPerPaper = await db
+      .select({
+        paperId: mainsPyqQuestions.paperId,
+        lastUpdated: sql<string>`max(${mainsPyqPreparedVariants.updatedAt})`,
+      })
+      .from(mainsPyqPreparedVariants)
+      .innerJoin(mainsPyqQuestions, eq(mainsPyqPreparedVariants.pyqQuestionId, mainsPyqQuestions.id))
+      .groupBy(mainsPyqQuestions.paperId);
+    
+    const activityMap = new Map(lastActivityPerPaper.map(a => [a.paperId, a.lastUpdated]));
+
+    const detailedData = papers.map((p) => {
+      const total = totalMap.get(p.id) || 0;
+      const done = doneMap.get(p.id) || 0;
+      const lastUpdated = activityMap.get(p.id);
+
+      return { 
+        id: p.id,
+        examYear: p.examYear,
+        paperNumber: p.paperNumber,
+        titleEn: p.titleEn,
+        qCount: total,
+        doneCount: done,
+        progress: total > 0 ? Math.round((done / total) * 100) : 0,
+        lastUpdated: lastUpdated ? new Date(lastUpdated) : null,
+        isHidden: p.isHidden
+      };
+    });
+
+    const totalQuestions = detailedData.reduce((acc, p) => acc + p.qCount, 0);
+    const totalDone = detailedData.reduce((acc, p) => acc + p.doneCount, 0);
+    const lastGlobalUpdate = detailedData.reduce((acc, p) => {
+      if (!p.lastUpdated) return acc;
+      if (!acc) return p.lastUpdated;
+      return p.lastUpdated > acc ? p.lastUpdated : acc;
+    }, null as Date | null);
+
+    // Target: 2020-2024, P1-P6 = 30 papers
+    const expectedYears = [2020, 2021, 2022, 2023, 2024];
+    const expectedPapers = [1, 2, 3, 4, 5, 6];
+    const missing: { year: number; paper: number }[] = [];
+    let targetImportedCount = 0;
+    let targetPreparedCount = 0;
+
+    for (const y of expectedYears) {
+      for (const p of expectedPapers) {
+        const found = detailedData.find(d => Number(d.examYear) === y && Number(d.paperNumber) === p);
+        if (!found) {
+          missing.push({ year: y, paper: p });
+        } else {
+          targetImportedCount++;
+          if (found.progress === 100) {
+            targetPreparedCount++;
+          }
+        }
+      }
+    }
+
+    return { 
+      success: true as const, 
+      data: detailedData,
+      missing,
+      summary: {
+        totalPapers: detailedData.length,
+        totalQuestions,
+        totalDone,
+        overallProgress: totalQuestions > 0 ? Math.round((totalDone / totalQuestions) * 100) : 0,
+        lastGlobalUpdate: lastGlobalUpdate ? lastGlobalUpdate.toISOString() : null,
+        targetTotal: expectedYears.length * expectedPapers.length,
+        targetImported: targetImportedCount,
+        targetMissing: missing.length,
+        targetPrepared: targetPreparedCount,
+        targetPendingPrep: targetImportedCount - targetPreparedCount
+      }
+    };
+  } catch (error) {
+    console.error('getMainsPyqDetailedOverview error:', error);
+    return { success: false as const, error: adminReadableError(error) };
+  }
 }
 
 /** Narrow stem shape so SELECT works on older DBs missing e.g. `expert_insights_*` columns. */

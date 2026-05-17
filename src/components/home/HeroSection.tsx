@@ -1,7 +1,7 @@
 'use client';
 
 import { useTransition } from 'react';
-import { BookOpen, Sparkles, Zap, ChevronRight, Star, ShieldCheck } from 'lucide-react';
+import { BookOpen, Sparkles, Zap, ChevronRight, Star, ShieldCheck, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useRouter } from 'next/navigation';
@@ -19,30 +19,30 @@ export function HeroSection() {
 
   const content = {
     en: {
-      badge: 'MPPSC 2026 : Elite Selection',
+      badge: 'MPPSC : Elite Selection',
       welcome: 'Welcome back,',
       ready: 'Ready for today\'s challenge?',
       title1: 'Master Both',
       title2: 'Prelims & Mains.',
-      subtitle: 'Pure PYQ-focused strategic analysis, deep conceptual clarity, and expert-guided syllabus analytics. Learn from the ultimate hub of rankers — built for complete conceptual mastery with zero textbook clutter.',
+      subtitle: 'Hoarding textbooks won\'t clear the exam. Master the exact syllabus demand, unlock retention mnemonics, and learn the science of dual-style model answers.',
       primaryBtn: 'Practice Free Test',
       pyqBtn: 'Practice PYQs',
       /** Kept for when we re-enable the `/free-quiz` hero CTA (currently commented below). */
       secondaryBtn: 'Free Mock Test',
-      openPrelimsHeroBtn: '2026 Prelims paper',
+      openPrelimsHeroBtn: 'Prelims Paper',
       stats: ['100+ Topic Tests', 'Smart PYQ Analytics', 'Retention Mnemonics']
     },
     hi: {
-      badge: 'MPPSC 2026 : एलीट सिलेक्शन',
+      badge: 'MPPSC : एलीट सिलेक्शन',
       welcome: 'स्वागत है,',
       ready: 'क्या आप आज की चुनौती के लिए तैयार हैं?',
       title1: 'प्रारंभिक और मुख्य परीक्षा दोनों में',
       title2: 'महारत हासिल करें।',
-      subtitle: 'शुद्ध PYQ-केंद्रित रणनीतिक विश्लेषण, गहरी वैचारिक स्पष्टता, और विषय-विशेषज्ञों के सिलेबस एनालिटिक्स। बिना किसी उबाऊ रटने के तरीक़े के — असली और सटीक तैयारी का एकमात्र हब।',
+      subtitle: 'सिर्फ किताबें और पीडीएफ जमा करने से सिलेक्शन नहीं होता। जानिए हर प्रश्न की असली डिमांड, स्मार्ट मेमोनिक्स से याद रखने की कला, और 2 अलग-अलग स्टाइल में उत्तर लिखने का विज्ञान।',
       primaryBtn: 'फ्री टेस्ट प्रैक्टिस करें',
       pyqBtn: 'PYQs प्रैक्टिस करें',
       secondaryBtn: 'फ्री मॉक टेस्ट',
-      openPrelimsHeroBtn: '2026 प्रारंभिक पेपर',
+      openPrelimsHeroBtn: 'प्रारंभिक परीक्षा पेपर',
       stats: ['100+ टॉपिक टेस्ट', 'स्मार्ट PYQ एनालिसिस', 'स्मार्ट मेमोनिक्स']
     }
   };
@@ -124,26 +124,7 @@ export function HeroSection() {
 
       <div className="relative z-10 flex w-full max-w-6xl flex-col items-center justify-center text-center -translate-y-4 md:-translate-y-6">
         
-        {/* 👤 PERSONALIZED HUB - Standardized Position */}
-        <AnimatePresence mode="wait">
-          {user?.name && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="mb-10 flex flex-col items-center gap-1.5"
-            >
-              <div className="flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/5 px-3 py-1 backdrop-blur-sm">
-                 <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-                 <span className="text-[11px] font-black tracking-[0.2em] text-amber-500 uppercase">
-                    {t.welcome} {user.name.split(' ')[0]}
-                 </span>
-              </div>
-              <span className="text-[10px] font-medium tracking-tight text-slate-500">
-                {t.ready}
-              </span>
-            </motion.div>
-          )}
-        </AnimatePresence>
+
 
         {/* Status Badge */}
         <motion.div
@@ -151,7 +132,7 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-5 py-2 backdrop-blur-xl transition-colors hover:border-white/10"
         >
-          <Sparkles size={14} className="text-amber-500 animate-pulse" />
+          <Trophy size={15} className="text-amber-400 animate-bounce" />
           <span className="text-[11px] font-black tracking-[0.25em] text-slate-200 uppercase">
             {t.badge}
           </span>

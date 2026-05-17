@@ -8,15 +8,15 @@ import { eq } from 'drizzle-orm';
 import { upsertMainsContent } from '@/actions/mains-actions';
 import {
   composeExpertStrategyFromRich,
-  extractModelAnswersEn,
   extractModelAnswersForValidation,
+  extractModelAnswersEn,
   isHistoryRichPayload,
-  normalizeVariantArr,
   stripServerFields,
 } from '@/lib/mains-history-rich-normalize';
 import { structuredKeyTermsToString } from '@/lib/mains-key-terms-flash';
 import {
   repairInteriorDoubleQuotesInMappedStrings,
+  repairEscapedJsonObjectKeys,
   jsonParseSnippetContext,
 } from '@/lib/mains-pyq-paste-json-parse';
 
@@ -52,13 +52,18 @@ function parseContentJson(rawText: string): Record<string, unknown> {
     .replace(/\r/g, '\n');
 
   const stripped = stripCodeFence(sanitized);
+  // CRITICAL FIX: Apply escaped-key repair BEFORE all parsing attempts.
+  // AI sometimes outputs malformed keys like \"question_id\": or "question_id\":
+  // This pre-pass normalizes them to "question_id": so subsequent parsers don't choke.
+  // See: src/lib/mains-pyq-paste-json-parse.ts repairEscapedJsonObjectKeys() for details.
+  const escapedKeysFixed = repairEscapedJsonObjectKeys(stripped);
 
   // Phase 1: Try raw parsing (with/without jsonrepair) to avoid altering valid quotes
   const rawTries = [
-    { label: 'JSON.parse raw', run: () => JSON.parse(stripped) },
-    { label: 'JSON5.parse raw', run: () => JSON5.parse(stripped) },
-    { label: 'jsonrepair + JSON.parse raw', run: () => JSON.parse(jsonrepair(stripped)) },
-    { label: 'jsonrepair + JSON5.parse raw', run: () => JSON5.parse(jsonrepair(stripped)) },
+    { label: 'JSON.parse raw', run: () => JSON.parse(escapedKeysFixed) },
+    { label: 'JSON5.parse raw', run: () => JSON5.parse(escapedKeysFixed) },
+    { label: 'jsonrepair + JSON.parse raw', run: () => JSON.parse(jsonrepair(escapedKeysFixed)) },
+    { label: 'jsonrepair + JSON5.parse raw', run: () => JSON5.parse(jsonrepair(escapedKeysFixed)) },
   ];
 
   for (const t of rawTries) {
@@ -73,7 +78,7 @@ function parseContentJson(rawText: string): Record<string, unknown> {
   }
 
   // Phase 2: Patch unescaped quotes in mapped strings and try again
-  const patched = repairInteriorDoubleQuotesInMappedStrings(stripped);
+  const patched = repairInteriorDoubleQuotesInMappedStrings(escapedKeysFixed);
   const patchTries = [
     { label: 'JSON.parse patched', run: () => JSON.parse(patched) },
     { label: 'JSON5.parse patched', run: () => JSON5.parse(patched) },
@@ -92,12 +97,12 @@ function parseContentJson(rawText: string): Record<string, unknown> {
     }
   }
 
-  // Phase 3: Everything failed, isolate the error index and return snippet context
+  // Phase 3: Everything failed. Let's find the error in the PATCHED version since it's our best bet.
   let lastErrorMsg = 'Invalid JSON';
   let errorIndex: number | undefined;
 
   try {
-    JSON.parse(stripped);
+    JSON.parse(patched);
   } catch (e) {
     if (e instanceof Error) {
       lastErrorMsg = e.message;
@@ -106,20 +111,8 @@ function parseContentJson(rawText: string): Record<string, unknown> {
     }
   }
 
-  if (errorIndex === undefined) {
-    try {
-      jsonrepair(stripped);
-    } catch (e) {
-      if (e instanceof Error) {
-        lastErrorMsg = e.message;
-        const m = lastErrorMsg.match(/\bposition\s+(\d+)/i);
-        if (m) errorIndex = parseInt(m[1]!, 10);
-      }
-    }
-  }
-
-  const context = jsonParseSnippetContext(stripped, errorIndex, 120);
-  throw new Error(`JSON Parsing Failed: ${lastErrorMsg}\n\n${context}`);
+  const context = jsonParseSnippetContext(patched, errorIndex, 120);
+  throw new Error(`JSON Parsing Failed: ${lastErrorMsg}\n\n${context}\n\n💡 HINT: There is an unescaped double quote (") inside a Hindi/English string. Even our auto-repairer couldn't fix it. Please ask the AI to use single quotes (') for emphasis instead of double quotes (").`);
 }
 
 function getDiagnostics(parsed: Record<string, unknown>, ma: ReturnType<typeof extractModelAnswersForValidation>): string {
@@ -142,6 +135,8 @@ function validateModelShape(
   pn: number,
   ma: ReturnType<typeof extractModelAnswersForValidation>
 ): string | null {
+  // Data quality gate: Ensure model answers exist in required variety for exam structure
+  // Each paper has different mark distributions; this check prevents incomplete saves
   const hasModels =
     ma['2m'].length +
       ma['7m'].length +
@@ -151,6 +146,7 @@ function validateModelShape(
     0;
   if (!hasModels) return 'model_answers empty — add at least one block';
 
+  // Paper-specific mark requirements (exam structure, non-negotiable)
   if (pn >= 1 && pn <= 4) {
     if (ma['2m'].length < 1 || ma['7m'].length < 1) {
       return 'Paper I–IV: provide at least ONE 2m and ONE 7m variant.';
@@ -184,6 +180,8 @@ export async function adminApplyMainsContentJson(topicId: string, rawText: strin
       const graspEn = String(parsed.syllabus_grasp_en ?? '').trim();
       const cognitiveHi = String(parsed.cognitive_intro_hi ?? '').trim();
       const cognitiveEn = String(parsed.cognitive_intro_en ?? '').trim();
+      
+      // Require at least one concept source per language (grasp takes precedence, falls back to cognitive)
       const openerHi = graspHi || cognitiveHi;
       const openerEn = graspEn || cognitiveEn;
       if (!openerHi || !openerEn) {
@@ -200,23 +198,72 @@ export async function adminApplyMainsContentJson(topicId: string, rawText: strin
       const err = validateModelShape(pn, ma);
       if (err) {
         const diag = getDiagnostics(parsed, ma);
-        return { success: false as const, error: `${err} ${diag}` };
-      }
-
-      const keyHi =
-        String(parsed.key_terms_hi ?? '').trim() ||
-        structuredKeyTermsToString(parsed.key_terms_cards_hi).trim();
-      const keyEn =
-        String(parsed.key_terms_en ?? '').trim() ||
-        structuredKeyTermsToString(parsed.key_terms_cards_en).trim();
-      if (!keyHi || !keyEn) {
-        return {
-          success: false as const,
-          error:
-            'key_terms_hi / key_terms_en — OR structured key_terms_cards_hi / key_terms_cards_en (History‑rich JSON)',
+        return { 
+          success: false as const, 
+          error: `${err}\n\n💡 HINT: AI output might have been truncated (cut off). Check if the JSON ends abruptly. If so, ask the AI to "Continue generating from where you left off" or move 'model_answers_hi/en' higher in your prompt.\n\n${diag}` 
         };
       }
 
+      const rawKeyHi = parsed.key_terms_hi ?? parsed.keyTermsHi;
+      const rawKeyCardsHi = parsed.key_terms_cards_hi ?? parsed.keyTermsCardsHi;
+      const rawKeyEn = parsed.key_terms_en ?? parsed.keyTermsEn;
+      const rawKeyCardsEn = parsed.key_terms_cards_en ?? parsed.keyTermsCardsEn;
+
+      // 🔄 SMART REPAIR: If AI gave us array of strings for key_terms but no structured cards,
+      // we convert them to cards so the UI (flashcards) doesn't look empty.
+      let finalKeyCardsHi = rawKeyCardsHi;
+      let finalKeyCardsEn = rawKeyCardsEn;
+
+      if (!finalKeyCardsHi && Array.isArray(rawKeyHi)) {
+        finalKeyCardsHi = rawKeyHi.map(s => {
+          const line = String(s).replace(/^[-•*]\s*/, '').trim();
+          const match = line.match(/^(\S+)\s+(.+?):\s+(.+)$/) || line.match(/^(.+?):\s+(.+)$/);
+          if (match && match.length >= 3) {
+             const hasEmoji = match.length === 4;
+             return {
+               emoji: hasEmoji ? match[1] : undefined,
+               term: hasEmoji ? match[2] : match[1],
+               hint: hasEmoji ? match[3] : match[2]
+             };
+          }
+          return { term: 'Term', hint: line };
+        });
+      }
+      if (!finalKeyCardsEn && Array.isArray(rawKeyEn)) {
+        finalKeyCardsEn = rawKeyEn.map(s => {
+          const line = String(s).replace(/^[-•*]\s*/, '').trim();
+          const match = line.match(/^(\S+)\s+(.+?):\s+(.+)$/) || line.match(/^(.+?):\s+(.+)$/);
+          if (match && match.length >= 3) {
+             const hasEmoji = match.length === 4;
+             return {
+               emoji: hasEmoji ? match[1] : undefined,
+               term: hasEmoji ? match[2] : match[1],
+               hint: hasEmoji ? match[3] : match[2]
+             };
+          }
+          return { term: 'Term', hint: line };
+        });
+      }
+
+      const keyHi = (Array.isArray(rawKeyHi)
+        ? rawKeyHi.join('\n').trim()
+        : String(rawKeyHi ?? '').trim()) ||
+        structuredKeyTermsToString(finalKeyCardsHi).trim();
+        
+      const keyEn = (Array.isArray(rawKeyEn)
+        ? rawKeyEn.join('\n').trim()
+        : String(rawKeyEn ?? '').trim()) ||
+        structuredKeyTermsToString(finalKeyCardsEn).trim();
+      
+      // Relaxed requirement: allow saving even if key terms are missing, but warn if one is missing while other exists
+      if (!keyHi || !keyEn) {
+        // If we have at least one language but not both, or both missing, we still allow save
+        // but it's good to log for diagnostics
+        const rKeys = Object.keys(parsed);
+        console.warn(`Mains save: Some key terms missing. hasKeyHi=${!!keyHi}, hasKeyEn=${!!keyEn}. Root keys: [${rKeys.join(', ')}]`);
+      }
+
+      // Validate English model answers (bilingual requirement)
       const maEn = extractModelAnswersEn(parsed);
       const needEn =
         maEn['2m'].length + maEn['7m'].length + maEn['10m'].length + maEn['11m'].length + maEn.case18.length;
@@ -235,25 +282,32 @@ export async function adminApplyMainsContentJson(topicId: string, rawText: strin
         };
       }
 
+      // Update richPayload with the repaired cards if necessary
+      const finalParsed = { ...parsed };
+      if (finalKeyCardsHi) finalParsed.key_terms_cards_hi = finalKeyCardsHi;
+      if (finalKeyCardsEn) finalParsed.key_terms_cards_en = finalKeyCardsEn;
+
       const res = await upsertMainsContent(topicId, {
         conceptHi,
         conceptEn,
         expertStrategyHi: composeExpertStrategyFromRich(parsed, 'hi'),
         expertStrategyEn: composeExpertStrategyFromRich(parsed, 'en'),
         modelAnswers: ma,
-        keyTermsHi: keyHi,
-        keyTermsEn: keyEn,
+        keyTermsHi: keyHi || null,
+        keyTermsEn: keyEn || null,
         practiceQuestions: (parsed.practice_questions ?? parsed.practiceQuestions) as unknown,
-        richPayload: stripServerFields(parsed),
+        richPayload: stripServerFields(finalParsed),
         examType: 'mppsc_mains',
       });
       return res;
     }
 
     const n = normalizeAiPayload(parsed);
+    // Bilingual content is mandatory; require both languages
     if (!n.conceptHi || !n.conceptEn) {
       return { success: false as const, error: 'concept_hi / concept_en required' };
     }
+    // Validate model answers match paper requirements
     const err = validateModelShape(pn, n.modelAnswers);
     if (err) {
       const diag = getDiagnostics(parsed, n.modelAnswers);

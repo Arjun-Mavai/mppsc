@@ -8,6 +8,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { MAIN_SYLLABUS_CARD_HUES, mainsSyllabusTileSkin } from '@/components/mains/mainsSyllabusTileSkin';
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { MainsSyllabusStructure } from '@/components/mains/MainsSyllabusStructure';
 import {
   Select,
   SelectContent,
@@ -15,7 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
 export type MainsSyllabusHubPaper = {
   id: string;
   paperNumber: number;
@@ -42,9 +42,11 @@ type ReadingTheme = 'deep' | 'paper';
 export function MainsSyllabusHubClient({
   papers,
   missing,
+  isAdmin = false,
 }: {
   papers: MainsSyllabusHubPaper[];
   missing: string | null;
+  isAdmin?: boolean;
 }) {
   const { language } = useSettingsStore();
   const hi = language === 'hi';
@@ -331,11 +333,13 @@ export function MainsSyllabusHubClient({
           ) : null}
         </AnimatePresence>
 
+        <MainsSyllabusStructure hi={hi} />
+
         <div className="mb-8">
           <Link
             href="/mains/syllabus/pyq-library"
             className={cn(
-              'flex items-center justify-between gap-4 overflow-hidden rounded-[2.25rem] px-5 py-4 transition-all duration-300 sm:rounded-[2.5rem] sm:py-5',
+              'flex items-center justify-between gap-4 overflow-hidden rounded-[2.25rem] px-5 py-4 transition-all duration-300 sm:rounded-[2.5rem] sm:py-5 interactive-tile',
               mainsSyllabusTileSkin('sky', themeDeep).frame,
               mainsSyllabusTileSkin('sky', themeDeep).rowHover
             )}
@@ -456,7 +460,7 @@ export function MainsSyllabusHubClient({
                     <Link
                       href={`/mains/syllabus/${matchingDb.id}`}
                       className={cn(
-                        'flex items-center justify-between gap-4 overflow-hidden rounded-[2.25rem] px-5 py-4 transition-all duration-300 sm:rounded-[2.5rem] sm:py-5',
+                        'flex items-center justify-between gap-4 overflow-hidden rounded-[2.25rem] px-5 py-4 transition-all duration-300 sm:rounded-[2.5rem] sm:py-5 interactive-tile',
                         tileSkin.frame,
                         tileSkin.rowHover
                       )}
@@ -503,17 +507,19 @@ export function MainsSyllabusHubClient({
                             </p>
                           ) : null}
                           <div className="mt-2 flex flex-wrap items-center gap-2">
-                            <span
-                              className={cn(
-                                'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide',
-                                themeDeep
-                                  ? 'border-white/15 bg-black/25 text-emerald-200'
-                                  : 'border-emerald-200/90 bg-emerald-50 text-emerald-900'
-                              )}
-                            >
-                              <Sparkles className="h-3 w-3" />
-                              {matchingDb.progress}% {hi ? 'तैयार' : 'ready'}
-                            </span>
+                            {isAdmin && (
+                              <span
+                                className={cn(
+                                  'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide',
+                                  themeDeep
+                                    ? 'border-white/15 bg-black/25 text-emerald-200'
+                                    : 'border-emerald-200/90 bg-emerald-50 text-emerald-900'
+                                )}
+                              >
+                                <Sparkles className="h-3 w-3" />
+                                {matchingDb.progress}% {hi ? 'तैयार' : 'ready'}
+                              </span>
+                            )}
                             <span
                               className={cn(
                                 'text-[11px] font-bold',
@@ -540,7 +546,7 @@ export function MainsSyllabusHubClient({
                 <li key={`missing-${sp.paperNumber}`}>
                   <div
                     className={cn(
-                      'flex items-center justify-between gap-4 overflow-hidden rounded-[2.25rem] px-5 py-4 transition-all duration-300 sm:rounded-[2.5rem] sm:py-5 opacity-80',
+                      'flex items-center justify-between gap-4 overflow-hidden rounded-[2.25rem] px-5 py-4 transition-all duration-300 sm:rounded-[2.5rem] sm:py-5 opacity-80 interactive-tile',
                       tileSkin.frame
                     )}
                   >

@@ -13,6 +13,7 @@ import { PyqAnswerProse } from '@/components/mains/PyqAnswerProse';
 import { MainsKeyTermsFlash } from '@/components/mains/MainsKeyTermsFlash';
 import { useMainsReaderProseTheme } from '@/components/mains/useMainsReaderTheme';
 import { coerceMarkdownBulletsLoose } from '@/lib/mains-readable-coerce';
+import { QuickFeedback } from '@/features/tests/components/QuickFeedback';
 
 /**
  * Mains topic content — readable “coaching module” layout (markdown in DB).
@@ -415,18 +416,23 @@ export function MainsContentViewer({ topic, content, language, onMarkDone, isDon
         </AnimatePresence>
       </div>
 
-      <div className="border-t border-slate-200 bg-white/95 px-6 py-4 dark:border-slate-800 dark:bg-slate-950/95">
-        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-4">
-          <p className="text-sm font-bold text-slate-500 dark:text-slate-400">{hi ? 'कैसा लगा?' : 'How was this?'}</p>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="ghost" size="sm" className="rounded-xl font-semibold hover:bg-emerald-500/15 hover:text-emerald-700 dark:hover:text-emerald-400">
-              👍 {hi ? 'काम आया' : 'Helpful'}
-            </Button>
-            <Button variant="ghost" size="sm" className="rounded-xl font-semibold hover:bg-violet-500/15">
-              🤔 {hi ? 'संदेह' : 'Doubt'}
-            </Button>
-          </div>
+      <div className="mx-auto max-w-4xl px-4 py-16 text-center border-t border-slate-100 dark:border-slate-800/50 mt-8">
+        <div className="mb-8 space-y-3">
+          <p className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em]">
+            {hi ? 'आपका फीडबैक' : 'Your Feedback'}
+          </p>
+          <h3 className="text-xl font-black text-slate-800 dark:text-slate-100 sm:text-2xl">
+            {hi ? 'यह कंटेंट आपके लिए कितना मददगार रहा?' : 'How helpful was this content for you?'}
+          </h3>
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            {hi ? 'आपके सुझाव हमें बेहतर बनाने में मदद करेंगे।' : 'Your feedback will help us improve our expert content.'}
+          </p>
         </div>
+        <QuickFeedback 
+          questionId={topic.id}
+          questionText={hi ? topic.titleHi : topic.titleEn}
+          source="mains_syllabus_topic"
+        />
       </div>
     </div>
   );

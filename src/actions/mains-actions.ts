@@ -1,21 +1,79 @@
 'use server';
 
+/**
+ * 🏛️ MPPSC MAINS - SYLLABUS & CONTENT MANAGEMENT ACTIONS
+ * 
+ * Ye file MPPSC Mains ke syllabus (Papers, Units, Topics) aur unke deep content (Concept, Model Answers)
+ * ko manage karne ke liye hai. Ye saare actions Admin Dashboard ko power dete hain.
+ * 
+ * 📜 FILE OVERVIEW & FLOW:
+ * 1. Admin UI se data aata hai (JSON ya form input).
+ * 2. Ye file input validate karti hai (Zod schemas use karke) aur DB me save karti hai.
+ * 3. Cache revalidate karti hai (`/admin/mains`) taaki naya data turant dikhe.
+ * 
+ * 📑 FUNCTION INDEX (Timeline):
+ * - `getMainsProgressOverview`: (Optimized) Pure syllabus ka progress dikhata hai (Kitne topics published hain).
+ * - `getMainsDetailedProgressOverview`: Unit-wise aur Part-wise detailed progress dikhata hai.
+ * - `upsertMainsPaper`: Naya paper add karne ya existing ko update karne ke liye.
+ * - `upsertMainsUnit`: Unit level data manage karne ke liye.
+ * - `upsertMainsTopic`: Topic level data manage karne ke liye.
+ * - `upsertMainsContent`: AI-generated Deep Content (Concept + Model Answers) save karne ke liye.
+ * - `getMainsTopicForPage`: Student side par single topic page render karne ke liye data fetch karta hai.
+ * - `getTopicContentForAdmin`: Admin side par topic ka content edit karne ke liye fetch karta hai.
+ */
+
 import { db } from '@/db';
 import { mainsPapers, mainsUnits, mainsTopics, mainsContent } from '@/db/schema';
-import { eq, and, sql, count, asc } from 'drizzle-orm';
+import { eq, and, sql, count, asc, desc } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { revalidatePath } from 'next/cache';
 import { assertAdmin, verifyAuth } from '@/lib/auth';
 import type { MainsUnitPart } from '@/lib/mains-syllabus-unit-label';
 import { isMainsVaultUnlockedUser } from '@/lib/mains-vault-access';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
 
-/**
- * 🏛️ MAINS MANAGEMENT ACTIONS
- * 
- * Bhai, ye saare actions admin dashboard ko power denge.
- * CRUD operations for Papers, Units, Topics and Deep Content.
+/** 📜 MAINS SCHEMAS
+ * Bhai, ye schemas input validation ensure karenge.
+ * Prod-ready code mein hamesha input validate karna chahiye.
  */
+const MainsPaperSchema = z.object({
+  id: z.string().uuid().optional(),
+  paperNumber: z.number().min(1).max(6),
+  titleHi: z.string().min(1),
+  titleEn: z.string().min(1),
+  totalMarks: z.number().default(300),
+  durationMinutes: z.number().default(180),
+  displayOrder: z.number().default(0),
+  description: z.string().optional(),
+});
+
+const MainsUnitSchema = z.object({
+  id: z.string().uuid().optional(),
+  paperId: z.string().uuid(),
+  part: z.enum(['A', 'B', 'NONE']).default('NONE'),
+  unitNumber: z.number().min(1).max(10),
+  titleHi: z.string().min(1),
+  titleEn: z.string().min(1),
+  displayOrder: z.number().default(0),
+});
+
+const MainsContentSchema = z.object({
+  conceptHi: z.string().min(1),
+  conceptEn: z.string().min(1),
+  expertStrategyHi: z.string().optional().nullable(),
+  expertStrategyEn: z.string().optional().nullable(),
+  modelAnswers: z.record(z.string(), z.any()).default({}),
+  keyTermsHi: z.string().optional().nullable(),
+  keyTermsEn: z.string().optional().nullable(),
+  practiceQuestions: z.any().optional().nullable(),
+  richPayload: z.record(z.string(), z.any()).optional().nullable(),
+  examType: z.enum(['upsc', 'mppsc', 'all', 'mppolice', 'mppsc_mains']).default('mppsc_mains'),
+});
+
+export type MainsPaperInput = z.infer<typeof MainsPaperSchema>;
+export type MainsUnitInput = z.infer<typeof MainsUnitSchema>;
+export type MainsContentInput = z.infer<typeof MainsContentSchema>;
 
 function blobFromError(error: unknown): string {
   const base = error instanceof Error ? error.message : String(error);
@@ -30,6 +88,7 @@ function blobFromError(error: unknown): string {
 }
 
 // 1. Get Progress Overview for Admin (optimized: 2 queries instead of 9)
+/** 📊 Admin Dashboard ke liye pure syllabus ka progress fetch karta hai. */
 export async function getMainsProgressOverview() {
   try {
     const papers = await db.select().from(mainsPapers).orderBy(mainsPapers.displayOrder);
@@ -38,12 +97,13 @@ export async function getMainsProgressOverview() {
     const statsPerPaper = await db
       .select({
         paperId: mainsUnits.paperId,
-        unitsCount: count(mainsUnits.id),
+        unitsCount: count(sql`DISTINCT ${mainsUnits.id}`),
         totalTopics: count(mainsTopics.id),
-        publishedTopics: sql<number>`count(CASE WHEN ${mainsTopics.status} = 'published' THEN 1 END)`,
+        publishedTopics: count(mainsContent.id),
       })
       .from(mainsUnits)
       .leftJoin(mainsTopics, eq(mainsTopics.unitId, mainsUnits.id))
+      .leftJoin(mainsContent, eq(mainsContent.topicId, mainsTopics.id))
       .groupBy(mainsUnits.paperId);
 
     // Build lookup map for O(1) access
@@ -84,42 +144,129 @@ export async function getMainsProgressOverview() {
   }
 }
 
-// 2. Add/Update Paper
-export async function upsertMainsPaper(data: any) {
+/** 📊 DETAILED PROGRESS TRACKER (PART-WISE)
+ * Bhai, ye action admin ko detailed breakdown dega:
+ * Paper -> Part A/B -> Units -> Topics (Total vs Published) + Last Activity
+ */
+/** 📈 Unit-wise aur Part-wise detailed progress nikalta hai taaki pata chale kahan kitna kaam baaki hai. */
+export async function getMainsDetailedProgressOverview() {
   try {
+    await assertAdmin();
+    const papers = await db.select().from(mainsPapers).orderBy(mainsPapers.displayOrder);
+
+    // Fetch all parts and their stats
+    const partStats = await db
+      .select({
+        paperId: mainsUnits.paperId,
+        part: mainsUnits.part,
+        unitNumber: mainsUnits.unitNumber,
+        unitTitleEn: mainsUnits.titleEn,
+        totalTopics: count(mainsTopics.id),
+        publishedTopics: count(mainsContent.id),
+        lastUpdated: sql<string>`max(${mainsContent.updatedAt})`,
+      })
+      .from(mainsUnits)
+      .leftJoin(mainsTopics, eq(mainsTopics.unitId, mainsUnits.id))
+      .leftJoin(mainsContent, eq(mainsContent.topicId, mainsTopics.id))
+      .groupBy(mainsUnits.paperId, mainsUnits.part, mainsUnits.unitNumber, mainsUnits.titleEn);
+
+    const detailedOverview = papers.map((paper) => {
+      const paperUnits = partStats.filter((s) => s.paperId === paper.id);
+      
+      const units = paperUnits.map(u => ({
+        part: u.part || 'N/A',
+        unitNumber: u.unitNumber,
+        unitTitleEn: u.unitTitleEn,
+        totalTopics: Number(u.totalTopics ?? 0),
+        publishedTopics: Number(u.publishedTopics ?? 0),
+        progress: Number(u.totalTopics ?? 0) > 0 
+          ? Math.round((Number(u.publishedTopics ?? 0) / Number(u.totalTopics ?? 0)) * 100) 
+          : 0,
+        lastUpdated: u.lastUpdated ? new Date(u.lastUpdated) : null,
+      })).sort((a, b) => {
+        if (a.part !== b.part) return (a.part || '').localeCompare(b.part || '');
+        return a.unitNumber - b.unitNumber;
+      });
+
+      const totalTopics = units.reduce((acc, u) => acc + u.totalTopics, 0);
+      const totalPublished = units.reduce((acc, u) => acc + u.publishedTopics, 0);
+      const lastUpdated = units.reduce((acc, u) => {
+        if (!u.lastUpdated) return acc;
+        if (!acc) return u.lastUpdated;
+        return u.lastUpdated > acc ? u.lastUpdated : acc;
+      }, null as Date | null);
+
+      return {
+        id: paper.id,
+        paperNumber: paper.paperNumber,
+        titleEn: paper.titleEn,
+        titleHi: paper.titleHi,
+        units,
+        totalTopics,
+        totalPublished,
+        progress: totalTopics > 0 ? Math.round((totalPublished / totalTopics) * 100) : 0,
+        lastUpdated,
+      };
+    });
+
+    return { success: true as const, data: detailedOverview };
+  } catch (error) {
+    console.error('Detailed Progress Overview Error:', error);
+    return { success: false as const, error: 'Failed to fetch detailed overview' };
+  }
+}
+
+// 2. Add/Update Paper
+/** 📄 Naya paper banane ya existing paper ki details (marks, duration) update karne ke liye. */
+export async function upsertMainsPaper(rawInput: MainsPaperInput) {
+  try {
+    await assertAdmin();
+    const data = MainsPaperSchema.parse(rawInput);
     const id = data.id || uuidv4();
     if (data.id) {
       await db.update(mainsPapers).set(data).where(eq(mainsPapers.id, id));
     } else {
-      await db.insert(mainsPapers).values({ id, ...data });
+      await db.insert(mainsPapers).values({ ...data, id });
     }
     revalidatePath('/admin/mains');
-    return { success: true, id };
+    return { success: true as const, id };
   } catch (error) {
-    return { success: false, error: 'Failed to save paper' };
+    logger.error('upsertMainsPaper failed', error);
+    return { success: false as const, error: 'Failed to save paper' };
   }
 }
 
 // 3. Add/Update Unit
-export async function upsertMainsUnit(data: any) {
+/** 📁 Paper ke andar unit (Unit 1-10) aur Part (A/B) manage karne ke liye. */
+export async function upsertMainsUnit(rawInput: MainsUnitInput) {
   try {
+    await assertAdmin();
+    const data = MainsUnitSchema.parse(rawInput);
     const id = data.id || uuidv4();
     if (data.id) {
       await db.update(mainsUnits).set(data).where(eq(mainsUnits.id, id));
     } else {
-      await db.insert(mainsUnits).values({ id, ...data });
+      await db.insert(mainsUnits).values({ ...data, id });
     }
     revalidatePath('/admin/mains');
-    return { success: true, id };
+    return { success: true as const, id };
   } catch (error) {
-    return { success: false, error: 'Failed to save unit' };
+    logger.error('upsertMainsUnit failed', error);
+    return { success: false as const, error: 'Failed to save unit' };
   }
 }
 
 // 4. Upsert Deep Content (The AI-generated Expert Content)
-export async function upsertMainsContent(topicId: string, content: any) {
+/** 📝 AI se generate kiya hua deep content (Concept, Model Answers) save karne ke liye. */
+export async function upsertMainsContent(topicId: string, rawInput: MainsContentInput) {
   try {
     await assertAdmin();
+    // Re-enabling Zod validation if it's safe. If it was causing crashes, we need to know why.
+    // In many cases, it's due to circular refs or complex JSON which Drizzle handles fine but Zod 
+    // might struggle with if not defined precisely. 
+    // For now, I'll attempt to use .parse() but wrap in a more specific try-catch or fallback.
+    const content = MainsContentSchema.parse(rawInput);
+    
     const existing = await db
       .select()
       .from(mainsContent)
@@ -135,7 +282,8 @@ export async function upsertMainsContent(topicId: string, content: any) {
       await db.insert(mainsContent).values({
         id: uuidv4(),
         topicId,
-        ...content
+        ...content,
+        updatedAt: new Date(),
       });
     }
 
@@ -147,14 +295,16 @@ export async function upsertMainsContent(topicId: string, content: any) {
 
     revalidatePath('/admin/mains');
     revalidatePath(`/mains/syllabus`);
-    return { success: true };
+    return { success: true as const };
   } catch (error) {
-    console.error('Upsert Content Error:', error);
-    return { success: false, error: 'Failed to save content' };
+    logger.error('Upsert Content Error:', error);
+    return { success: false as const, error: 'Failed to save content' };
   }
 }
 
+
 /** Admin clears expert row; topic goes back to draft until re-saved. */
+/** 🗑️ Kisi topic ka content delete karne ke liye (Reset karne ke kaam aata hai). */
 export async function adminDeleteMainsContentForTopic(topicId: string) {
   try {
     await assertAdmin();
@@ -170,6 +320,7 @@ export async function adminDeleteMainsContentForTopic(topicId: string) {
 }
 
 // 5. Get Detailed Syllabus Tree for a Paper (Admin & Student)
+/** 🌳 Student aur Admin dono ke liye paper ka pura structure (Units -> Topics) fetch karta hai. */
 export async function getMainsSyllabusTree(paperId: string) {
   try {
     const units = await db
@@ -232,6 +383,7 @@ export async function getMainsSyllabusTree(paperId: string) {
 }
 
 /** Topic + unit + paper + optional expert content (for `/mains/syllabus/[paperId]/[topicId]`). */
+/** 📖 Student side par jab koi topic kholta hai, toh uska content aur navigation links fetch karne ke liye. */
 export async function getMainsTopicForPage(topicId: string, paperId: string) {
   try {
     const row = await db.query.mainsTopics.findFirst({
@@ -284,15 +436,31 @@ export async function getMainsTopicForPage(topicId: string, paperId: string) {
   }
 }
 
+/** Admin side: get full topic content without masking. */
+export async function getTopicContentForAdmin(topicId: string) {
+  try {
+    await assertAdmin();
+    const row = await db.query.mainsTopics.findFirst({
+      where: eq(mainsTopics.id, topicId),
+      with: {
+        content: true,
+      },
+    });
+    return { success: true as const, data: row };
+  } catch (error) {
+    logger.error('getTopicContentForAdmin failed', error);
+    return { success: false as const, error: 'Failed to fetch admin content' };
+  }
+}
+
 /** Get all papers 1-6 with their full units and topics tree for the global Syllabus Menu */
+/** 📚 Dropdowns aur menus me dikhane ke liye saare papers aur unke units ka data. */
 export async function getAllMainsPapersWithSyllabus() {
   try {
-    const papers = await db.select().from(mainsPapers).orderBy(mainsPapers.displayOrder);
-    
-    const data = await Promise.all(
-      papers.map(async (p) => {
-        const units = await db.query.mainsUnits.findMany({
-          where: eq(mainsUnits.paperId, p.id),
+    const papers = await db.query.mainsPapers.findMany({
+      orderBy: [asc(mainsPapers.displayOrder)],
+      with: {
+        units: {
           orderBy: [asc(mainsUnits.part), asc(mainsUnits.displayOrder), asc(mainsUnits.id)],
           with: {
             topics: {
@@ -307,31 +475,66 @@ export async function getAllMainsPapersWithSyllabus() {
               orderBy: [mainsTopics.displayOrder],
             },
           },
-        });
-        return {
-          id: p.id,
-          paperNumber: p.paperNumber,
-          titleEn: p.titleEn,
-          titleHi: p.titleHi,
-          units: units.map((u) => ({
-            id: u.id,
-            unitNumber: u.unitNumber,
-            part: u.part as MainsUnitPart,
-            titleHi: u.titleHi,
-            titleEn: u.titleEn,
-            topics: u.topics.map((t) => ({
-              id: t.id,
-              titleHi: t.titleHi,
-              titleEn: t.titleEn,
-              status: t.status ?? 'draft',
-            })),
-          })),
-        };
-      })
-    );
+        },
+      },
+    });
+
+    const data = papers.map((p) => ({
+      id: p.id,
+      paperNumber: p.paperNumber,
+      titleEn: p.titleEn,
+      titleHi: p.titleHi,
+      units: p.units.map((u) => ({
+        id: u.id,
+        unitNumber: u.unitNumber,
+        part: u.part as MainsUnitPart,
+        titleHi: u.titleHi,
+        titleEn: u.titleEn,
+        topics: u.topics.map((t) => ({
+          id: t.id,
+          titleHi: t.titleHi,
+          titleEn: t.titleEn,
+          status: t.status ?? 'draft',
+        })),
+      })),
+    }));
+
     return { success: true as const, data };
   } catch (error) {
     console.error('getAllMainsPapersWithSyllabus failed:', error);
     return { success: false as const, error: 'fetch_failed' as const };
+  }
+}
+
+
+/** 🕒 TRACK RECENT SYLLABUS ACTIVITY
+ * Bhai, ye action admin ko batayega ki hal hi mein kis topic par expert content upload hua hai.
+ */
+/** ⏱️ Dashboard par recent updates (Kaunsa topic kab update hua) dikhane ke liye. */
+export async function adminGetRecentMainsActivity() {
+  try {
+    await assertAdmin();
+    const rows = await db
+      .select({
+        id: mainsContent.id,
+        updatedAt: mainsContent.updatedAt,
+        topicId: mainsContent.topicId,
+        topicTitleHi: mainsTopics.titleHi,
+        topicTitleEn: mainsTopics.titleEn,
+        unitNumber: mainsUnits.unitNumber,
+        unitPart: mainsUnits.part,
+        paperNumber: mainsPapers.paperNumber,
+      })
+      .from(mainsContent)
+      .innerJoin(mainsTopics, eq(mainsTopics.id, mainsContent.topicId))
+      .innerJoin(mainsUnits, eq(mainsUnits.id, mainsTopics.unitId))
+      .innerJoin(mainsPapers, eq(mainsPapers.id, mainsUnits.paperId))
+      .orderBy(desc(mainsContent.updatedAt))
+      .limit(10);
+
+    return { success: true as const, data: rows };
+  } catch (error) {
+    console.error('adminGetRecentMainsActivity', error);
+    return { success: false as const, error: 'Failed to fetch activity' };
   }
 }

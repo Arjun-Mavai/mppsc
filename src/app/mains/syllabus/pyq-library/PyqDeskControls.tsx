@@ -1,9 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { memo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Moon, SlidersHorizontal, SunMedium } from 'lucide-react';
+import { Lock, Moon, SlidersHorizontal, SunMedium } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Select,
@@ -13,6 +13,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import {
+  isMainsPyqDemoPaper,
+  MAINS_PYQ_DEMO_PAPER_NUMBER,
+  MAINS_PYQ_DEMO_YEAR,
+} from '@/lib/mains-vault-demo';
 
 type Paper = {
   id: string;
@@ -30,20 +35,23 @@ interface PyqDeskControlsProps {
   onThemeChange: (theme: ReadingTheme) => void;
   deskControlsOpen: boolean;
   onControlsToggle: (open: boolean) => void;
+  vaultUnlocked: boolean;
 }
 
-export function PyqDeskControls({
+export const PyqDeskControls = memo(({
   papers,
   paperId,
   onPaperChange,
   readingTheme,
   onThemeChange,
   deskControlsOpen,
-  onControlsToggle,
-}: PyqDeskControlsProps) {
+  vaultUnlocked,
+}: PyqDeskControlsProps) => {
   const { language } = useSettingsStore();
   const hi = language === 'hi';
   const themeDeep = readingTheme === 'deep';
+
+  const showFreeBadge = !vaultUnlocked;
 
   return (
     <AnimatePresence initial={false}>
@@ -56,14 +64,35 @@ export function PyqDeskControls({
           transition={{ duration: 0.22 }}
           className="overflow-hidden"
         >
-          <div
+          <motion.div
             className={cn(
               'mb-5 space-y-5 rounded-3xl border p-5 sm:p-6 transition-all duration-300 shadow-xl',
               themeDeep ? 'border-slate-700 bg-slate-900/60 backdrop-blur-md shadow-black/40' : 'border-slate-200/80 bg-white/95 backdrop-blur-md shadow-slate-200/60'
             )}
           >
-            {/* 1. PAPER SELECTOR (TOP) */}
-            <div>
+            {showFreeBadge ? (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={cn(
+                  'flex flex-wrap items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-xs font-bold',
+                  themeDeep
+                    ? 'border-emerald-500/30 bg-emerald-950/40 text-emerald-200'
+                    : 'border-emerald-200 bg-emerald-50/90 text-emerald-900'
+                )}
+              >
+                <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
+                  {hi ? 'मुफ़्त' : 'Free'}
+                </span>
+                <span>
+                  {hi
+                    ? `${MAINS_PYQ_DEMO_YEAR} · पेपर ${MAINS_PYQ_DEMO_PAPER_NUMBER} — खंड A व B में नमूना`
+                    : `${MAINS_PYQ_DEMO_YEAR} · Paper ${MAINS_PYQ_DEMO_PAPER_NUMBER} — samples in Part A & B`}
+                </span>
+              </motion.div>
+            ) : null}
+
+            <motion.div>
               <label
                 className={cn(
                   'mb-2 flex items-center gap-1.5 text-xs font-black uppercase tracking-wider',
@@ -74,8 +103,8 @@ export function PyqDeskControls({
                 <span>{hi ? 'पेपर चुनें (Select Paper)' : 'Select Paper'}</span>
               </label>
               <div className="relative">
-                <div className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2">
-                  <div
+                <motion.div className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2">
+                  <motion.div
                     className={cn(
                       'h-2 w-2 rounded-full animate-pulse',
                       themeDeep
@@ -83,7 +112,7 @@ export function PyqDeskControls({
                         : 'bg-emerald-600 shadow-[0_0_10px_rgba(5,150,105,0.4)]'
                     )}
                   />
-                </div>
+                </motion.div>
                 <Select value={paperId} onValueChange={onPaperChange}>
                   <SelectTrigger
                     className={cn(
@@ -106,32 +135,62 @@ export function PyqDeskControls({
                         : 'border border-slate-200 bg-white text-slate-800'
                     )}
                   >
-                    {papers.map((p) => (
-                      <SelectItem
-                        key={p.id}
-                        value={p.id}
-                        textValue={`${p.examYear} Paper ${p.paperNumber}`}
-                        className={cn(
-                          'cursor-pointer py-3.5 px-4 text-sm font-bold md:text-[15px] transition-colors rounded-xl mx-1 my-0.5',
-                          themeDeep
-                            ? 'text-slate-300 focus:bg-slate-800 focus:text-white'
-                            : 'text-slate-700 focus:bg-emerald-50 focus:text-emerald-950'
-                        )}
-                      >
-                        <span className="font-black tabular-nums flex items-center gap-2">
-                          <span className="text-emerald-500">▪</span>
-                          <span>{p.examYear}</span>
-                          <span className="opacity-40">|</span>
-                          <span>{hi ? <>पेपर {p.paperNumber}</> : <>Paper {p.paperNumber}</>}</span>
-                        </span>
-                      </SelectItem>
-                    ))}
+                    {papers.map((p) => {
+                      const isFreePaper = isMainsPyqDemoPaper(p.examYear, p.paperNumber);
+                      const paperLocked = !vaultUnlocked && !isFreePaper;
+                      return (
+                        <SelectItem
+                          key={p.id}
+                          value={p.id}
+                          textValue={`${p.examYear} Paper ${p.paperNumber}`}
+                          className={cn(
+                            'cursor-pointer py-3.5 px-4 text-sm font-bold md:text-[15px] transition-colors rounded-xl mx-1 my-0.5',
+                            themeDeep
+                              ? 'text-slate-300 focus:bg-slate-800 focus:text-white'
+                              : 'text-slate-700 focus:bg-emerald-50 focus:text-emerald-950',
+                            paperLocked && 'opacity-90'
+                          )}
+                        >
+                          <span className="font-black tabular-nums flex items-center gap-2 w-full">
+                            <span className="text-emerald-500">▪</span>
+                            <span>{p.examYear}</span>
+                            <span className="opacity-40">|</span>
+                            <span className="flex-1">
+                              {hi ? <>पेपर {p.paperNumber}</> : <>Paper {p.paperNumber}</>}
+                            </span>
+                            {paperLocked ? (
+                              <span
+                                className={cn(
+                                  'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wide',
+                                  themeDeep
+                                    ? 'border-amber-500/40 bg-amber-950/50 text-amber-300'
+                                    : 'border-amber-300 bg-amber-50 text-amber-800'
+                                )}
+                              >
+                                <Lock className="h-3 w-3 shrink-0" aria-hidden />
+                                {hi ? 'प्रीमियम' : 'Premium'}
+                              </span>
+                            ) : !vaultUnlocked ? (
+                              <span
+                                className={cn(
+                                  'rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wide',
+                                  themeDeep
+                                    ? 'border-emerald-500/40 text-emerald-300'
+                                    : 'border-emerald-300 text-emerald-700'
+                                )}
+                              >
+                                {hi ? 'नमूना' : 'Sample'}
+                              </span>
+                            ) : null}
+                          </span>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+            </motion.div>
 
-            {/* 2. THEME SWITCHER (MIDDLE) */}
             <div
               className={cn(
                 'flex items-center justify-between gap-3 border-t pt-4',
@@ -146,7 +205,7 @@ export function PyqDeskControls({
               >
                 {hi ? 'पठन थीम (Theme)' : 'Reading Theme'}
               </span>
-              <div
+              <motion.div
                 className={cn(
                   'flex items-center gap-1.5 rounded-2xl border p-1.5',
                   themeDeep ? 'border-slate-700 bg-slate-950/80' : 'border-slate-200 bg-slate-100/80 shadow-inner'
@@ -178,10 +237,9 @@ export function PyqDeskControls({
                   <Moon className="mr-1.5 h-4 w-4 shrink-0" />
                   {hi ? 'गहरा' : 'Dark'}
                 </Button>
-              </div>
+              </motion.div>
             </div>
 
-            {/* 3. DESCRIPTIVE TEXT (BOTTOM FOOTER) */}
             <div
               className={cn(
                 'rounded-2xl p-4 border transition-colors',
@@ -189,17 +247,19 @@ export function PyqDeskControls({
               )}
             >
               <div className="flex items-start gap-2.5">
-                <SlidersHorizontal className={cn("h-4 w-4 mt-0.5 shrink-0", themeDeep ? "text-amber-500" : "text-amber-600")} />
+                <SlidersHorizontal className={cn('h-4 w-4 mt-0.5 shrink-0', themeDeep ? 'text-amber-500' : 'text-amber-600')} />
                 <p className="text-xs leading-relaxed font-semibold">
                   {hi
-                    ? 'पेपर या पठन थीम बदलने के लिए ऊपर दिए गए विकल्पों का उपयोग करें। नीचे संपूर्ण प्रश्न सूची और सटीक विश्लेषणात्मक उत्तर उपलब्ध हैं।'
-                    : 'Use the controls above to fast-switch exam papers or reading mode. Access the complete list of strategic answers below.'}
+                    ? 'सभी वर्ष ब्राउज़ करें। मुफ़्त: 2024 पेपर 1 — खंड A और B में सीमित नमूना; बाकी तुरंत लाइब्रेरी अनलॉक।'
+                    : 'Browse every year. Free: 2024 Paper 1 samples in Part A & B; other papers show unlock instantly.'}
                 </p>
               </div>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
       ) : null}
     </AnimatePresence>
   );
-}
+});
+
+PyqDeskControls.displayName = 'PyqDeskControls';

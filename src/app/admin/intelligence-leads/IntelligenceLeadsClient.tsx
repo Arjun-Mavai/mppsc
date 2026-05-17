@@ -61,6 +61,7 @@ export default function IntelligenceLeadsClient({ initialData }: IntelligenceLea
   const [searchTerm, setSearchTerm] = useState('');
   const [filterReaction, setFilterReaction] = useState<string | null>(null);
   const [filterSubject, setFilterSubject] = useState<string | null>(null);
+  const [filterSource, setFilterSource] = useState<string | null>(null);
 
   const filteredData = useMemo(() => {
     return initialData.filter((item) => {
@@ -71,16 +72,24 @@ export default function IntelligenceLeadsClient({ initialData }: IntelligenceLea
 
       const matchesFilter = filterReaction ? item.reaction === filterReaction : true;
       const matchesSubject = filterSubject ? item.question?.subject === filterSubject : true;
+      const matchesSource = filterSource ? item.source === filterSource : true;
 
-      return matchesSearch && matchesFilter && matchesSubject;
+      return matchesSearch && matchesFilter && matchesSubject && matchesSource;
     });
-  }, [initialData, searchTerm, filterReaction, filterSubject]);
+  }, [initialData, searchTerm, filterReaction, filterSubject, filterSource]);
 
   const uniqueSubjects = useMemo(() => {
     const subjects = initialData
       .map((item) => item.question?.subject)
       .filter((s): s is string => !!s);
     return Array.from(new Set(subjects)).sort();
+  }, [initialData]);
+
+  const uniqueSources = useMemo(() => {
+    const sources = initialData
+      .map((item) => item.source)
+      .filter((s): s is string => !!s);
+    return Array.from(new Set(sources)).sort();
   }, [initialData]);
 
   const stats = useMemo(() => {
@@ -130,56 +139,80 @@ export default function IntelligenceLeadsClient({ initialData }: IntelligenceLea
       </div>
 
       <Card className="p-6">
-        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="relative max-w-sm flex-1">
-            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <Input
-              placeholder="Search by name, mobile, or ID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+        <div className="mb-6 space-y-4">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="relative max-w-sm flex-1">
+              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                placeholder="Search by name, mobile, or ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Badge
+                variant={filterReaction === null ? 'default' : 'outline'}
+                className="cursor-pointer"
+                onClick={() => setFilterReaction(null)}
+              >
+                All
+              </Badge>
+              <Badge
+                variant={filterReaction === 'helpful' ? 'default' : 'outline'}
+                className="cursor-pointer border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                onClick={() => setFilterReaction('helpful')}
+              >
+                Helpful
+              </Badge>
+              <Badge
+                variant={filterReaction === 'insightful' ? 'default' : 'outline'}
+                className="cursor-pointer border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                onClick={() => setFilterReaction('insightful')}
+              >
+                Insightful
+              </Badge>
+              <Badge
+                variant={filterReaction === 'unhelpful' ? 'default' : 'outline'}
+                className="cursor-pointer border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+                onClick={() => setFilterReaction('unhelpful')}
+              >
+                Unhelpful
+              </Badge>
+              <Badge
+                variant={filterReaction === 'doubt' ? 'default' : 'outline'}
+                className="cursor-pointer border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                onClick={() => setFilterReaction('doubt')}
+              >
+                Doubt
+              </Badge>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="mr-2 text-xs font-black uppercase text-slate-400">Sources:</div>
             <Badge
-              variant={filterReaction === null ? 'default' : 'outline'}
+              variant={filterSource === null ? 'default' : 'outline'}
               className="cursor-pointer"
-              onClick={() => setFilterReaction(null)}
+              onClick={() => setFilterSource(null)}
             >
-              All
+              All Sources
             </Badge>
-            <Badge
-              variant={filterReaction === 'helpful' ? 'default' : 'outline'}
-              className="cursor-pointer border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-              onClick={() => setFilterReaction('helpful')}
-            >
-              Helpful
-            </Badge>
-            <Badge
-              variant={filterReaction === 'insightful' ? 'default' : 'outline'}
-              className="cursor-pointer border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
-              onClick={() => setFilterReaction('insightful')}
-            >
-              Insightful
-            </Badge>
-            <Badge
-              variant={filterReaction === 'unhelpful' ? 'default' : 'outline'}
-              className="cursor-pointer border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
-              onClick={() => setFilterReaction('unhelpful')}
-            >
-              Unhelpful
-            </Badge>
-            <Badge
-              variant={filterReaction === 'doubt' ? 'default' : 'outline'}
-              className="cursor-pointer border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
-              onClick={() => setFilterReaction('doubt')}
-            >
-              Doubt
-            </Badge>
+            {uniqueSources.map((src) => (
+              <Badge
+                key={src}
+                variant={filterSource === src ? 'default' : 'outline'}
+                className="cursor-pointer border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                onClick={() => setFilterSource(src)}
+              >
+                {src.replace(/_/g, ' ')}
+              </Badge>
+            ))}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="mr-2 text-xs font-black uppercase text-slate-400">Subjects:</div>
             <Badge
               variant={filterSubject === null ? 'default' : 'outline'}
               className="cursor-pointer"

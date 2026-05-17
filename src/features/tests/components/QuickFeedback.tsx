@@ -115,7 +115,7 @@ export function QuickFeedback({
   };
 
   return (
-    <div className={cn('mt-6 flex flex-col items-end gap-3', className)}>
+    <div className={cn('mt-6 flex flex-col items-center gap-3', className)}>
       <div className="flex items-center gap-1.5 rounded-full border border-slate-200/60 bg-slate-50/50 p-1.5 shadow-sm">
         <p className="px-2 text-[9px] font-black tracking-widest text-slate-400 uppercase">
           Helpful?

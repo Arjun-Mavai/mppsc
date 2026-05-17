@@ -166,6 +166,18 @@ export function useQuizLogic({
   // ───────────────────────────────────────────────────────────────
   const [needsFeedback, setNeedsFeedback] = useState(false);
 
+  // 🛡️ REFS for stable handleSubmit (Prevents timer drift)
+  const timeLeftRef = useRef(timeLeft);
+  const answersRef = useRef(answers);
+
+  useEffect(() => {
+    timeLeftRef.current = timeLeft;
+  }, [timeLeft]);
+
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+
   /**
    * handleSubmit
    * ─────────────────────────────────────────────────────────────
@@ -226,8 +238,9 @@ export function useQuizLogic({
       // ───────────────────────────────────────────────────────
       // 📝 FORMAT ANSWERS (NUMBER → STRING for database)
       // ───────────────────────────────────────────────────────
+      const currentAnswers = answersRef.current;
       const formattedAnswers: Record<string, string> = {};
-      Object.entries(answers).forEach(([qId, optIdx]) => {
+      Object.entries(currentAnswers).forEach(([qId, optIdx]) => {
         formattedAnswers[qId] = String(optIdx);
       });
 
@@ -250,7 +263,7 @@ export function useQuizLogic({
         testId,
         userId,
         formattedAnswers,
-        timeLimitInMinutes * 60 - timeLeft, // Total time taken
+        timeLimitInMinutes * 60 - timeLeftRef.current, // Total time taken
         finalTimes,
         title
       );
@@ -264,14 +277,12 @@ export function useQuizLogic({
       setIsSubmitted(true);
     }
   }, [
-    answers,
     questions,
     currentQuestionIndex,
     questionTimes,
     testId,
     userId,
     timeLimitInMinutes,
-    timeLeft,
     isSubmitting,
     isSubmitted,
     title,
@@ -481,18 +492,6 @@ export function useQuizLogic({
    * EFFECT 2: Timer Logic
    * ─────────────────────────────────────────────────────────────
    * Bhai, yeh countdown timer hai. Har second -1 hota rahega.
-   *
-   * Flow:
-   * 1. setInterval start karo (har 1000ms = 1 second)
-   * 2. timeLeft -1 karo
-   * 3. Agar 0 ho gaya → timer stop, test auto-submit
-   *
-   * Cleanup:
-   * - Component unmount pe clearInterval (memory leak prevention)
-   * - Test submit hone pe timer stop
-   *
-   * Performance:
-   * - isSubmitted dependency me hai, agar submit ho gaya to timer stop
    */
   useEffect(() => {
     // Agar test submit ho gaya, timer band karo
@@ -502,12 +501,26 @@ export function useQuizLogic({
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timerId);
-          return 0; // Timer khatam, test auto-submit hoga
+          // Auto-submit when time is UP
+          if (!isSubmitted) {
+            handleSubmit();
+          }
+          return 0;
         }
-        return prev - 1; // Har second -1
+        return prev - 1;
       });
+    }, 1000);
 
-      // ⏱️ Update Real-time Per-Question Display
+    return () => clearInterval(timerId);
+  }, [isSubmitted, handleSubmit]);
+
+  /**
+   * EFFECT 3: Per-Question Real-time Clock
+   * Separate from timer to avoid interval restarts on question change.
+   */
+  useEffect(() => {
+    if (isSubmitted) return;
+    const interval = setInterval(() => {
       if (questionStartTimeRef.current) {
         const duration = (Date.now() - questionStartTimeRef.current) / 1000;
         const qId = questions[currentQuestionIndex]?.id;
@@ -515,31 +528,9 @@ export function useQuizLogic({
         setActiveQuestionTime(Math.round(previouslySpent + duration));
       }
     }, 1000);
+    return () => clearInterval(interval);
+  }, [isSubmitted, currentQuestionIndex, questions, questionTimes]);
 
-    // Cleanup: Component unmount ya isSubmitted change pe timer stop
-    return () => clearInterval(timerId);
-  }, [isSubmitted, currentQuestionIndex, questionTimes, questions]);
-
-  /**
-   * EFFECT 3: Auto-Submit on Time Up
-   * ─────────────────────────────────────────────────────────────
-   * Bhai, time khatam = test automatic submit.
-   *
-   * Flow:
-   * 1. Jab timeLeft === 0
-   * 2. Aur test abhi submitted nahi hai
-   * 3. To automatically submit kar do
-   *
-   * Why separate effect?
-   * - Timer logic simple rahega
-   * - Submit logic ko isolate rakha
-   * - Easier to debug
-   */
-  useEffect(() => {
-    if (timeLeft === 0 && !isSubmitted) {
-      handleSubmit();
-    }
-  }, [timeLeft, isSubmitted, handleSubmit]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 📤 RETURN STATEMENT (Hook ka output)

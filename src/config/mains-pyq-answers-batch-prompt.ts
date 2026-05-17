@@ -35,6 +35,14 @@ CROSS-PAPER DISCIPLINE (infer from unit / stem — apply what fits; never invent
 - Science–tech / MP-specific themes: **definition → Indian/MP context → limitation → way forward**; no speculative “reports”.
 `.trim();
 
+const JSON_SAFETY_ADDENDUM = `
+JSON SAFETY ADDENDUM
+- Output one raw JSON object only. No markdown fences, no commentary, no code block markers.
+- Never escape key names. Write "question_id":, not \\\"question_id\\\": or "question_id\\":.
+- Keep exact field names from the schema: schema_version, paper_number, exam_year, items, question_id, marks, expert_insights_hi, expert_insights_en, variants, variant_slot, style_label_hi, style_label_en, answer_hi, answer_en.
+- If a string is getting risky because of quotes, replace inner double quotes with single quotes or shorten the sentence.
+- Do not add extra wrapper keys, notes, or explanatory text outside the schema.`.trim();
+
 /**
  * One AI user message: batch of official stems → JSON with 2 variants per stem (HI + EN) + optional expert insights per stem.
  * Paper/part “expert lens” slices come from `scratch/prompt-segregation-paper-*.txt` (same modules as /mains topic AI).
@@ -76,6 +84,17 @@ export function buildPyqAnswersBatchUserPrompt(args: {
 
   return `You are an MPPSC Mains selected-expert (top 0.1% answer quality). Output ONE raw JSON object only — no markdown fences, no commentary outside JSON.
 
+════════════════════════════════════════════════════════════════════════════════
+🚨 MANDATORY JSON OUTPUT PROTOCOL — NON-NEGOTIABLE 🚨
+════════════════════════════════════════════════════════════════════════════════
+1. **STRUCTURAL QUOTES**: Use ONLY clean double-quotes (") for keys and string boundaries.
+   - CORRECT: "question_id": "8b1f..."
+   - INCORRECT: \"question_id\": \"8b1f...\" (DO NOT ESCAPE KEYS)
+2. **INTERIOR QUOTES**: NEVER use double-quotes (") inside a string value. Use single quotes (') instead.
+3. **NO TRAILING COMMAS**: Ensure the last item in an array or object has no comma.
+4. **COMPACT CONTENT**: Keep bullets short (1-2 lines) to prevent response truncation.
+════════════════════════════════════════════════════════════════════════════════
+
 EXAM: ${args.examYear} ${args.examLabel ?? 'MPPSC Mains'} · PAPER ${args.paperNumber}
 
 ${MARK_POINT_PRESENTATION(isEssay)}
@@ -83,6 +102,8 @@ ${MARK_POINT_PRESENTATION(isEssay)}
 ${SUBJECT_LENS}
 
 ${lensBlocks.join('\n')}
+
+${JSON_SAFETY_ADDENDUM}
 
 STEMS IN THIS BATCH (${args.questions.length}):
 ${stems}
@@ -154,13 +175,12 @@ Under EACH of the nine sections you MUST deliver:
 
 LANGUAGE QUALITY (non‑negotiable)
 - **Hindi**: शुद्ध, परीक्षा-उपयुक्त, प्राकृतिक बोलचाल से मिलता प्रवाह — **not** English-to-Hindi calque of the EN insight file; वही रणनीति, स्वाभाविक Hindi.
-${isPureHindi ? '- **English**: STRICTLY PROHIBITED. All `_en` keys must be null. Do not use English anywhere.' : '- **English**: warm, examiner-sharp; short sentences where possible — still paper-quality.'}
+${isPureHindi ? '- **English**: STRICTLY PROHIBITED. All \`_en\` keys must be null. Do not use English anywhere.' : '- **English**: warm, examiner-sharp; short sentences where possible — still paper-quality.'}
 - Model answers (**answer_hi / answer_en**): **ONLY "- " lines** as per MARK_POINT_PRESENTATION; use **double asterisks** only for 3–6 word labels inside a bullet (UI renders bold — no stray single asterisks).
 
 VARIANT STYLE LABELS (for student UI beside “Variant 1/2”; required per variant)
 - **style_label_hi** — short Hindi angle (exam register); natively written; parallels the English label’s meaning.
 - **style_label_en** — short English angle; tight editorial chip.
-- **Legacy**: **style_label** alone is treated as English (same semantic as style_label_en) when newer keys absent.
 
 MARK / LENGTH DISCIPLINE
 - Obey **MARK_POINT_PRESENTATION** first; then match word economy to **m** (2m micro ≈20 words; 5m short; 7m ~60-word class; 10/11m long bullet grids; 18m case-style where relevant).
@@ -168,7 +188,11 @@ MARK / LENGTH DISCIPLINE
 - **question_id** must match the batch list exactly (for admin paste).
 
 RULES
-- **Valid JSON (critical)**: Never put raw ASCII double-quote marks inside answer_* or expert_insights_* JSON string values (breaks parsers). Prefer single-quoted glosses (e.g. 'Evaluate' as plain text), **bold markdown**, curved quotes (U+201C / U+201D), or hyphens — never phrase-wrapping with ASCII 0x22 inside long insight or answer text.
+- **Valid JSON (critical)**: 
+  - **STRUCTURAL QUOTES**: Use ONLY clean double-quotes (") for keys and string boundaries (e.g. "question_id": "8b1f..."). NEVER escape them (NOT \"question_id\":). NEVER add backslashes near colons (NOT "key\":).
+  - **INTERIOR QUOTES**: NEVER use double-quotes (") inside a string value. Use single quotes (') instead.
+  - **NO HALLUCINATIONS**: Do NOT add stray backslashes (\) anywhere in the JSON structure.
+  - **NO TRAILING COMMAS**: Verify the last element in any object or array does not have a trailing comma.
 - Cite only exam-safe, standard sources; no fabricated bodies or URLs.
 - Both variants must differ in **opening move**, **ordering**, and **examples** — not shallow paraphrase.
 `.trim();

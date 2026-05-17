@@ -16,6 +16,8 @@ import type { MainsUnitPart } from '@/lib/mains-syllabus-unit-label';
 import { mainsUnitShortBadge, mainsUnitSubtitle } from '@/lib/mains-syllabus-unit-label';
 import { useParams, usePathname } from 'next/navigation';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { QuickFeedback } from '@/features/tests/components/QuickFeedback';
+import { toast } from 'sonner';
 
 /**
  * 📂 MAINS SYLLABUS SIDEBAR
@@ -193,14 +195,30 @@ export function MainsSyllabusSidebar({
                     {unit.topics.map((topic) => {
                       const isActive = activeTopicId === topic.id;
                       const isDone = progressData[topic.id] === 'done';
+                      const isPublished = topic.status === 'published';
+
+                      const handleClick = (e: React.MouseEvent) => {
+                        if (!isPublished) {
+                          e.preventDefault();
+                          toast.info(hi ? 'जल्द आ रहा है / Coming Soon' : 'Coming Soon / जल्द आ रहा है', {
+                            description: hi 
+                              ? 'इस सेक्शन का कंटेंट अभी तैयार हो रहा है, कृपया प्रतीक्षा करें।' 
+                              : 'Content for this section is coming soon. Please stay tuned!',
+                            icon: <Target className="h-4 w-4 text-amber-500" />
+                          });
+                          return;
+                        }
+                        if (onTopicClick) onTopicClick();
+                      };
                       
                       return (
                         <Link
                           key={topic.id}
-                          href={`/mains/syllabus/${activePaperId ?? ''}/${topic.id}`}
-                          onClick={onTopicClick}
+                          href={isPublished ? `/mains/syllabus/${activePaperId ?? ''}/${topic.id}` : '#'}
+                          onClick={handleClick}
                           className={cn(
                             "flex items-center justify-between group p-2 rounded-lg text-sm transition-all text-left",
+                            !isPublished && "opacity-60 grayscale-[0.5] pointer-events-auto cursor-not-allowed",
                             isActive 
                               ? theme.activeTopic
                               : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/20"
@@ -209,7 +227,11 @@ export function MainsSyllabusSidebar({
                           <span className="flex-1 pr-2 text-sm font-semibold leading-relaxed whitespace-normal break-words">
                             {hi ? topic.titleHi : topic.titleEn}
                           </span>
-                          {isDone ? (
+                          {!isPublished ? (
+                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-tighter shrink-0">
+                              {hi ? 'जल्द' : 'Soon'}
+                            </span>
+                          ) : isDone ? (
                             <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
                           ) : isActive ? (
                             <ChevronRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 transition-transform translate-x-0.5 font-bold" />
@@ -225,6 +247,16 @@ export function MainsSyllabusSidebar({
             </div>
           );
         })}
+
+{/* ── Removed QuickFeedback from Sidebar for now ── */}
+        {/* <div className="mt-8 border-t border-slate-100 dark:border-slate-800/50 pt-6 pb-4">
+          <QuickFeedback 
+            questionId={activePaperId || 'mains_syllabus'}
+            questionText={hi ? `पेपर ${paperNumber}: ${titleHi || titleEn}` : `Paper ${paperNumber}: ${titleEn}`}
+            source="mains_syllabus_paper"
+            className="px-2"
+          />
+        </div> */}
       </div>
 
       {/* ── Progress Footer ── */}

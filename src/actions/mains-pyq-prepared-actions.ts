@@ -7,13 +7,17 @@ import { eq, and, desc, count, inArray, type InferSelectModel } from 'drizzle-or
 import { isMainsPyqPaperListedRow, whereMainsPyqPaperListed } from '@/lib/mains-pyq-visibility';
 import { MAINS_PYQ_PREPARED_VARIANTS_PURGE_PHRASE } from '@/config/mains-pyq-admin';
 import { v4 as uuidv4 } from 'uuid';
-import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
+import { revalidatePath, unstable_cache } from 'next/cache';
+import { revalidateTag as originalRevalidateTag } from 'next/cache';
+const revalidateTag = originalRevalidateTag as any;
 import { buildPyqAnswersBatchUserPrompt, type PyqBatchQuestion } from '@/config/mains-pyq-answers-batch-prompt';
 import { extractPasteItems } from '@/lib/mains-pyq-batch-paste';
 import { parseMainsPyqPasteJson } from '@/lib/mains-pyq-paste-json-parse';
 import type { NormalizedVariant } from '@/lib/mains-pyq-batch-paste';
 import { isMainsVaultUnlockedUser } from '@/lib/mains-vault-access';
+import { isMainsPyqDemoPaper, pickMainsPyqFreeDemoQuestionIds } from '@/lib/mains-vault-demo';
 import { logger } from '@/lib/logger';
+import { revalidatePyqOnUpload } from '@/lib/cache';
 
 function variantsMissingStyleLabelHiColumn(message: string) {
   return /no such column[\s\S]*style_label_hi/i.test(message);
@@ -104,40 +108,50 @@ function normalizeLoadedPyqRows(rows: PyqQuestionWithVariantsRow[]): PyqQuestion
 async function loadPaperQuestionsWithVariantsRelational(
   pyqPaperId: string
 ): Promise<PyqQuestionWithVariantsRow[]> {
-  const base = eq(mainsPyqQuestions.paperId, pyqPaperId);
-  const orderBy = [mainsPyqQuestions.displayOrder];
-
-  const attempts: Array<{
-    qCols?: typeof PYQ_QUESTION_COLS_NO_EXPERT;
-    variantsWide: boolean;
-  }> = [
-    { variantsWide: true },
-    { variantsWide: false },
-    { qCols: PYQ_QUESTION_COLS_NO_EXPERT, variantsWide: true },
-    { qCols: PYQ_QUESTION_COLS_NO_EXPERT, variantsWide: false },
-  ];
-
-  let lastError: unknown;
-  for (const spec of attempts) {
-    try {
-      const variantRel = spec.variantsWide
-        ? ({ preparedVariants: true } as const)
-        : ({ preparedVariants: { columns: PYQ_VARIANT_COLS_LEGACY } } as const);
-      const rows = await db.query.mainsPyqQuestions.findMany({
-        where: base,
-        orderBy,
-        ...(spec.qCols ? { columns: spec.qCols } : {}),
-        with: variantRel,
-      });
-      return normalizeLoadedPyqRows(rows as PyqQuestionWithVariantsRow[]);
-    } catch (err) {
-      lastError = err;
-    }
+  try {
+    const rows = await db.query.mainsPyqQuestions.findMany({
+      where: eq(mainsPyqQuestions.paperId, pyqPaperId),
+      orderBy: [mainsPyqQuestions.displayOrder],
+      with: {
+        preparedVariants: true,
+      },
+    });
+    return normalizeLoadedPyqRows(rows as unknown as PyqQuestionWithVariantsRow[]);
+  } catch (err) {
+    logger.error('[loadPaperQuestionsWithVariantsRelational] primary query failed', err as Error);
+    // Minimal fallback for missing new columns
+    const rows = await db.query.mainsPyqQuestions.findMany({
+      where: eq(mainsPyqQuestions.paperId, pyqPaperId),
+      orderBy: [mainsPyqQuestions.displayOrder],
+      columns: PYQ_QUESTION_COLS_NO_EXPERT,
+      with: {
+        preparedVariants: { columns: PYQ_VARIANT_COLS_LEGACY },
+      },
+    });
+    return normalizeLoadedPyqRows(rows as unknown as PyqQuestionWithVariantsRow[]);
   }
-  throw lastError;
 }
 
+
 // ━━━ CACHED DATA FETCHERS (event-driven invalidation) ━━━
+
+async function attachQuestionCountsToPapers(papers: InferSelectModel<typeof mainsPyqPapers>[]) {
+  if (papers.length === 0) return papers.map((p) => ({ ...p, questionCount: 0 }));
+
+  const ids = papers.map((p) => p.id);
+  const countRows = await db
+    .select({ paperId: mainsPyqQuestions.paperId, questionCount: count() })
+    .from(mainsPyqQuestions)
+    .where(inArray(mainsPyqQuestions.paperId, ids))
+    .groupBy(mainsPyqQuestions.paperId);
+
+  const countByPaper = new Map(countRows.map((r) => [r.paperId, Number(r.questionCount)]));
+
+  return papers.map((p) => ({
+    ...p,
+    questionCount: countByPaper.get(p.id) ?? 0,
+  }));
+}
 
 const cachedListMainsPyqPapersLibrarySummary = unstable_cache(
   async () => {
@@ -147,7 +161,7 @@ const cachedListMainsPyqPapersLibrarySummary = unstable_cache(
         where: whereMainsPyqPaperListed(),
         orderBy,
       });
-      return { success: true as const, data: papers };
+      return { success: true as const, data: await attachQuestionCountsToPapers(papers) };
     } catch (e1) {
       const m1 = e1 instanceof Error ? e1.message : String(e1);
       logger.error('[listMainsPyqPapersLibrarySummary] filtered query failed', new Error(m1), {
@@ -156,8 +170,8 @@ const cachedListMainsPyqPapersLibrarySummary = unstable_cache(
 
       try {
         const papers = await db.query.mainsPyqPapers.findMany({ orderBy });
-        const data = papers.filter(isMainsPyqPaperListedRow);
-        return { success: true as const, data };
+        const listed = papers.filter(isMainsPyqPaperListedRow);
+        return { success: true as const, data: await attachQuestionCountsToPapers(listed) };
       } catch (e2) {
         const m2 = e2 instanceof Error ? e2.message : String(e2);
         logger.error('[listMainsPyqPapersLibrarySummary] unfiltered fallback failed', new Error(m2), {
@@ -172,7 +186,7 @@ const cachedListMainsPyqPapersLibrarySummary = unstable_cache(
     }
   },
   ['mains-pyq-papers-list'],
-  { revalidate: 86400 } // 24h fallback, but event-driven revalidation on admin upload
+  { revalidate: 86400, tags: ['mains-pyq-papers-list'] } // 24h fallback, but event-driven revalidation on admin upload
 );
 
 const cachedGetMainsPyqPaperPublic = unstable_cache(
@@ -201,7 +215,7 @@ const cachedGetMainsPyqPaperPublic = unstable_cache(
     }
   },
   ['mains-pyq-paper'],
-  { revalidate: 86400 } // 24h fallback
+  { revalidate: 86400, tags: ['mains-pyq-paper'] } // 24h fallback
 );
 
 type VariantDbPayload = {
@@ -281,8 +295,9 @@ export async function purgeAllMainsPyqPreparedVariantsConfirm(confirmation: stri
     await db.delete(mainsPyqPreparedVariants);
     revalidatePath('/admin/mains-pyq');
     revalidatePath('/mains/syllabus/pyq-library');
-    (revalidateTag as any)('mains-pyq-papers-list');
-    (revalidateTag as any)('mains-pyq-paper');
+    revalidateTag('mains-pyq-papers-list', 'max');
+    revalidateTag('mains-pyq-paper', 'max');
+    await revalidatePyqOnUpload();
     return { success: true as const };
   } catch (e) {
     return { success: false as const, error: e instanceof Error ? e.message : String(e) };
@@ -292,6 +307,11 @@ export async function purgeMainsPyqPreparedVariantsForPaper(paperId: string) {
   try {
     await assertAdmin();
     if (!paperId) return { success: false as const, error: 'No paper ID provided' };
+    const paper = await db.query.mainsPyqPapers.findFirst({
+      where: eq(mainsPyqPapers.id, paperId),
+      columns: { paperNumber: true },
+    });
+    if (!paper) return { success: false as const, error: 'Paper not found' };
 
     const qs = await db.select({ id: mainsPyqQuestions.id }).from(mainsPyqQuestions).where(eq(mainsPyqQuestions.paperId, paperId));
     const qIds = qs.map(q => q.id);
@@ -302,8 +322,9 @@ export async function purgeMainsPyqPreparedVariantsForPaper(paperId: string) {
     
     revalidatePath('/admin/mains-pyq');
     revalidatePath('/mains/syllabus/pyq-library');
-    (revalidateTag as any)('mains-pyq-papers-list');
-    (revalidateTag as any)('mains-pyq-paper');
+    revalidateTag('mains-pyq-papers-list', 'max');
+    revalidateTag('mains-pyq-paper', 'max');
+    await revalidatePyqOnUpload(paper.paperNumber);
     return { success: true as const };
   } catch (e) {
     return { success: false as const, error: e instanceof Error ? e.message : String(e) };
@@ -541,8 +562,9 @@ export async function adminPastePyqAnswersBatchJson(pyqPaperId: string, rawText:
 
     revalidatePath('/admin/mains-pyq');
     revalidatePath('/mains/syllabus/pyq-library');
-    (revalidateTag as any)('mains-pyq-papers-list');
-    (revalidateTag as any)('mains-pyq-paper');
+    revalidateTag('mains-pyq-papers-list', 'max');
+    revalidateTag('mains-pyq-paper', 'max');
+    await revalidatePyqOnUpload(paper.paperNumber);
 
     const upserted = variantsWritten + insightQuestionsTouched;
     return {
@@ -567,32 +589,77 @@ export async function getMainsPyqPaperPublic(pyqPaperId: string) {
   if (!result.success) return result;
 
   const user = await verifyAuth();
-  if (!user) return result;
+  const vaultUnlocked = isMainsVaultUnlockedUser(user);
 
-  if (isMainsVaultUnlockedUser(user)) return result;
+  if (vaultUnlocked) return result;
 
-  const sanitized = result.data.questions.map((q) => ({
-    ...q,
-    questionHi: '',
-    questionEn: '',
-    expertInsightsHi: null,
-    expertInsightsEn: null,
-    variants: [],
-  }));
+  const { paper, questions } = result.data;
+  const isDemo = isMainsPyqDemoPaper(paper.examYear, paper.paperNumber);
 
-  return {
-    success: true as const,
-    data: {
-      paper: result.data.paper,
-      questions: sanitized,
-    },
-  };
+  if (!isDemo) {
+    const sanitized = questions.map((q) => ({
+      ...q,
+      questionHi: '',
+      questionEn: null,
+      expertInsightsHi: null,
+      expertInsightsEn: null,
+      variants: [] as typeof q.variants,
+      isLocked: true as const,
+    }));
+    return { success: true as const, data: { paper, questions: sanitized } };
+  }
+
+  const freeIds = pickMainsPyqFreeDemoQuestionIds(questions);
+  const sanitized = questions.map((q) => {
+    const isPreview = freeIds.has(q.id);
+    return {
+      ...q,
+      expertInsightsHi: isPreview ? q.expertInsightsHi : null,
+      expertInsightsEn: isPreview ? q.expertInsightsEn : null,
+      variants: isPreview ? q.variants : [],
+      isLocked: !isPreview,
+    };
+  });
+
+  return { success: true as const, data: { paper, questions: sanitized } };
 }
 
+
+export type MainsPyqLibraryPaperRow = InferSelectModel<typeof mainsPyqPapers> & { questionCount: number };
+
 export type MainsPyqPaperListResponse =
-  | { success: true; data: InferSelectModel<typeof mainsPyqPapers>[] }
+  | { success: true; data: MainsPyqLibraryPaperRow[] }
   | { success: false; error: 'fetch_failed'; detail?: string };
 
 export async function listMainsPyqPapersLibrarySummary(): Promise<MainsPyqPaperListResponse> {
   return cachedListMainsPyqPapersLibrarySummary();
+}
+
+/** 🕒 TRACK RECENT PYQ BATCH ACTIVITY
+ * Bhai, ye admin ko batayega ki hal hi mein kis paper ke answers paste huye hain.
+ */
+export async function adminGetRecentMainsPyqActivity() {
+  try {
+    await assertAdmin();
+    const rows = await db
+      .select({
+        id: mainsPyqPreparedVariants.id,
+        updatedAt: mainsPyqPreparedVariants.updatedAt,
+        variantSlot: mainsPyqPreparedVariants.variantSlot,
+        questionHi: mainsPyqQuestions.questionHi,
+        questionEn: mainsPyqQuestions.questionEn,
+        paperNumber: mainsPyqPapers.paperNumber,
+        examYear: mainsPyqPapers.examYear,
+      })
+      .from(mainsPyqPreparedVariants)
+      .innerJoin(mainsPyqQuestions, eq(mainsPyqQuestions.id, mainsPyqPreparedVariants.pyqQuestionId))
+      .innerJoin(mainsPyqPapers, eq(mainsPyqPapers.id, mainsPyqQuestions.paperId))
+      .orderBy(desc(mainsPyqPreparedVariants.updatedAt))
+      .limit(10);
+
+    return { success: true as const, data: rows };
+  } catch (error) {
+    console.error('adminGetRecentMainsPyqActivity', error);
+    return { success: false as const, error: 'Failed to fetch activity' };
+  }
 }

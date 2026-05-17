@@ -6,7 +6,7 @@ import { getMainsPaperExpertAddon } from '@/config/mains-paper-expert-addons';
  * **LEGACY** global rules (flat \`concept_hi\` + top-level \`model_answers\`).
  * Still useful for **tone / examiner voice**; the **authoritative JSON shape** is Expert-Rich (see \`MAINS_HISTORY_RICH_OUTPUT_SPEC\` inside the topic block).
  */
-export const MAINS_TOPIC_AI_LEGACY_SYSTEM_PROMPT = `NOTE: If you already read a **LATEST** block with Expert-Rich keys — **ignore every “Required keys: concept_hi…” instruction below**. Use that block’s JSON contract only. This section is **voice / structure habits** for bullets, mark discipline, and examiner tone.
+export const MAINS_TOPIC_AI_LEGACY_SYSTEM_PROMPT = `🚨 SUPER CRITICAL: If you use "Expert-Rich" keys, you MUST put "model_answers_hi" and "model_answers_en" at the VERY TOP of your JSON. Do not truncate the response.
 
 You are a senior MPPSC Mains mentor & former evaluator mindset (10+ years). You write ONLY for MPPSC State Service Mains 2026 — descriptive answers, not Prelims trivia.
 
@@ -117,6 +117,13 @@ export const MAINS_TOPIC_AI_MICRO_TONE = `COACHING TONE (micro — Expert-Rich J
 - Key-term cards: HI = natural spoken-student Hindi; EN = short simple English — structured JSON for flash UI.
 - When PYQ stems are listed, align model_answers_* hooks and framing to that demand — original prose only.`.trim();
 
+const JSON_SAFETY_ADDENDUM = `JSON SAFETY ADDENDUM
+- Output one raw JSON object only. No markdown fences, no commentary, no prefix/suffix text.
+- Never escape key names. Write \`"schema_version":\`, not \\\"schema_version\\\": or \`"schema_version\\":\`.
+- Keep every key exactly as named in the schema; do not invent aliases or rename fields.
+- If a value needs quotes, use single quotes inside prose or shorten the sentence instead of breaking JSON.
+- Prefer slightly shorter content over risky punctuation if the answer is getting long.`.trim();
+
 function expectedDemoBlock(paperNumber: number): string {
   if (paperNumber <= 3) {
     return `--- NO IMPORTED PYQ STEMS FOUND (no topic-link + no unit bucket) ---
@@ -191,6 +198,11 @@ ${dynamicExpertBlock}
 LATEST — REQUIRED EXPERT-RICH JSON (must match this key set)
 ══════════════════════════════════════════════════════════════════
 ${MAINS_HISTORY_RICH_OUTPUT_SPEC}
+
+══════════════════════════════════════════════════════════════════
+JSON SAFETY ADDENDUM
+══════════════════════════════════════════════════════════════════
+${JSON_SAFETY_ADDENDUM}
 
 ══════════════════════════════════════════════════════════════════
 SYLLABUS DEPTH & READABILITY (Expert-Rich)

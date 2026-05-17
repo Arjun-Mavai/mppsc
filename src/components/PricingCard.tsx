@@ -22,7 +22,8 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { type PricingData, calcDiscount, calcMonthly, PlanFeatureWithIcon } from '@/config/pricing';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Target,
@@ -281,24 +282,18 @@ export function PricingCard({
 
           {/* Features List */}
           <ul className="mb-8 flex-1 space-y-3.5 text-left">
-            {features.map((f, i) => {
-              const IconComp = ICON_MAP[f.icon || ''] || CheckCircle2;
-              return (
-                <li
-                  key={f.en}
-                  className={cn(
-                    'flex items-start gap-3 text-sm font-medium',
-                    isProShell ? 'text-slate-900' : 'text-slate-700',
-                    isProShell && !isUpgrade && i === 0 && 'font-bold'
-                  )}
-                >
-                  <IconComp
-                    className={cn('mt-0.5 h-4.5 w-4.5 shrink-0', isLite ? 'text-amber-500' : featureIconTone)}
-                  />
-                  <span>{hi ? f.hi : f.en}</span>
-                </li>
-              );
-            })}
+            {features.map((f, i) => (
+              <FeatureItem 
+                key={f.en} 
+                f={f} 
+                i={i} 
+                isLite={isLite} 
+                isProShell={isProShell} 
+                isUpgrade={isUpgrade} 
+                featureIconTone={featureIconTone} 
+                language={language}
+              />
+            ))}
             {/* Validity Item if not in features already */}
             {!isUpgrade && (
               <li
@@ -399,5 +394,118 @@ export function PricingCard({
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function FeatureItem({ 
+  f, 
+  i, 
+  isLite, 
+  isProShell, 
+  isUpgrade, 
+  featureIconTone, 
+  language 
+}: { 
+  f: PlanFeatureWithIcon; 
+  i: number; 
+  isLite: boolean; 
+  isProShell: boolean; 
+  isUpgrade: boolean; 
+  featureIconTone: string; 
+  language: 'en' | 'hi';
+}) {
+  const [expanded, setExpanded] = React.useState(false);
+  const hi = language === 'hi';
+  const text = hi ? f.hi : f.en;
+  
+  /**
+   * Split logic: 
+   * We look for " — " (em-dash with space) or " - " (hyphen with space).
+   * This avoids splitting hyphenated words like "Double-Style".
+   */
+  const separatorRegex = /\s+[\u2014-]\s+/;
+  const parts = text.split(separatorRegex);
+  const hasDetails = parts.length > 1;
+
+  let headline = parts[0] || '';
+  let details = parts.slice(1).join(' — ');
+
+  /**
+   * User Exception: If we have multiple dashes (e.g. Double-Style - Variations — Detail),
+   * we might want to include the first dash in the headline if it was a false positive.
+   * But with the improved regex above, "Double-Style" won't split.
+   * However, the user specifically asked: "agar two dash h to fisrt skip karna h".
+   */
+  if (parts.length > 2) {
+    headline = `${parts[0]} — ${parts[1]}`;
+    details = parts.slice(2).join(' — ');
+  }
+
+  const IconComp = ICON_MAP[f.icon || ''] || CheckCircle2;
+
+  return (
+    <li
+      className={cn(
+        'group/feat flex flex-col gap-1',
+        hasDetails && 'cursor-pointer select-none'
+      )}
+      onClick={() => hasDetails && setExpanded(!expanded)}
+    >
+      <div className="flex items-start gap-3">
+        <IconComp
+          className={cn(
+            'mt-0.5 h-4 w-4 shrink-0 transition-transform duration-300',
+            isLite ? 'text-amber-500' : featureIconTone,
+            expanded && 'scale-110'
+          )}
+        />
+        <div className="flex flex-1 flex-col gap-0.5 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <span className={cn(
+              'text-[13.5px] font-semibold leading-snug',
+              isProShell ? 'text-slate-900' : 'text-slate-700',
+              isProShell && !isUpgrade && i === 0 && 'font-bold'
+            )}>
+              {headline}
+            </span>
+            {hasDetails && (
+              <div className="flex items-center gap-1 opacity-60 transition-opacity group-hover/feat:opacity-100">
+                {!expanded && (
+                  <motion.div 
+                    animate={{ y: [0, -2, 0] }} 
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    className="flex items-center gap-1"
+                  >
+                    <span className="text-[9px] font-bold uppercase tracking-tight text-slate-400">
+                      {hi ? 'देखें' : 'More'}
+                    </span>
+                    <Sparkles className="h-2.5 w-2.5 text-amber-500" />
+                  </motion.div>
+                )}
+                <ChevronDown className={cn(
+                  'h-3.5 w-3.5 text-slate-400 transition-transform duration-300',
+                  expanded && 'rotate-180'
+                )} />
+              </div>
+            )}
+          </div>
+          
+          <AnimatePresence>
+            {expanded && hasDetails && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <p className="pb-1 text-[12.5px] font-medium leading-relaxed text-slate-500/90 italic">
+                  {details}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </li>
   );
 }

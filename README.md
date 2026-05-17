@@ -1501,6 +1501,22 @@ import { CANONICAL_TEST_IDS } from "@/lib/pyq-constants";
 📧 Email: combo.test@mppsc.in
 🔑 Password: ComboTest@123456
 
+┌──────────┬──────────────────────────────────────────────┐
+│ Field │ Credentials │
+├──────────┼──────────────────────────────────────────────┤
+│ Email │ arjun.admin@mppsc.in │
+│ Password │ AdminCombo@2026 │
+│ Role │ Admin (Boss Mode) │
+│ Grants │ Combo (Prelims + Mains Full Access) │
+│ Validity │ 1 Year (Extension available via Admin panel) │
+└──────────┴──────────────────────────────────────────────┘
+
+🎯 इस यूज़र के पास क्या-क्या पावर है?
+
+1.  Mains Full Access: पेपर 1-6 के सभी टॉपिक्स, मॉडल आंसर और PYQ लाइब्रेरी पूरी खुली (Unlocked) मिलेगी।
+2.  Prelims Full Access: सभी FLTs, Unit Tests और PYQ एनालिसिस का एक्सेस होगा।
+3.  Admin Dashboard: आप /admin सेक्शन में जाकर कंटेंट अपलोड, यूज़र्स मैनेज और सिस्टम कंट्रोल कर सकते हैं।
+
 ~/.copilot/session-state/18f9bf97-9df5-4964-8703-178c02302a26/files/
 
 1.  DOCUMENTATION-INDEX.md - Master guide
@@ -1556,3 +1572,6 @@ ROOT CAUSE BUG:
 * return []; // ✅ Free users get nothing
 
 This was giving every user (even free) pre access by default, letting pre-only users bypass mains checks.
+
+mppsc mains syllabus path
+/Users/arjun/.gemini/antigravity/brain/01c2e148-60a4-44e1-a57f-a6ab0c355658/mppsc_2026_mains_analysis.md.resolved

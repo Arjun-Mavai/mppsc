@@ -32,11 +32,20 @@ export function MainsPremiumMarketing({ onClose }: MainsPremiumMarketingProps) {
   const p = pricingData?.pricing ?? PRICING_DEFAULTS;
   const mppscCopy = pricingData?.mppscProductCopy ?? DEFAULT_MPPSC_PRODUCT_COPY;
 
-  const mainsFeatures: PlanFeatureWithIcon[] = mppscCopy.mains.bulletsEn.map((en, i) => ({
+  const baseFeatures = mppscCopy.mains.bulletsEn.map((en, i) => ({
     en,
     hi: mppscCopy.mains.bulletsHi[i] ?? en,
-    icon: 'Target',
+    icon: 'Target' as const,
   }));
+
+  const mainsFeatures: PlanFeatureWithIcon[] = [
+    ...baseFeatures,
+    {
+      en: '⚡ Fast 1-Click Syllabus Navigator — No more opening 10 PDFs! Our Syllabus Menu is so fast that students can switch between any unit or topic of Paper 1 to 6 in 1 click without page reloads.',
+      hi: '⚡ 1-क्लिक फास्ट सिलेबस नेविगेटर — सिलेबस चेक करने में 10 PDFs खोलने का झंझट खत्म! हमारा "सिलेबस मेन्यू" इतना फास्ट है कि छात्र बिना पेज रीलोड किए, पेपर 1 से पेपर 6 के किसी भी टॉपिक पर 1 क्लिक में स्विच कर सकते हैं।',
+      icon: 'Target',
+    },
+  ];
 
   if (isLoading) {
     return (
@@ -70,11 +79,11 @@ export function MainsPremiumMarketing({ onClose }: MainsPremiumMarketingProps) {
           </>
         )}
       </h2>
-      <p className="mx-auto mb-8 max-w-lg px-2 text-sm font-medium text-slate-600 md:text-base">
+{/* <p className="mx-auto mb-8 max-w-lg px-2 text-sm font-medium text-slate-600 md:text-base">
         {hi
           ? 'सिलेबस के प्रत्येक टॉपिक की गहरी समझ (Syllabus Grasp) के लिए पिछले वर्षों के प्रश्नों (PYQs) के हिंदी व इंग्लिश (English & Hindi) में तैयार 2 अलग-अलग स्टाइल के सटीक मॉडल उत्तर।'
           : 'Deeply grasp every syllabus topic with complete previous years\' questions (PYQs) and 2 distinct model answer styles (Dual-Style variations) in clean English & Hindi.'}
-      </p>
+      </p> */}
 
       <div className="mb-8 flex justify-center">
         <div className="relative inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2">
