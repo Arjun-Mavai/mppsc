@@ -103,19 +103,9 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // 1. Fetch User on Server (Once per request)
-  const user = await verifyAuthInternal();
-
-  // 2. Transform for Navbar
-  const navbarUser = user
-    ? (() => {
-        if (user._mismatch) return null;
-        return {
-          ...user,
-          accessExpiresAt: user.accessExpiresAt?.toString() || null,
-        } as AuthenticatedUser;
-      })()
-    : null;
+  // ⚡ PERFORMANCE: Removed server-side auth check to make the layout and homepage static (SSG).
+  // AppNavbar will handle user fetching on the client side.
+  const navbarUser = null;
 
   // JSON-LD structured data — helps Google show rich results
   const websiteSchema = {
@@ -157,7 +147,7 @@ export default async function RootLayout({
         {/* Facebook Pixel Code */}
         <Script
           id="fb-pixel"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js'); fbq('init', '2337193063478696'); fbq('track', 'PageView');`,
           }}
@@ -190,7 +180,9 @@ export default async function RootLayout({
         <GlobalErrorBoundary>
           <PwaRegistry />
           <Providers>
-            <AppNavbar user={navbarUser} />
+            <Suspense fallback={null}>
+              <AppNavbar user={navbarUser} />
+            </Suspense>
             <MainContentWrapper>{children}</MainContentWrapper>
 
             <AppFooter />

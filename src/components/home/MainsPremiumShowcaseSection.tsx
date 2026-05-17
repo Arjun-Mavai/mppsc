@@ -134,17 +134,14 @@ export function MainsPremiumShowcaseSection() {
               )}
             </m.h2>
 
-            <m.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-              className="text-base sm:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-bold"
+            <p 
+              className="text-base sm:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-bold animate-fade-in-up" 
+              style={{ animationDelay: '0.2s', animationFillMode: 'both' }}
             >
               {isHindi 
                 ? 'सिर्फ नोट्स जमा करने से मेंस क्लीयर नहीं होता। जानिए हर सिलेबस लाइन की असली डिमांड और सीखिए 2 अलग-अलग स्टाइल में उत्तर लिखने का विज्ञान।'
                 : 'Mains isn\'t about hoarding PDFs—it\'s about structuring under time pressure. Unlock dual-style model answers and deep syllabus clarity.'}
-            </m.p>
+            </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-center">

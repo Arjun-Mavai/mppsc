@@ -127,24 +127,15 @@ export function HeroSection() {
 
 
         {/* Status Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-5 py-2 backdrop-blur-xl transition-colors hover:border-white/10"
-        >
+        <div className="animate-fade-in-up mb-8 inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-5 py-2 backdrop-blur-xl transition-colors hover:border-white/10">
           <Trophy size={15} className="text-amber-400 animate-bounce" />
           <span className="text-[11px] font-black tracking-[0.25em] text-slate-200 uppercase">
             {t.badge}
           </span>
-        </motion.div>
+        </div>
 
         {/* Headline - High Impact Typography */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="space-y-4"
-        >
+        <div className="space-y-4 animate-fade-in-up">
           <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter text-white leading-[1.3] md:leading-[1.15]">
             {language === 'hi' ? (
               <span className="block opacity-95">
@@ -243,23 +234,13 @@ export function HeroSection() {
             )}
           </h1>
           
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="mx-auto mt-8 max-w-2xl px-6 text-base font-bold leading-relaxed text-slate-400 md:text-xl"
-          >
+          <p className="mx-auto mt-8 max-w-2xl px-6 text-base font-bold leading-relaxed text-slate-400 md:text-xl">
             {t.subtitle}
-          </motion.p>
-        </motion.div>
+          </p>
+        </div>
 
         {/* Action Buttons — 2026 open prelims first (hero priority), then PYQs */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mt-14 flex w-full flex-col items-center justify-center gap-5 sm:flex-row"
-        >
+        <div className="animate-fade-in-up mt-14 flex w-full flex-col items-center justify-center gap-5 sm:flex-row" style={{ animationDelay: '0.5s', animationFillMode: 'both' }}>
           {/* Primary CTA: open 2026 MPPSC prelims paper (lead gate on that route) */}
           <button
             type="button"
@@ -284,15 +265,10 @@ export function HeroSection() {
             <span className="text-lg tracking-tighter">{user ? t.pyqBtn : t.primaryBtn}</span>
             <ChevronRight size={20} className="text-white/80 transition-transform group-hover:translate-x-1" />
           </button>
-        </motion.div>
+        </div>
 
         {/* Feature Highlights */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          className="mt-20 flex flex-wrap justify-center gap-10 opacity-50 transition-opacity hover:opacity-100"
-        >
+        <div className="animate-fade-in-up mt-20 flex flex-wrap justify-center gap-10 opacity-50 transition-opacity hover:opacity-100" style={{ animationDelay: '0.7s', animationFillMode: 'both' }}>
           {t.stats.map((stat, i) => (
             <div key={i} className="flex items-center gap-3">
               <ShieldCheck size={16} className="text-amber-500" />
@@ -301,7 +277,7 @@ export function HeroSection() {
               </span>
             </div>
           ))}
-        </motion.div>
+        </div>
 
       </div>
 
