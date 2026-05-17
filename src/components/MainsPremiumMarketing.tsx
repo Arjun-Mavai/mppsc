@@ -53,7 +53,7 @@ export function MainsPremiumMarketing({ onClose }: MainsPremiumMarketingProps) {
 
   return (
     <div className="animate-in fade-in zoom-in-95 relative flex flex-col items-center bg-slate-50 px-4 py-6 text-center duration-200 md:p-10">
-      <Badge className="mb-4 border-emerald-200 bg-emerald-50 px-4 py-1.5 text-emerald-800 md:mb-5">
+      <Badge className="mb-4 border-amber-200 bg-amber-50 px-4 py-1.5 text-amber-800 md:mb-5">
         {hi ? 'MPPSC मेंस लाइब्रेरी' : 'MPPSC Mains Library'}
       </Badge>
 
@@ -102,14 +102,14 @@ export function MainsPremiumMarketing({ onClose }: MainsPremiumMarketingProps) {
           {hi ? (
             <>
               प्री + मेंस एक साथ?{' '}
-              <a href="/pricing" onClick={() => onClose?.()} className="font-bold text-emerald-700 underline underline-offset-2">
+              <a href="/pricing" onClick={() => onClose?.()} className="font-bold text-amber-700 underline underline-offset-2">
                 प्राइसिंग पर कॉम्बो देखें
               </a>
             </>
           ) : (
             <>
               Want Pre + Mains together?{' '}
-              <a href="/pricing" onClick={() => onClose?.()} className="font-bold text-emerald-700 underline underline-offset-2">
+              <a href="/pricing" onClick={() => onClose?.()} className="font-bold text-amber-700 underline underline-offset-2">
                 See the combo on pricing
               </a>
             </>
@@ -117,7 +117,7 @@ export function MainsPremiumMarketing({ onClose }: MainsPremiumMarketingProps) {
         </p>
       </div>
 
-      <DialogPrimitive.Close className="absolute top-2 right-2 z-50 rounded-full border-2 border-emerald-100 bg-white p-2 text-emerald-600 shadow-sm transition-all hover:scale-110 hover:bg-emerald-50 active:scale-95">
+      <DialogPrimitive.Close className="absolute top-2 right-2 z-50 rounded-full border-2 border-rose-100 bg-white p-2 text-rose-500 shadow-sm transition-all hover:scale-110 hover:bg-rose-50 hover:text-rose-600 active:scale-95">
         <X className="h-6 w-6" strokeWidth={3} />
       </DialogPrimitive.Close>
     </div>

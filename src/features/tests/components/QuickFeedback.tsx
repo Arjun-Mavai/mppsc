@@ -115,8 +115,8 @@ export function QuickFeedback({
 
   return (
     <div className={cn('mt-6 flex flex-col items-center gap-3', className)}>
-      <div className="flex items-center gap-1.5 rounded-full border border-slate-200/60 bg-slate-50/50 p-1.5 shadow-sm">
-        <p className="px-2 text-[9px] font-black tracking-widest text-slate-400 uppercase">
+      <div className="flex items-center gap-1.5 rounded-full border border-slate-400/20 bg-slate-400/10 p-1.5 shadow-sm">
+        <p className="px-2 text-[9px] font-black tracking-widest text-slate-500 uppercase">
           Helpful?
         </p>
         
@@ -162,7 +162,7 @@ export function QuickFeedback({
             initial={{ opacity: 0, scale: 0.95, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
-            className="flex w-full max-w-xs flex-col gap-3 rounded-2xl border border-rose-100 bg-white p-4 shadow-xl"
+            className="flex w-full max-w-xs flex-col gap-3 rounded-2xl border border-rose-100 bg-white dark:border-rose-900/50 dark:bg-slate-900 p-4 shadow-xl"
           >
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-black text-rose-900 uppercase tracking-tight">How can we improve this?</p>
@@ -177,7 +177,7 @@ export function QuickFeedback({
               value={feedbackMsg}
               onChange={(e) => setFeedbackMsg(e.target.value)}
               placeholder="Tell us what's missing or wrong..."
-              className="min-h-[70px] w-full rounded-xl border border-slate-100 bg-slate-50 p-3 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-rose-200"
+              className="min-h-[70px] w-full rounded-xl border border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-950 p-3 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-rose-200 dark:focus:ring-rose-800"
             />
             <Button
               size="sm"
@@ -216,7 +216,7 @@ function ReactionButton({
       disabled={disabled}
       className={cn(
         'group relative flex h-8 w-8 items-center justify-center rounded-full transition-all duration-300 active:scale-90',
-        active ? cn(activeColor, 'text-white shadow-md') : 'text-slate-400 hover:bg-white hover:text-slate-600 hover:shadow-sm'
+        active ? cn(activeColor, 'text-white shadow-md') : 'text-slate-400 dark:text-slate-500 hover:bg-white dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 hover:shadow-sm'
       )}
     >
       {submitting ? <Loader2 className="h-3 w-3 animate-spin" /> : icon}

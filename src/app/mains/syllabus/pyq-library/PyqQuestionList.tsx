@@ -523,20 +523,20 @@ const PyqQuestionRow = memo(({
                                className="absolute left-[102%] top-[-15px] flex flex-col-reverse items-end pointer-events-none select-none z-30"
                              >
                                {/* 🤚 Hand - Tilted sharply up-left, finger tip touches arrow base */}
-                               <div className="text-3xl filter drop-shadow-md rotate-[45deg] mr-[-10px] mb-[-12px] z-10">
+                               <div className="text-3xl filter drop-shadow-md rotate-[35deg] mr-[-15px] mb-[-10px] z-10">
                                  👈
                                </div>
 
                                {/* 🎨 Curvy Sharp Arrow - Curves from finger tip up to the button */}
                                <svg width="54" height="54" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg" className="filter drop-shadow-[0_2px_6px_rgba(236,72,153,0.45)]">
                                  <path 
-                                   d="M45 48C38 30 18 15 6 6" 
+                                   d="M45 48C30 40 15 25 6 15" 
                                    stroke="#ec4899" 
                                    strokeWidth="4.5" 
                                    strokeLinecap="round" 
                                  />
                                  <path 
-                                   d="M22 6L6 6L10 22" 
+                                   d="M22 15L6 15L10 31" 
                                    stroke="#ec4899" 
                                    strokeWidth="4.5" 
                                    strokeLinecap="round" 

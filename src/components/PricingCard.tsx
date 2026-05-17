@@ -122,7 +122,7 @@ export function PricingCard({
     isLite
       ? 'border border-amber-100 shadow-sm hover:shadow-md'
       : isMains
-        ? 'border-2 border-emerald-500 shadow-[0_20px_50px_rgba(16,185,129,0.14)] overflow-hidden scale-[1.02] z-10'
+        ? 'border-2 border-amber-500 shadow-[0_20px_50px_rgba(245,158,11,0.15)] overflow-hidden scale-[1.02] z-10'
         : isCombo
           ? 'border-2 border-amber-600 shadow-[0_20px_50px_rgba(245,158,11,0.15)] overflow-hidden scale-[1.02] z-10'
           : isPro || isUpgrade
@@ -133,7 +133,7 @@ export function PricingCard({
   const titleIcon = isLite ? (
     <Zap className="h-5 w-5 text-amber-500" />
   ) : isMains ? (
-    <BookOpen className="h-5 w-5 text-emerald-600" />
+    <BookOpen className="h-5 w-5 text-amber-600" />
   ) : isCombo || isPro ? (
     <Crown className="h-5 w-5 text-amber-600" />
   ) : (
@@ -176,9 +176,7 @@ export function PricingCard({
 
   const featureIconTone = isLite
     ? 'text-amber-500'
-    : isMains
-      ? 'text-emerald-600'
-      : 'text-amber-600';
+    : 'text-amber-600';
 
   return (
     <div className="group relative h-full">
@@ -186,7 +184,7 @@ export function PricingCard({
         <div className="absolute -inset-0.5 animate-pulse rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 opacity-20 blur-md" />
       )}
       {isMains && (
-        <div className="absolute -inset-0.5 animate-pulse rounded-xl bg-gradient-to-r from-emerald-400 to-teal-500 opacity-20 blur-md" />
+        <div className="absolute -inset-0.5 animate-pulse rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 opacity-20 blur-md" />
       )}
 
       <Card className={cn(cardClasses, 'bg-white')}>
@@ -210,7 +208,7 @@ export function PricingCard({
               <h3
                 className={cn(
                   'text-xl font-bold',
-                  isPro || isUpgrade || isCombo ? 'text-amber-900' : isMains ? 'text-emerald-950' : 'text-slate-900'
+                  isPro || isUpgrade || isCombo || isMains ? 'text-amber-900' : 'text-slate-900'
                 )}
               >
                 {title}
@@ -224,11 +222,9 @@ export function PricingCard({
             <p
               className={cn(
                 'text-sm font-medium',
-                isPro || isUpgrade || isCombo
+                isPro || isUpgrade || isCombo || isMains
                   ? 'text-amber-700/80'
-                  : isMains
-                    ? 'text-emerald-800/90'
-                    : 'text-slate-500'
+                  : 'text-slate-500'
               )}
             >
               {subtitle}
@@ -328,7 +324,7 @@ export function PricingCard({
                   (isProShell && !isMains) &&
                     'bg-slate-950 text-white shadow-lg shadow-amber-900/20 hover:bg-black border border-amber-500/30',
                   isMains &&
-                    'bg-slate-950 text-white shadow-lg shadow-emerald-900/25 hover:bg-black border border-emerald-500/35'
+                    'bg-slate-950 text-white shadow-lg shadow-amber-900/20 hover:bg-black border border-amber-500/30'
                 )}
               >
                 <Link href={href} prefetch={true} onClick={onBuy}>
@@ -366,7 +362,7 @@ export function PricingCard({
                   (isProShell && !isMains) &&
                     'bg-slate-950 text-white shadow-lg shadow-amber-900/20 hover:bg-black border border-amber-500/30',
                   isMains &&
-                    'bg-slate-950 text-white shadow-lg shadow-emerald-900/25 hover:bg-black border border-emerald-500/35'
+                    'bg-slate-950 text-white shadow-lg shadow-amber-900/20 hover:bg-black border border-amber-500/30'
                 )}
               >
                 {isLite
