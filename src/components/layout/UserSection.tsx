@@ -43,7 +43,7 @@ export const UserSection = memo(function UserSection({
             className="relative hidden h-10 w-10 rounded-full p-0 ring-2 ring-slate-100 transition-all hover:ring-slate-200 md:flex"
           >
             <Avatar className="h-10 w-10">
-              <AvatarImage src={user.image || '/default-avatar.png'} alt={user.name || 'User'} className="scale-150" />
+              <AvatarImage src={user.image || undefined} alt={user.name || 'User'} className="scale-150" />
               <AvatarFallback className="border border-slate-100 bg-slate-50 font-bold text-slate-700">
                 {user.name?.charAt(0).toUpperCase() || 'U'}
               </AvatarFallback>

@@ -252,11 +252,7 @@ export function GuestLeadModal({
         <div className="flex flex-col items-center text-center mb-6">
           {isMains ? (
             <div className="relative mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-b from-amber-50 to-amber-100/30 p-2 shadow-md dark:from-slate-900 dark:to-amber-950/20 border-2 border-amber-300/50 dark:border-amber-500/20">
-              <img 
-                src="/ashok_emblem_gold.png" 
-                alt="National Emblem of India" 
-                className="w-20 h-20 object-contain drop-shadow-[0_4px_8px_rgba(180,83,9,0.35)] select-none"
-              />
+              <AshokEmblemIcon className="w-20 h-20 drop-shadow-[0_4px_8px_rgba(180,83,9,0.35)] select-none" />
               {/* Subtle pulsing gold background glow */}
               <div className="absolute inset-0 -z-10 animate-pulse rounded-full bg-amber-400/5 blur-md" />
             </div>
