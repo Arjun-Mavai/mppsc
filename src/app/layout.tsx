@@ -180,7 +180,9 @@ export default async function RootLayout({
         <GlobalErrorBoundary>
           <PwaRegistry />
           <Providers>
-            <AppNavbar user={navbarUser} />
+            <Suspense fallback={null}>
+              <AppNavbar user={navbarUser} />
+            </Suspense>
             <MainContentWrapper>{children}</MainContentWrapper>
 
             <AppFooter />
