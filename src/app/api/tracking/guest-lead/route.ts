@@ -61,7 +61,7 @@ export async function POST(req: Request) {
       const displayCategory =
         body.page === 'mains-pyq-library'
           ? '📚 Mains PYQ Library'
-          : body.page === 'mains-syllabus'
+          : (body.page === 'mains-syllabus' || body.page === 'mppsc-mains')
             ? '📘 Mains Syllabus Library'
             : `🔍 ${body.page}`;
 

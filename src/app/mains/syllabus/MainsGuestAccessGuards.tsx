@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import dynamic from 'next/dynamic';
 
-const GuestLeadModal = dynamic(
-  () => import('@/components/guest-lead-modal').then((mod) => mod.GuestLeadModal),
+const MainsGuestEntryDialog = dynamic(
+  () => import('./MainsGuestEntryDialog').then((mod) => mod.MainsGuestEntryDialog),
   { ssr: false }
 );
 
@@ -68,14 +68,6 @@ export function MainsGuestAccessGuards() {
 
   if (isLoggedIn) return null;
 
-  const page = pathname?.includes('/pyq-library') ? 'mains-pyq-library' : 'mains-syllabus';
-  const title = page === 'mains-pyq-library'
-    ? '🏛️ MPPSC Mains: Unlock Free PYQs & Sample Answers'
-    : '🏛️ MPPSC Mains: Unlock Free Syllabus & Topics';
-  const subtitle = page === 'mains-pyq-library'
-    ? 'भावी अधिकारी! दर्ज करें अपना विवरण और मुख्य परीक्षा (Mains) के पिछले वर्षों के प्रश्न-बैंक व उपलब्ध निःशुल्क मॉडल आंसर्स तुरंत अनलॉक करें।'
-    : 'भावी अधिकारी! दर्ज करें अपना विवरण और मुख्य परीक्षा (Mains) का नया माइक्रो-सिलेबस, टॉपिक्स व उपलब्ध निःशुल्क सैंपल्स तुरंत अनलॉक करें।';
-
-  return <GuestLeadModal page={page} title={title} subtitle={subtitle} mandatory />;
+  return <MainsGuestEntryDialog />;
 }
 
