@@ -338,9 +338,6 @@ function PricingPageInner() {
 
       {/* ── Hero Header ──────────────────────────────────── */}
       <section className="relative z-10 px-4 pt-24 pb-4 text-center md:pt-32 md:pb-8">
-        <Badge className="mb-6 cursor-default border-amber-200 bg-amber-50 px-5 py-2 text-xs font-black tracking-widest text-amber-800 uppercase shadow-sm">
-          6 Months Access
-        </Badge>
         <h1 className="font-display mb-4 text-4xl leading-[1.28] py-1 font-black tracking-tight text-slate-900 md:text-7xl">
           {hi ? (
             <>
