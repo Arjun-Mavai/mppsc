@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useMemo, useState } from 'react';
+import { memo, useMemo, useState, useCallback } from 'react';
 import { ChevronDown, Lock, Layers, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -54,7 +54,7 @@ interface PyqQuestionListProps {
   showGlobalFilters: boolean;
 }
 
-export function PyqQuestionList({
+export const PyqQuestionList = memo(function PyqQuestionList({
   questions,
   paperNumber,
   examYear,
@@ -75,6 +75,15 @@ export function PyqQuestionList({
   const [openIds, setOpenIds] = useState<Record<string, boolean>>({});
   const [insightsOpenIds, setInsightsOpenIds] = useState<Record<string, boolean>>({});
   const [marksFilter, setMarksFilter] = useState<number | 'ALL'>('ALL');
+
+  // ⚡ Stable callbacks prevent cascading re-renders
+  const handleQOpen = useCallback((qId: string, val: boolean) => {
+    setOpenIds(prev => prev[qId] === val ? prev : { ...prev, [qId]: val });
+  }, []);
+
+  const handleInsightOpen = useCallback((qId: string, val: boolean) => {
+    setInsightsOpenIds(prev => prev[qId] === val ? prev : { ...prev, [qId]: val });
+  }, []);
 
   const parts = useMemo(() => {
     const s = new Set(questions.map((q) => String(q.part).toUpperCase()));
@@ -231,10 +240,10 @@ export function PyqQuestionList({
             effectiveHi={effectiveHi}
             themeDeep={themeDeep}
             open={!!openIds[q.id]}
-            setOpen={(val) => setOpenIds(prev => ({ ...prev, [q.id]: val }))}
+            setOpen={(val) => handleQOpen(q.id, val)}
             readingTheme={readingTheme}
             insightsOpen={!!insightsOpenIds[q.id]}
-            setInsightsOpen={(val) => setInsightsOpenIds(prev => ({ ...prev, [q.id]: val }))}
+            setInsightsOpen={(val) => handleInsightOpen(q.id, val)}
             examYear={examYear}
           />
         ))}
@@ -250,7 +259,9 @@ export function PyqQuestionList({
       ) : null}
     </>
   );
-}
+});
+
+PyqQuestionList.displayName = 'PyqQuestionList';
 
 function PyqVaultUnlockBanner({
   hi,

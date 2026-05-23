@@ -60,10 +60,12 @@ export function PyqLibraryClient({
 }) {
   const hasServerSeed = initialPapers.length > 0;
   const cacheSeeded = useRef(false);
-  if (hasServerSeed && !cacheSeeded.current) {
-    seedModuleCaches(initialPapers, initialPaperId, initialQuestions);
-    cacheSeeded.current = true;
-  }
+  useEffect(() => {
+    if (hasServerSeed && !cacheSeeded.current) {
+      seedModuleCaches(initialPapers, initialPaperId, initialQuestions);
+      cacheSeeded.current = true;
+    }
+  }, [hasServerSeed, initialPapers, initialPaperId, initialQuestions]);
 
   const { language } = useSettingsStore();
   const hi = language === 'hi';
@@ -205,25 +207,47 @@ export function PyqLibraryClient({
 
   useEffect(() => {
     if (!paperId) return;
+    // Batch: Load questions AND reset filter in same effect
+    setPartFilter('ALL');
     void loadQs(paperId, selectedPaper);
   }, [paperId, selectedPaper, loadQs]);
 
-  useEffect(() => {
-    setPartFilter('ALL');
-  }, [paperId]);
-
   // Prefetch all papers in background if vault is unlocked for instant switching
+  // ⚡ Rate-limited to 3 concurrent requests to avoid network saturation
   useEffect(() => {
-    if (vaultUnlocked && papers.length > 0) {
-      papers.forEach((p) => {
-        if (!pyqQuestionsCache.has(p.id)) {
-          void getMainsPyqPaperPublic(p.id).then((res) => {
-            if (res.success && res.data) {
-              pyqQuestionsCache.set(p.id, res.data.questions as QRow[]);
-            }
-          });
+    if (!vaultUnlocked || papers.length === 0) return;
+
+    let activeCount = 0;
+    let nextIndex = 0; // Shared counter ensures each paper claimed exactly once
+    const maxConcurrent = 3;
+    const queue = papers.filter(p => !pyqQuestionsCache.has(p.id));
+
+    const processPaper = async (): Promise<void> => {
+      if (nextIndex >= queue.length) return;
+
+      activeCount++;
+      const idx = nextIndex++; // Atomic claim of next item in queue
+      const p = queue[idx];
+
+      try {
+        const res = await getMainsPyqPaperPublic(p.id);
+        if (res.success && res.data) {
+          pyqQuestionsCache.set(p.id, res.data.questions as QRow[]);
         }
-      });
+      } catch {
+        // Fail silently, user can manually load
+      } finally {
+        activeCount--;
+        // Schedule next if queue not exhausted and under concurrency limit
+        if (nextIndex < queue.length && activeCount < maxConcurrent) {
+          void processPaper();
+        }
+      }
+    };
+
+    // Start 3 workers (each will claim from nextIndex)
+    for (let i = 0; i < Math.min(maxConcurrent, queue.length); i++) {
+      void processPaper();
     }
   }, [papers, vaultUnlocked]);
 

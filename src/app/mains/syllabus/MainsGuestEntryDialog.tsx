@@ -16,7 +16,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { toast } from 'sonner';
 
 export function MainsGuestEntryDialog() {
-  const { user } = useSettingsStore();
+  const { user, setGuestLead } = useSettingsStore();
   const [isOpen, setIsOpen] = useState(false);
   const [guestName, setGuestName] = useState('');
   const [guestMobile, setGuestMobile] = useState('');
@@ -33,10 +33,24 @@ export function MainsGuestEntryDialog() {
 
     // Check localStorage for existing lead
     const stored = localStorage.getItem('mppsc_mains_lead');
-    if (!stored) {
+    if (stored) {
+      try {
+        // Hydrate Zustand store from localStorage for returning guests
+        const lead = JSON.parse(stored);
+        setGuestLead({
+          name: lead.name,
+          phone: lead.phone,
+          email: lead.email,
+        });
+      } catch {
+        // If parse fails, show dialog to get fresh data
+        setIsOpen(true);
+      }
+    } else {
+      // No stored lead, show dialog
       setIsOpen(true);
     }
-  }, [user]);
+  }, [user, setGuestLead]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -89,6 +103,13 @@ export function MainsGuestEntryDialog() {
       // Save to localStorage
       localStorage.setItem('mppsc_mains_lead', JSON.stringify(lead));
       localStorage.setItem('mains_guest_lead', JSON.stringify(lead)); // Fallback support
+
+      // 🎯 SYNC TO ZUSTAND STORE (for tracking throughout the app)
+      setGuestLead({
+        name: lead.name,
+        phone: lead.phone,
+        email: lead.email,
+      });
 
       // 🚀 INSTANT ASYNC BACKGROUND UNLOCK
       fetch('/api/tracking/guest-lead', {

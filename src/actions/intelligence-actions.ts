@@ -82,17 +82,17 @@ export async function submitIntelligenceFeedback(data: IntelligenceFeedbackData)
       studentInfo = `<b>Name:</b> ${escapedName}\n` + 
                    (finalMobile ? `<b>Mobile:</b> <code>${finalMobile}</code>\n` : '') +
                    (userEmail ? `<b>Email:</b> ${userEmail}` : '');
+    } else if (guestId) {
+      // Fallback: Lookup from database if we have guestId
+      const guest = await db.query.guests.findFirst({
+        where: (g, { eq: eqOp }) => eqOp(g.id, guestId!),
+        columns: { name: true }
+      });
+      const displayName = guest?.name || finalMobile || 'Anonymous Guest';
+      studentInfo = `<b>Student:</b> ${escapeHTML(displayName)}${finalMobile ? ` (<code>${finalMobile}</code>)` : ''}`;
     } else {
-      // Fallback to guest search if we only have mobile
-      let displayName = finalMobile || 'Anonymous Guest';
-      if (guestId) {
-        const guest = await db.query.guests.findFirst({
-          where: (g, { eq: eqOp }) => eqOp(g.id, guestId!),
-          columns: { name: true }
-        });
-        if (guest?.name) displayName = `${escapeHTML(guest.name)} (${finalMobile || 'No Mobile'})`;
-      }
-      studentInfo = `<b>Student:</b> ${displayName}`;
+      // Final fallback: Just phone if available
+      studentInfo = `<b>Student:</b> ${finalMobile || 'Anonymous Guest'}`;
     }
 
     const now = new Date();

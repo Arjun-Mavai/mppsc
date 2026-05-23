@@ -38,25 +38,34 @@ export async function POST() {
         });
 
         if (user) {
-          await db
-            .update(mppscUsers)
-            .set({
-              sessionVersion: (user.sessionVersion || 0) + 1,
-              metadata: touchAuthLogoutMetadata(user.metadata),
-            })
-            .where(eq(mppscUsers.id, decoded.userId));
+          // Check if this token is actually the current active session
+          const tokenVersion = decoded.sessionVersion || 1;
+          const dbVersion = user.sessionVersion || 1;
 
-          await db.insert(mppscUserActivities).values({
-            id: uuidv4(),
-            userId: decoded.userId,
-            userEmail: decoded.email || '',
-            userName: null,
-            action: 'LOGOUT',
-            details: {
-              reason: 'manual_logout',
-            },
-          });
+          // Only bump session and record logout if the token is still valid (not already kicked)
+          if (tokenVersion === dbVersion) {
+            await db
+              .update(mppscUsers)
+              .set({
+                sessionVersion: dbVersion + 1,
+                metadata: touchAuthLogoutMetadata(user.metadata),
+              })
+              .where(eq(mppscUsers.id, decoded.userId));
+
+            await db.insert(mppscUserActivities).values({
+              id: uuidv4(),
+              userId: decoded.userId,
+              userEmail: decoded.email || '',
+              userName: null,
+              action: 'LOGOUT',
+              details: {
+                reason: 'manual_logout',
+              },
+            });
+          }
         }
+
+
       }
     }
   } catch (error) {
