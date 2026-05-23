@@ -1,36 +1,36 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { WifiOff, RefreshCw, BookOpen, Brain, Flame, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // Offline motivation quotes curated for MPPSC/Civil Services aspirants
 const OFFLINE_QUOTES = [
   {
-    text: "भावी अधिकारी! इंटरनेट बंद है तो इसे एक वरदान समझें। सोशल मीडिया से दूर, अपनी मुख्य किताबों और नोट्स के रिवीजन पर ध्यान केंद्रित करें।",
-    author: "MPPSC Zen Team",
-    category: "Rethink"
+    text: 'भावी अधिकारी! इंटरनेट बंद है तो इसे एक वरदान समझें। सोशल मीडिया से दूर, अपनी मुख्य किताबों और नोट्स के रिवीजन पर ध्यान केंद्रित करें।',
+    author: 'MPPSC Zen Team',
+    category: 'Rethink'
   },
   {
-    text: "सफलता का कोई शॉर्टकट नहीं होता, इसके लिए हर शांत क्षण में की गई मेहनत ही काम आती है। बिना भटके आज 1 घंटा लिखने का अभ्यास करें।",
-    author: "Success Mantra",
-    category: "Motivation"
+    text: 'सफलता का कोई शॉर्टकट नहीं होता, इसके लिए हर शांत क्षण में की गई मेहनत ही काम आती है। बिना भटके आज 1 घंटा लिखने का अभ्यास करें।',
+    author: 'Success Mantra',
+    category: 'Motivation'
   },
   {
-    text: "The best time to study without notifications is right now. Go deep into your revision!",
-    author: "Focus Catalyst",
-    category: "Productivity"
+    text: 'The best time to study without notifications is right now. Go deep into your revision!',
+    author: 'Focus Catalyst',
+    category: 'Productivity'
   },
   {
-    text: "संकल्प में विकल्प न आना ही संकल्प की वास्तविक विजय है। इंटरनेट के बिना भी आपकी पढ़ाई नहीं रुकनी चाहिए।",
-    author: "Swami Vivekananda Inspiration",
-    category: "Resolve"
+    text: 'संकल्प में विकल्प न आना ही संकल्प की वास्तविक विजय है। इंटरनेट के बिना भी आपकी पढ़ाई नहीं रुकनी चाहिए।',
+    author: 'Swami Vivekananda Inspiration',
+    category: 'Resolve'
   },
   {
-    text: "मेन्स आंसर राइटिंग के लिए आज एक रफ पेपर उठाएं और पिछले पढ़े हुए किसी भी टॉपिक का माइंड-मैप खुद से बनाएं।",
-    author: "Mains Strategy",
-    category: "Practice"
-  }
+    text: 'मेन्स आंसर राइटिंग के लिए आज एक रफ पेपर उठाएं और पिछले पढ़े हुए किसी भी टॉपिक का माइंड-मैप खुद से बनाएं।',
+    author: 'Mains Strategy',
+    category: 'Practice'
+  },
 ];
 
 export function OfflineClient() {
@@ -48,10 +48,13 @@ export function OfflineClient() {
 
   const handleCheckConnection = () => {
     setIsChecking(true);
-    // Simulate a connection check by checking navigator.onLine and refreshing
+    // Check if connection is back before reloading
     setTimeout(() => {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && navigator.onLine) {
         window.location.reload();
+      } else {
+        // Still offline, reset checking state and show message
+        setIsChecking(false);
       }
     }, 1200);
   };
