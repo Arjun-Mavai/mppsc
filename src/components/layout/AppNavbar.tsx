@@ -308,11 +308,15 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
       }
 
       if (sessionData.user) {
-        // Update only if data changed to prevent unnecessary re-renders
-        if (
-          globalUser?.id !== sessionData.user.id || 
-          globalUser?.sessionVersion !== sessionData.user.sessionVersion
-        ) {
+        // Update if any auth-relevant field changed (not just id/sessionVersion)
+        const authFieldsChanged =
+          globalUser?.id !== sessionData.user.id ||
+          globalUser?.sessionVersion !== sessionData.user.sessionVersion ||
+          globalUser?.isSubscribed !== sessionData.user.isSubscribed ||
+          globalUser?.planTier !== sessionData.user.planTier ||
+          JSON.stringify(globalUser?.accessGrants) !== JSON.stringify(sessionData.user.accessGrants);
+
+        if (authFieldsChanged) {
           logger.info('Background sync: Session updated from server');
           setUser(sessionData.user, !!sessionData.user.isSubscribed);
         }

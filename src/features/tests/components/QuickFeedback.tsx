@@ -32,9 +32,10 @@ export function QuickFeedback({
   const [reaction, setReaction] = useState<IntelligenceReaction | null>(null);
   const [isPending, startTransition] = useTransition();
   
-  // 🎯 FALLBACK: Use store guest lead if not passed directly
-  const finalGuestMobile = guestMobile || guestLead?.phone;
-  const finalGuestName = guestName || guestLead?.name;
+  // 🎯 FALLBACK: Use guest data ONLY if no authenticated user
+  // If user is logged in, use user's phone, never guest phone (prevents misattribution)
+  const finalGuestMobile = user ? user.phone : (guestMobile || guestLead?.phone);
+  const finalGuestName = user ? undefined : (guestName || guestLead?.name);
   
   // ⚡ OPTIMISTIC UI: Show reaction instantly
   const [optimisticReaction, setOptimisticReaction] = useOptimistic<IntelligenceReaction | null, IntelligenceReaction | null>(

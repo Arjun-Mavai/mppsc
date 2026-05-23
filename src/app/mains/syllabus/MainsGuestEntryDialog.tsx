@@ -33,10 +33,24 @@ export function MainsGuestEntryDialog() {
 
     // Check localStorage for existing lead
     const stored = localStorage.getItem('mppsc_mains_lead');
-    if (!stored) {
+    if (stored) {
+      try {
+        // Hydrate Zustand store from localStorage for returning guests
+        const lead = JSON.parse(stored);
+        setGuestLead({
+          name: lead.name,
+          phone: lead.phone,
+          email: lead.email,
+        });
+      } catch {
+        // If parse fails, show dialog to get fresh data
+        setIsOpen(true);
+      }
+    } else {
+      // No stored lead, show dialog
       setIsOpen(true);
     }
-  }, [user]);
+  }, [user, setGuestLead]);
 
   useEffect(() => {
     if (!isOpen) return;

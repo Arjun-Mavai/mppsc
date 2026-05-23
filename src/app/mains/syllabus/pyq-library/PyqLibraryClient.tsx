@@ -60,10 +60,12 @@ export function PyqLibraryClient({
 }) {
   const hasServerSeed = initialPapers.length > 0;
   const cacheSeeded = useRef(false);
-  if (hasServerSeed && !cacheSeeded.current) {
-    seedModuleCaches(initialPapers, initialPaperId, initialQuestions);
-    cacheSeeded.current = true;
-  }
+  useEffect(() => {
+    if (hasServerSeed && !cacheSeeded.current) {
+      seedModuleCaches(initialPapers, initialPaperId, initialQuestions);
+      cacheSeeded.current = true;
+    }
+  }, [hasServerSeed, initialPapers, initialPaperId, initialQuestions]);
 
   const { language } = useSettingsStore();
   const hi = language === 'hi';
@@ -216,13 +218,15 @@ export function PyqLibraryClient({
     if (!vaultUnlocked || papers.length === 0) return;
 
     let activeCount = 0;
+    let nextIndex = 0; // Shared counter ensures each paper claimed exactly once
     const maxConcurrent = 3;
     const queue = papers.filter(p => !pyqQuestionsCache.has(p.id));
 
-    const processPaper = async (idx: number): Promise<void> => {
-      if (idx >= queue.length || activeCount >= maxConcurrent) return;
+    const processPaper = async (): Promise<void> => {
+      if (nextIndex >= queue.length) return;
 
       activeCount++;
+      const idx = nextIndex++; // Atomic claim of next item in queue
       const p = queue[idx];
 
       try {
@@ -234,14 +238,16 @@ export function PyqLibraryClient({
         // Fail silently, user can manually load
       } finally {
         activeCount--;
-        // Process next in queue
-        void processPaper(idx + 1);
+        // Schedule next if queue not exhausted and under concurrency limit
+        if (nextIndex < queue.length && activeCount < maxConcurrent) {
+          void processPaper();
+        }
       }
     };
 
-    // Start first 3 immediately
+    // Start 3 workers (each will claim from nextIndex)
     for (let i = 0; i < Math.min(maxConcurrent, queue.length); i++) {
-      void processPaper(i);
+      void processPaper();
     }
   }, [papers, vaultUnlocked]);
 
