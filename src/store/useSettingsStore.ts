@@ -4,6 +4,12 @@ import type { AuthenticatedUser } from '@/types/auth';
 
 type Language = 'en' | 'hi';
 
+interface GuestLead {
+  name: string;
+  phone: string;
+  email?: string;
+}
+
 interface SettingsState {
   language: Language;
   setLanguage: (lang: Language) => void;
@@ -16,6 +22,8 @@ interface SettingsState {
   setUser: (user: AuthenticatedUser | null, isSubscribed: boolean) => void;
   uiMode: 'classic' | 'modern';
   setUiMode: (mode: 'classic' | 'modern') => void;
+  guestLead: GuestLead | null;
+  setGuestLead: (lead: GuestLead | null) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -34,6 +42,8 @@ export const useSettingsStore = create<SettingsState>()(
       setUser: (user, isSubscribed) => set({ user, isSubscribed, authCheckStatus: 'checked' }),
       uiMode: 'modern',
       setUiMode: (mode) => set({ uiMode: mode }),
+      guestLead: null,
+      setGuestLead: (lead) => set({ guestLead: lead }),
     }),
     {
       name: 'settings-storage', // localStorage key — removing this key triggers cross-tab logout

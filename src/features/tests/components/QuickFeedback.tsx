@@ -13,6 +13,7 @@ interface QuickFeedbackProps {
   questionId: string;
   questionText: string;
   guestMobile?: string;
+  guestName?: string;
   testId?: string;
   source?: string; // 'expert_analysis', 'open_paper_view', etc.
   className?: string;
@@ -22,13 +23,18 @@ export function QuickFeedback({
   questionId,
   questionText,
   guestMobile,
+  guestName,
   testId,
   source,
   className,
 }: QuickFeedbackProps) {
-  const { isSubscribed, user } = useSettingsStore();
+  const { isSubscribed, user, guestLead } = useSettingsStore();
   const [reaction, setReaction] = useState<IntelligenceReaction | null>(null);
   const [isPending, startTransition] = useTransition();
+  
+  // 🎯 FALLBACK: Use store guest lead if not passed directly
+  const finalGuestMobile = guestMobile || guestLead?.phone;
+  const finalGuestName = guestName || guestLead?.name;
   
   // ⚡ OPTIMISTIC UI: Show reaction instantly
   const [optimisticReaction, setOptimisticReaction] = useOptimistic<IntelligenceReaction | null, IntelligenceReaction | null>(
@@ -74,9 +80,9 @@ export function QuickFeedback({
         isPro: isSubscribed,
         source,
         userId: user?.id,
-        userName: user?.name || undefined,
+        userName: user?.name || finalGuestName || undefined,
         userEmail: user?.email || undefined,
-        guestMobile: guestMobile || user?.phone || undefined,
+        guestMobile: finalGuestMobile || user?.phone || undefined,
       }).catch(e => console.error('Reaction submission failed', e));
     } catch (e) {
       // Construction error
@@ -102,9 +108,9 @@ export function QuickFeedback({
         isPro: isSubscribed,
         source,
         userId: user?.id,
-        userName: user?.name || undefined,
+        userName: user?.name || finalGuestName || undefined,
         userEmail: user?.email || undefined,
-        guestMobile: guestMobile || user?.phone || undefined,
+        guestMobile: finalGuestMobile || user?.phone || undefined,
       }).catch(e => console.error('Comment submission failed', e));
       
       setFeedbackMsg('');

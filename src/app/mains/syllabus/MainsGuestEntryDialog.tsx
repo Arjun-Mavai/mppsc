@@ -16,7 +16,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { toast } from 'sonner';
 
 export function MainsGuestEntryDialog() {
-  const { user } = useSettingsStore();
+  const { user, setGuestLead } = useSettingsStore();
   const [isOpen, setIsOpen] = useState(false);
   const [guestName, setGuestName] = useState('');
   const [guestMobile, setGuestMobile] = useState('');
@@ -89,6 +89,13 @@ export function MainsGuestEntryDialog() {
       // Save to localStorage
       localStorage.setItem('mppsc_mains_lead', JSON.stringify(lead));
       localStorage.setItem('mains_guest_lead', JSON.stringify(lead)); // Fallback support
+
+      // 🎯 SYNC TO ZUSTAND STORE (for tracking throughout the app)
+      setGuestLead({
+        name: lead.name,
+        phone: lead.phone,
+        email: lead.email,
+      });
 
       // 🚀 INSTANT ASYNC BACKGROUND UNLOCK
       fetch('/api/tracking/guest-lead', {
