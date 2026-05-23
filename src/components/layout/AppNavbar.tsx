@@ -97,36 +97,42 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   const portalNav = useMemo(() => getProductPortalNavVisibility(user), [user]);
 
   // ✅ OPTIMIZED: Define core callbacks BEFORE useEffects to avoid "Initialization" errors
-  const handleLogout = useCallback(async (redirectPath: string = '/login?reason=logged_out') => {
+  const handleLogout = useCallback(async (reason?: string | any) => {
     try {
       setIsLoggingOut(true);
-
-      // 1. Clear Zustand store + localStorage immediately
       setUser(null, false);
       setAuthCheckStatus('checked');
 
-      // 2. Nuke persisted Zustand state from localStorage
+      // 1. Nuke persisted Zustand state from localStorage FIRST (Synchronous)
       if (typeof window !== 'undefined') {
         localStorage.removeItem('settings-storage');
       }
 
-      // 3. Clear Service Worker cache
+      // 2. Fire background network requests to clear server cookies & service worker caches (with timeout)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      fetch('/api/auth/mppsc-logout', { method: 'POST', keepalive: true, signal: controller.signal })
+        .catch(() => {})
+        .finally(() => clearTimeout(timeoutId));
+      
       if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map((name) => caches.delete(name)));
+        Promise.race([
+          Promise.all([...(await caches.keys()).map((name) => caches.delete(name))]),
+          new Promise(r => setTimeout(r, 2000))
+        ]).catch(() => {});
       }
 
-      // 4. Hit server to delete httpOnly cookie
-      await fetch('/api/auth/mppsc-logout', { method: 'POST' });
+      const safeReason = typeof reason === 'string' ? reason : 'logged_out';
 
-      // 5. Hard reload
-      window.location.href = redirectPath;
+      // 3. Force hard redirect to login page NOW that local storage is clean
+      // This will look like a seamless hard refresh to the user.
+      window.location.href = `/login?reason=${encodeURIComponent(safeReason)}`;
     } catch (error) {
       logger.error('Logout failed:', error);
       localStorage.removeItem('settings-storage');
-      window.location.href = redirectPath;
+      window.location.href = '/login?reason=logged_out';
     }
-  }, [setUser, setAuthCheckStatus]);
+  }, [setUser, setAuthCheckStatus, setIsLoggingOut]);
 
   const handleManualRefresh = useCallback(async () => {
     try {
@@ -245,72 +251,104 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     ];
   }, [user, language]);
 
-  // QUERY: SESSION RESTORATION
-  const { data: sessionData, isLoading: isSessionLoading } = useQuery({
+  // QUERY: SESSION RESTORATION (The "Hydration")
+  const {
+    data: sessionData,
+    isLoading: isSessionLoading,
+    refetch: refetchSession,
+  } = useQuery({
     queryKey: ['me'],
     queryFn: async () => {
       const result = await getCurrentUser();
+
       if (result.user) {
         return { user: result.user as AuthenticatedUser };
       }
       return result;
     },
-    enabled: !initialUser && !globalUser && !isLoggingOut,
-    staleTime: 10 * 60 * 1000,
+    // Ensure background refresh is always active unless actively logging out
+    enabled: !isLoggingOut,
+    staleTime: 5 * 60 * 1000, // 5 minutes fresh, refetches automatically on window focus 
     retry: false,
   });
 
-  // Effect 1: Handle mounting state
+  useEffect(() => {
+    const timer = setTimeout(() => void refetchSession(), 200);
+    return () => clearTimeout(timer);
+  }, [pathname, refetchSession]);
+
+  // ─── EFFECTS (Optimized & Consolidated) ──────────────────────────────────
+  
+  // 1. Mount Status (Hydration)
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Effect 2: Handle initial user sync from props
-  useEffect(() => {
-    const needsSync = initialUser && (authCheckStatus === 'idle' || (initialUser.id && !globalUser?.id));
-    if (needsSync && initialUser) {
-      setUser(initialUser, !!initialUser.isSubscribed);
-    }
-  }, [initialUser, authCheckStatus, globalUser, setUser]);
-
-  // Effect 3: Handle global user auth status
-  useEffect(() => {
-    if (globalUser && authCheckStatus === 'idle') {
-      setAuthCheckStatus('checked');
-    }
-  }, [globalUser, authCheckStatus, setAuthCheckStatus]);
-
-  // Effect 4: Handle session data from React Query
+  // 2. Master Auth State Sync (Eliminates Effect Chaining)
   useEffect(() => {
     if (isLoggingOut) return;
 
-    if (globalUser) return;
+    // STEP A: Initial Server Props Sync
+    // Server-provided user is the absolute truth for initial render.
+    if (initialUser && globalUser?.id !== initialUser.id) {
+      setUser(initialUser, !!initialUser.isSubscribed);
+      setAuthCheckStatus('checked');
+      return; 
+    }
 
+    // STEP B: Background Fetch Results (React Query)
     if (sessionData) {
-      if (sessionData.user) {
-        logger.info('Session restored successfully');
-        setUser(sessionData.user, !!sessionData.user.isSubscribed);
-      } else if ((sessionData as any).reason === 'multi_device') {
-        logger.warn('Remote session mismatch detected. Logging out client.');
-        // Protected page pe seedha login; public page pe wahi page but auth state clean.
-        const redirectTarget = isProtectedClientRoute
-          ? '/login?reason=multi_device'
-          : `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+      if ((sessionData as any).reason === 'multi_device') {
         toast.error('Security Alert', {
           description: 'This session was logged out because the account was opened on another device.',
+          duration: 10000,
         });
-        handleLogout(redirectTarget);
+        handleLogout('multi_device');
+        return;
+      }
+
+      if (sessionData.user) {
+        // Update only if data changed to prevent unnecessary re-renders
+        if (
+          globalUser?.id !== sessionData.user.id || 
+          globalUser?.sessionVersion !== sessionData.user.sessionVersion
+        ) {
+          logger.info('Background sync: Session updated from server');
+          setUser(sessionData.user, !!sessionData.user.isSubscribed);
+        }
+        setAuthCheckStatus('checked');
       } else {
+        // If server says no user, wipe stale client state.
+        if (globalUser) {
+          logger.warn('Background sync: User is logged out on server. Wiping client state.');
+          setUser(null, false);
+        }
         setAuthCheckStatus('checked');
       }
-    } else if (!isSessionLoading && authCheckStatus === 'idle' && !initialUser) {
-      setAuthCheckStatus('checked');
+      return;
     }
 
-    if (isSessionLoading) {
+    // STEP C: Loading State
+    if (isSessionLoading && authCheckStatus === 'idle' && !initialUser && !globalUser) {
       setAuthCheckStatus('loading');
+      return;
     }
-  }, [sessionData, isSessionLoading, authCheckStatus, initialUser, globalUser, setUser, setAuthCheckStatus, handleLogout, isLoggingOut, isProtectedClientRoute, pathname, searchParams]);
+
+    // STEP D: Fallback Idle State
+    if (!isSessionLoading && authCheckStatus === 'idle') {
+      setAuthCheckStatus('checked');
+    }
+  }, [
+    isLoggingOut,
+    initialUser,
+    globalUser?.id,
+    globalUser?.sessionVersion,
+    sessionData,
+    isSessionLoading,
+    authCheckStatus,
+    setUser,
+    setAuthCheckStatus
+  ]);
 
   const isCompleted = searchParams.get('completed') === 'true';
   const isQuizPlay = (pathname.includes('/quiz/play') || pathname.includes('/free-quiz/play')) && !isCompleted;
