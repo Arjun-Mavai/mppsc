@@ -205,25 +205,43 @@ export function PyqLibraryClient({
 
   useEffect(() => {
     if (!paperId) return;
+    // Batch: Load questions AND reset filter in same effect
+    setPartFilter('ALL');
     void loadQs(paperId, selectedPaper);
   }, [paperId, selectedPaper, loadQs]);
 
-  useEffect(() => {
-    setPartFilter('ALL');
-  }, [paperId]);
-
   // Prefetch all papers in background if vault is unlocked for instant switching
+  // ⚡ Rate-limited to 3 concurrent requests to avoid network saturation
   useEffect(() => {
-    if (vaultUnlocked && papers.length > 0) {
-      papers.forEach((p) => {
-        if (!pyqQuestionsCache.has(p.id)) {
-          void getMainsPyqPaperPublic(p.id).then((res) => {
-            if (res.success && res.data) {
-              pyqQuestionsCache.set(p.id, res.data.questions as QRow[]);
-            }
-          });
+    if (!vaultUnlocked || papers.length === 0) return;
+
+    let activeCount = 0;
+    const maxConcurrent = 3;
+    const queue = papers.filter(p => !pyqQuestionsCache.has(p.id));
+
+    const processPaper = async (idx: number): Promise<void> => {
+      if (idx >= queue.length || activeCount >= maxConcurrent) return;
+
+      activeCount++;
+      const p = queue[idx];
+
+      try {
+        const res = await getMainsPyqPaperPublic(p.id);
+        if (res.success && res.data) {
+          pyqQuestionsCache.set(p.id, res.data.questions as QRow[]);
         }
-      });
+      } catch {
+        // Fail silently, user can manually load
+      } finally {
+        activeCount--;
+        // Process next in queue
+        void processPaper(idx + 1);
+      }
+    };
+
+    // Start first 3 immediately
+    for (let i = 0; i < Math.min(maxConcurrent, queue.length); i++) {
+      void processPaper(i);
     }
   }, [papers, vaultUnlocked]);
 
