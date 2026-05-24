@@ -1,16 +1,20 @@
 'use client';
 
 import { useTransition } from 'react';
-import { BookOpen, Sparkles, Zap, ChevronRight, Star, ShieldCheck, Trophy } from 'lucide-react';
+import { BookOpen, Sparkles, Zap, ChevronRight, Star, ShieldCheck, Trophy, Crown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useRouter } from 'next/navigation';
 import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
+import { hasPreAccess, hasMainsAccess } from '@/lib/access-grants';
 
 export function HeroSection() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const { language, user } = useSettingsStore();
+
+  const preAccess = hasPreAccess(user);
+  const mainsAccess = hasMainsAccess(user);
 
   const handleNavigation = (path: string, eventName: string) => {
     trackFbCustomEvent(eventName, { location: 'home_page_hero_section' });
@@ -27,6 +31,7 @@ export function HeroSection() {
       subtitle: 'Hoarding textbooks won\'t clear the exam. Master the exact syllabus demand, unlock retention mnemonics, and learn the science of dual-style model answers.',
       primaryBtn: 'Practice Free Test',
       pyqBtn: 'Practice PYQs',
+      mainsBtn: 'Go to Mains Vault',
       /** Kept for when we re-enable the `/free-quiz` hero CTA (currently commented below). */
       secondaryBtn: 'Free Mock Test',
       openPrelimsHeroBtn: 'Prelims Paper',
@@ -41,6 +46,7 @@ export function HeroSection() {
       subtitle: 'सिर्फ किताबें और पीडीएफ जमा करने से सिलेक्शन नहीं होता। जानिए हर प्रश्न की असली डिमांड, स्मार्ट मेमोनिक्स से याद रखने की कला, और 2 अलग-अलग स्टाइल में उत्तर लिखने का विज्ञान।',
       primaryBtn: 'फ्री टेस्ट प्रैक्टिस करें',
       pyqBtn: 'PYQs प्रैक्टिस करें',
+      mainsBtn: 'मेंस रिपॉजिटरी पर जाएं',
       secondaryBtn: 'फ्री मॉक टेस्ट',
       openPrelimsHeroBtn: 'प्रारंभिक परीक्षा पेपर',
       stats: ['100+ टॉपिक टेस्ट', 'स्मार्ट PYQ एनालिसिस', 'स्मार्ट मेमोनिक्स']
@@ -124,8 +130,6 @@ export function HeroSection() {
 
       <div className="relative z-10 flex w-full max-w-6xl flex-col items-center justify-center text-center -translate-y-4 md:-translate-y-6">
         
-
-
         {/* Status Badge */}
         <div className="animate-fade-in-up mb-8 inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-5 py-2 backdrop-blur-xl transition-colors hover:border-white/10">
           <Trophy size={15} className="text-amber-400 animate-bounce" />
@@ -241,30 +245,46 @@ export function HeroSection() {
 
         {/* Action Buttons — 2026 open prelims first (hero priority), then PYQs */}
         <div className="animate-fade-in-up mt-14 flex w-full flex-col items-center justify-center gap-5 sm:flex-row" style={{ animationDelay: '0.5s', animationFillMode: 'both' }}>
-          {/* Primary CTA: open 2026 MPPSC prelims paper (lead gate on that route) */}
-          <button
-            type="button"
-            onClick={() => handleNavigation('/open/2026-mppsc-prelims', 'hero_open_2026_prelims_clicked')}
-            disabled={isPending}
-            className="group relative flex h-16 w-full items-center justify-center gap-4 overflow-hidden rounded-2xl bg-gradient-to-r from-amber-200 via-white to-amber-100 px-10 font-black text-black shadow-[0_0_30px_rgba(251,191,36,0.1)] transition-all hover:scale-[1.03] hover:shadow-[0_0_40px_rgba(251,191,36,0.25)] active:scale-[0.97] sm:w-auto"
-          >
-            <BookOpen size={22} className="text-amber-600" />
-            <span className="text-lg tracking-tighter">{t.openPrelimsHeroBtn}</span>
-            <ChevronRight size={22} className="transition-transform group-hover:translate-x-1.5" />
-            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-black/5 to-transparent group-hover:animate-shimmer" />
-          </button>
+          {/* Primary CTA: Based on access */}
+          {mainsAccess && !preAccess ? (
+            <button
+              type="button"
+              onClick={() => handleNavigation('/mains', 'hero_mains_vault_clicked')}
+              disabled={isPending}
+              className="group relative flex h-16 w-full items-center justify-center gap-4 overflow-hidden rounded-2xl bg-gradient-to-r from-amber-200 via-white to-amber-100 px-10 font-black text-black shadow-[0_0_30px_rgba(251,191,36,0.1)] transition-all hover:scale-[1.03] hover:shadow-[0_0_40px_rgba(251,191,36,0.25)] active:scale-[0.97] sm:w-auto"
+            >
+              <Crown size={22} className="text-amber-600" />
+              <span className="text-lg tracking-tighter">{t.mainsBtn}</span>
+              <ChevronRight size={22} className="transition-transform group-hover:translate-x-1.5" />
+              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-black/5 to-transparent group-hover:animate-shimmer" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleNavigation('/open/2026-mppsc-prelims', 'hero_open_2026_prelims_clicked')}
+              disabled={isPending}
+              className="group relative flex h-16 w-full items-center justify-center gap-4 overflow-hidden rounded-2xl bg-gradient-to-r from-amber-200 via-white to-amber-100 px-10 font-black text-black shadow-[0_0_30px_rgba(251,191,36,0.1)] transition-all hover:scale-[1.03] hover:shadow-[0_0_40px_rgba(251,191,36,0.25)] active:scale-[0.97] sm:w-auto"
+            >
+              <BookOpen size={22} className="text-amber-600" />
+              <span className="text-lg tracking-tighter">{t.openPrelimsHeroBtn}</span>
+              <ChevronRight size={22} className="transition-transform group-hover:translate-x-1.5" />
+              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-black/5 to-transparent group-hover:animate-shimmer" />
+            </button>
+          )}
 
-          {/* Secondary CTA: PYQs */}
-          <button
-            type="button"
-            onClick={() => handleNavigation(user ? '/syllabus/quiz/pyq' : '/free-quiz', user ? 'hero_pyq_clicked' : 'hero_free_test_clicked')}
-            disabled={isPending}
-            className="group flex h-16 w-full items-center justify-center gap-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 px-10 font-bold text-white backdrop-blur-2xl transition-all hover:bg-amber-500/10 hover:border-amber-500/40 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)] active:scale-[0.97] sm:w-auto"
-          >
-            <Zap size={20} className="text-amber-500 transition-transform group-hover:translate-x-0.5" />
-            <span className="text-lg tracking-tighter">{user ? t.pyqBtn : t.primaryBtn}</span>
-            <ChevronRight size={20} className="text-white/80 transition-transform group-hover:translate-x-1" />
-          </button>
+          {/* Secondary CTA: PYQs (only if Pre access or Logged Out) */}
+          {(preAccess || !user) && (
+            <button
+              type="button"
+              onClick={() => handleNavigation(user ? '/syllabus/quiz/pyq' : '/free-quiz', user ? 'hero_pyq_clicked' : 'hero_free_test_clicked')}
+              disabled={isPending}
+              className="group flex h-16 w-full items-center justify-center gap-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 px-10 font-bold text-white backdrop-blur-2xl transition-all hover:bg-amber-500/10 hover:border-amber-500/40 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)] active:scale-[0.97] sm:w-auto"
+            >
+              <Zap size={20} className="text-amber-500 transition-transform group-hover:translate-x-0.5" />
+              <span className="text-lg tracking-tighter">{user ? t.pyqBtn : t.primaryBtn}</span>
+              <ChevronRight size={20} className="text-white/80 transition-transform group-hover:translate-x-1" />
+            </button>
+          )}
         </div>
 
         {/* Feature Highlights */}

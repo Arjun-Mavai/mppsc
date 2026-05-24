@@ -222,7 +222,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
       return [
         { name: language === 'hi' ? 'मुख्य पाठ्यक्रम' : 'Mains Syllabus', href: '/mains', icon: Crown, color: 'text-emerald-500' },
         { name: language === 'hi' ? 'मेंस PYQ लाइब्रेरी' : 'Mains PYQ Library', href: '/mains/syllabus/pyq-library', icon: Library, color: 'text-violet-600' },
-        { name: 'About Us', href: '/', icon: Info, color: 'text-slate-500' },
+        { name: 'About Us', href: '/mains', icon: Info, color: 'text-slate-500' },
       ];
     }
 
@@ -465,7 +465,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                       const isActive = pathname === item.href;
                       const Icon = item.icon;
                       return (
-                        <div key={item.href}>
+                        <div key={item.name}>
                           <SheetClose asChild>
                             <Link
                               href={item.href}
