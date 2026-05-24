@@ -49,7 +49,7 @@ export function MainsPyqAdminClient() {
 
   useEffect(() => {
     // Schedule load asynchronously to avoid synchronous setState inside effect
-    Promise.resolve().then(load);
+    void Promise.resolve().then(load);
   }, [load]);
 
   const loadSampleJson = async () => {

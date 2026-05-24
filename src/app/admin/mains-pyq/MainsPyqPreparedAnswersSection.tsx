@@ -43,6 +43,10 @@ type BatchWorkspace = {
   promptPreview: string;
   pasteJson: string;
   targetQuestionId: string;
+  editingQuestionHi: string;
+  editingQuestionEn: string;
+  loadingStem: boolean;
+  savingStem: boolean;
 };
 
 function emptyWorkspaces(): BatchWorkspace[] {
@@ -51,6 +55,10 @@ function emptyWorkspaces(): BatchWorkspace[] {
     promptPreview: '',
     pasteJson: '',
     targetQuestionId: '',
+    editingQuestionHi: '',
+    editingQuestionEn: '',
+    loadingStem: false,
+    savingStem: false,
   }));
 }
 
@@ -72,63 +80,65 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
   const [variantPurging, setVariantPurging] = useState(false);
   const [purgeTargetId, setPurgeTargetId] = useState<string>('ALL');
 
-  const [editingQuestionId, setEditingQuestionId] = useState<string>('');
-  const [editingQuestionHi, setEditingQuestionHi] = useState<string>('');
-  const [editingQuestionEn, setEditingQuestionEn] = useState<string>('');
-  const [loadingStem, setLoadingStem] = useState<boolean>(false);
-  const [savingStem, setSavingStem] = useState<boolean>(false);
+  const lang = useSettingsStore((s) => s.language);
+  const hi = lang === 'hi';
+
+  const patchWorkspace = useCallback((index: number, patch: Partial<BatchWorkspace>) => {
+    setWorkspaces((prev) => {
+      const next = [...prev];
+      if (next[index]) {
+        next[index] = { ...next[index], ...patch };
+      }
+      return next;
+    });
+  }, []);
 
   const handleTargetQuestionChange = async (index: number, val: string) => {
     const qid = val === 'none' ? '' : val;
     patchWorkspace(index, { targetQuestionId: qid });
     
     if (qid) {
-      setEditingQuestionId(qid);
-      setLoadingStem(true);
+      patchWorkspace(index, { loadingStem: true });
       const r = await adminGetQuestionStem(qid);
-      setLoadingStem(false);
       if (r.success && r.data) {
-        setEditingQuestionHi(r.data.questionHi);
-        setEditingQuestionEn(r.data.questionEn || '');
+        patchWorkspace(index, { 
+          editingQuestionHi: r.data.questionHi, 
+          editingQuestionEn: r.data.questionEn || '',
+          loadingStem: false 
+        });
       } else {
+        patchWorkspace(index, { loadingStem: false });
         toast.error('Failed to load question stem from DB');
       }
     } else {
-      setEditingQuestionId('');
-      setEditingQuestionHi('');
-      setEditingQuestionEn('');
+      patchWorkspace(index, { 
+        editingQuestionHi: '', 
+        editingQuestionEn: '',
+        loadingStem: false 
+      });
     }
   };
 
-  const handleSaveStem = async () => {
-    if (!editingQuestionId || !editingQuestionHi.trim()) return;
-    setSavingStem(true);
+  const handleSaveStem = async (index: number) => {
+    const ws = workspaces[index];
+    if (!ws?.targetQuestionId || !ws.editingQuestionHi.trim()) return;
+    patchWorkspace(index, { savingStem: true });
     const r = await updateMainsPyqQuestionStemAdmin({
-      questionId: editingQuestionId,
-      questionHi: editingQuestionHi,
-      questionEn: editingQuestionEn || null,
+      questionId: ws.targetQuestionId,
+      questionHi: ws.editingQuestionHi,
+      questionEn: ws.editingQuestionEn || null,
     });
-    setSavingStem(false);
+    patchWorkspace(index, { savingStem: false });
     if (r.success) {
       toast.success('Question stem updated successfully in DB');
-      if (paperId) await loadDetail(paperId);
+      const pid = workspaces[index]?.paperId;
+      if (pid) await loadDetail(pid);
     } else {
       toast.error(r.error || 'Failed to save question stem');
     }
   };
 
-  const lang = useSettingsStore((s) => s.language);
-  const hi = lang === 'hi';
-
   const paperId = workspaces[activeWs]?.paperId ?? '';
-
-  const patchWorkspace = useCallback((index: number, patch: Partial<BatchWorkspace>) => {
-    setWorkspaces((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], ...patch };
-      return next;
-    });
-  }, []);
 
   const loadOverview = useCallback(async () => {
     const r = await adminGetPyqPrepOverview();
@@ -592,7 +602,7 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
                         </span>
                       </div>
                       
-                      {loadingStem ? (
+                      {workspaces[i]?.loadingStem ? (
                         <div className="flex items-center justify-center py-6 text-slate-400 text-xs gap-2">
                           <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
                           Loading complete stem from database...
@@ -602,8 +612,8 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
                           <div>
                             <Label className="mb-1 block text-[10px] font-bold text-slate-600">Hindi Question Stem (Passage / Gaddhans)</Label>
                             <Textarea
-                              value={editingQuestionHi}
-                              onChange={(e) => setEditingQuestionHi(e.target.value)}
+                              value={workspaces[i]?.editingQuestionHi ?? ''}
+                              onChange={(e) => patchWorkspace(i, { editingQuestionHi: e.target.value })}
                               placeholder="Enter full Hindi passage or question stem word-for-word..."
                               className="text-xs font-bold font-[family-name:var(--font-pyq-dev)] leading-relaxed h-28"
                             />
@@ -612,8 +622,8 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
                           <div>
                             <Label className="mb-1 block text-[10px] font-bold text-slate-600">English Question Stem (Optional / Translation)</Label>
                             <Textarea
-                              value={editingQuestionEn}
-                              onChange={(e) => setEditingQuestionEn(e.target.value)}
+                              value={workspaces[i]?.editingQuestionEn ?? ''}
+                              onChange={(e) => patchWorkspace(i, { editingQuestionEn: e.target.value })}
                               placeholder="Enter English translation (if any)..."
                               className="text-xs font-medium h-16"
                             />
@@ -622,11 +632,11 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
                           <Button
                             type="button"
                             size="sm"
-                            disabled={savingStem || !editingQuestionHi.trim()}
-                            onClick={handleSaveStem}
+                            disabled={workspaces[i]?.savingStem || !workspaces[i]?.editingQuestionHi?.trim()}
+                            onClick={() => handleSaveStem(i)}
                             className="w-full text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5 flex items-center justify-center h-8 cursor-pointer rounded-lg shadow-sm"
                           >
-                            {savingStem ? (
+                            {workspaces[i]?.savingStem ? (
                               <Loader2 className="h-3.5 w-3.5 animate-spin" />
                             ) : (
                               <Save className="h-3.5 w-3.5" />

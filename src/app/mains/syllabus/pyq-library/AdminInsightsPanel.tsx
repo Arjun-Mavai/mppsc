@@ -340,7 +340,7 @@ export default function AdminInsightsPanel({
           ) : (
             <div className={cn('flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wider', themeDeep ? 'bg-emerald-950/70 border border-emerald-500/30 text-emerald-300' : 'bg-emerald-50 border border-emerald-200 text-emerald-800')}>
               <ShieldCheck className="h-3.5 w-3.5" />
-              <span>Perfect GS Match</span>
+              <span>Perfect Pattern Match</span>
             </div>
           )}
           
