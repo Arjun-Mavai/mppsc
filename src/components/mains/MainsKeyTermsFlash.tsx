@@ -3,6 +3,21 @@
 import { cn } from '@/lib/utils';
 import { mergeFlashItemsFromSources, type KeyTermFlashItem } from '@/lib/mains-key-terms-flash';
 
+function parseBold(text: string) {
+  if (!text) return null;
+  const parts = text.split(/(\*\*.+?\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+      return (
+        <strong key={i} className="font-extrabold text-slate-900 dark:text-white">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return <span key={i}>{part.replace(/\*+/g, '')}</span>;
+  });
+}
+
 export function MainsKeyTermsFlash({
   structured,
   fallbackText,
@@ -62,7 +77,7 @@ export function MainsKeyTermsFlash({
                   {it.emoji}
                 </span>
               ) : null}
-              {it.term}
+              {parseBold(it.term)}
             </span>
           </div>
           <div
@@ -71,7 +86,7 @@ export function MainsKeyTermsFlash({
               it.term ? 'mt-1.5 border-t border-slate-200/50 pt-1.5 dark:border-slate-800/50' : 'font-semibold'
             )}
           >
-            {it.hint.replace(/\s*\|\s*/g, '\n• ').replace(/\.\s+(?=[A-Z\u0900-\u097F])/g, '.\n• ').replace(/,\s*/g, ',\n• ')}
+            {parseBold(it.hint.replace(/\s*\|\s*/g, '\n• ').replace(/\.\s+(?=[A-Z\u0900-\u097F])/g, '.\n• ').replace(/,\s*/g, ',\n• '))}
           </div>
         </li>
       ))}

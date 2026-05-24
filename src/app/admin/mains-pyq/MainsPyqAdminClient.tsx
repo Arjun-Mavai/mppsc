@@ -11,7 +11,6 @@ import { Loader2, Upload, Database, FileJson, Sparkles } from 'lucide-react';
 import { MainsPyqInitialImportPromptGenerator } from '@/app/admin/mains-pyq/MainsPyqInitialImportPromptGenerator';
 import { MainsPyqProgressTracker } from '@/app/admin/mains-pyq/MainsPyqProgressTracker';
 import { toast } from 'sonner';
-import Link from 'next/link';
 
 import {
   Accordion,
@@ -38,14 +37,19 @@ export function MainsPyqAdminClient() {
   const [raw, setRaw] = useState('');
   const [loading, setLoading] = useState(false);
   const [papers, setPapers] = useState<AdminMainsPyqPaperOption[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const load = useCallback(async () => {
     const res = await listMainsPyqPapers();
-    if (res.success) setPapers(res.data ?? []);
+    if (res.success) {
+      setPapers(res.data ?? []);
+      setRefreshTrigger((prev) => prev + 1);
+    }
   }, []);
 
   useEffect(() => {
-    load();
+    // Schedule load asynchronously to avoid synchronous setState inside effect
+    void Promise.resolve().then(load);
   }, [load]);
 
   const loadSampleJson = async () => {
@@ -96,7 +100,7 @@ export function MainsPyqAdminClient() {
 
       <MainsPyqInitialImportPromptGenerator />
 
-      <MainsPyqProgressTracker />
+      <MainsPyqProgressTracker refreshTrigger={refreshTrigger} />
 
       <Card className="p-6 border-slate-200 shadow-sm">
         <div className="flex items-center gap-2 mb-3">

@@ -161,7 +161,7 @@ export function PyqExpertInsightsRenderer({
 
               return (
                 <div
-                  key={sec.number}
+                  key={`${sec.number}-${idx}`}
                   className={cn(
                     'rounded-2xl p-3.5 sm:p-4 space-y-4',
                     boxStyles

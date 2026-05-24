@@ -9,6 +9,10 @@ import {
   purgeAllMainsPyqPreparedVariantsConfirm,
   purgeMainsPyqPreparedVariantsForPaper,
 } from '@/actions/mains-pyq-prepared-actions';
+import {
+  adminGetQuestionStem,
+  updateMainsPyqQuestionStemAdmin,
+} from '@/actions/mains-pyq-actions';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -39,6 +43,10 @@ type BatchWorkspace = {
   promptPreview: string;
   pasteJson: string;
   targetQuestionId: string;
+  editingQuestionHi: string;
+  editingQuestionEn: string;
+  loadingStem: boolean;
+  savingStem: boolean;
 };
 
 function emptyWorkspaces(): BatchWorkspace[] {
@@ -47,6 +55,10 @@ function emptyWorkspaces(): BatchWorkspace[] {
     promptPreview: '',
     pasteJson: '',
     targetQuestionId: '',
+    editingQuestionHi: '',
+    editingQuestionEn: '',
+    loadingStem: false,
+    savingStem: false,
   }));
 }
 
@@ -71,15 +83,62 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
   const lang = useSettingsStore((s) => s.language);
   const hi = lang === 'hi';
 
-  const paperId = workspaces[activeWs]?.paperId ?? '';
-
   const patchWorkspace = useCallback((index: number, patch: Partial<BatchWorkspace>) => {
     setWorkspaces((prev) => {
       const next = [...prev];
-      next[index] = { ...next[index], ...patch };
+      if (next[index]) {
+        next[index] = { ...next[index], ...patch };
+      }
       return next;
     });
   }, []);
+
+  const handleTargetQuestionChange = async (index: number, val: string) => {
+    const qid = val === 'none' ? '' : val;
+    patchWorkspace(index, { targetQuestionId: qid });
+    
+    if (qid) {
+      patchWorkspace(index, { loadingStem: true });
+      const r = await adminGetQuestionStem(qid);
+      if (r.success && r.data) {
+        patchWorkspace(index, { 
+          editingQuestionHi: r.data.questionHi, 
+          editingQuestionEn: r.data.questionEn || '',
+          loadingStem: false 
+        });
+      } else {
+        patchWorkspace(index, { loadingStem: false });
+        toast.error('Failed to load question stem from DB');
+      }
+    } else {
+      patchWorkspace(index, { 
+        editingQuestionHi: '', 
+        editingQuestionEn: '',
+        loadingStem: false 
+      });
+    }
+  };
+
+  const handleSaveStem = async (index: number) => {
+    const ws = workspaces[index];
+    if (!ws?.targetQuestionId || !ws.editingQuestionHi.trim()) return;
+    patchWorkspace(index, { savingStem: true });
+    const r = await updateMainsPyqQuestionStemAdmin({
+      questionId: ws.targetQuestionId,
+      questionHi: ws.editingQuestionHi,
+      questionEn: ws.editingQuestionEn || null,
+    });
+    patchWorkspace(index, { savingStem: false });
+    if (r.success) {
+      toast.success('Question stem updated successfully in DB');
+      const pid = workspaces[index]?.paperId;
+      if (pid) await loadDetail(pid);
+    } else {
+      toast.error(r.error || 'Failed to save question stem');
+    }
+  };
+
+  const paperId = workspaces[activeWs]?.paperId ?? '';
 
   const loadOverview = useCallback(async () => {
     const r = await adminGetPyqPrepOverview();
@@ -509,7 +568,7 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
                   <Label className="mb-1.5 block text-xs font-bold text-slate-700">Targeted Regeneration (Optional)</Label>
                   <Select
                     value={workspaces[i]?.targetQuestionId || ''}
-                    onValueChange={(val) => patchWorkspace(i, { targetQuestionId: val === 'none' ? '' : val })}
+                    onValueChange={(val) => handleTargetQuestionChange(i, val)}
                   >
                     <SelectTrigger className="h-9 w-full text-xs">
                       <SelectValue placeholder="Select a specific stem to regenerate..." />
@@ -531,6 +590,63 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
                       })}
                     </SelectContent>
                   </Select>
+
+                  {workspaces[i]?.targetQuestionId && (
+                    <div className="mt-3.5 border-t border-dashed border-slate-200 pt-3.5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                          Stem Direct Editor
+                        </span>
+                        <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100 dark:bg-amber-950/20 dark:border-amber-900/30">
+                          Fix truncation or gaddhans here
+                        </span>
+                      </div>
+                      
+                      {workspaces[i]?.loadingStem ? (
+                        <div className="flex items-center justify-center py-6 text-slate-400 text-xs gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+                          Loading complete stem from database...
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="mb-1 block text-[10px] font-bold text-slate-600">Hindi Question Stem (Passage / Gaddhans)</Label>
+                            <Textarea
+                              value={workspaces[i]?.editingQuestionHi ?? ''}
+                              onChange={(e) => patchWorkspace(i, { editingQuestionHi: e.target.value })}
+                              placeholder="Enter full Hindi passage or question stem word-for-word..."
+                              className="text-xs font-bold font-[family-name:var(--font-pyq-dev)] leading-relaxed h-28"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="mb-1 block text-[10px] font-bold text-slate-600">English Question Stem (Optional / Translation)</Label>
+                            <Textarea
+                              value={workspaces[i]?.editingQuestionEn ?? ''}
+                              onChange={(e) => patchWorkspace(i, { editingQuestionEn: e.target.value })}
+                              placeholder="Enter English translation (if any)..."
+                              className="text-xs font-medium h-16"
+                            />
+                          </div>
+
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={workspaces[i]?.savingStem || !workspaces[i]?.editingQuestionHi?.trim()}
+                            onClick={() => handleSaveStem(i)}
+                            className="w-full text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5 flex items-center justify-center h-8 cursor-pointer rounded-lg shadow-sm"
+                          >
+                            {workspaces[i]?.savingStem ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Save className="h-3.5 w-3.5" />
+                            )}
+                            Save Complete Stem to DB
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </Card>
               ) : null}
 

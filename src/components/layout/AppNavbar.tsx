@@ -465,7 +465,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                       const isActive = pathname === item.href;
                       const Icon = item.icon;
                       return (
-                        <div key={item.href}>
+                        <div key={item.name}>
                           <SheetClose asChild>
                             <Link
                               href={item.href}

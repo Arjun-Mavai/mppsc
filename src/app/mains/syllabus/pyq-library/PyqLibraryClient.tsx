@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Target, Sparkles } from 'lucide-react';
+import { ArrowLeft, Target, Sparkles, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { listMainsPyqPapersLibrarySummary, getMainsPyqPaperPublic } from '@/actions/mains-pyq-prepared-actions';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -18,6 +18,7 @@ import {
   MAINS_PYQ_DEMO_YEAR,
 } from '@/lib/mains-vault-demo';
 import { AnimatePresence, motion } from 'framer-motion';
+import dynamic from 'next/dynamic';
 
 type Paper = {
   id: string;
@@ -45,18 +46,22 @@ function isPremiumLockedPaper(paper: Paper | undefined, vaultUnlocked: boolean) 
   return !isMainsPyqDemoPaper(paper.examYear, paper.paperNumber);
 }
 
+const AdminInsightsPanel = dynamic(() => import('./AdminInsightsPanel'), { ssr: false });
+
 export function PyqLibraryClient({
   vaultUnlocked,
   allowDemoAccess,
   initialPapers = [],
   initialPaperId = '',
   initialQuestions = [],
+  isAdmin = false,
 }: {
   vaultUnlocked: boolean;
   allowDemoAccess: boolean;
   initialPapers?: Paper[];
   initialPaperId?: string;
   initialQuestions?: QRow[];
+  isAdmin?: boolean;
 }) {
   const hasServerSeed = initialPapers.length > 0;
   const cacheSeeded = useRef(false);
@@ -69,7 +74,6 @@ export function PyqLibraryClient({
 
   const { language } = useSettingsStore();
   const hi = language === 'hi';
-  const [, startPaperTransition] = useTransition();
 
   const [papers, setPapers] = useState<Paper[]>(() =>
     hasServerSeed ? initialPapers : (pyqPaperListCache ?? [])
@@ -101,6 +105,7 @@ export function PyqLibraryClient({
   const [partFilter, setPartFilter] = useState<string>('ALL');
   const [vaultModalOpen, setVaultModalOpen] = useState(false);
   const [showGlobalFilters, setShowGlobalFilters] = useState(true);
+  const [showAdminInsights, setShowAdminInsights] = useState(true);
 
   const selectedPaper = useMemo(() => papers.find((p) => p.id === paperId), [papers, paperId]);
   const premiumLockedView = isPremiumLockedPaper(selectedPaper, vaultUnlocked);
@@ -169,7 +174,7 @@ export function PyqLibraryClient({
     }
   }, []);
 
-  const applyPremiumLockedPaper = useCallback((paper: Paper) => {
+  const applyPremiumLockedPaper = useCallback(() => {
     setQuestions([]);
     setQuestionsLoadIssue('none');
     setLoadingQ(false);
@@ -181,7 +186,7 @@ export function PyqLibraryClient({
       const meta = paper ?? papers.find((p) => p.id === pid);
 
       if (isPremiumLockedPaper(meta, vaultUnlocked)) {
-        applyPremiumLockedPaper(meta!);
+        applyPremiumLockedPaper();
         return;
       }
 
@@ -201,15 +206,16 @@ export function PyqLibraryClient({
   );
 
   useEffect(() => {
-    void loadList(!hasServerSeed && (pyqPaperListCache?.length ?? 0) === 0);
+    void Promise.resolve().then(() => loadList(!hasServerSeed && (pyqPaperListCache?.length ?? 0) === 0));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (!paperId) return;
-    // Batch: Load questions AND reset filter in same effect
-    setPartFilter('ALL');
-    void loadQs(paperId, selectedPaper);
+    void Promise.resolve().then(() => {
+      setPartFilter('ALL');
+      void loadQs(paperId, selectedPaper);
+    });
   }, [paperId, selectedPaper, loadQs]);
 
   // Prefetch all papers in background if vault is unlocked for instant switching
@@ -255,28 +261,22 @@ export function PyqLibraryClient({
     (nextId: string) => {
       const nextPaper = papers.find((p) => p.id === nextId);
       if (isPremiumLockedPaper(nextPaper, vaultUnlocked)) {
-        startPaperTransition(() => {
-          setPaperId(nextId);
-          applyPremiumLockedPaper(nextPaper!);
-        });
+        setPaperId(nextId);
+        applyPremiumLockedPaper();
         return;
       }
       const cached = pyqQuestionsCache.get(nextId);
       if (cached) {
-        startPaperTransition(() => {
-          setPaperId(nextId);
-          setQuestions(cached);
-          setQuestionsLoadIssue('none');
-          setLoadingQ(false);
-        });
+        setPaperId(nextId);
+        setQuestions(cached);
+        setQuestionsLoadIssue('none');
+        setLoadingQ(false);
         void fetchQuestions(nextId, false);
         return;
       }
-      startPaperTransition(() => {
-        setPaperId(nextId);
-      });
+      setPaperId(nextId);
     },
-    [papers, vaultUnlocked, fetchQuestions, applyPremiumLockedPaper, startPaperTransition]
+    [papers, vaultUnlocked, fetchQuestions, applyPremiumLockedPaper]
   );
 
   const themeDeep = readingTheme === 'deep';
@@ -337,6 +337,22 @@ export function PyqLibraryClient({
               />
             </button>
 
+            {isAdmin && !showAdminInsights && (
+              <button
+                type="button"
+                onClick={() => setShowAdminInsights(true)}
+                className={cn(
+                  'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 shadow-sm transition-transform hover:-translate-y-0.5 active:scale-95',
+                  themeDeep
+                    ? 'border-sky-500/20 bg-slate-900 text-sky-400 hover:border-sky-500/40 hover:text-sky-300 shadow-md shadow-sky-950/20'
+                    : 'border-sky-200 bg-sky-50 text-sky-700 hover:border-sky-400 hover:bg-sky-100/50 shadow-md shadow-sky-100/30'
+                )}
+                title="Show Admin Insights"
+              >
+                <ShieldCheck className="h-[18px] w-[18px]" />
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => setDeskControlsOpen(!deskControlsOpen)}
@@ -381,6 +397,15 @@ export function PyqLibraryClient({
           onControlsToggle={setDeskControlsOpen}
           vaultUnlocked={vaultUnlocked}
         />
+
+        {isAdmin && showAdminInsights && questions.length > 0 && (
+          <AdminInsightsPanel
+            questions={questions}
+            selectedPaper={selectedPaper}
+            themeDeep={themeDeep}
+            onHide={() => setShowAdminInsights(false)}
+          />
+        )}
 
         <PyqLibraryErrorBoundary
           readingTheme={readingTheme}
