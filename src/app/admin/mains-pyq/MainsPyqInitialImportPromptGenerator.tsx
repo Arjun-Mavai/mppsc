@@ -80,8 +80,9 @@ RULES:
    - Paper 4: 2 marks (Very Short), 5 marks (Short), 20 marks (Long/Case Study).
 4. "type" should be: "Very Short", "Short", "Long", or "Case Study".
 5. Ensure both Hindi (question_hi) and English (question_en) text is extracted accurately.
-6. The root key MUST be "mppsc_mains_paper_${yr}".
-7. Return ONLY the JSON object. No markdown fences, no preamble.
+6. CRITICAL: For Hindi unseen passages (अपठित गद्यांश / Gaddhans) or any other long-form questions, you MUST extract and return the ENTIRE passage word-for-word. Do NOT summarize, truncate, or use triple dots "..." to omit any part of the passage. The complete, raw, long-form passage must be fully present in "question_hi" (and "question_en" if translation is provided).
+7. The root key MUST be "mppsc_mains_paper_${yr}".
+8. Return ONLY the JSON object. No markdown fences, no preamble.
 
 Please extract the data for MPPSC Mains ${yr} Paper ${pNum} from the text provided in the next message.`;
 

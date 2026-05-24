@@ -898,3 +898,52 @@ export async function updateMainsPyqPaperAdmin(input: {
     return { success: false as const, error: adminReadableError(e) };
   }
 }
+
+export async function updateMainsPyqQuestionStemAdmin(input: {
+  questionId: string;
+  questionHi: string;
+  questionEn?: string | null;
+}) {
+  try {
+    await assertAdmin();
+    if (!input.questionId || !input.questionHi.trim()) {
+      return { success: false as const, error: 'Question ID and Hindi stem are required' };
+    }
+    await db
+      .update(mainsPyqQuestions)
+      .set({
+        questionHi: input.questionHi.trim(),
+        questionEn: input.questionEn !== undefined ? (input.questionEn?.trim() || null) : undefined,
+      })
+      .where(eq(mainsPyqQuestions.id, input.questionId));
+
+    revalidatePath('/admin/mains-pyq');
+    revalidatePath('/mains/syllabus/pyq-library');
+    return { success: true as const };
+  } catch (e) {
+    return { success: false as const, error: adminReadableError(e) };
+  }
+}
+
+export async function adminGetQuestionStem(questionId: string) {
+  try {
+    await assertAdmin();
+    const q = await db
+      .select({
+        id: mainsPyqQuestions.id,
+        questionHi: mainsPyqQuestions.questionHi,
+        questionEn: mainsPyqQuestions.questionEn,
+      })
+      .from(mainsPyqQuestions)
+      .where(eq(mainsPyqQuestions.id, questionId))
+      .limit(1);
+
+    if (q.length === 0) {
+      return { success: false as const, error: 'Question not found' };
+    }
+    return { success: true as const, data: q[0]! };
+  } catch (e) {
+    return { success: false as const, error: adminReadableError(e) };
+  }
+}
+

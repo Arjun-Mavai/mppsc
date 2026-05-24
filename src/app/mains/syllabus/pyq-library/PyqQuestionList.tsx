@@ -1,7 +1,7 @@
 'use client';
 
 import { memo, useMemo, useState, useCallback } from 'react';
-import { ChevronDown, Lock, Layers, Trophy } from 'lucide-react';
+import { Lock, Layers, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -123,33 +123,11 @@ export const PyqQuestionList = memo(function PyqQuestionList({
     if (vaultUnlocked) return 0;
     if (!isDemoPaper) return paperQuestionCount;
     return filtered.filter((q) => !guestFreeIds.has(q.id)).length;
-  }, [vaultUnlocked, isDemoPaper, filtered, guestFreeIds, paperQuestionCount, partFilter]);
+  }, [vaultUnlocked, isDemoPaper, filtered, guestFreeIds, paperQuestionCount]);
 
   const showVaultBanner = !vaultUnlocked && lockedCount > 0;
 
-  function stemFor(q: QRow) {
-    return effectiveHi ? q.questionHi : (q.questionEn ?? q.questionHi);
-  }
 
-  function insightsFor(q: QRow) {
-    if (effectiveHi) return (q.expertInsightsHi ?? '').trim();
-    return (q.expertInsightsEn ?? q.expertInsightsHi ?? '').trim();
-  }
-
-  function answerFor(v: QRow['variants'][0]) {
-    return effectiveHi ? v.answerHi : (v.answerEn ?? v.answerHi);
-  }
-
-  function styleLabelFor(v: QRow['variants'][0]) {
-    if (effectiveHi) {
-      const s = (v.styleLabelHi ?? '').trim();
-      if (s) return s;
-      return (v.styleLabel ?? '').trim() || null;
-    }
-    const s = (v.styleLabel ?? '').trim();
-    if (s) return s;
-    return (v.styleLabelHi ?? '').trim() || null;
-  }
 
   return (
     <>
@@ -413,7 +391,7 @@ const PyqQuestionRow = memo(({
           </p>
           <p
             className={cn(
-              'mt-1 text-[15px] font-bold leading-relaxed md:text-base',
+              'mt-1 text-[15px] font-bold leading-relaxed md:text-base whitespace-pre-line',
               effectiveHi ? 'font-[family-name:var(--font-pyq-dev)]' : 'font-[family-name:var(--font-pyq-serif)]',
               themeDeep ? 'text-slate-100' : 'text-slate-900'
             )}
@@ -462,7 +440,7 @@ const PyqQuestionRow = memo(({
 
                       return (
                         <div
-                          key={v.slot}
+                          key={`${v.slot}-${vIdx}`}
                           className={cn(
                             'min-w-0',
                             vIdx > 0 &&

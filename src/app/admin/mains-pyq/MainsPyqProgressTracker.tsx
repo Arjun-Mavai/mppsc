@@ -6,30 +6,54 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
-  Clock, 
   AlertCircle,
-  Library,
   ChevronDown,
   ChevronUp,
-  Target,
   CalendarDays,
-  CheckCircle2,
-  XCircle
+  CheckCircle2
 } from 'lucide-react';
-import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export function MainsPyqProgressTracker() {
-  const [data, setData] = useState<any>(null);
+type OverviewPaper = {
+  examYear: number;
+  paperNumber: number;
+  progress: number;
+  qCount: number;
+  doneCount: number;
+};
+
+type OverviewMissing = {
+  year: number;
+  paper: number;
+};
+
+type OverviewSummary = {
+  targetImported: number;
+  targetPrepared: number;
+  targetTotal: number;
+};
+
+type OverviewSuccess = {
+  success: true;
+  summary: OverviewSummary;
+  data: OverviewPaper[];
+  missing: OverviewMissing[];
+};
+
+type OverviewResponse = OverviewSuccess | { success: false; error: string };
+
+export function MainsPyqProgressTracker({ refreshTrigger }: { refreshTrigger?: number }) {
+  const [data, setData] = useState<OverviewSuccess | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await getMainsPyqDetailedOverview();
+    const res: OverviewResponse = await getMainsPyqDetailedOverview();
     if (res.success) {
       setData(res);
+      setError(null);
     } else {
       setError(res.error || 'Failed to load PYQ progress');
     }
@@ -37,11 +61,11 @@ export function MainsPyqProgressTracker() {
   }, []);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    void Promise.resolve().then(load);
+  }, [load, refreshTrigger]);
 
   useEffect(() => {
-    if (isOpen) load();
+    if (isOpen) void Promise.resolve().then(load);
   }, [isOpen, load]);
 
   if (loading && !data) return null;
@@ -52,11 +76,11 @@ export function MainsPyqProgressTracker() {
   // Group papers by year
   const years = [2024, 2023, 2022, 2021, 2020];
   const groupedByYear = years.map(year => {
-    const yearPapers = papers.filter((p: any) => p.examYear === year);
-    const yearMissing = missing.filter((m: any) => m.year === year);
+    const yearPapers = papers.filter((p) => p.examYear === year);
+    const yearMissing = missing.filter((m) => m.year === year);
     
     // Summary for the year
-    const totalDone = yearPapers.filter((p: any) => p.progress === 100).length;
+    const totalDone = yearPapers.filter((p) => p.progress === 100).length;
     const totalExpected = 6;
     const yearProgress = Math.round((totalDone / totalExpected) * 100);
 
@@ -136,8 +160,8 @@ export function MainsPyqProgressTracker() {
                     {/* Paper Grid for this Year */}
                     <div className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                       {[1, 2, 3, 4, 5, 6].map(paperNum => {
-                        const p = yearData.papers.find((x: any) => x.paperNumber === paperNum);
-                        const isMissing = yearData.missing.some((m: any) => m.paper === paperNum);
+                        const p = yearData.papers.find((x) => x.paperNumber === paperNum);
+                        const isMissing = yearData.missing.some((m) => m.paper === paperNum);
                         
                         if (isMissing) {
                           return (

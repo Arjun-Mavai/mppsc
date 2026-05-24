@@ -9,6 +9,10 @@ import {
   purgeAllMainsPyqPreparedVariantsConfirm,
   purgeMainsPyqPreparedVariantsForPaper,
 } from '@/actions/mains-pyq-prepared-actions';
+import {
+  adminGetQuestionStem,
+  updateMainsPyqQuestionStemAdmin,
+} from '@/actions/mains-pyq-actions';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -67,6 +71,51 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
   const [variantPurgeText, setVariantPurgeText] = useState('');
   const [variantPurging, setVariantPurging] = useState(false);
   const [purgeTargetId, setPurgeTargetId] = useState<string>('ALL');
+
+  const [editingQuestionId, setEditingQuestionId] = useState<string>('');
+  const [editingQuestionHi, setEditingQuestionHi] = useState<string>('');
+  const [editingQuestionEn, setEditingQuestionEn] = useState<string>('');
+  const [loadingStem, setLoadingStem] = useState<boolean>(false);
+  const [savingStem, setSavingStem] = useState<boolean>(false);
+
+  const handleTargetQuestionChange = async (index: number, val: string) => {
+    const qid = val === 'none' ? '' : val;
+    patchWorkspace(index, { targetQuestionId: qid });
+    
+    if (qid) {
+      setEditingQuestionId(qid);
+      setLoadingStem(true);
+      const r = await adminGetQuestionStem(qid);
+      setLoadingStem(false);
+      if (r.success && r.data) {
+        setEditingQuestionHi(r.data.questionHi);
+        setEditingQuestionEn(r.data.questionEn || '');
+      } else {
+        toast.error('Failed to load question stem from DB');
+      }
+    } else {
+      setEditingQuestionId('');
+      setEditingQuestionHi('');
+      setEditingQuestionEn('');
+    }
+  };
+
+  const handleSaveStem = async () => {
+    if (!editingQuestionId || !editingQuestionHi.trim()) return;
+    setSavingStem(true);
+    const r = await updateMainsPyqQuestionStemAdmin({
+      questionId: editingQuestionId,
+      questionHi: editingQuestionHi,
+      questionEn: editingQuestionEn || null,
+    });
+    setSavingStem(false);
+    if (r.success) {
+      toast.success('Question stem updated successfully in DB');
+      if (paperId) await loadDetail(paperId);
+    } else {
+      toast.error(r.error || 'Failed to save question stem');
+    }
+  };
 
   const lang = useSettingsStore((s) => s.language);
   const hi = lang === 'hi';
@@ -509,7 +558,7 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
                   <Label className="mb-1.5 block text-xs font-bold text-slate-700">Targeted Regeneration (Optional)</Label>
                   <Select
                     value={workspaces[i]?.targetQuestionId || ''}
-                    onValueChange={(val) => patchWorkspace(i, { targetQuestionId: val === 'none' ? '' : val })}
+                    onValueChange={(val) => handleTargetQuestionChange(i, val)}
                   >
                     <SelectTrigger className="h-9 w-full text-xs">
                       <SelectValue placeholder="Select a specific stem to regenerate..." />
@@ -531,6 +580,63 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
                       })}
                     </SelectContent>
                   </Select>
+
+                  {workspaces[i]?.targetQuestionId && (
+                    <div className="mt-3.5 border-t border-dashed border-slate-200 pt-3.5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                          Stem Direct Editor
+                        </span>
+                        <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100 dark:bg-amber-950/20 dark:border-amber-900/30">
+                          Fix truncation or gaddhans here
+                        </span>
+                      </div>
+                      
+                      {loadingStem ? (
+                        <div className="flex items-center justify-center py-6 text-slate-400 text-xs gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+                          Loading complete stem from database...
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="mb-1 block text-[10px] font-bold text-slate-600">Hindi Question Stem (Passage / Gaddhans)</Label>
+                            <Textarea
+                              value={editingQuestionHi}
+                              onChange={(e) => setEditingQuestionHi(e.target.value)}
+                              placeholder="Enter full Hindi passage or question stem word-for-word..."
+                              className="text-xs font-bold font-[family-name:var(--font-pyq-dev)] leading-relaxed h-28"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="mb-1 block text-[10px] font-bold text-slate-600">English Question Stem (Optional / Translation)</Label>
+                            <Textarea
+                              value={editingQuestionEn}
+                              onChange={(e) => setEditingQuestionEn(e.target.value)}
+                              placeholder="Enter English translation (if any)..."
+                              className="text-xs font-medium h-16"
+                            />
+                          </div>
+
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={savingStem || !editingQuestionHi.trim()}
+                            onClick={handleSaveStem}
+                            className="w-full text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5 flex items-center justify-center h-8 cursor-pointer rounded-lg shadow-sm"
+                          >
+                            {savingStem ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Save className="h-3.5 w-3.5" />
+                            )}
+                            Save Complete Stem to DB
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </Card>
               ) : null}
 

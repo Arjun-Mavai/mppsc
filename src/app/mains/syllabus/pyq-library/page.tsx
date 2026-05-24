@@ -64,6 +64,8 @@ async function PyqLibraryData() {
     }
   }
 
+  const isAdmin = user?.role === 'admin';
+
   return (
     <PyqLibraryClient
       vaultUnlocked={vaultUnlocked}
@@ -71,6 +73,7 @@ async function PyqLibraryData() {
       initialPapers={initialPapers}
       initialPaperId={initialPaperId}
       initialQuestions={initialQuestions}
+      isAdmin={isAdmin}
     />
   );
 }
