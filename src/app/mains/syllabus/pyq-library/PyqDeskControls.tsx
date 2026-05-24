@@ -31,6 +31,7 @@ interface PyqDeskControlsProps {
   papers: Paper[];
   paperId: string;
   onPaperChange: (id: string) => void;
+  onPaperHover?: (id: string) => void;
   readingTheme: ReadingTheme;
   onThemeChange: (theme: ReadingTheme) => void;
   deskControlsOpen: boolean;
@@ -42,6 +43,7 @@ export const PyqDeskControls = memo(({
   papers,
   paperId,
   onPaperChange,
+  onPaperHover,
   readingTheme,
   onThemeChange,
   deskControlsOpen,
@@ -143,6 +145,7 @@ export const PyqDeskControls = memo(({
                           key={p.id}
                           value={p.id}
                           textValue={`${p.examYear} Paper ${p.paperNumber}`}
+                          onPointerEnter={() => onPaperHover?.(p.id)}
                           className={cn(
                             'cursor-pointer py-3.5 px-4 text-sm font-bold md:text-[15px] transition-colors rounded-xl mx-1 my-0.5',
                             themeDeep
