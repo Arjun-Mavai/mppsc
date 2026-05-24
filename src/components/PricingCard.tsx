@@ -156,12 +156,12 @@ export function PricingCard({
             : 'Upgrade to Pro';
   const subtitle = isLite
     ? hi
-      ? 'स्मार्ट शुरुआत — 6 महीने'
-      : 'Smart start — 6 Months'
+      ? 'तैयारी का पहला मजबूत कदम'
+      : 'The perfect first step'
     : isPro
       ? hi
-        ? 'पूरी ताकत — 6 महीने'
-        : 'Full power — 6 Months'
+        ? 'प्रीलिम्स फतेह करने का मास्टर प्लान'
+        : 'The ultimate masterplan for Prelims'
       : isMains
         ? hi
           ? 'सिलेबस, मॉडल उत्तर व PYQ डेस्क'
@@ -291,7 +291,7 @@ export function PricingCard({
               />
             ))}
             {/* Validity Item if not in features already */}
-            {!isUpgrade && (
+            {/* {!isUpgrade && (
               <li
                 className={cn(
                   'flex items-start gap-3 text-sm font-medium',
@@ -308,7 +308,7 @@ export function PricingCard({
                   {hi ? (isLite ? '6 महीने तक वैध' : validityText) : validityText}
                 </span>
               </li>
-            )}
+            )} */}
           </ul>
 
           {/* Action Button */}
