@@ -401,7 +401,8 @@ const PyqQuestionRow = memo(({
         </div>
       </div>
 
-        <div className={cn(!open && "hidden")}>
+        {open && (
+          <div>
               <div
               className={cn(
                 'border-t px-2 py-4 sm:px-4',
@@ -536,13 +537,15 @@ const PyqQuestionRow = memo(({
                            )}                        </div>
                       </div>
                       
-                        <div className={cn(!insightsOpen && "hidden", "w-full")}>
-                              <PyqExpertInsightsRenderer
-                                insightsText={insightsText}
-                                themeDeep={themeDeep}
-                                hi={effectiveHi}
-                              />
-                        </div>
+                        {insightsOpen && (
+                          <div className="w-full">
+                                <PyqExpertInsightsRenderer
+                                  insightsText={insightsText}
+                                  themeDeep={themeDeep}
+                                  hi={effectiveHi}
+                                />
+                          </div>
+                        )}
                     </div>
                   ) : null}
 
@@ -558,6 +561,7 @@ const PyqQuestionRow = memo(({
               )}
             </div>
           </div>
+        )}
     </li>
   );
 });

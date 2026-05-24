@@ -35,6 +35,7 @@ type MainsPyqPaperListResponse =
 
 let pyqPaperListCache: Paper[] | null = null;
 const pyqQuestionsCache = new Map<string, QRow[]>();
+const pyqFetchPromises = new Map<string, Promise<any>>();
 
 function seedModuleCaches(papers: Paper[], paperId: string, questions: QRow[]) {
   if (papers.length > 0) pyqPaperListCache = papers;
@@ -148,31 +149,79 @@ export function PyqLibraryClient({
         (p) => p.examYear === MAINS_PYQ_DEMO_YEAR && p.paperNumber === MAINS_PYQ_DEMO_PAPER_NUMBER
       );
       if (demo && !pyqQuestionsCache.has(demo.id)) {
-        void getMainsPyqPaperPublic(demo.id).then((res) => {
+        let promise = pyqFetchPromises.get(demo.id);
+        if (!promise) {
+          promise = getMainsPyqPaperPublic(demo.id);
+          pyqFetchPromises.set(demo.id, promise);
+        }
+        void promise.then((res) => {
           if (res.success && res.data) {
             pyqQuestionsCache.set(demo.id, res.data.questions as QRow[]);
           }
+          pyqFetchPromises.delete(demo.id);
         });
       }
     }
   }, [vaultUnlocked]);
 
+  const currentPaperIdRef = useRef(paperId);
+  useEffect(() => {
+    currentPaperIdRef.current = paperId;
+  }, [paperId]);
+
   const fetchQuestions = useCallback(async (pid: string, showLoading: boolean) => {
     if (showLoading) setLoadingQ(true);
-    const r = await getMainsPyqPaperPublic(pid);
-    if (showLoading) setLoadingQ(false);
-    if (r.success && r.data) {
-      const next = r.data.questions as QRow[];
-      pyqQuestionsCache.set(pid, next);
-      setQuestions(next);
-      setQuestionsLoadIssue('none');
-    } else {
-      setQuestions([]);
-      if (r.success === false) {
-        setQuestionsLoadIssue(r.error === 'not_found' ? 'not_found' : 'fetch_failed');
+    
+    let promise = pyqFetchPromises.get(pid);
+    if (!promise) {
+      promise = getMainsPyqPaperPublic(pid);
+      pyqFetchPromises.set(pid, promise);
+    }
+    
+    try {
+      const r = await promise;
+      
+      if (r.success && r.data) {
+        const next = r.data.questions as QRow[];
+        pyqQuestionsCache.set(pid, next);
+        
+        // Only update active component state if the user is still on this paper
+        if (currentPaperIdRef.current === pid) {
+          if (showLoading) setLoadingQ(false);
+          setQuestions(next);
+          setQuestionsLoadIssue('none');
+        }
+      } else {
+        if (currentPaperIdRef.current === pid) {
+          setQuestions([]);
+          if (r.success === false) {
+            setQuestionsLoadIssue(r.error === 'not_found' ? 'not_found' : 'fetch_failed');
+          }
+          if (showLoading) setLoadingQ(false);
+        }
       }
+    } catch (err) {
+      if (currentPaperIdRef.current === pid) {
+        setQuestions([]);
+        setQuestionsLoadIssue('fetch_failed');
+        if (showLoading) setLoadingQ(false);
+      }
+    } finally {
+      pyqFetchPromises.delete(pid);
     }
   }, []);
+
+  const handlePaperHover = useCallback(
+    (pid: string) => {
+      if (pyqQuestionsCache.has(pid)) return;
+      const targetPaper = papers.find((p) => p.id === pid);
+      if (!targetPaper || isPremiumLockedPaper(targetPaper, vaultUnlocked)) return;
+
+      // Silently pre-fetch in the background
+      void fetchQuestions(pid, false);
+    },
+    [papers, vaultUnlocked, fetchQuestions]
+  );
 
   const applyPremiumLockedPaper = useCallback(() => {
     setQuestions([]);
@@ -195,7 +244,6 @@ export function PyqLibraryClient({
         setQuestions(cached);
         setQuestionsLoadIssue('none');
         setLoadingQ(false);
-        void fetchQuestions(pid, false);
         return;
       }
 
@@ -211,12 +259,11 @@ export function PyqLibraryClient({
   }, []);
 
   useEffect(() => {
-    if (!paperId) return;
-    void Promise.resolve().then(() => {
-      setPartFilter('ALL');
-      void loadQs(paperId, selectedPaper);
-    });
-  }, [paperId, selectedPaper, loadQs]);
+    if (!paperId || pyqQuestionsCache.has(paperId)) return;
+    // Initial load for the first paper if not seeded from server
+    void loadQs(paperId, selectedPaper);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount for the initial paper if needed
 
   // Prefetch all papers in background if vault is unlocked for instant switching
   // ⚡ Rate-limited to 3 concurrent requests to avoid network saturation
@@ -236,13 +283,19 @@ export function PyqLibraryClient({
       const p = queue[idx];
 
       try {
-        const res = await getMainsPyqPaperPublic(p.id);
+        let promise = pyqFetchPromises.get(p.id);
+        if (!promise) {
+          promise = getMainsPyqPaperPublic(p.id);
+          pyqFetchPromises.set(p.id, promise);
+        }
+        const res = await promise;
         if (res.success && res.data) {
           pyqQuestionsCache.set(p.id, res.data.questions as QRow[]);
         }
       } catch {
         // Fail silently, user can manually load
       } finally {
+        pyqFetchPromises.delete(p.id);
         activeCount--;
         // Schedule next if queue not exhausted and under concurrency limit
         if (nextIndex < queue.length && activeCount < maxConcurrent) {
@@ -259,24 +312,27 @@ export function PyqLibraryClient({
 
   const handlePaperChange = useCallback(
     (nextId: string) => {
+      setPartFilter('ALL');
+      setPaperId(nextId);
+      
       const nextPaper = papers.find((p) => p.id === nextId);
       if (isPremiumLockedPaper(nextPaper, vaultUnlocked)) {
-        setPaperId(nextId);
         applyPremiumLockedPaper();
         return;
       }
+      
       const cached = pyqQuestionsCache.get(nextId);
       if (cached) {
-        setPaperId(nextId);
         setQuestions(cached);
         setQuestionsLoadIssue('none');
         setLoadingQ(false);
-        void fetchQuestions(nextId, false);
         return;
       }
-      setPaperId(nextId);
+      
+      // Start fetch immediately, don't wait for useEffect
+      void loadQs(nextId, nextPaper);
     },
-    [papers, vaultUnlocked, fetchQuestions, applyPremiumLockedPaper]
+    [papers, vaultUnlocked, applyPremiumLockedPaper, loadQs]
   );
 
   const themeDeep = readingTheme === 'deep';
@@ -391,6 +447,7 @@ export function PyqLibraryClient({
           papers={papers}
           paperId={paperId}
           onPaperChange={handlePaperChange}
+          onPaperHover={handlePaperHover}
           readingTheme={readingTheme}
           onThemeChange={setReadingTheme}
           deskControlsOpen={deskControlsOpen}

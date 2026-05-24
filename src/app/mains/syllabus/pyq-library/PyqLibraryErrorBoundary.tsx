@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { MainsPyqLoader } from './MainsPyqLoader';
 
 type ReadingTheme = 'deep' | 'paper';
 
@@ -113,7 +114,7 @@ export function PyqLibraryErrorBoundary({
   }
 
   if (loadingQ) {
-    return <p className={themeDeep ? 'text-slate-500' : 'text-slate-600'}>{hi ? 'प्रश्न लोड…' : 'Loading questions…'}</p>;
+    return <MainsPyqLoader hi={hi} themeDeep={themeDeep} />;
   }
 
   if (questionsLoadIssue !== 'none') {
