@@ -16,6 +16,7 @@ import { revalidatePath } from 'next/cache';
 import { MAINS_PYQ_PURGE_CONFIRMATION_PHRASE } from '@/config/mains-pyq-admin';
 import { stripJsonFence } from '@/lib/mains-pyq-batch-paste';
 import { parseMainsPyqImportJson, stripCiteMarkers, stableQuestionKey } from '@/lib/mains-pyq-import';
+import { repairInteriorDoubleQuotesInMappedStrings } from '@/lib/mains-pyq-paste-json-parse';
 import { jsonrepair } from 'jsonrepair';
 import {
   buildMainsTopicUserPrompt,
@@ -50,12 +51,14 @@ function adminReadableError(e: unknown): string {
   return b.slice(0, 400);
 }
 
+
 function parseJson(raw: string): unknown {
   const trimmed = stripJsonFence(raw);
   try {
     return JSON.parse(trimmed);
   } catch {
-    return JSON.parse(jsonrepair(trimmed));
+    const repairedQuotes = repairInteriorDoubleQuotesInMappedStrings(trimmed);
+    return JSON.parse(jsonrepair(repairedQuotes));
   }
 }
 

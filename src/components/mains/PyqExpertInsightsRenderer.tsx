@@ -29,8 +29,11 @@ export function PyqExpertInsightsRenderer({
 }: PyqExpertInsightsRendererProps) {
   if (!insightsText) return null;
 
+  // Hotfix for past DB records with Bengali character typo
+  const safeInsightsText = insightsText.replace(/मध्यप्रदেশ/g, 'मध्यप्रदेश');
+
   // Attempt to parse the complex JSON object
-  const explanation = parseExtendedData(insightsText);
+  const explanation = parseExtendedData(safeInsightsText);
 
   // Helper to aggressively strip markdown formatting characters, colons, stars, hashes
   const cleanText = (s: unknown): string => {
@@ -63,7 +66,7 @@ export function PyqExpertInsightsRenderer({
 
   // Fallback: If it's not valid expert JSON, check if it's the structured 9 points, and render elegantly
   if (!isExpertJSON) {
-    const rawCleaned = cleanText(insightsText);
+    const rawCleaned = cleanText(safeInsightsText);
     const parseMainsExpertTips = (text: string) => {
       const sections: {
         number: number;
@@ -122,7 +125,7 @@ export function PyqExpertInsightsRenderer({
       return { sections, hasNumberedSections };
     };
 
-    const { sections, hasNumberedSections } = parseMainsExpertTips(insightsText);
+    const { sections, hasNumberedSections } = parseMainsExpertTips(safeInsightsText);
 
     if (hasNumberedSections) {
       return (
