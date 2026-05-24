@@ -725,7 +725,7 @@ export function MainsHistoryRichViewer({
           {/* Key terms */}
           <details className="group rounded-2xl border-2 border-sky-200/80 bg-sky-50/40 p-3 sm:p-4 transition-all dark:border-sky-500/20 dark:bg-[#0c1626] shadow-sm hover:border-sky-400/60">
             <summary className="mb-3 flex cursor-pointer select-none items-center justify-between outline-none marker:content-none pb-3 border-b border-sky-200/50 dark:border-sky-500/20 px-3 sm:px-4">
-              <h2 className="text-xl font-black text-sky-950 dark:text-sky-200">⚡ {hi ? 'की-टर्म्स डिकोडर (Flash)' : 'Key Terms Decoder (Flash)'}</h2>
+              <h2 className="text-xl font-black text-sky-950 dark:text-sky-200">{hi ? 'की-टर्म्स डिकोडर (Flash)' : 'Key Terms Decoder (Flash)'}</h2>
               <ChevronDown className="h-5 w-5 shrink-0 text-sky-400 transition-transform group-open:rotate-180" />
             </summary>
             <MainsKeyTermsFlash
