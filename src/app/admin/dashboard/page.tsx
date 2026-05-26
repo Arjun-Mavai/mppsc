@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getAdminDashboardStats } from '@/actions/admin-actions';
+import { getAdminDashboardStats, getTelemetryStatusAction, toggleTelemetryAction } from '@/actions/admin-actions';
+import { toast } from 'sonner';
 import {
   Loader2,
   Activity,
@@ -100,6 +101,8 @@ const IntelligenceLeadsList = dynamic(
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminDashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [telemetryEnabled, setTelemetryEnabled] = useState(true);
+  const [toggling, setToggling] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({
     uploads: true,
     guests: true,
@@ -113,13 +116,48 @@ export default function AdminDashboardPage() {
   const toggle = (key: string) => setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
 
   useEffect(() => {
+    // 1. Fetch dashboard stats
     getAdminDashboardStats().then((res) => {
       if (res.success) {
         setStats(res);
       }
       setLoading(false);
     });
+
+    // 2. Fetch active telemetry configuration status
+    getTelemetryStatusAction().then((res) => {
+      if (res.success) {
+        setTelemetryEnabled(res.enabled);
+      }
+    });
   }, []);
+
+  const handleToggleTelemetry = async () => {
+    try {
+      setToggling(true);
+      const nextState = !telemetryEnabled;
+      const res = await toggleTelemetryAction(nextState);
+      if (res.success) {
+        setTelemetryEnabled(nextState);
+        toast.success(
+          nextState 
+            ? 'Event Telemetry Activated! 🟢' 
+            : 'Event Telemetry Muted! 🔴', 
+          {
+            description: nextState 
+              ? 'Bot is now broadcasting live user events.' 
+              : 'Bot broadcasts have been suspended dynamically.',
+          }
+        );
+      } else {
+        toast.error('Failed to update telemetry settings');
+      }
+    } catch (err) {
+      toast.error('An error occurred while updating settings');
+    } finally {
+      setToggling(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -138,7 +176,7 @@ export default function AdminDashboardPage() {
     <div className="min-h-screen bg-slate-50/50 p-4 font-sans md:p-8 lg:p-12">
       <div className="mx-auto max-w-7xl space-y-6 md:space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-black tracking-tight text-slate-900 md:text-3xl">
               Admin Dashboard
@@ -147,13 +185,44 @@ export default function AdminDashboardPage() {
               Overview of content ingestion and test coverage.
             </p>
           </div>
-          <Badge
-            variant="outline"
-            className="hidden animate-pulse items-center gap-1.5 border-emerald-100 bg-white px-3 py-1 text-[10px] font-bold text-emerald-600 ring-4 ring-emerald-50/50 md:flex"
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            Live System Active
-          </Badge>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Dynamic Telemetry Toggle Control */}
+            <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-sm ring-1 ring-slate-100/50">
+              <div className="flex flex-col text-left">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">User Telemetry Bot</span>
+                <span className={`text-xs font-bold transition-colors duration-200 ${telemetryEnabled ? 'text-indigo-600' : 'text-slate-500'}`}>
+                  {toggling ? 'Updating...' : telemetryEnabled ? '🟢 Event Logging: Active' : '🔴 Event Logging: Muted'}
+                </span>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={telemetryEnabled}
+                aria-label="Toggle user telemetry bot"
+                onClick={handleToggleTelemetry}
+                disabled={toggling}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 disabled:opacity-50 ${
+                  telemetryEnabled ? 'bg-indigo-600' : 'bg-slate-200'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    telemetryEnabled ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+
+            </div>
+
+            <Badge
+              variant="outline"
+              className="animate-pulse items-center gap-1.5 border-emerald-100 bg-white px-3 py-2.5 text-[10px] font-bold text-emerald-600 ring-4 ring-emerald-50/50 flex"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              Live System Active
+            </Badge>
+          </div>
         </div>
 
         {/* Stats Grid — 2 cols on mobile, scales up */}

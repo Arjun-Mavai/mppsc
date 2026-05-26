@@ -1236,3 +1236,12 @@ export const intelligenceFeedbackRelations = relations(intelligenceFeedback, ({ 
     references: [questions.id],
   }),
 }));
+
+// System Settings Table (Scalable and isolated configuration storage)
+export const systemSettings = sqliteTable('system_settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+  description: text('description'),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+});
+
