@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { sendTelemetryEvent, TelemetryEvent } from '@/lib/telegram-events';
 import { logger } from '@/lib/logger';
+import { headers } from 'next/headers';
 
 /**
  * API Endpoint: POST /api/tracking/events
@@ -9,17 +10,46 @@ import { logger } from '@/lib/logger';
  */
 export async function POST(req: Request) {
   try {
+    // 🛡️ ABUSE PROTECTION: Verify request origin/site
+    const headerList = headers();
+    const origin = headerList.get('origin');
+    const secFetchSite = headerList.get('sec-fetch-site');
+    const host = headerList.get('host');
+
+    // Only allow same-origin or same-site requests to prevent external spam
+    const isSameOrigin = origin && host && origin.includes(host);
+    const isSameSite = secFetchSite === 'same-origin' || secFetchSite === 'same-site';
+
+    if (!isSameOrigin && !isSameSite && process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
     const body = (await req.json()) as TelemetryEvent;
 
-    // Basic validation
+    // 🛡️ PAYLOAD VALIDATION & CONSTRAINTS
     if (!body || !body.type || !body.path) {
       return NextResponse.json({ error: 'Invalid telemetry payload' }, { status: 400 });
     }
 
+    // Truncate strings to prevent oversized Telegram requests (max 4096 chars per message)
+    // We enforce a conservative limit per field here.
+    const sanitize = (str: string | undefined, max = 500) => 
+      typeof str === 'string' ? str.substring(0, max) : undefined;
+
+    const validatedEvent: TelemetryEvent = {
+      ...body,
+      path: body.path.substring(0, 255),
+      previousPath: sanitize(body.previousPath, 255),
+      referrer: sanitize(body.referrer, 500),
+      userAgent: sanitize(body.userAgent, 500),
+      actionDetails: sanitize(body.actionDetails, 1000),
+      guestName: sanitize(body.guestName, 100),
+    };
+
     // 🚀 ASYNCHRONOUS BACKGROUND DISPATCH
     // We intentionally DO NOT await this call, allowing Next.js to return 200 OK immediately
     // and offload all Telegram requests out-of-band so it doesn't affect user interactions.
-    sendTelemetryEvent(body).catch((err) => {
+    sendTelemetryEvent(validatedEvent).catch((err) => {
       if (process.env.NODE_ENV === 'development') {
         console.error('[Telemetry API] Background telemetry dispatch failed:', err);
       }
@@ -33,3 +63,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }
+

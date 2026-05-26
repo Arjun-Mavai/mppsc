@@ -102,16 +102,23 @@ export function TelemetryTracker() {
   }, [pathname, searchParams, user]);
 
   // Tab unload listener (tracks dwell time when tab is closed/hidden)
+  const reportedRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const handleUnload = () => {
       const fullPath = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '');
+      
+      // Prevent double reporting for the same path
+      if (reportedRef.current === fullPath) return;
+
       const now = Date.now();
       const guestName = localStorage.getItem('mppsc_guest_name');
       const durationSeconds = Math.round((now - entryTimeRef.current) / 1000);
 
       if (durationSeconds >= 1) {
+        reportedRef.current = fullPath;
         sendEvent({
           type: 'page_dwell',
           path: fullPath,
@@ -134,8 +141,9 @@ export function TelemetryTracker() {
       if (document.visibilityState === 'hidden') {
         handleUnload();
       } else {
-        // Reset tracking timers when user returns to tab
+        // Reset tracking timers and "reported" flag when user returns to tab
         entryTimeRef.current = Date.now();
+        reportedRef.current = null;
       }
     };
 
@@ -147,6 +155,7 @@ export function TelemetryTracker() {
       window.removeEventListener('pagehide', handleUnload);
     };
   }, [pathname, searchParams, user]);
+
 
   return null;
 }

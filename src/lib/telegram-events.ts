@@ -1,4 +1,5 @@
 import { getTelemetryEnabled } from './system-settings';
+import { escapeHTML } from './telegram';
 
 export interface TelemetryEvent {
   type: 'page_view' | 'page_dwell' | 'action';
@@ -19,15 +20,6 @@ export interface TelemetryEvent {
   actionDetails?: string;
 }
 
-// Escape helper for Telegram HTML parse mode
-function escapeHTML(str: string): string {
-  if (!str) return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
 /**
  * Normalizes user agents into readable formats
  */
@@ -38,10 +30,11 @@ function parseReadableUserAgent(ua: string): string {
   let browser = 'Unknown Browser';
   let os = 'Unknown OS';
 
+  // Check Edge before Chrome because Edge includes "Chrome" in its UA
   if (lowercaseUa.includes('firefox')) browser = 'Firefox';
+  else if (lowercaseUa.includes('edg/') || lowercaseUa.includes('edge')) browser = 'Edge';
   else if (lowercaseUa.includes('chrome')) browser = 'Chrome';
   else if (lowercaseUa.includes('safari')) browser = 'Safari';
-  else if (lowercaseUa.includes('edge')) browser = 'Edge';
 
   if (lowercaseUa.includes('iphone')) os = 'iPhone';
   else if (lowercaseUa.includes('ipad')) os = 'iPad';
@@ -68,8 +61,6 @@ function formatDuration(seconds: number): string {
  * Formats a single telemetry event into standard beautiful HTML for Telegram
  */
 function formatTelemetryMessage(event: TelemetryEvent): string {
-  const isDetailed = process.env.TELEGRAM_EVENTS_DETAILED !== 'false';
-  
   // Identify payment funnel
   const isPaymentPath = 
     event.path.startsWith('/pricing') || 
@@ -161,6 +152,10 @@ function formatTelemetryMessage(event: TelemetryEvent): string {
  * Fully isolated, resilient, and checks active telemetry dynamic toggle state before shipping.
  */
 export async function sendTelemetryEvent(event: TelemetryEvent) {
+  // 4. Dispatch fetch asynchronously with strict AbortController timeout (3 seconds)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3000);
+
   try {
     // 1. Check Dynamic Toggle Switch State (SQLite settings table)
     const isEnabled = await getTelemetryEnabled();
@@ -169,8 +164,7 @@ export async function sendTelemetryEvent(event: TelemetryEvent) {
     }
 
     // 2. Load Tokens and fallback config
-    // Primary events bot token (uses provided bot token by default)
-    const BOT_TOKEN = process.env.TELEGRAM_EVENTS_BOT_TOKEN || '8412751496:AAF3AUYupX05y-msVrWHJR4uVfelF1Pb2ts';
+    const BOT_TOKEN = process.env.TELEGRAM_EVENTS_BOT_TOKEN;
     const CHAT_ID = process.env.TELEGRAM_EVENTS_CHAT_ID || process.env.TELEGRAM_CHAT_ID;
 
     if (!BOT_TOKEN || !CHAT_ID) {
@@ -195,10 +189,6 @@ export async function sendTelemetryEvent(event: TelemetryEvent) {
 
     const message = formatTelemetryMessage(event);
 
-    // 4. Dispatch fetch asynchronously with strict AbortController timeout (3 seconds)
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-
     const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
     const response = await fetch(url, {
       method: 'POST',
@@ -210,8 +200,6 @@ export async function sendTelemetryEvent(event: TelemetryEvent) {
       }),
       signal: controller.signal,
     });
-
-    clearTimeout(timeoutId);
 
     if (!response.ok && process.env.NODE_ENV === 'development') {
       console.error('[Telemetry] Telegram API Error:', await response.text());
@@ -225,5 +213,8 @@ export async function sendTelemetryEvent(event: TelemetryEvent) {
         console.error('[Telemetry] Failed to dispatch event:', error);
       }
     }
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
+

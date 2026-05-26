@@ -181,7 +181,9 @@ export default async function RootLayout({
         <GlobalErrorBoundary>
           <PwaRegistry />
           <Providers>
-            <TelemetryTracker />
+            <Suspense fallback={null}>
+              <TelemetryTracker />
+            </Suspense>
             <Suspense fallback={null}>
               <AppNavbar user={navbarUser} />
             </Suspense>

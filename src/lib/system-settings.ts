@@ -6,7 +6,7 @@ const TELEMETRY_KEY = 'telemetry_enabled';
 
 /**
  * 🔒 Check if telemetry/event logging is enabled dynamically.
- * Defaults to true if the setting is missing or the database is unavailable (fail-open).
+ * Defaults to false if the setting is missing or the database is unavailable (fail-closed).
  */
 export async function getTelemetryEnabled(): Promise<boolean> {
   try {
@@ -17,14 +17,14 @@ export async function getTelemetryEnabled(): Promise<boolean> {
       .limit(1);
 
     if (row.length === 0) {
-      return true; // Default is enabled
+      return false; // Default is disabled (fail-closed)
     }
 
     return row[0].value === 'true';
   } catch (error) {
-    // Fail-open: default to true on DB connectivity errors
-    console.error('[Telemetry Settings] Failed to load setting from DB (failing open):', error);
-    return true;
+    // Fail-closed: default to false on DB connectivity errors to prevent log flooding
+    console.error('[Telemetry Settings] Failed to load setting from DB (failing closed):', error);
+    return false;
   }
 }
 
@@ -35,31 +35,23 @@ export async function setTelemetryEnabled(enabled: boolean): Promise<void> {
   try {
     const valueStr = enabled ? 'true' : 'false';
 
-    // Upsert — check if exists, then insert or update
-    const existing = await db
-      .select({ key: systemSettings.key })
-      .from(systemSettings)
-      .where(eq(systemSettings.key, TELEMETRY_KEY))
-      .limit(1);
-
-    if (existing.length === 0) {
-      await db.insert(systemSettings).values({
+    await db.insert(systemSettings)
+      .values({
         key: TELEMETRY_KEY,
         value: valueStr,
         description: 'Toggles Telegram event logging bot dynamic tracking',
         updatedAt: new Date(),
-      });
-    } else {
-      await db
-        .update(systemSettings)
-        .set({
+      })
+      .onConflictDoUpdate({
+        target: systemSettings.key,
+        set: {
           value: valueStr,
           updatedAt: new Date(),
-        })
-        .where(eq(systemSettings.key, TELEMETRY_KEY));
-    }
+        },
+      });
   } catch (error) {
     console.error('[Telemetry Settings] Failed to update setting in DB:', error);
     throw new Error('Failed to update telemetry settings');
   }
 }
+
