@@ -572,3 +572,31 @@ export async function testResendEmail(targetEmail: string) {
     return { success: false, error: error.message || 'Execution failed' };
   }
 }
+
+// --- TELEMETRY / EVENT CONFIGURATION SWITCH ---
+export async function getTelemetryStatusAction() {
+  await assertAdmin();
+  try {
+    const { getTelemetryEnabled } = await import('@/lib/system-settings');
+    const enabled = await getTelemetryEnabled();
+    return { success: true, enabled };
+  } catch (error) {
+    logger.error('Failed to get telemetry status:', error, { category: 'admin' });
+    return { success: false, enabled: true };
+  }
+}
+
+export async function toggleTelemetryAction(enabled: boolean) {
+  await assertAdmin();
+  try {
+    const { setTelemetryEnabled } = await import('@/lib/system-settings');
+    await setTelemetryEnabled(enabled);
+    
+    logger.info(`Telemetry status toggled by admin: ${enabled}`);
+    return { success: true, enabled };
+  } catch (error: any) {
+    logger.error('Failed to toggle telemetry status:', error, { category: 'admin' });
+    return { success: false, error: error.message || 'Failed to update setting' };
+  }
+}
+

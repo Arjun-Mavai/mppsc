@@ -4,6 +4,7 @@ import './globals.css';
 import PwaRegistry from '@/components/PwaRegistry';
 import { Suspense } from 'react';
 import Providers from './Providers';
+import { TelemetryTracker } from '@/components/TelemetryTracker';
 import { AppFooter } from '@/components/layout/AppFooter';
 import { GlobalLockModal } from '@/components/GlobalLockModal';
 import { ScrollToTop } from '@/components/ScrollToTop';
@@ -180,6 +181,7 @@ export default async function RootLayout({
         <GlobalErrorBoundary>
           <PwaRegistry />
           <Providers>
+            <TelemetryTracker />
             <Suspense fallback={null}>
               <AppNavbar user={navbarUser} />
             </Suspense>
