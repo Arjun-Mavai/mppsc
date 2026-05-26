@@ -11,7 +11,7 @@ import { headers } from 'next/headers';
 export async function POST(req: Request) {
   try {
     // 🛡️ ABUSE PROTECTION: Verify request origin/site
-    const headerList = headers();
+    const headerList = await headers();
     const origin = headerList.get('origin');
     const secFetchSite = headerList.get('sec-fetch-site');
     const host = headerList.get('host');
@@ -33,8 +33,8 @@ export async function POST(req: Request) {
 
     // Truncate strings to prevent oversized Telegram requests (max 4096 chars per message)
     // We enforce a conservative limit per field here.
-    const sanitize = (str: string | undefined, max = 500) => 
-      typeof str === 'string' ? str.substring(0, max) : undefined;
+    const sanitize = <T extends string | null | undefined>(str: T, max = 500): T => 
+      typeof str === 'string' ? str.substring(0, max) as T : str;
 
     const validatedEvent: TelemetryEvent = {
       ...body,
