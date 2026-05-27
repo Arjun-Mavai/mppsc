@@ -8,10 +8,11 @@ export function TelemetryTracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   
-  const { user } = useSettingsStore();
+  const { user, guestLead } = useSettingsStore();
 
   const prevPathnameRef = useRef<string | null>(null);
   const entryTimeRef = useRef<number>(Date.now());
+  const lastTrackedPathRef = useRef<string | null>(null);
 
   // Detect device classification
   const getDeviceType = (): string => {
@@ -68,10 +69,16 @@ export function TelemetryTracker() {
             id: user.id,
             name: user.name,
             email: user.email,
+            phone: user.phone,
             role: user.role,
             planTier: user.planTier,
           } : null,
           guestName,
+          guestLead: guestLead ? {
+            name: guestLead.name,
+            phone: guestLead.phone,
+            email: guestLead.email,
+          } : null,
           device: getDeviceType(),
           userAgent: navigator.userAgent,
           referrer: document.referrer || undefined,
@@ -79,27 +86,36 @@ export function TelemetryTracker() {
       }
     }
 
-    // 2. Report the NEW Page View event immediately
-    sendEvent({
-      type: 'page_view',
-      path: fullPath,
-      user: user ? {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        planTier: user.planTier,
-      } : null,
-      guestName,
-      device: getDeviceType(),
-      userAgent: navigator.userAgent,
-      referrer: document.referrer || undefined,
-    });
+    // 2. Report the NEW Page View event immediately (only if not already tracked to prevent duplicates on hydration/dependency triggers)
+    if (lastTrackedPathRef.current !== fullPath) {
+      sendEvent({
+        type: 'page_view',
+        path: fullPath,
+        user: user ? {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          planTier: user.planTier,
+        } : null,
+        guestName,
+        guestLead: guestLead ? {
+          name: guestLead.name,
+          phone: guestLead.phone,
+          email: guestLead.email,
+        } : null,
+        device: getDeviceType(),
+        userAgent: navigator.userAgent,
+        referrer: document.referrer || undefined,
+      });
+      lastTrackedPathRef.current = fullPath;
+    }
 
     // 3. Update active state trackers
     prevPathnameRef.current = fullPath;
     entryTimeRef.current = now;
-  }, [pathname, searchParams, user]);
+  }, [pathname, searchParams, user, guestLead]);
 
   // Tab unload listener (tracks dwell time when tab is closed/hidden)
   const reportedRef = useRef<string | null>(null);
@@ -127,10 +143,16 @@ export function TelemetryTracker() {
             id: user.id,
             name: user.name,
             email: user.email,
+            phone: user.phone,
             role: user.role,
             planTier: user.planTier,
           } : null,
           guestName,
+          guestLead: guestLead ? {
+            name: guestLead.name,
+            phone: guestLead.phone,
+            email: guestLead.email,
+          } : null,
           device: getDeviceType(),
           userAgent: navigator.userAgent,
         });
@@ -154,8 +176,6 @@ export function TelemetryTracker() {
       window.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('pagehide', handleUnload);
     };
-  }, [pathname, searchParams, user]);
-
-
+  }, [pathname, searchParams, user, guestLead]);
   return null;
 }

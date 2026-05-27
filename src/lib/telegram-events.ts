@@ -10,10 +10,16 @@ export interface TelemetryEvent {
     id?: string;
     name?: string;
     email?: string;
+    phone?: string | null;
     role?: string;
     planTier?: string;
   } | null;
   guestName?: string | null;
+  guestLead?: {
+    name: string;
+    phone: string;
+    email?: string;
+  } | null;
   device?: string;
   userAgent?: string;
   referrer?: string;
@@ -71,13 +77,21 @@ function formatTelemetryMessage(event: TelemetryEvent): string {
   // Identify Mains path
   const isMainsPath = event.path.startsWith('/mains');
 
-  // Normalize User info
-  let userDisplay = 'Guest (Anonymous)';
-  if (event.user && event.user.email) {
+  // Normalize User info with name and phone
+  let userDisplay = '👤 <b>Guest (Anonymous)</b>';
+  if (event.user && (event.user.email || event.user.phone || event.user.name)) {
     const tier = event.user.planTier ? ` (${event.user.planTier.toUpperCase()})` : '';
-    userDisplay = `👤 <b>${escapeHTML(event.user.name || 'User')}</b> - ${escapeHTML(event.user.email)}${tier}`;
+    const namePart = event.user.name ? `<b>${escapeHTML(event.user.name)}</b>` : 'Registered User';
+    const emailPart = event.user.email ? ` | 📧 ${escapeHTML(event.user.email)}` : '';
+    const phonePart = event.user.phone ? ` | 📞 <code>${escapeHTML(event.user.phone)}</code>` : '';
+    userDisplay = `👤 ${namePart}${tier}${emailPart}${phonePart}`;
+  } else if (event.guestLead) {
+    const namePart = `<b>${escapeHTML(event.guestLead.name)}</b> (Guest Lead)`;
+    const phonePart = ` | 📞 <code>${escapeHTML(event.guestLead.phone)}</code>`;
+    const emailPart = event.guestLead.email ? ` | 📧 ${escapeHTML(event.guestLead.email)}` : '';
+    userDisplay = `👤 ${namePart}${phonePart}${emailPart}`;
   } else if (event.guestName) {
-    userDisplay = `👤 <b>${escapeHTML(event.guestName)}</b> (Guest Lead)`;
+    userDisplay = `👤 <b>${escapeHTML(event.guestName)}</b> (Guest)`;
   }
 
   // Device & browser details
@@ -85,14 +99,18 @@ function formatTelemetryMessage(event: TelemetryEvent): string {
   const browserOs = event.userAgent ? parseReadableUserAgent(event.userAgent) : 'Unknown Browser';
   const connectionDisplay = `📱 ${escapeHTML(browserOs)} ${deviceType}`;
 
-  // Time in IST
-  const timestamp = new Date().toLocaleString('en-IN', {
+  // Time in IST (Day, Date, and Time format)
+  const dateObj = new Date();
+  const dayName = dateObj.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short' }); // Wed, Thu, etc.
+  const dateStr = dateObj.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' }); // 27 May 2026
+  const timeStr = dateObj.toLocaleString('en-IN', {
     timeZone: 'Asia/Kolkata',
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
     hour12: true,
-  }) + ' IST';
+  }); // 08:41:24 AM
+  const timestamp = `${dayName}, ${dateStr} | ${timeStr} IST`;
 
   let title = '📊 <b>MPPSC ZEN TELEMETRY ALERT</b>';
   let body = '';
@@ -118,7 +136,7 @@ function formatTelemetryMessage(event: TelemetryEvent): string {
       `${userDisplay}\n` +
       `${connectionDisplay}\n` +
       (event.referrer ? `🔍 <b>Referrer:</b> <code>${escapeHTML(event.referrer)}</code>\n` : '') +
-      `⏱️ <b>Time:</b> ${timestamp}\n\n` +
+      `📅 <b>Date & Time:</b> ${timestamp}\n\n` +
       `${tags} #PageView`;
   } else if (event.type === 'page_dwell') {
     title = isPaymentPath ? `⏱️ <b>PAYMENT FUNNEL EXIT SURVEY</b>` : title;
@@ -130,7 +148,7 @@ function formatTelemetryMessage(event: TelemetryEvent): string {
       (event.previousPath ? `➡️ <b>Navigated to:</b> <code>${escapeHTML(event.previousPath)}</code>\n\n` : '\n') +
       `${userDisplay}\n` +
       `${connectionDisplay}\n` +
-      `⏱️ <b>Time:</b> ${timestamp}\n\n` +
+      `📅 <b>Date & Time:</b> ${timestamp}\n\n` +
       `${tags} #DwellTime`;
   } else {
     // Action / Custom Clicks
@@ -140,7 +158,7 @@ function formatTelemetryMessage(event: TelemetryEvent): string {
       `📍 <b>Active Page:</b> <code>${escapeHTML(event.path)}</code>\n\n` +
       `${userDisplay}\n` +
       `${connectionDisplay}\n` +
-      `⏱️ <b>Time:</b> ${timestamp}\n\n` +
+      `📅 <b>Date & Time:</b> ${timestamp}\n\n` +
       `${tags} #UserAction`;
   }
 
@@ -181,9 +199,10 @@ export async function sendTelemetryEvent(event: TelemetryEvent) {
       event.path.startsWith('/payment') || 
       event.path.startsWith('/upgrade') || 
       event.path.startsWith('/thank-you');
+    const isMainsPath = event.path.startsWith('/mains');
 
-    // If not detailed tracking, skip normal PageViews and DwellTimes on non-payment routes
-    if (!isDetailed && !isPaymentPath && event.type !== 'action') {
+    // If not detailed tracking, skip normal PageViews and DwellTimes on non-payment and non-mains routes
+    if (!isDetailed && !isPaymentPath && !isMainsPath && event.type !== 'action') {
       return;
     }
 
@@ -217,4 +236,5 @@ export async function sendTelemetryEvent(event: TelemetryEvent) {
     clearTimeout(timeoutId);
   }
 }
+
 
