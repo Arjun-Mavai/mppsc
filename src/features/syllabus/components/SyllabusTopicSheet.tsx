@@ -640,7 +640,7 @@ export function SyllabusTopicSheet({
                   {/* Mains integration - High Value Zone */}
                   {topic.potential_mains_questions && topic.potential_mains_questions.length > 0 && (
                     <section className="space-y-4">
-                      <SectionHeading icon={Trophy} title={isHindi ? 'मुख्य परीक्षा डिकोडर' : 'Mains Decoder'} colorClass="bg-slate-900 text-white" emoji="🏅" accentColor="bg-slate-700" description="Expected questions for mains" />
+                      <SectionHeading icon={Trophy} title={isHindi ? 'मुख्य परीक्षा डिकोडर' : 'Mains Decoder'} colorClass="bg-slate-900 text-white" emoji="🏅" accentColor="bg-slate-700" />
                       <div className="grid gap-3">
                         {topic.potential_mains_questions.map((q, i) => {
                           const cleanQ = q
