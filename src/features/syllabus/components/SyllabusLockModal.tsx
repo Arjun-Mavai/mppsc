@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useEffect } from 'react';
 import { trackAction } from '@/lib/analytics/track';
+import { notifyLockModalOpen } from '@/lib/analytics/notifyLockModal';
 
 interface SyllabusLockModalProps {
   open: boolean;
@@ -15,6 +16,7 @@ export function SyllabusLockModal({ open, onOpenChange }: SyllabusLockModalProps
   useEffect(() => {
     if (open) {
       trackAction('🔓 Prelims Syllabus Lock Modal Opened');
+      notifyLockModalOpen('prelims');
     }
   }, [open]);
 
