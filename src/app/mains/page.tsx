@@ -204,13 +204,13 @@ export default function MainsLandingPage() {
           <p className="mx-auto mt-4 max-w-3xl px-4 text-base sm:text-lg md:text-xl font-semibold leading-relaxed text-slate-300">
             {hi ? (
               <>
-                सिर्फ उत्तर मत पढ़िए। समझिए कि परीक्षक वास्तव में क्या पूछ रहा है।
+                सिर्फ नोट्स जमा करने से मेन्स क्लियर नहीं हो जाता। समझिए कि परीक्षक वास्तव में क्या पूछ रहा है।
                 <br /><br />
                 प्रश्न की मांग पहचानें, उत्तर का सही ढाँचा बनाना सीखें, और हर PYQ के पीछे छिपा पैटर्न समझें।
               </>
             ) : (
               <>
-                Don't just read answers. Understand what the examiner is actually asking.
+                Just collecting notes won't clear Mains. Understand what the examiner is actually asking.
                 <br /><br />
                 Identify the question's demand, learn to build the perfect answer structure, and understand the pattern hidden behind every PYQ.
               </>
