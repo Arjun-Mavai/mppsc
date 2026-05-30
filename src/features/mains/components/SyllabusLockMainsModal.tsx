@@ -1,5 +1,7 @@
 import { MainsPremiumMarketing } from '@/components/MainsPremiumMarketing';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { useEffect } from 'react';
+import { trackAction } from '@/lib/analytics/track';
 
 interface SyllabusLockMainsModalProps {
   open: boolean;
@@ -7,6 +9,12 @@ interface SyllabusLockMainsModalProps {
 }
 
 export function SyllabusLockMainsModal({ open, onOpenChange }: SyllabusLockMainsModalProps) {
+  useEffect(() => {
+    if (open) {
+      trackAction('🔒 Mains Syllabus Lock Modal Opened');
+    }
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent

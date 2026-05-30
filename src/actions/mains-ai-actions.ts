@@ -58,12 +58,10 @@ function parseContentJson(rawText: string): Record<string, unknown> {
   // See: src/lib/mains-pyq-paste-json-parse.ts repairEscapedJsonObjectKeys() for details.
   const escapedKeysFixed = repairEscapedJsonObjectKeys(stripped);
 
-  // Phase 1: Try raw parsing (with/without jsonrepair) to avoid altering valid quotes
+  // Phase 1: Try raw parsing WITHOUT jsonrepair first (to avoid premature truncation by jsonrepair)
   const rawTries = [
     { label: 'JSON.parse raw', run: () => JSON.parse(escapedKeysFixed) },
     { label: 'JSON5.parse raw', run: () => JSON5.parse(escapedKeysFixed) },
-    { label: 'jsonrepair + JSON.parse raw', run: () => JSON.parse(jsonrepair(escapedKeysFixed)) },
-    { label: 'jsonrepair + JSON5.parse raw', run: () => JSON5.parse(jsonrepair(escapedKeysFixed)) },
   ];
 
   for (const t of rawTries) {
@@ -77,13 +75,11 @@ function parseContentJson(rawText: string): Record<string, unknown> {
     }
   }
 
-  // Phase 2: Patch unescaped quotes in mapped strings and try again
+  // Phase 2: Patch unescaped quotes in mapped strings and try clean parsing (WITHOUT jsonrepair)
   const patched = repairInteriorDoubleQuotesInMappedStrings(escapedKeysFixed);
   const patchTries = [
     { label: 'JSON.parse patched', run: () => JSON.parse(patched) },
     { label: 'JSON5.parse patched', run: () => JSON5.parse(patched) },
-    { label: 'jsonrepair + JSON.parse patched', run: () => JSON.parse(jsonrepair(patched)) },
-    { label: 'jsonrepair + JSON5.parse patched', run: () => JSON5.parse(jsonrepair(patched)) },
   ];
 
   for (const t of patchTries) {
@@ -97,7 +93,26 @@ function parseContentJson(rawText: string): Record<string, unknown> {
     }
   }
 
-  // Phase 3: Everything failed. Let's find the error in the PATCHED version since it's our best bet.
+  // Phase 3: Try jsonrepair as a last resort on patched/raw versions (in case of true truncation/missing brackets)
+  const repairTries = [
+    { label: 'jsonrepair + JSON.parse patched', run: () => JSON.parse(jsonrepair(patched)) },
+    { label: 'jsonrepair + JSON5.parse patched', run: () => JSON5.parse(jsonrepair(patched)) },
+    { label: 'jsonrepair + JSON.parse raw', run: () => JSON.parse(jsonrepair(escapedKeysFixed)) },
+    { label: 'jsonrepair + JSON5.parse raw', run: () => JSON5.parse(jsonrepair(escapedKeysFixed)) },
+  ];
+
+  for (const t of repairTries) {
+    try {
+      const val = t.run();
+      if (val && typeof val === 'object') {
+        return val as Record<string, unknown>;
+      }
+    } catch {
+      // Continue
+    }
+  }
+
+  // Phase 4: Everything failed. Let's find the error in the PATCHED version since it's our best bet.
   let lastErrorMsg = 'Invalid JSON';
   let errorIndex: number | undefined;
 
@@ -158,9 +173,6 @@ function validateModelShape(
   if (pn === 4) {
     if (ma['11m'].length < 1) return 'Paper IV: provide at least ONE 11m long-answer variant.';
   }
-  if (pn >= 5) {
-    if (ma['2m'].length < 1) return 'Paper V/VI: keep at least one 2m sample; add 7m and/or 10m rows as fits the topic.';
-  }
   return null;
 }
 
@@ -184,11 +196,14 @@ export async function adminApplyMainsContentJson(topicId: string, rawText: strin
       // Require at least one concept source per language (grasp takes precedence, falls back to cognitive)
       const openerHi = graspHi || cognitiveHi;
       const openerEn = graspEn || cognitiveEn;
-      if (!openerHi || !openerEn) {
+      const isPaper5or6 = pn >= 5;
+
+      if (!openerHi || (!openerEn && !isPaper5or6)) {
         return {
           success: false as const,
-          error:
-            'History‑rich JSON: supply cognitive_intro_* and/or syllabus_grasp_* in BOTH languages (at least one non-empty per language).',
+          error: isPaper5or6
+            ? 'History‑rich JSON: supply cognitive_intro_hi and/or syllabus_grasp_hi in Hindi (at least one non-empty).'
+            : 'History‑rich JSON: supply cognitive_intro_* and/or syllabus_grasp_* in BOTH languages (at least one non-empty per language).',
         };
       }
       const conceptHi = [graspHi, cognitiveHi].filter(Boolean).join('\n\n');
@@ -263,23 +278,27 @@ export async function adminApplyMainsContentJson(topicId: string, rawText: strin
         console.warn(`Mains save: Some key terms missing. hasKeyHi=${!!keyHi}, hasKeyEn=${!!keyEn}. Root keys: [${rKeys.join(', ')}]`);
       }
 
-      // Validate English model answers (bilingual requirement)
+      // Validate English model answers (bilingual requirement, relaxed for Paper 5 & 6)
       const maEn = extractModelAnswersEn(parsed);
       const needEn =
         maEn['2m'].length + maEn['7m'].length + maEn['10m'].length + maEn['11m'].length + maEn.case18.length;
-      if (needEn === 0) {
+      
+      if (needEn === 0 && !isPaper5or6) {
         return {
           success: false as const,
           error: 'model_answers_en required for bilingual History‑rich saves',
         };
       }
-      const enErr = validateModelShape(pn, maEn);
-      if (enErr) {
-        const diag = getDiagnostics(parsed, maEn);
-        return {
-          success: false as const,
-          error: `English models: ${enErr} ${diag}`,
-        };
+      
+      if (needEn > 0) {
+        const enErr = validateModelShape(pn, maEn);
+        if (enErr) {
+          const diag = getDiagnostics(parsed, maEn);
+          return {
+            success: false as const,
+            error: `English models: ${enErr} ${diag}`,
+          };
+        }
       }
 
       // Update richPayload with the repaired cards if necessary
@@ -303,9 +322,13 @@ export async function adminApplyMainsContentJson(topicId: string, rawText: strin
     }
 
     const n = normalizeAiPayload(parsed);
-    // Bilingual content is mandatory; require both languages
-    if (!n.conceptHi || !n.conceptEn) {
-      return { success: false as const, error: 'concept_hi / concept_en required' };
+    // Bilingual content is mandatory; require both languages (relaxed for Paper 5 & 6)
+    const isPaper5or6 = pn >= 5;
+    if (!n.conceptHi || (!n.conceptEn && !isPaper5or6)) {
+      return { 
+        success: false as const, 
+        error: isPaper5or6 ? 'concept_hi required' : 'concept_hi / concept_en required' 
+      };
     }
     // Validate model answers match paper requirements
     const err = validateModelShape(pn, n.modelAnswers);

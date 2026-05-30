@@ -60,7 +60,7 @@ const MainsUnitSchema = z.object({
 
 const MainsContentSchema = z.object({
   conceptHi: z.string().min(1),
-  conceptEn: z.string().min(1),
+  conceptEn: z.string().default(''),
   expertStrategyHi: z.string().optional().nullable(),
   expertStrategyEn: z.string().optional().nullable(),
   modelAnswers: z.record(z.string(), z.unknown()).default({}),

@@ -22,6 +22,8 @@ export interface IntelligenceFeedbackData {
   userId?: string;
   userName?: string;
   userEmail?: string;
+  unitInfo?: string;
+  userGrants?: string;
 }
 
 export async function submitIntelligenceFeedback(data: IntelligenceFeedbackData) {
@@ -37,6 +39,8 @@ export async function submitIntelligenceFeedback(data: IntelligenceFeedbackData)
     userId,
     userName,
     userEmail,
+    unitInfo,
+    userGrants,
   } = data;
 
   try {
@@ -96,15 +100,16 @@ export async function submitIntelligenceFeedback(data: IntelligenceFeedbackData)
     }
 
     const now = new Date();
-    const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-    const dayStr = now.toLocaleDateString('en-IN', { weekday: 'long' });
+    const dateStr = now.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    const dayStr = now.toLocaleDateString('en-US', { weekday: 'long' });
 
     const studentLabel = isPro ? '💎 Subscribed Pro User' : '👤 Guest Student';
     const sourceLabel = source === 'expert_analysis' ? '🧠 Intelligence Analysis' : 
                        source === 'open_paper_view' ? '📄 Paper Solutions' : 
                        source === 'mains_pyq' ? '📝 Mains PYQ Library' :
                        source === 'mains_syllabus_paper' ? '📚 Mains Syllabus Hub' :
+                       source === 'prelims_syllabus_topic' ? '🧭 Prelims Syllabus Hub' :
                        source || 'Generic Page';
 
     await sendTelegramNotification(
@@ -113,13 +118,15 @@ export async function submitIntelligenceFeedback(data: IntelligenceFeedbackData)
       `<b>Action:</b> ${reactionLabel}\n` +
       `<b>Source:</b> <code>${sourceLabel}</code>\n` +
       `<b>Status:</b> ${studentLabel}\n` +
+      (unitInfo ? `<b>Unit:</b> <code>${escapeHTML(unitInfo)}</code>\n` : '') +
+      (userGrants ? `<b>Grants:</b> <code>${escapeHTML(userGrants)}</code>\n` : '') +
       `${studentInfo}\n` +
       `<b>When:</b> ${dayStr}, ${dateStr} at ${timeStr}\n` +
       `<b>Question ID:</b> <code>${questionId}</code>\n` +
       `<b>Content:</b> <i>"${escapeHTML(questionText).slice(0, 150)}${questionText.length > 150 ? '...' : ''}"</i>\n` +
       (message ? `\n<b>Feedback:</b> ${escapeHTML(message)}\n` : '') +
       `━━━━━━━━━━━━━━━━\n` +
-      `#SolutionIntelligence ${source === 'mains_pyq' ? '#MainsPYQ' : source === 'mains_syllabus_paper' ? '#MainsSyllabus' : '#MPPSC2026'} ${isPro ? '#ProUser' : ''}`
+      `#SolutionIntelligence ${source === 'mains_pyq' ? '#MainsPYQ' : source === 'prelims_syllabus_topic' ? '#PrelimsSyllabus' : '#MPPSC2026'} ${isPro ? '#ProUser' : ''}`
     );
 
     return { success: true };

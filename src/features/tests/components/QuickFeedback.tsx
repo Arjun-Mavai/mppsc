@@ -17,6 +17,7 @@ interface QuickFeedbackProps {
   testId?: string;
   source?: string; // 'expert_analysis', 'open_paper_view', etc.
   className?: string;
+  unitInfo?: string;
 }
 
 export function QuickFeedback({
@@ -27,6 +28,7 @@ export function QuickFeedback({
   testId,
   source,
   className,
+  unitInfo,
 }: QuickFeedbackProps) {
   const { isSubscribed, user, guestLead } = useSettingsStore();
   const [reaction, setReaction] = useState<IntelligenceReaction | null>(null);
@@ -45,6 +47,24 @@ export function QuickFeedback({
 
   const [showFeedbackBox, setShowFeedbackBox] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState('');
+
+  const userAccessGrants = user?.accessGrants || [];
+  const hasPre = userAccessGrants.includes('mppsc_pre');
+  const hasMains = userAccessGrants.includes('mppsc_mains');
+
+  let grantsInfo = 'Guest';
+  if (user) {
+    let typeLabel = 'Free / None';
+    if (hasPre && hasMains) {
+      typeLabel = 'Combo';
+    } else if (hasPre) {
+      typeLabel = 'Pre-Only';
+    } else if (hasMains) {
+      typeLabel = 'Mains-Only';
+    }
+    grantsInfo = `${typeLabel} (${JSON.stringify(userAccessGrants)})`;
+  }
+
 
   const onReact = async (type: IntelligenceReaction) => {
     // Toggle logic for Unhelpful and Doubt (need comment box, so not purely backgrounded yet)
@@ -84,6 +104,8 @@ export function QuickFeedback({
         userName: user?.name || finalGuestName || undefined,
         userEmail: user?.email || undefined,
         guestMobile: finalGuestMobile || user?.phone || undefined,
+        unitInfo,
+        userGrants: grantsInfo,
       }).catch(e => console.error('Reaction submission failed', e));
     } catch (e) {
       // Construction error
@@ -112,6 +134,8 @@ export function QuickFeedback({
         userName: user?.name || finalGuestName || undefined,
         userEmail: user?.email || undefined,
         guestMobile: finalGuestMobile || user?.phone || undefined,
+        unitInfo,
+        userGrants: grantsInfo,
       }).catch(e => console.error('Comment submission failed', e));
       
       setFeedbackMsg('');

@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Sparkles, Search, PlayCircle, Lock } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, ArrowRight, Sparkles, Search, PlayCircle, Lock, SlidersHorizontal } from 'lucide-react';
 import FlipCard from '@/components/FlipCard';
 import { SyllabusTopicCard } from '@/components/SyllabusTopicCard';
 import { cn } from '@/lib/utils';
@@ -33,6 +33,30 @@ export interface TopicData {
     strategy?: string;
     type?: string;
   }[];
+  // ── Elite Expert Fields (Standard) ──────────
+  topic_intro?: string;
+  topic_significance?: string;
+  priority_level?: string;
+  trend_shift_alert?: string;
+  examiner_focus?: string;
+  common_pitfall?: string;
+  must_know_micro_topics?: string[];
+  retention_trick?: string;
+  litmus_test?: string;
+  mains_integration?: string;
+  pyq_pre_examples?: string[];
+  pyq_mains_examples?: string[];
+  ideal_study_format?: string;
+
+  // ── New AI Enrichment Fields (MPPSC Specialist) ──────────
+  quote?: string;
+  introduction?: string;
+  key_concepts?: string[];
+  ai_details?: string;
+  facts_for_prelims?: string[];
+  potential_mains_questions?: string[];
+  
+  official_details?: string;
   isFree?: boolean;
   // ── Access control flags (DB se aate hain) ──────────────────
   isLiteAccess?: boolean | null;
@@ -104,6 +128,7 @@ export default function UnitContent({
 
   // Premium/Lock State
   const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
+  const [isControlsOpen, setIsControlsOpen] = useState(false);
   const { isSubscribed, user } = useSettingsStore();
 
   const isTopicLocked = (topic: TopicData, _filteredIndex: number) => {
@@ -230,7 +255,7 @@ export default function UnitContent({
     <div className="min-h-screen bg-slate-50/50 pb-24 font-sans">
       {/* Sub-header: Unit title + Language toggle + Progress bar */}
       {/* 🧭 PREMIUM SUB-NAV: Unit Title + Progress */}
-      <div className="sticky top-[72px] z-30 border-b border-slate-200/40 bg-white/70 backdrop-blur-xl transition-all duration-300 md:top-[88px]">
+      <div className="sticky top-[56px] z-30 border-b border-slate-200/40 bg-white/70 backdrop-blur-xl transition-all duration-300 md:top-[56px]">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-6">
           <div className="flex min-w-0 items-center gap-4">
             <button
@@ -249,7 +274,7 @@ export default function UnitContent({
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 sm:gap-6">
             {/* Desktop Progress Indicator */}
             <div className="hidden items-center gap-3 md:flex">
               <div className="text-right">
@@ -274,6 +299,20 @@ export default function UnitContent({
               <Search className="h-3.5 w-3.5" />
               <span>CMD+K</span>
             </div>
+
+            {/* 🎛️ Premium Controls Toggle Circular Button */}
+            <button
+              onClick={() => setIsControlsOpen(!isControlsOpen)}
+              className={cn(
+                "flex h-10 w-10 items-center justify-center rounded-full border transition-all active:scale-95 shrink-0 shadow-sm",
+                isControlsOpen
+                  ? "bg-slate-900 border-slate-950 text-white shadow-md shadow-slate-900/10 scale-105"
+                  : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+              )}
+              title={language === 'hi' ? 'सेटिंग्स व व्यू' : 'Settings & View'}
+            >
+              <SlidersHorizontal className="h-4.5 w-4.5" />
+            </button>
           </div>
         </div>
 
@@ -290,34 +329,31 @@ export default function UnitContent({
 
       <SyllabusSearch open={isSearchOpen} setOpen={setIsSearchOpen} />
 
-      <main className="mx-auto max-w-7xl px-6 pt-8">
-        {/* Animated Intro */}
-        <div className="mb-12 flex flex-col items-center justify-center space-y-6 text-center">
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="relative"
-          >
-            <div className="absolute inset-0 rounded-full bg-slate-500/10 blur-3xl" />
-            <span className="relative inline-flex items-center rounded-full bg-slate-900 px-6 py-2 text-xs font-black tracking-widest text-white uppercase shadow-lg">
-              <Sparkles className="mr-2 h-4 w-4" />
-              {currentTopics.length} TOPICS
-            </span>
-          </motion.div>
-
-          <div className="flex w-full flex-col items-center justify-center gap-6 sm:flex-row">
-            <Button
-              size="lg"
-              onClick={() => handleQuizClick('unit')}
-              className="group h-14 rounded-2xl bg-slate-900 px-8 text-base font-bold text-white shadow-lg transition-all hover:bg-slate-800"
+      <main className="mx-auto max-w-7xl px-6 pt-6">
+        {/* Collapsing Settings/Controls Drawer */}
+        <AnimatePresence>
+          {isControlsOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, scale: 0.97 }}
+              animate={{ opacity: 1, height: 'auto', scale: 1 }}
+              exit={{ opacity: 0, height: 0, scale: 0.97 }}
+              transition={{ duration: 0.22, ease: 'easeInOut' }}
+              className="mb-8 overflow-hidden"
             >
-              <PlayCircle className="mr-2 h-5 w-5 text-emerald-400 transition-transform group-hover:scale-110" />
-              {language === 'hi' ? 'यूनिट टेस्ट शुरू करें' : 'Start Revision Test'}{' '}
-            </Button>
-
-            <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
-          </div>
-        </div>
+              <div className="flex flex-col items-center justify-center gap-4 rounded-3xl border border-slate-200/60 bg-white p-5 shadow-sm text-center">
+                <div className="relative">
+                  <span className="relative inline-flex items-center rounded-full bg-slate-900 px-5 py-1.5 text-[11px] font-black tracking-widest text-white uppercase shadow-md">
+                    <Sparkles className="mr-2 h-3.5 w-3.5 text-amber-400 fill-amber-400/20 animate-pulse" />
+                    {currentTopics.length} {language === 'hi' ? 'टॉपिक्स' : 'Topics'}
+                  </span>
+                </div>
+                <div className="flex w-full items-center justify-center">
+                  <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {viewMode === 'grid' ? (
           <motion.div
@@ -349,6 +385,7 @@ export default function UnitContent({
                     colorVariant={colorVariant}
                     isLocked={locked}
                     isFree={isFree}
+                    hasAiContent={!!topic.introduction}
                     onClick={() => handleOpenDetails(topic, idx)}
                     labels={{
                       search: language === 'hi' ? 'सर्च' : 'Search',
@@ -407,7 +444,12 @@ export default function UnitContent({
                       "{topic.back}"
                     </p>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                      {topic.introduction && (
+                        <span className="inline-flex items-center rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-[10px] font-black tracking-widest text-indigo-600 uppercase">
+                          <Sparkles className="mr-2 h-3.5 w-3.5 fill-indigo-600/20" /> Rich Notes
+                        </span>
+                      )}
                       {locked ? (
                         <span className="inline-flex items-center rounded-lg border border-amber-100 bg-amber-50 px-3 py-1.5 text-[10px] font-black tracking-widest text-amber-600 uppercase">
                           <Lock className="mr-2 h-3.5 w-3.5" /> PREMIUM LOCKED

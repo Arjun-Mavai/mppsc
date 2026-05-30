@@ -16,10 +16,13 @@ interface SyllabusTopicCardProps {
   variant?: 'topic' | 'unit';
   isLocked?: boolean;
   isFree?: boolean;
+  hasAiContent?: boolean;
   isLoading?: boolean;
   hideBadge?: boolean;
   hidePlus?: boolean;
   onClick: () => void;
+  onPointerEnter?: () => void;
+  onTouchStart?: () => void;
   labels: {
     search: string;
     topic: string;
@@ -68,10 +71,13 @@ export const SyllabusTopicCard: React.FC<SyllabusTopicCardProps> = ({
   variant = 'topic',
   isLocked,
   isFree,
+  hasAiContent,
   isLoading,
   hideBadge = false,
   hidePlus = false,
   onClick,
+  onPointerEnter,
+  onTouchStart,
   labels,
 }) => {
   const style = variants[colorVariant];
@@ -81,6 +87,8 @@ export const SyllabusTopicCard: React.FC<SyllabusTopicCardProps> = ({
       whileHover={{ y: -8, scale: 1.01 }}
       whileTap={{ scale: 0.96 }}
       onClick={onClick}
+      onPointerEnter={onPointerEnter}
+      onTouchStart={onTouchStart}
       transition={{ type: 'spring', stiffness: 500, damping: 15 }}
       className={cn(
         'group relative flex h-[320px] w-full cursor-pointer flex-col justify-between overflow-hidden rounded-[2.5rem] border p-6 transition-all duration-300',
@@ -153,7 +161,12 @@ export const SyllabusTopicCard: React.FC<SyllabusTopicCardProps> = ({
           {title}
         </h3>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {hasAiContent && (
+            <div className="inline-flex items-center rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[9px] font-black tracking-widest text-indigo-600 uppercase shadow-sm">
+              <Sparkles className="mr-1.5 h-3 w-3 fill-indigo-600/20" /> Rich Notes
+            </div>
+          )}
           {isLocked ? (
             <div className="inline-flex items-center rounded-lg border border-white bg-white/60 px-2.5 py-1 text-[9px] font-black tracking-widest text-amber-600 uppercase shadow-sm">
               <Lock className="mr-1.5 h-3 w-3" /> Premium

@@ -87,18 +87,18 @@ export const LITE_FEATURES: PlanFeatureWithIcon[] = [
 
 // ── Pro Plan Features ─────────────────────────────────────
 export const PRO_FEATURES: PlanFeatureWithIcon[] = [
-  { en: 'Unlimited Topic & Unit Tests', hi: 'अनलिमिटेड टॉपिक और यूनिट टेस्ट', icon: 'Target' },
-  { en: 'Full Length Mock Tests (100Q)', hi: 'फुल लेंथ मॉक टेस्ट (100 प्रश्न)', icon: 'FileText' },
-  { en: 'CSAT Mock Papers', hi: 'CSAT मॉक पेपर', icon: 'BookOpen' },
-  { en: 'PYQ Papers (2020-2026)', hi: 'PYQ पेपर (2020-2026)', icon: 'BookOpen' },
+  { en: 'Instantly test your preparation on every topic', hi: 'हर टॉपिक पर अपनी तैयारी तुरंत जाँचें', icon: 'Target' },
+  { en: 'Test your real exam temperament with simulated mocks', hi: 'वास्तविक परीक्षा जैसी समय प्रबंधन के साथ फुल मॉक टेस्ट', icon: 'FileText' },
+  { en: 'Secure your CSAT qualifying score with targeted papers', hi: 'लक्ष्यित पेपर्स के साथ अपना CSAT स्कोर सुरक्षित करें', icon: 'BookOpen' },
+  { en: 'Understand the real exam pattern through past years\' questions', hi: 'पिछले वर्षों के प्रश्नों से वास्तविक परीक्षा पैटर्न समझें', icon: 'History' },
   {
-    en: 'PYQ Intelligence: Topic Trends, Weightage & Exam DNA',
-    hi: 'PYQ इंटेलिजेंस: टॉपिक ट्रेंड, वेटेज और एग्जाम DNA',
+    en: 'Identify high-frequency repeat topics instantly',
+    hi: 'कौन से टॉपिक्स बार-बार पूछे जाते हैं, तुरंत पहचानें',
     icon: 'BarChart3',
   },
-  { en: 'Smart Analytics Dashboard', hi: 'स्मार्ट एनालिटिक्स डैशबोर्ड', icon: 'BarChart3' },
-  { en: 'Premium Study Blogs', hi: 'प्रीमियम स्टडी ब्लॉग्स', icon: 'FileText' },
-  { en: 'Test History for Revision', hi: 'रिवीज़न के लिए टेस्ट हिस्ट्री', icon: 'History' },
+  { en: 'Identify your strong and weak units instantly', hi: 'अपनी कमजोर और मजबूत यूनिट्स तुरंत जानें', icon: 'BarChart3' },
+  { en: 'Learn rankers strategies to score well above the cutoff', hi: 'टॉपर्स की गुप्त रणनीतियों से कटऑफ के ऊपर स्कोर करना सीखें', icon: 'FileText' },
+  { en: 'Revisit past mistakes during revision to ensure zero repeat errors', hi: 'Revision के समय पुरानी गलतियाँ दोबारा देखें', icon: 'History' },
 ];
 
 // Helper: compute discount percentage

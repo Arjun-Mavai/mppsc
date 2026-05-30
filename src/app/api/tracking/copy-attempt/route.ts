@@ -9,8 +9,45 @@
 
 import { logger } from '@/lib/logger';
 
+function normalizeOrigin(origin: string | null | undefined): string | null {
+  if (!origin) return null;
+  try {
+    return new URL(origin).origin.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+const ALLOWED_ORIGINS = new Set(
+  [process.env.NEXT_PUBLIC_APP_URL, process.env.APP_URL, 'http://localhost:3000']
+    .map(normalizeOrigin)
+    .filter((origin): origin is string => Boolean(origin))
+);
+
+function resolveTrustedOrigin(req: Request): string | null {
+  const requestOrigin = normalizeOrigin(req.headers.get('origin'));
+  if (!requestOrigin) return null;
+
+  const host = req.headers.get('host');
+  const proto = req.headers.get('x-forwarded-proto') ?? 'https';
+  const hostOrigin = normalizeOrigin(host ? `${proto}://${host}` : null);
+
+  if (ALLOWED_ORIGINS.has(requestOrigin) || (hostOrigin && requestOrigin === hostOrigin)) {
+    return requestOrigin;
+  }
+  return null;
+}
+
 export async function POST(req: Request) {
   try {
+    const secFetchSite = req.headers.get('sec-fetch-site');
+    const trustedOrigin = resolveTrustedOrigin(req);
+    const isSameSite = secFetchSite === 'same-origin' || secFetchSite === 'same-site';
+
+    if (process.env.NODE_ENV === 'production' && !trustedOrigin && !isSameSite) {
+      return Response.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
     const contentTypeHeader = req.headers.get('content-type') || '';
     let action: string | null = null;
     let fingerprint: string | null = null;
@@ -87,4 +124,25 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * Handle CORS Preflight requests for navigator.sendBeacon
+ * When sendBeacon is used, modern browsers may fire an OPTIONS request first.
+ * Next.js Route Handlers return 404/405 if OPTIONS is not exported.
+ */
+export async function OPTIONS(req: Request) {
+  const trustedOrigin = resolveTrustedOrigin(req);
+  if (!trustedOrigin) {
+    return new Response(null, { status: 403 });
+  }
+
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': trustedOrigin,
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
 }

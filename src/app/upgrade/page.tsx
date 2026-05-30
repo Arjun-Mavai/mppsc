@@ -47,13 +47,11 @@ const DualLanguageShowcase = dynamic(() =>
 const FlashCardsSection = dynamic(() =>
   import('@/components/home/FlashCardsSection').then((m) => ({ default: m.FlashCardsSection }))
 );
+import { PricingSection } from '@/components/home/PricingSection';
 const ExamSimulationSection = dynamic(() =>
   import('@/components/home/ExamSimulationSection').then((m) => ({
     default: m.ExamSimulationSection,
   }))
-);
-const PricingSection = dynamic(() =>
-  import('@/components/home/PricingSection').then((m) => ({ default: m.PricingSection }))
 );
 
 export default function UpgradePage() {

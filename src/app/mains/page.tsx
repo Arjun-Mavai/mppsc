@@ -201,10 +201,20 @@ export default function MainsLandingPage() {
             )}
           </p>
 
-          <p className="mx-auto mt-2 max-w-3xl px-4 text-base sm:text-lg md:text-xl font-bold leading-relaxed text-slate-300">
-            {hi 
-              ? 'सिर्फ नोट्स जमा करने से मेंस क्लीयर नहीं होता। जानिए हर सिलेबस लाइन की असली डिमांड और सीखिए 2 अलग-अलग स्टाइल में उत्तर लिखने का विज्ञान।'
-              : 'Hoarding textbooks and PDFs won\'t clear the exam. Master the exact syllabus demand, unlock retention mnemonics, and learn the science of dual-style model answers.'}
+          <p className="mx-auto mt-4 max-w-3xl px-4 text-base sm:text-lg md:text-xl font-semibold leading-relaxed text-slate-300">
+            {hi ? (
+              <>
+                सिर्फ उत्तर मत पढ़िए। समझिए कि परीक्षक वास्तव में क्या पूछ रहा है।
+                <br /><br />
+                प्रश्न की मांग पहचानें, उत्तर का सही ढाँचा बनाना सीखें, और हर PYQ के पीछे छिपा पैटर्न समझें।
+              </>
+            ) : (
+              <>
+                Don't just read answers. Understand what the examiner is actually asking.
+                <br /><br />
+                Identify the question's demand, learn to build the perfect answer structure, and understand the pattern hidden behind every PYQ.
+              </>
+            )}
           </p>
 
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md sm:max-w-2xl md:max-w-3xl mx-auto">

@@ -3,6 +3,21 @@ import { sendTelemetryEvent, TelemetryEvent } from '@/lib/telegram-events';
 import { logger } from '@/lib/logger';
 import { headers } from 'next/headers';
 
+function normalizeOrigin(origin: string | null | undefined): string | null {
+  if (!origin) return null;
+  try {
+    return new URL(origin).origin.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+const ALLOWED_ORIGINS = new Set(
+  [process.env.NEXT_PUBLIC_APP_URL, process.env.APP_URL, 'http://localhost:3000']
+    .map(normalizeOrigin)
+    .filter((origin): origin is string => Boolean(origin))
+);
+
 /**
  * API Endpoint: POST /api/tracking/events
  * Receives lightweight user navigation events and routes them asynchronously.
@@ -12,15 +27,18 @@ export async function POST(req: Request) {
   try {
     // 🛡️ ABUSE PROTECTION: Verify request origin/site
     const headerList = await headers();
-    const origin = headerList.get('origin');
+    const requestOrigin = normalizeOrigin(headerList.get('origin'));
     const secFetchSite = headerList.get('sec-fetch-site');
     const host = headerList.get('host');
+    const proto = headerList.get('x-forwarded-proto') ?? 'https';
+    const hostOrigin = normalizeOrigin(host ? `${proto}://${host}` : null);
 
-    // Only allow same-origin or same-site requests to prevent external spam
-    const isSameOrigin = origin && host && origin.includes(host);
+    // Only allow same-origin/same-site or configured trusted origins to prevent external spam
+    const isSameOrigin = requestOrigin && hostOrigin && requestOrigin === hostOrigin;
     const isSameSite = secFetchSite === 'same-origin' || secFetchSite === 'same-site';
+    const isAllowedOrigin = requestOrigin ? ALLOWED_ORIGINS.has(requestOrigin) : false;
 
-    if (!isSameOrigin && !isSameSite && process.env.NODE_ENV === 'production') {
+    if (!isSameOrigin && !isSameSite && !isAllowedOrigin && process.env.NODE_ENV === 'production') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
@@ -57,10 +75,40 @@ export async function POST(req: Request) {
 
     // Return immediate success
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     // 🔒 Silent catch-all on the server side
     logger.error('Failed to process incoming telemetry payload', error);
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
+/**
+ * Handle CORS Preflight requests for navigator.sendBeacon
+ * When sendBeacon is used with a Blob of type application/json, modern browsers 
+ * fire an OPTIONS request first. Next.js Route Handlers return 404/405 if OPTIONS is not exported.
+ */
+export async function OPTIONS(req: Request) {
+  const requestOrigin = normalizeOrigin(req.headers.get('origin'));
+  if (!requestOrigin) {
+    return new NextResponse(null, { status: 403 });
+  }
+
+  const host = req.headers.get('host');
+  const proto = req.headers.get('x-forwarded-proto') ?? 'https';
+  const hostOrigin = normalizeOrigin(host ? `${proto}://${host}` : null);
+
+  const isTrusted = ALLOWED_ORIGINS.has(requestOrigin) || (hostOrigin && requestOrigin === hostOrigin);
+
+  if (!isTrusted) {
+    return new NextResponse(null, { status: 403 });
+  }
+
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': requestOrigin,
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
+}
