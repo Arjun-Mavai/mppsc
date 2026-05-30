@@ -103,7 +103,6 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [navigatingId, setNavigatingId] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const { user, isSubscribed, setUser, language, setLanguage } = useSettingsStore();
   const [isPending, startTransition] = useTransition();
@@ -126,8 +125,10 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
       }
 
       prefetchUnit(unitId);
-      setNavigatingId(unitId);
-      router.push(`/syllabus/${unitId}`);
+      // Removed setNavigatingId to let Next.js instantly transition to the new loading.tsx
+      startTransition(() => {
+        router.push(`/syllabus/${unitId}`);
+      });
     },
     [prefetchUnit, router]
   );
@@ -309,7 +310,6 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
                         colorVariant={(['blue', 'pink', 'emerald', 'amber'] as const)[index % 4]}
                         variant="unit"
                         isLocked={isLocked}
-                        isLoading={navigatingId === key}
                         onClick={() => navigateToUnit(key, isLocked)}
                         onPointerEnter={() => {
                           if (!isLocked) prefetchUnit(key);
@@ -339,7 +339,6 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
                   const isLocked = key !== 'unit_1' && !isSubscribed;
                   
                   const meta = getUnitMetadata(key, index);
-                  const isNavigating = navigatingId === key;
 
                   return (
                     <motion.div
@@ -362,13 +361,6 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
                         isLocked && "grayscale-[0.4]"
                       )}
                     >
-                      {/* Loading Overlay */}
-                      {isNavigating && (
-                        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/40 backdrop-blur-[2px]">
-                          <Loader2 className={cn("h-6 w-6 animate-spin", meta.text)} />
-                        </div>
-                      )}
-
                       {/* Top Row: Unit Badge + Lock/Premium */}
                       <div className="relative z-10 flex items-center justify-between">
                         <span className="px-2 py-0.5 rounded-full bg-white/70 border border-white text-[8px] font-black tracking-widest text-slate-500 shadow-sm backdrop-blur-sm uppercase">
@@ -441,11 +433,6 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
                       onClick={() => navigateToUnit(key, isLocked)}
                       className="cursor-pointer relative"
                     >
-                      {navigatingId === key && (
-                        <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/20 backdrop-blur-[1px] rounded-2xl">
-                          <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-900 border-t-transparent"></div>
-                        </div>
-                      )}
                       <div
                         className={cn(
                           'group relative flex items-center gap-6 overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-slate-300 hover:shadow-md',
