@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { type PricingData, calcDiscount, calcMonthly, PlanFeatureWithIcon } from '@/config/pricing';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { trackAction } from '@/lib/analytics/track';
 import { ChevronDown } from 'lucide-react';
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -142,15 +143,13 @@ export function PricingCard({
   const title = isLite
     ? 'Lite'
     : isPro
-      ? 'Pro'
+      ? 'MPPSC Prelims Mastery'
       : isMains
         ? hi
-          ? 'मेंस ज्ञानकोश'
-          : 'Mains Gyan Kosh'
+          ? 'PYQ-फोकस्ड सिलेबस गहरी समझ के लिए'
+          : 'PYQ-focused syllabus for deep understanding'
         : isCombo
-          ? hi
-            ? 'प्री + मेंस'
-            : 'Pre + Mains'
+          ? 'MPPSC Complete Preparation System'
           : hi
             ? 'प्रो में अपग्रेड'
             : 'Upgrade to Pro';
@@ -160,16 +159,16 @@ export function PricingCard({
       : 'The perfect first step'
     : isPro
       ? hi
-        ? 'प्रीलिम्स फतेह करने का मास्टर प्लान'
-        : 'The ultimate masterplan for Prelims'
+        ? 'तैयारी में भटकाव कम करें। परीक्षा की वास्तविक मांग समझें।'
+        : 'Reduce deviation in preparation. Grasp the real demand of the exam.'
       : isMains
         ? hi
-          ? 'सिलेबस, मॉडल उत्तर व PYQ डेस्क'
-          : 'Syllabus, model answers & mains PYQ desk'
+          ? 'क्या पढ़ना है, कितना पढ़ना है और उत्तर में कैसे उपयोग करना है।'
+          : 'What to study, how much to study, and how to use it in answers.'
         : isCombo
           ? hi
-            ? 'प्रो प्रीलिम्स + पूरा मेंस एक साथ'
-            : 'Pro prelims stack + full Mains Gyan Kosh'
+            ? 'Prelims से Mains तक एक ही तैयारी प्रणाली'
+            : 'Prelims to Mains, one unified preparation system'
           : hi
             ? 'लाइट से प्रो — सिर्फ़ अंतर भरें'
             : 'Lite → Pro — Just pay the difference';
@@ -203,6 +202,20 @@ export function PricingCard({
         <CardContent className="relative z-10 flex h-full flex-col p-6 md:p-8">
           {/* Header Block */}
           <div className="mb-5">
+            {isPro && (
+              <div className="mb-3 rounded-xl bg-red-50/70 border border-red-200/50 p-3 text-xs font-semibold text-red-800 leading-relaxed shadow-sm">
+                {hi 
+                  ? '⚠️ अधिकांश छात्र सब कुछ पढ़ने की कोशिश करते हैं। सफल अभ्यर्थी प्राथमिकताएँ तय करते हैं।' 
+                  : '⚠️ Most students try to read everything. Successful candidates set priorities.'}
+              </div>
+            )}
+            {isMains && (
+              <div className="mb-3 rounded-xl bg-amber-50/70 border border-amber-200/50 p-3 text-xs font-semibold text-amber-900 leading-relaxed shadow-sm">
+                {hi 
+                  ? '💡 अधिकांश छात्र उत्तर याद करते हैं। सफल अभ्यर्थी प्रश्न की मांग समझते हैं।' 
+                  : '💡 Most students memorize answers. Successful candidates understand the question\'s demand.'}
+              </div>
+            )}
             <div className="mb-1 flex items-center gap-2">
               {titleIcon}
               <h3
@@ -233,42 +246,52 @@ export function PricingCard({
 
           {/* Price Block */}
           <div className="mb-5">
-            <div className="flex items-baseline gap-2">
-              <span className="text-sm text-slate-400 line-through">₹{originalPrice}</span>
-              <span className="text-4xl font-black tracking-tighter text-slate-900">₹{price}</span>
-              {isUpgrade && (
-                <Badge className="ml-2 border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700">
-                  {hi ? `बचत ₹${originalPrice - price}` : `SAVE ₹${originalPrice - price}`}
-                </Badge>
-              )}
-            </div>
-
-            {!isUpgrade && (
-              <div className="mt-2 flex items-center gap-3">
-                <Badge className="border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700">
-                  {discount}% OFF
-                </Badge>
-                <span className="relative inline-flex items-center">
-                  <span className="absolute inset-[-2] rounded-full bg-gradient-to-r from-red-500 via-pink-500 to-green-500 p-[1.5px]" />
-                  <span className="relative rounded-full bg-white px-2.5 py-0.5 text-[11px] font-bold text-slate-800">
-                    {hi ? `लगभग ₹${monthly}/mo` : `Effective ₹${monthly}/mo`}
-                  </span>
+            { (isPro || isMains || isCombo) ? (
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-bold text-amber-700 uppercase tracking-wider flex items-center gap-1">
+                  🔥 Founding Batch Price
                 </span>
+                <div className="flex items-baseline gap-2.5">
+                  <span className="text-4xl font-black tracking-tighter text-slate-900">₹{price}</span>
+                  <span className="relative inline-flex items-center">
+                    <span className="absolute inset-[-2] rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 p-[1px]" />
+                    <span className="relative rounded-full bg-white px-2.5 py-0.5 text-[11px] font-bold text-slate-800">
+                      {hi
+                        ? `लगभग ₹${Math.round(monthly)}/माह`
+                        : `~₹${Math.round(monthly)}/month`}
+                    </span>
+                  </span>
+                </div>
               </div>
+            ) : (
+              <>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-sm text-slate-400 line-through">₹{originalPrice}</span>
+                  <span className="text-4xl font-black tracking-tighter text-slate-900">₹{price}</span>
+                  {isUpgrade && (
+                    <Badge className="ml-2 border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700">
+                      {hi ? `बचत ₹${originalPrice - price}` : `SAVE ₹${originalPrice - price}`}
+                    </Badge>
+                  )}
+                </div>
+
+                {!isUpgrade && (
+                  <div className="mt-2 flex items-center gap-3">
+                    <Badge className="border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700">
+                      {discount}% OFF
+                    </Badge>
+                    <span className="relative inline-flex items-center">
+                      <span className="absolute inset-[-2] rounded-full bg-gradient-to-r from-red-500 via-pink-500 to-green-500 p-[1.5px]" />
+                      <span className="relative rounded-full bg-white px-2.5 py-0.5 text-[11px] font-bold text-slate-800">
+                        {hi ? `लगभग ₹${monthly}/mo` : `Effective ₹${monthly}/mo`}
+                      </span>
+                    </span>
+                  </div>
+                )}
+              </>
             )}
 
-            {/* {(isPro || isUpgrade) && !isUpgrade && (
-                             <div className="mt-2">
-                                <span className="relative inline-flex items-center">
-                                    <span className="absolute inset-[-2] rounded-full bg-gradient-to-r from-red-500 via-pink-500 to-green-500 p-[1.5px]" />
-                                    <span className="relative bg-white text-slate-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full">
-                                        {hi ? `सिर्फ ₹${p.proPrice - p.litePrice} ज़्यादा` : `just ₹${p.proPrice - p.litePrice} more than Lite`}
-                                    </span>
-                                </span>
-                            </div>
-                        )} */}
-
-            <p className="mt-1.5 flex items-center gap-1 text-[11px] text-slate-400">
+            <p className="mt-2.5 flex items-center gap-1 text-[11px] text-slate-400">
               <Clock className="h-3 w-3" />
               {hi ? `एक बार भुगतान • ${validityText}` : `One-time payment • ${validityText}`}
             </p>
@@ -311,6 +334,30 @@ export function PricingCard({
             )} */}
           </ul>
 
+          {/* Sample Material Link Above Button */}
+          {isPro && (
+            <div className="mb-3.5 text-center">
+              <Link 
+                href="/open/2026-mppsc-prelims" 
+                onClick={() => trackAction('🔍 Clicked Prelims Sample Material Link from PricingCard')}
+                className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-amber-700 transition-colors underline decoration-slate-300 hover:decoration-amber-500 underline-offset-4"
+              >
+                {hi ? '🔓 खरीदने से पहले नमूना सामग्री देखें' : '🔓 View Sample Material Before Buying'}
+              </Link>
+            </div>
+          )}
+          {isMains && (
+            <div className="mb-3.5 text-center">
+              <Link 
+                href="/open/mains-demo" 
+                onClick={() => trackAction('🔍 Clicked Mains Sample Answers Link from PricingCard')}
+                className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-amber-700 transition-colors underline decoration-slate-300 hover:decoration-amber-500 underline-offset-4"
+              >
+                {hi ? '🔓 खरीदने से पहले नमूना उत्तर देखें' : '🔓 View Sample Answers Before Buying'}
+              </Link>
+            </div>
+          )}
+
           {/* Action Button */}
           {href ? (
             <motion.div whileTap={{ scale: 0.96 }} className="w-full">
@@ -330,23 +377,23 @@ export function PricingCard({
                 <Link href={href} prefetch={true} onClick={onBuy}>
                   {isLite
                     ? hi
-                      ? `₹${price} में लाइट लें`
-                      : `Get Lite — ₹${price}`
+                      ? 'लाइट के साथ शुरुआत करें'
+                      : 'Start with Lite Access'
                     : isUpgrade
                       ? hi
-                        ? `₹${price} में प्रो लें`
-                        : `Upgrade to Pro — ₹${price}`
+                        ? 'प्रो में अपग्रेड करें'
+                        : 'Upgrade to Prelims Mastery'
                       : isMains
                         ? hi
-                          ? `मेंस लाइब्रेरी सक्रिय करें — ₹${price}`
-                          : `Activate Mains Library — ₹${price}`
+                          ? '✍️ उत्तर लेखन प्रणाली शुरू करें'
+                          : '✍️ Start Answer Writing'
                         : isCombo
                           ? hi
-                            ? `₹${price} में कॉम्बो लें`
-                            : `Get Combo — ₹${price}`
+                            ? 'MPPSC Complete Access Unlock करें'
+                            : 'Unlock MPPSC Complete Access'
                           : hi
-                            ? `₹${price} में प्रो लें`
-                            : `Get Pro — ₹${price}`}
+                            ? '🚀 तैयारी शुरू करें'
+                            : '🚀 Start Preparation'}
                 </Link>
               </Button>
             </motion.div>
@@ -367,23 +414,23 @@ export function PricingCard({
               >
                 {isLite
                   ? hi
-                    ? `₹${price} में लाइट लें`
-                    : `Get Lite — ₹${price}`
+                    ? 'लाइट के साथ शुरुआत करें'
+                    : 'Start with Lite Access'
                   : isUpgrade
                     ? hi
-                      ? `₹${price} में प्रो लें`
-                      : `Upgrade to Pro — ₹${price}`
+                      ? 'प्रो में अपग्रेड करें'
+                      : 'Upgrade to Prelims Mastery'
                     : isMains
                       ? hi
-                        ? `मेंस लाइब्रेरी सक्रिय करें — ₹${price}`
-                        : `Activate Mains Library — ₹${price}`
+                        ? '✍️ उत्तर लेखन प्रणाली शुरू करें'
+                        : '✍️ Start Answer Writing'
                       : isCombo
                         ? hi
-                          ? `₹${price} में कॉम्बो लें`
-                          : `Get Combo — ₹${price}`
+                          ? 'MPPSC Complete Access Unlock करें'
+                          : 'Unlock MPPSC Complete Access'
                         : hi
-                          ? `₹${price} में प्रो लें`
-                          : `Get Pro — ₹${price}`}
+                          ? '🚀 तैयारी शुरू करें'
+                          : '🚀 Start Preparation'}
               </Button>
             </motion.div>
           )}

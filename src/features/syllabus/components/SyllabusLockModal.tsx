@@ -1,6 +1,8 @@
 import { PremiumMarketing } from '@/components/PremiumMarketing';
 import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { useEffect } from 'react';
+import { trackAction } from '@/lib/analytics/track';
 
 interface SyllabusLockModalProps {
   open: boolean;
@@ -9,6 +11,12 @@ interface SyllabusLockModalProps {
 
 export function SyllabusLockModal({ open, onOpenChange }: SyllabusLockModalProps) {
   const router = useRouter();
+
+  useEffect(() => {
+    if (open) {
+      trackAction('🔓 Prelims Syllabus Lock Modal Opened');
+    }
+  }, [open]);
 
   // modal={false} prevents body scroll lock and scrollbar hiding
   return (

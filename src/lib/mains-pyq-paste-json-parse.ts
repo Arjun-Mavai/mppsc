@@ -53,7 +53,7 @@ export function repairInteriorDoubleQuotesInMappedStrings(raw: string): string {
   // We handle both clean quotes "key": and escaped hallucinations \"key\": or even "key\": (missing start escape)
   // We also handle cases where the AI forgets the colon entirely!
   const KEY_RE =
-    /\s*\\*"(question_id|marks|expert_insights_en|expert_insights_hi|answer_hi|answer_en|style_label_hi|style_label_en|style_label|structure_breakdown|cognitive_intro_hi|cognitive_intro_en|concept_hi|concept_en|syllabus_grasp_hi|syllabus_grasp_en|expert_strategy_hi|expert_strategy_en|pyq_trend_analysis_hi|pyq_trend_analysis_en|desi_analogy_hi|desi_analogy_en|authentic_source_citation_hi|authentic_source_citation_en|psychological_memory_hook_hi|psychological_memory_hook_en|visual_infographic_cue_hi|visual_infographic_cue_en|examiner_trap_hi|examiner_trap_en|topper_x_factor_hi|topper_x_factor_en|expert_evaluator_lens_applied|text|stem|hint|term|dimension_name|question_hi|question_en|paper_title_hi|paper_title_en|part_title_hi|part_title_en|unit_title_hi|unit_title_en|type)\\*"\s*[:\\]*\s*/g;
+    /\s*\\*"(question_id|marks|expert_insights_en|expert_insights_hi|answer_hi|answer_en|style_label_hi|style_label_en|style_label|structure_breakdown|cognitive_intro_hi|cognitive_intro_en|concept_hi|concept_en|syllabus_grasp_hi|syllabus_grasp_en|expert_strategy_hi|expert_strategy_en|pyq_trend_analysis_hi|pyq_trend_analysis_en|desi_analogy_hi|desi_analogy_en|authentic_source_citation_hi|authentic_source_citation_en|psychological_memory_hook_hi|psychological_memory_hook_en|visual_infographic_cue_hi|visual_infographic_cue_en|examiner_trap_hi|examiner_trap_en|topper_x_factor_hi|topper_x_factor_en|expert_evaluator_lens_applied|text|stem|hint|term|dimension_name|question_hi|question_en|paper_title_hi|paper_title_en|part_title_hi|part_title_en|unit_title_hi|unit_title_en|type|facts_for_prelims|pyq_pre_examples|potential_mains_questions|practice_questions|key_terms_hi|key_terms_en|interlinking_dots_hi|interlinking_dots_en|multidimensional_interlinking_hi|multidimensional_interlinking_en|emoji)\\*"\s*[:\\]*\s*/g;
 
   // Pre-pass: Fix common hallucinated escaped key patterns like \"key\": or "key\":
   // and handle cases where the colon is missing or escaped.
@@ -116,6 +116,33 @@ export function repairInteriorDoubleQuotesInMappedStrings(raw: string): string {
     return { repaired: res, endIdx: i };
   }
 
+  function repairStringArray(startIdx: number): { repaired: string; endIdx: number } {
+    let i = startIdx;
+    let res = '[';
+    i++; // Skip '['
+
+    while (i < s.length) {
+      const ch = s[i]!;
+      if (ch === ']') {
+        res += ']';
+        i++;
+        break;
+      }
+      
+      // If it starts a string element
+      if (ch === '"' || (ch === '\\' && s[i+1] === '"')) {
+        const { repaired, endIdx } = repairSingleString(i);
+        res += repaired;
+        i = endIdx;
+        continue;
+      }
+      
+      res += ch;
+      i++;
+    }
+    return { repaired: res, endIdx: i };
+  }
+
   while (cursor < s.length) {
     KEY_RE.lastIndex = cursor;
     const m = KEY_RE.exec(s);
@@ -135,10 +162,15 @@ export function repairInteriorDoubleQuotesInMappedStrings(raw: string): string {
       i++;
     }
 
-    // Check for " or \" opening the value
+    // Check for " or \" opening the value, or [ opening an array
     if (i < s.length && (s[i] === '"' || (s[i] === '\\' && s[i+1] === '"'))) {
       out += ws;
       const { repaired, endIdx } = repairSingleString(i);
+      out += repaired;
+      cursor = endIdx;
+    } else if (i < s.length && s[i] === '[') {
+      out += ws;
+      const { repaired, endIdx } = repairStringArray(i);
       out += repaired;
       cursor = endIdx;
     } else {

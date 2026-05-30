@@ -33,13 +33,6 @@ export default async function UnitPage({ params }: Props) {
 
   if (dbTopics.length > 0) {
     // Use DB Data
-    // Fetch dynamic unit data just for title metadata if needed
-    // Ideally we should have titles in DB too.
-    // We use syllabusmetadata here to avoid loading full heavy content if possible,
-    // but current structure might not allow easy access without import.
-    // For now, let's just use hardcoded Fallback or minimal info to avoid heavy bundle.
-    // Optimally, we fetch metadata from DB or a lightweight config.
-
     try {
       const { getSyllabusUnit } = await import('@/features/syllabus/utils/loader');
       const staticUnit = await getSyllabusUnit(unitId);
@@ -56,6 +49,17 @@ export default async function UnitPage({ params }: Props) {
       unitTitleEn = 'Unit ' + unitId;
     }
 
+    // Helper to strip years like (MPPSC 2021), [UPPCS 2022], (RAS/RTS 2018) or standalone years
+    const stripYear = (str: string) => {
+      if (!str) return str;
+      return str
+        .replace(/\[\s*(?:[A-Za-z\/\s0-9&_-]+)?\s*\d{4}\s*\]/gi, '') // Strips [UPPCS 2022], [UPPSC 2022], [MPPSC 2020], [2022]
+        .replace(/\(\s*(?:[A-Za-z\/\s0-9&_-]+)?\s*\d{4}\s*\)/gi, '') // Strips (UPPSC 2014), (RAS/RTS 2018), (2014)
+        .replace(/(?:UPPCS|MPPSC|UPSC|UPPSC|CGPSC|BPSC|RAS|RTS|IAS|Exam)?\s*\d{4}/gi, '') // Strips standalone UPPCS 2022 or 2022
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+
     // Process DB Topics
     finalTopics = dbTopics.map((t, idx) => {
       const c = t.content as any; // Official Syllabus (Old)
@@ -66,16 +70,39 @@ export default async function UnitPage({ params }: Props) {
         unitId: t.unitId,
         front: t.title,
         back: c?.back || ai?.content || '', // Fallback to AI summary if back missing
-        details: c?.details,
+        official_details: c?.details,
         mnemonic: ai?.mnemonic || c?.mnemonic,
         impact_emoji: ai?.impact_emoji || c?.impact_emoji,
         important_facts: ai?.points || c?.important_facts, // "Points" from AI -> "important_facts" in UI
-        pyq: ai?.pyq, // New field
+        pyq: (ai?.pyq || []).map((p: any) => ({ ...p, question: stripYear(p.question) })),
         isFree:
           (t.isFree ?? false) || (unitId === 'unit_1' && idx < ACCESS_CONFIG.FREE_TOPICS_UNIT1),
         // ── DB access flags → client ko pass karo ──────────
         isLiteAccess: t.isLiteAccess ?? null,
         isProAccess: t.isProAccess ?? null,
+        
+        // ── Elite Expert Fields ──────────
+        topic_intro: ai?.topic_intro || ai?.introduction, // Fallback to intro
+        topic_significance: ai?.topic_significance,
+        priority_level: ai?.priority_level,
+        trend_shift_alert: ai?.trend_shift_alert,
+        examiner_focus: ai?.examiner_focus,
+        common_pitfall: ai?.common_pitfall,
+        must_know_micro_topics: ai?.must_know_micro_topics,
+        retention_trick: ai?.retention_trick,
+        litmus_test: ai?.litmus_test,
+        mains_integration: ai?.mains_integration,
+        pyq_pre_examples: (ai?.pyq_pre_examples || []).map((q: string) => stripYear(q)),
+        pyq_mains_examples: (ai?.pyq_mains_examples || ai?.potential_mains_questions || []).map((q: string) => stripYear(q)),
+        ideal_study_format: ai?.ideal_study_format,
+
+        // ── New AI Enrichment Fields ──────────
+        quote: ai?.quote,
+        introduction: ai?.introduction,
+        key_concepts: ai?.key_concepts,
+        ai_details: ai?.details,
+        facts_for_prelims: ai?.facts_for_prelims || ai?.points,
+        potential_mains_questions: (ai?.potential_mains_questions || []).map((q: string) => stripYear(q)),
       };
     });
 
@@ -89,15 +116,38 @@ export default async function UnitPage({ params }: Props) {
         unitId: t.unitId,
         front: t.titleEn || t.title,
         back: c?.back || ai?.content || '',
-        details: c?.details,
+        official_details: c?.details,
         mnemonic: ai?.mnemonic || c?.mnemonic,
         impact_emoji: ai?.impact_emoji || c?.impact_emoji,
-        important_facts: ai?.points || c?.important_facts,
-        pyq: ai?.pyq,
+        important_facts: ai?.points || ai?.facts_for_prelims || c?.important_facts,
+        pyq: (ai?.pyq || []).map((p: any) => ({ ...p, question: stripYear(p.question) })),
         isFree:
           (t.isFree ?? false) || (unitId === 'unit_1' && idx < ACCESS_CONFIG.FREE_TOPICS_UNIT1),
         isLiteAccess: t.isLiteAccess ?? null,
         isProAccess: t.isProAccess ?? null,
+        
+        // ── Elite Expert Fields ──────────
+        topic_intro: ai?.topic_intro || ai?.introduction,
+        topic_significance: ai?.topic_significance,
+        priority_level: ai?.priority_level,
+        trend_shift_alert: ai?.trend_shift_alert,
+        examiner_focus: ai?.examiner_focus,
+        common_pitfall: ai?.common_pitfall,
+        must_know_micro_topics: ai?.must_know_micro_topics,
+        retention_trick: ai?.retention_trick,
+        litmus_test: ai?.litmus_test,
+        mains_integration: ai?.mains_integration,
+        pyq_pre_examples: (ai?.pyq_pre_examples || []).map((q: string) => stripYear(q)),
+        pyq_mains_examples: (ai?.pyq_mains_examples || ai?.potential_mains_questions || []).map((q: string) => stripYear(q)),
+        ideal_study_format: ai?.ideal_study_format,
+
+        // ── New AI Enrichment Fields ──────────
+        quote: ai?.quote,
+        introduction: ai?.introduction,
+        key_concepts: ai?.key_concepts,
+        ai_details: ai?.details,
+        facts_for_prelims: ai?.facts_for_prelims || ai?.points,
+        potential_mains_questions: (ai?.potential_mains_questions || []).map((q: string) => stripYear(q)),
       };
     });
   } else {
@@ -112,20 +162,20 @@ export default async function UnitPage({ params }: Props) {
     unitTitle = unit.title || '';
     unitTitleEn = unit.title_en || unit.title || '';
 
-    // Bhai Unit 1 ke pehle 5 topics hi free h - baaki sab premium
     const isUnit1 = unitId === 'unit_1';
 
     finalTopics = (unit.topics || []).map((t, idx) => ({
       ...t,
       unitId,
-      // Use centralized config for free topic limit — avoid hardcoded drift
       isFree: isUnit1 ? idx < ACCESS_CONFIG.FREE_TOPICS_UNIT1 : false,
+      official_details: (t as any).details,
     }));
 
     finalTopicsEn = (unit.topics_en || unit.topics || []).map((t, idx) => ({
       ...t,
       unitId,
       isFree: isUnit1 ? idx < ACCESS_CONFIG.FREE_TOPICS_UNIT1 : false,
+      official_details: (t as any).details || (t as any).contentEn?.details,
     }));
   }
 

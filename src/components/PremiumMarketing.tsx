@@ -6,7 +6,7 @@
 // Admin changes prices in dashboard → reflects here instantly.
 // All ₹ amounts are dynamic — no hardcoded prices.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-import { Star, Users, Flame, X } from 'lucide-react';
+import { Star, Flame, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -115,25 +115,20 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
   return (
     <div className="animate-in fade-in zoom-in-95 relative flex flex-col items-center bg-slate-50 px-4 py-6 text-center duration-200 md:p-8">
       {/* Header */}
-      {/* Header */}
       <h2 className="font-display mb-3 text-2xl leading-tight font-black tracking-tighter text-slate-900 uppercase md:text-5xl">
-        {hi ? 'अपना MPPSC सफलता प्लान' : 'Choose Your MPPSC Success Plan'}
+        {hi ? 'तैयारी शुरू नहीं, सही दिशा में शुरू करें।' : "Don't just start preparation, start in the right direction."}
       </h2>
       <p className="mx-auto mb-6 max-w-lg px-4 text-sm font-medium text-slate-500 md:text-lg">
-        {hi ? 'छात्रों के साथ स्मार्ट तैयारी करें' : 'Join aspirants who are preparing smarter'}
+        {hi ? 'सिलेबस की सही दिशा पहचानें और परीक्षा के वास्तविक स्वरूप को समझें।' : 'Identify the correct path of the syllabus and grasp the real form of the exam.'}
       </p>
 
       {/* FOMO — first 100 students with joined count badge */}
       <div className="mb-8 flex justify-center">
         <div className="relative inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2">
-          <Flame className="h-3.5 w-3.5 text-red-500" />
-          <span className="text-xs font-semibold text-amber-800">
-            {hi ? p.urgencyTextHi : p.urgencyText}
+          <Flame className="h-3.5 w-3.5 text-red-500 animate-pulse" />
+          <span className="text-xs font-bold text-amber-900 uppercase tracking-tight">
+            {hi ? '🚀 MPPSC 2027 संस्थापक बैच' : '🚀 MPPSC 2027 Founding Batch'}
           </span>
-          <Badge className="h-5 border-emerald-200 bg-emerald-100 px-1.5 py-0 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100">
-            <Users className="mr-0.5 h-2.5 w-2.5" />
-            {p.studentsBought} joined
-          </Badge>
         </div>
       </div>
 

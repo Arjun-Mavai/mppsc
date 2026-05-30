@@ -12,15 +12,12 @@
 //   - Trust signals + FAQ
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-import { useState, useEffect, useMemo, Suspense } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useMemo, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ChevronDown,
   Shield,
   Zap,
-  Clock,
-  Users,
   Sparkles,
   Target,
   BookOpen,
@@ -28,15 +25,13 @@ import {
   FileText,
   Flame,
   History,
-  Newspaper,
+  Brain,
 } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import {
   PRICING_DEFAULTS,
-  LITE_FEATURES,
   PRO_FEATURES,
 } from '@/config/pricing';
 import type { MppscPricingSegmentKey } from '@/config/mppsc-product-copy';
@@ -95,20 +90,7 @@ const faqData = [
 ];
 
 // ── Feature lists from centralized config ───────────────
-// Icon mapping for pricing page
-const ICON_MAP: Record<string, any> = {
-  Target,
-  BookOpen,
-  Sparkles,
-  FileText,
-  Clock,
-  Zap,
-  BarChart3,
-  History,
-};
-
-// const liteFeatures = LITE_FEATURES.map((f) => ({ ...f, icon: ICON_MAP[f.icon || ''] || Target }));
-const proFeatures = PRO_FEATURES.map((f) => ({ ...f, icon: ICON_MAP[f.icon || ''] || Target }));
+const proFeatures = PRO_FEATURES;
 
 // ── Pricing data from centralized config ────────────────
 
@@ -139,97 +121,98 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
 
 const preValueCards = [
   {
-    icon: BarChart3,
-    label: { en: 'Exam DNA Analysis', hi: 'एग्जाम DNA विश्लेषण' },
-    sub: { en: 'Topic Distribution & Trends', hi: 'विषय वितरण और रुझान' },
-    highlight: true,
-  },
-  {
     icon: Target,
-    label: { en: 'Master Your Syllabus', hi: 'सिलेबस पर महारत' },
-    sub: { en: 'Basic understanding of all 10 units', hi: 'सभी 10 यूनिट्स की पूरी समझ' },
+    label: { en: 'What to study, what to skip', hi: 'क्या पढ़ना है, क्या छोड़ना है' },
+    sub: { en: 'Understand the real exam relevance of every topic and set the exact boundary of your study.', hi: 'हर टॉपिक की वास्तविक परीक्षा-प्रासंगिकता और तैयारी की सही सीमा समझें।' },
     highlight: true,
-  },
-  {
-    icon: Sparkles,
-    label: { en: 'Premium Facts Library', hi: 'प्रीमियम फैक्ट्स लाइब्रेरी' },
-    sub: { en: 'High-yield Exam Facts', hi: 'हाई-यील्ड एग्जाम फैक्ट्स' },
-    highlight: true,
-  },
-  {
-    icon: Zap,
-    label: { en: '5000+ Questions', hi: '5000+ प्रश्न' },
-    sub: { en: 'Across all topics', hi: 'सभी विषयों में' },
-  },
-  {
-    icon: FileText,
-    label: { en: 'Full Mock Tests', hi: 'फुल मॉक टेस्ट' },
-    sub: { en: '100Q each', hi: '100 प्रश्न प्रत्येक' },
   },
   {
     icon: History,
-    label: { en: '5+ Years PYQs', hi: '5+ साल के PYQ' },
-    sub: { en: 'With Explanations', hi: 'विस्तृत उत्तर सहित' },
+    label: { en: 'Identify patterns through PYQs', hi: 'PYQ से पैटर्न पहचानें' },
+    sub: { en: 'Spot high-frequency repeating areas via unit-wise, subject-wise, and year-wise PYQs.', hi: 'Unit-wise, Subject-wise और Year-wise PYQs से बार-बार पूछे जाने वाले विषय पहचानें।' },
     badges: { en: ['Year-wise', 'Subject-wise', 'Unit-wise'], hi: ['वर्ष-वार', 'विषय-वार', 'यूनिट-वार'] },
     highlight: true,
   },
   {
-    icon: Newspaper,
-    label: { en: 'Premium Blogs', hi: 'प्रीमियम ब्लॉग्स' },
-    sub: { en: 'Basic understanding of all 10 units of MPPSC', hi: 'MPPSC की सभी 10 यूनिट्स की बेसिक समझ' },
+    icon: BookOpen,
+    label: { en: 'Deep syllabus understanding', hi: 'सिलेबस की गहरी समझ' },
+    sub: { en: 'Don’t just read a list of topics—grasp the true meaning and exam-weight of every syllabus line.', hi: 'सिर्फ सूची नहीं, बल्कि हर सिलेबस लाइन का वास्तविक अर्थ और महत्व समझें।' },
+    highlight: true,
   },
   {
-    icon: BookOpen,
-    label: { en: 'Master The Concept', hi: 'कॉन्सेप्ट पर महारत' },
-    sub: { en: 'Structured Breakdowns & Shortcuts', hi: 'विस्तृत व्याख्या और शॉर्ट-कट' },
+    icon: BarChart3,
+    label: { en: 'What can be asked in the exam?', hi: 'परीक्षा में क्या पूछा जा सकता है?' },
+    sub: { en: 'Anticipate future question patterns and trends based on scientific PYQ analysis.', hi: 'पिछले वर्षों के प्रश्नों और ट्रेंड्स के आधार पर संभावित परीक्षा दिशा समझें।' },
     highlight: true,
+  },
+  {
+    icon: Brain,
+    label: { en: 'Understand the examiner’s mindset', hi: 'परीक्षक की सोच समझें' },
+    sub: { en: 'Learn how priority weights are assigned and how tricky questions are framed.', hi: 'किस विषय को कितनी प्राथमिकता मिलती है और प्रश्न कैसे घुमाकर पूछे जाते हैं, जानें।' },
+    highlight: true,
+  },
+  {
+    icon: Zap,
+    label: { en: 'Master every single Unit', hi: 'हर यूनिट पर महारत' },
+    sub: { en: 'PYQs, core concepts, and high-yield revision points for all 10 units, centralized.', hi: 'प्रत्येक यूनिट के साथ जुड़े PYQs, अवधारणाएँ और परीक्षा-योग्य बिंदु एक ही स्थान पर।' },
+  },
+  {
+    icon: Sparkles,
+    label: { en: 'Remember complex facts easily', hi: 'कठिन तथ्य आसानी से याद रखें' },
+    sub: { en: 'Store places, MP history, and hard dates permanently using simplified memory hacks.', hi: 'महत्वपूर्ण तथ्यों, स्थानों, इतिहास और अवधारणाओं को सरल ट्रिक्स व संबंधों से याद रखें।' },
+    highlight: true,
+  },
+  {
+    icon: FileText,
+    label: { en: 'Pre-to-Mains connection', hi: 'Pre से Mains तक कनेक्शन' },
+    sub: { en: 'Connect factual prelims topics to conceptual Mains dimensions wherever necessary.', hi: 'जहाँ आवश्यक हो, विषयों के गहरे आयाम और Mains दृष्टिकोण भी समझें।' },
   },
 ];
 
 const mainsValueCards = [
   {
     icon: History,
-    label: { en: '5 Years Mains PYQs (2020-2024)', hi: '5 साल के मुख्य PYQs (2020-2024)' },
-    sub: { en: 'Authentic strategic answers for all 6 papers', hi: 'सभी 6 पेपर्स के प्रामाणिक रणनीतिक उत्तर' },
+    label: { en: 'Recognize Examiner\'s Pattern', hi: 'परीक्षक का वास्तविक पैटर्न पहचानें' },
+    sub: { en: 'Learn how official answers are structured for maximum marks in all 6 papers', hi: 'सीखें कि सभी 6 पेपर्स में अधिकतम अंकों के लिए उत्तर कैसे लिखे जाते हैं' },
     badges: { en: ['Paper 1-6', 'Strategic Answers'], hi: ['पेपर 1-6', 'रणनीतिक उत्तर'] },
     highlight: true,
   },
   {
     icon: Target,
-    label: { en: 'Deep Syllabus Detailing', hi: 'डीप सिलेबस डिटेलिंग' },
-    sub: { en: 'Every topic mapped with conceptual structures, breakdowns, high-yield facts, and state acts', hi: 'सिलेबस के हर topic की स्पष्ट व सूक्ष्म संरचनात्मक समझ, विषय-वार व्याख्या, विस्तृत facts और राज्य विशेष अधिनियम' },
+    label: { en: 'Know Exact Syllabus Depth', hi: 'हर टॉपिक में कितनी डेप्थ तक पढ़ना है, क्लियर' },
+    sub: { en: 'Clear guidelines on what to focus on and what to leave for every single unit', hi: 'प्रत्येक यूनिट के लिए क्या पढ़ना है और क्या छोड़ना है, इसकी बिल्कुल स्पष्ट गाइडलाइन्स' },
     highlight: true,
   },
   {
     icon: Sparkles,
-    label: { en: 'Double-Style Answer Variations', hi: 'डबल-स्टाइल उत्तर वेरिएशन' },
-    sub: { en: 'Every question has 2 completely distinct model answers (compare multiple structures & styles)', hi: 'हर प्रश्न के 2 alag तरीकों व angles से लिखे मॉडल उत्तर (एक ही उत्तर को दो alag दृष्टिकोणों से समझने की शैली)' },
+    label: { en: 'Master Multiple Scoring Approaches', hi: 'एक ही प्रश्न को अलग-अलग तरीकों से लिखना सीखें' },
+    sub: { en: 'Compare and master 2 completely distinct natural model drafts for each question', hi: 'हर प्रश्न के लिए 2 बिल्कुल अलग दृष्टिकोण वाले शानदार मॉडल उत्तरों का विश्लेषण' },
     highlight: true,
   },
   {
     icon: Zap,
-    label: { en: '⚡ Ultra-Fast 1-Click Syllabus Navigator', hi: '⚡ अल्ट्रा-फास्ट 1-क्लिक सिलेबस नेविगेटर' },
+    label: { en: '⚡ Save Hours of Page-Juggling', hi: '⚡ PDFs के झंझट से मुक्ति, समय बचाएं' },
     sub: { 
-      en: 'No more opening 10 PDFs! Our Syllabus Menu is so fast you can switch between any unit or topic of Paper 1-6 in 1 click without page reloads. Zero context switch time.', 
-      hi: 'सिलेबस चेक करने में 10 PDFs खोलने का झंझट खत्म! हमारा "सिलेबस मेन्यू" इतना फास्ट है कि छात्र बिना पेज रीलोड किए, पेपर 1 से पेपर 6 के किसी भी टॉपिक पर 1 क्लिक में स्विच कर सकते हैं।' 
+      en: 'Switch between any topic or paper of GS 1-6 instantly without losing focus', 
+      hi: 'बिना फोकस खोए पेपर 1 से 6 के किसी भी टॉपिक पर 1 क्लिक में तुरंत स्विच करें' 
     },
     highlight: true,
   },
   {
     icon: BookOpen,
-    label: { en: 'Strategic Expert Blueprint', hi: 'रणनीतिक रूपरेखा' },
-    sub: { en: 'What to study & how to secure marks', hi: 'क्या पढ़ना है और कैसे स्कोर बढ़ाना है' },
+    label: { en: 'Write Like an Expert', hi: 'विशेषज्ञ की तरह प्रभावशाली उत्तर लिखें' },
+    sub: { en: 'Learn exact scoring tricks, what to underline, and examiner mindset rules', hi: 'सीखें कि उत्तर में क्या अंडरलाइन करना है, और सामान्य गलतियों से कैसे बचना है' },
     highlight: true,
   },
   {
     icon: History,
-    label: { en: 'Syllabus-Mapped PYQ Matrix', hi: 'सिलेबस-मैप्ड PYQ मैट्रिक्स' },
-    sub: { en: 'See exam patterns evolve directly under the topic you are reading.', hi: 'जो टॉपिक आप पढ़ रहे हैं, उसके ठीक नीचे देखें कि पिछले सालों में क्या पूछा गया।' },
+    label: { en: 'See Syllabus Evolve Into Questions', hi: 'देखें कि सिलेबस से प्रश्न कैसे बनते हैं' },
+    sub: { en: 'Read past years\' questions mapped directly under the topic you are revising', hi: 'जो टॉपिक आप पढ़ रहे हैं, उसके ठीक नीचे पिछले वर्षों के प्रश्नों का सीधा लाइव कवरेज' },
   },
   {
     icon: Zap,
-    label: { en: 'Bilingual Mnemonics', hi: 'द्विभाषी मेमोनिक्स' },
-    sub: { en: 'Effortless retention keywords & triggers', hi: 'याद रखने की आसान ट्रिक्स व कीवर्ड्स' },
+    label: { en: 'Remember Complex Topics Permanently', hi: 'कठिन विषयों को लंबे समय तक याद रखें' },
+    sub: { en: 'Store hard acts, constitutional articles, and MP facts using smart associations', hi: 'कठिन अधिनियमों, अनुच्छेदों और MP के फैक्ट्स को आसान मेमोरी ट्रिक्स से याद रखें' },
   },
 ];
 
@@ -248,12 +231,10 @@ function PricingPageInner() {
   const planTier = user?.planTier ?? 'free';
   const isProUser = planTier === 'pro';
   const isLiteUser = planTier === 'lite';
-  const [mppscSegment, setMppscSegment] = useState<MppscPricingSegmentKey>('combo');
+  const [mppscSegment, setMppscSegment] = useState<MppscPricingSegmentKey>(
+    () => (searchParams.get('need') === 'mains' ? 'mains' : 'combo')
+  );
   const [showAllMainsCards, setShowAllMainsCards] = useState(false);
-
-  useEffect(() => {
-    setShowAllMainsCards(false);
-  }, [mppscSegment]);
 
   // 🔒 Fetch pricing with React Query + Server Action
   const { data: pricingData, isLoading } = useQuery({
@@ -278,18 +259,19 @@ function PricingPageInner() {
     }));
   }, [mppscCopy, mppscSegment]);
 
-  useEffect(() => {
-    if (searchParams.get('need') === 'mains') {
-      setMppscSegment('mains');
-    }
-  }, [searchParams]);
-
   // Pre Pro users without Mains — old behaviour: skip pricing noise
+  const needsMainsUpsell = searchParams.get('need') === 'mains';
+
   useEffect(() => {
-    if (isProUser && hasPreAccess(user as any) && !hasMainsAccess(user as any)) {
+    if (!needsMainsUpsell && isProUser && hasPreAccess(user) && !hasMainsAccess(user)) {
       router.replace('/syllabus/quiz/pyq');
     }
-  }, [isProUser, user, router]);
+  }, [isProUser, needsMainsUpsell, user, router]);
+
+  const handleSegmentChange = useCallback((key: MppscPricingSegmentKey) => {
+    setMppscSegment(key);
+    setShowAllMainsCards(false);
+  }, []);
 
   const handleBuy = (plan: 'lite' | 'pro' | 'upgrade' | 'mains' | 'combo') => {
     if (plan === 'lite') {
@@ -306,7 +288,7 @@ function PricingPageInner() {
     } else if (plan === 'combo') {
       setSelectedPlan({
         planType: 'combo',
-        name: `Pre + Mains Combo — ₹${p.comboPrice}`,
+        name: `MPPSC Complete Preparation System — ₹${p.comboPrice}`,
       });
     }
     setShowPaymentModal(true);
@@ -387,7 +369,7 @@ function PricingPageInner() {
               language={language}
               onBuy={() => handleBuy('pro')}
             />
-            {!hasMainsAccess(user as any) && (
+            {!hasMainsAccess(user) && (
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-6 text-center shadow-sm">
                 <p className="mb-3 text-sm font-bold text-emerald-900">
                   {hi ? 'मेन्स ज्ञानकोश जोड़ें' : 'Add Mains Gyan Kosh'}
@@ -499,13 +481,8 @@ function PricingPageInner() {
             <div className="relative inline-flex items-center gap-3 rounded-full border border-amber-200 bg-amber-50/80 backdrop-blur-sm px-5 py-2.5 shadow-xl shadow-amber-500/5">
               <Flame className="h-4 w-4 text-orange-600 animate-pulse" />
               <span className="text-sm font-black text-amber-900 uppercase tracking-tight">
-                {hi ? p.urgencyTextHi : p.urgencyText}
+                {hi ? '🚀 MPPSC 2027 संस्थापक बैच' : '🚀 MPPSC 2027 Founding Batch'}
               </span>
-              <div className="h-4 w-px bg-amber-200 mx-1" />
-              <Badge className="h-6 border-emerald-200 bg-emerald-100 px-2 py-0 text-xs font-black text-emerald-800 hover:bg-emerald-100">
-                <Users className="mr-1 h-3 w-3" />
-                {p.studentsBought || PRICING_DEFAULTS.studentsBought} joined
-              </Badge>
             </div>
           </div>
 
@@ -528,7 +505,7 @@ function PricingPageInner() {
                   type="button"
                   role="tab"
                   aria-selected={mppscSegment === key}
-                  onClick={() => setMppscSegment(key)}
+                  onClick={() => handleSegmentChange(key)}
                   className={cn(
                     'relative flex-1 rounded-xl py-3 text-center text-xs font-black uppercase tracking-wide transition-all',
                     mppscSegment === key

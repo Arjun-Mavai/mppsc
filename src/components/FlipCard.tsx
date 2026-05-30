@@ -246,15 +246,6 @@ const FlipCard: React.FC<FlipCardProps> = ({
             >
               Read More
             </button>
-
-            {/* Practice Button */}
-            <button
-              onClick={handlePracticeClick}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-slate-800 to-violet-600 text-[10px] font-black tracking-wider text-white uppercase shadow-lg shadow-slate-600/20 transition-all hover:scale-[1.02] hover:shadow-slate-600/40"
-            >
-              <Zap size={14} className="fill-white" />
-              {labels.practiceTest}
-            </button>
           </div>
         </div>
       </motion.div>

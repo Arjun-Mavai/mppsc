@@ -26,9 +26,9 @@ export function HeroSection() {
       badge: 'MPPSC : Elite Selection',
       welcome: 'Welcome back,',
       ready: 'Ready for today\'s challenge?',
-      title1: 'Master Both',
-      title2: 'Prelims & Mains.',
-      subtitle: 'Hoarding textbooks won\'t clear the exam. Master the exact syllabus demand, unlock retention mnemonics, and learn the science of dual-style model answers.',
+      title1: 'MPPSC Prelims +',
+      title2: 'Mains',
+      subtitle: 'Understand what to study, what to skip, what the question demands, and how to apply what you have learned in the exam.',
       primaryBtn: 'Practice Free Test',
       pyqBtn: 'Practice PYQs',
       mainsBtn: 'Go to Mains Vault',
@@ -41,9 +41,9 @@ export function HeroSection() {
       badge: 'MPPSC : एलीट सिलेक्शन',
       welcome: 'स्वागत है,',
       ready: 'क्या आप आज की चुनौती के लिए तैयार हैं?',
-      title1: 'प्रारंभिक और मुख्य परीक्षा दोनों में',
-      title2: 'महारत हासिल करें।',
-      subtitle: 'सिर्फ किताबें और पीडीएफ जमा करने से सिलेक्शन नहीं होता। जानिए हर प्रश्न की असली डिमांड, स्मार्ट मेमोनिक्स से याद रखने की कला, और 2 अलग-अलग स्टाइल में उत्तर लिखने का विज्ञान।',
+      title1: 'MPPSC Prelims +',
+      title2: 'Mains',
+      subtitle: 'समझिए क्या पढ़ना है, क्या छोड़ना है, प्रश्न की मांग क्या है, और परीक्षा में पढ़ी हुई चीज़ों को कैसे उपयोग करना है।',
       primaryBtn: 'फ्री टेस्ट प्रैक्टिस करें',
       pyqBtn: 'PYQs प्रैक्टिस करें',
       mainsBtn: 'मेंस रिपॉजिटरी पर जाएं',
@@ -108,28 +108,28 @@ export function HeroSection() {
           animation: crystal-shimmer 5s infinite linear;
         }
       `}</style>
-      
+
       {/* 🎭 BEYOND-PREMIUM ATMOSPHERE */}
       <div className="pointer-events-none absolute inset-0 z-0">
         {/* Animated Aurora Glows */}
         <div className="absolute top-[-10%] left-[-10%] h-[800px] w-[800px] rounded-full bg-indigo-600/15 blur-[140px] animate-pulse" />
         <div className="absolute bottom-[-10%] right-[-10%] h-[700px] w-[700px] rounded-full bg-amber-600/10 blur-[140px]" />
-        
+
         {/* Cinematic Particles / Grid */}
-        <div 
-          className="absolute inset-0 opacity-[0.08]" 
+        <div
+          className="absolute inset-0 opacity-[0.08]"
           style={{
             backgroundImage: `radial-gradient(#ffffff 1px, transparent 0)`,
             backgroundSize: '40px 40px',
           }}
         />
-        
+
         {/* Center Spotlight */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#020408_90%)]" />
       </div>
 
       <div className="relative z-10 flex w-full max-w-6xl flex-col items-center justify-center text-center -translate-y-4 md:-translate-y-6">
-        
+
         {/* Status Badge */}
         <div className="animate-fade-in-up mb-8 inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-5 py-2 backdrop-blur-xl transition-colors hover:border-white/10">
           <Trophy size={15} className="text-amber-400 animate-bounce" />
@@ -140,104 +140,59 @@ export function HeroSection() {
 
         {/* Headline - High Impact Typography */}
         <div className="space-y-4 animate-fade-in-up">
-          <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter text-white leading-[1.3] md:leading-[1.15]">
-            {language === 'hi' ? (
-              <span className="block opacity-95">
-                प्रारंभिक और{' '}
-                <span className="inline-block relative align-middle my-1">
-                  {/* Clean direct arrow placed at bottom-left pointing up-right towards the button */}
-                  <div className="absolute -bottom-6 left-2 z-20 pointer-events-none filter drop-shadow-[0_2px_8px_rgba(245,158,11,0.5)] animate-bounce">
-                    <svg
-                      width="32"
-                      height="32"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M5 19L19 5M19 5H9M19 5V15"
-                        stroke="#f59e0b"
-                        strokeWidth="3.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleNavigation('/mains', 'hero_mains_badge_clicked')}
-                    disabled={isPending}
-                    className="relative inline-flex items-center gap-2 rounded-2xl border border-red-500/50 bg-red-950/30 px-6 py-2 sm:px-8 sm:py-3.5 text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-white shadow-[0_0_25px_rgba(239,68,68,0.25)] transition-all hover:scale-[1.05] hover:border-red-400 hover:bg-red-950/50 hover:shadow-[0_0_40px_rgba(239,68,68,0.45)] active:scale-95 cursor-pointer select-none mx-3 group overflow-hidden"
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter text-white leading-[1.3] md:leading-[1.15]">
+            <span className="block opacity-95">
+              MPPSC Prelims +{' '}
+              <span className="inline-block relative align-middle my-1">
+                {/* Clean direct arrow placed at bottom-left pointing up-right towards the button */}
+                <div className="absolute -bottom-6 left-2 z-20 pointer-events-none filter drop-shadow-[0_2px_8px_rgba(245,158,11,0.5)] animate-bounce">
+                  <svg
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    {/* Shimmer background */}
-                    <div className="absolute inset-0 shimmer-bg" />
+                    <path
+                      d="M5 19L19 5M19 5H9M19 5V15"
+                      stroke="#f59e0b"
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
 
-                    {/* Micro-sparkles inside the box */}
-                    <Sparkles size={16} className="absolute -top-2 -right-2 text-amber-400 animate-pulse z-10" />
-                    
-                    <span className="relative z-10 text-white font-black filter drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">
-                      मुख्य परीक्षा
-                    </span>
-                  </button>
-                </span>
-                {' '}दोनों में
+                <button
+                  type="button"
+                  onClick={() => handleNavigation('/mains', 'hero_mains_badge_clicked')}
+                  disabled={isPending}
+                  className="relative inline-flex items-center gap-2 rounded-2xl border border-red-500/50 bg-red-950/30 px-6 py-2 sm:px-8 sm:py-3.5 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white shadow-[0_0_25px_rgba(239,68,68,0.25)] transition-all hover:scale-[1.05] hover:border-red-400 hover:bg-red-950/50 hover:shadow-[0_0_40px_rgba(239,68,68,0.45)] active:scale-95 cursor-pointer select-none mx-3 group overflow-hidden"
+                >
+                  {/* Shimmer background */}
+                  <div className="absolute inset-0 shimmer-bg" />
+
+                  {/* Micro-sparkles inside the box */}
+                  <Sparkles size={16} className="absolute -top-2 -right-2 text-amber-400 animate-pulse z-10" />
+
+                  <span className="relative z-10 text-white font-black filter drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">
+                    Mains
+                  </span>
+                </button>
               </span>
-            ) : (
-              <span className="block opacity-80 mix-blend-overlay">
-                Master Both
-              </span>
-            )}
+            </span>
 
             {language === 'hi' ? (
-              <span className="block bg-gradient-to-b from-amber-200 via-amber-400 to-orange-600 bg-clip-text text-transparent filter drop-shadow-[0_10px_40px_rgba(245,158,11,0.25)] mt-2">
-                महारत हासिल करें।
+              <span className="block bg-gradient-to-b from-amber-200 via-amber-400 to-orange-500 bg-clip-text text-transparent filter drop-shadow-[0_10px_40px_rgba(245,158,11,0.25)] mt-4 text-3xl sm:text-5xl md:text-6xl font-black">
+                सिर्फ पढ़ाई नहीं, सही दिशा में तैयारी।
               </span>
             ) : (
-              <span className="block bg-gradient-to-b from-amber-200 via-amber-400 to-orange-600 bg-clip-text text-transparent filter drop-shadow-[0_10px_40px_rgba(245,158,11,0.25)]">
-                Prelims &{' '}
-                <span className="inline-block relative align-middle my-1">
-                  {/* Clean direct arrow placed at bottom-left pointing up-right towards the button */}
-                  <div className="absolute -bottom-6 left-2 z-20 pointer-events-none filter drop-shadow-[0_2px_8px_rgba(245,158,11,0.5)] animate-bounce">
-                    <svg
-                      width="32"
-                      height="32"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M5 19L19 5M19 5H9M19 5V15"
-                        stroke="#f59e0b"
-                        strokeWidth="3.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleNavigation('/mains', 'hero_mains_badge_clicked')}
-                    disabled={isPending}
-                    className="relative inline-flex items-center gap-2 rounded-2xl border border-red-500/50 bg-red-950/30 px-6 py-2 sm:px-8 sm:py-3.5 text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-white shadow-[0_0_25px_rgba(239,68,68,0.25)] transition-all hover:scale-[1.05] hover:border-red-400 hover:bg-red-950/50 hover:shadow-[0_0_40px_rgba(239,68,68,0.45)] active:scale-95 cursor-pointer select-none mx-3 group overflow-hidden"
-                  >
-                    {/* Shimmer background */}
-                    <div className="absolute inset-0 shimmer-bg" />
-
-                    {/* Micro-sparkles inside the box */}
-                    <Sparkles size={16} className="absolute -top-2 -right-2 text-amber-400 animate-pulse z-10" />
-                    
-                    <span className="relative z-10 text-white font-black filter drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">
-                      Mains
-                    </span>
-                  </button>
-                </span>
-                .
+              <span className="block bg-gradient-to-b from-amber-200 via-amber-400 to-orange-500 bg-clip-text text-transparent filter drop-shadow-[0_10px_40px_rgba(245,158,11,0.25)] mt-4 text-3xl sm:text-5xl md:text-6xl font-black">
+                Don't just study, prepare with direction.
               </span>
             )}
           </h1>
-          
+
           <p className="mx-auto mt-8 max-w-2xl px-6 text-base font-bold leading-relaxed text-slate-400 md:text-xl">
             {t.subtitle}
           </p>
@@ -307,7 +262,7 @@ export function HeroSection() {
       {/* Loading Portal Overlay */}
       <AnimatePresence>
         {isPending && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -322,7 +277,7 @@ export function HeroSection() {
               <div className="flex flex-col items-center gap-2">
                 <p className="text-[11px] font-black tracking-[0.5em] text-amber-500 uppercase">Syncing Data</p>
                 <div className="h-1 w-32 overflow-hidden rounded-full bg-white/5">
-                  <motion.div 
+                  <motion.div
                     initial={{ x: '-100%' }}
                     animate={{ x: '100%' }}
                     transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}

@@ -4,7 +4,7 @@
  * Mains vault pitch inside SyllabusLockMainsModal — mirrors PremiumMarketing shell,
  * prices + bullets from `getPricingData('mppsc')` (DB + merged defaults).
  */
-import { Users, Flame, X } from 'lucide-react';
+import { Flame, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -60,13 +60,11 @@ export function MainsPremiumMarketing({ onClose }: MainsPremiumMarketingProps) {
       <h2 className="font-display mb-3 max-w-xl text-2xl leading-tight font-black tracking-tight text-slate-900 md:text-4xl">
         {hi ? (
           <>
-            <span className="text-emerald-700">PYQ-फोकस्ड</span> सिलेबस<br />
-            गहरी समझ के लिए
+            सिलेबस से उत्तर तक की <span className="text-emerald-700">स्पष्ट समझ</span>
           </>
         ) : (
           <>
-            <span className="text-emerald-700">PYQ-focused</span> Syllabus<br />
-            for Deep Understanding
+            Clear <span className="text-emerald-700">understanding</span> from syllabus to answers
           </>
         )}
       </h2>
@@ -78,14 +76,10 @@ export function MainsPremiumMarketing({ onClose }: MainsPremiumMarketingProps) {
 
       <div className="mb-8 flex justify-center">
         <div className="relative inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2">
-          <Flame className="h-3.5 w-3.5 text-red-500" />
-          <span className="text-xs font-semibold text-amber-800">
-            {hi ? p.urgencyTextHi : p.urgencyText}
+          <Flame className="h-3.5 w-3.5 text-red-500 animate-pulse" />
+          <span className="text-xs font-bold text-amber-900 uppercase tracking-tight">
+            {hi ? '🚀 MPPSC 2027 संस्थापक बैच' : '🚀 MPPSC 2027 Founding Batch'}
           </span>
-          <Badge className="h-5 border-emerald-200 bg-emerald-100 px-1.5 py-0 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100">
-            <Users className="mr-0.5 h-2.5 w-2.5" />
-            {p.studentsBought ?? PRICING_DEFAULTS.studentsBought} joined
-          </Badge>
         </div>
       </div>
 

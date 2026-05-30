@@ -19,7 +19,7 @@ import { TopicData } from '@/app/syllabus/[unitId]/UnitContent';
  */
 export const ACCESS_CONFIG = {
   // Unit 1 me kitne topics free users ko dikhane h (fallback when DB flags not set)
-  FREE_TOPICS_UNIT1: 5,
+  FREE_TOPICS_UNIT1: 2,
 
   // Lite plan limits — ye ab legacy fallback hai
   // Primary control DB flags se hota hai

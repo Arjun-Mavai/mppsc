@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { syllabusTopics, mppscUsers } from '@/db/schema';
+import { syllabusTopics } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 
@@ -9,26 +9,46 @@ const ADMIN_SECRET_HEADER = 'x-admin-secret';
 
 type EnrichedTopic = {
   id: string;
-  content_hindi: any;
-  content_english: any;
+  content_hindi: unknown;
+  content_english: unknown;
+};
+
+type ExportTopic = {
+  id: string;
+  unit_title: string;
+  topic_title: string;
+  topic_title_en: string;
+  hasAiContent: boolean;
+};
+
+type ExportUnit = {
+  title: string;
+  topics: ExportTopic[];
+  topics_en: ExportTopic[];
 };
 
 export async function GET(request: NextRequest) {
   try {
-    // verify secret? For export maybe not strictly necessary if it's just IDs/Titles,
-    // but cleaner to require it. Use query param or header.
-    // For simplicity in this tool, we'll allow fetching metadata without secret
-    // OR require the header if the UI handles it.
-    // Let's make it public for now since syllabus structure isn't super sensitive,
-    // or key-protected if easily doable. The client page has the key input for POST,
-    // but for GET it loads on mount. Let's leave it open but maybe lightweight.
+    const adminSecret = request.headers.get(ADMIN_SECRET_HEADER);
+    if (!adminSecret) {
+      return NextResponse.json({ error: 'Missing Admin Secret' }, { status: 401 });
+    }
+
+    const adminUser = await db.query.mppscUsers.findFirst({
+      where: (users, { and, eq }) =>
+        and(eq(users.role, 'admin'), eq(users.adminSecret, adminSecret)),
+    });
+
+    if (!adminUser) {
+      return NextResponse.json({ error: 'Invalid Admin Secret' }, { status: 403 });
+    }
 
     const allTopics = await db.query.syllabusTopics.findMany({
       orderBy: (topics, { asc }) => [asc(topics.unitId), asc(topics.order)],
     });
 
     // Group by Unit
-    const grouped: Record<string, any> = {};
+    const grouped: Record<string, ExportUnit> = {};
 
     // Helper to format unit ID (unit_1 -> Unit 1) if needed,
     // but we keep keys as unit_1 for consistency
@@ -36,10 +56,9 @@ export async function GET(request: NextRequest) {
     allTopics.forEach((topic) => {
       if (!grouped[topic.unitId]) {
         grouped[topic.unitId] = {
-          title: topic.unitId.replace('_', ' ').toUpperCase(), // Fallback title
+          title: topic.unitId.replace('_', ' ').toUpperCase(),
           topics: [],
-          topics_en: [], // We don't really use this structure in the export JSON logic anymore,
-          // we just need the flat list for the specific unit
+          topics_en: []
         };
       }
 
@@ -58,12 +77,13 @@ export async function GET(request: NextRequest) {
 
         topic_title: topic.title,
         topic_title_en: topic.titleEn || topic.title,
+        hasAiContent: !!topic.aiContent,
       });
     });
 
     return NextResponse.json({ units: grouped });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Internal Server Error' }, { status: 500 });
   }
 }
 
@@ -119,9 +139,9 @@ export async function POST(request: NextRequest) {
           .where(eq(syllabusTopics.id, topic.id));
 
         updatedCount++;
-      } catch (err: any) {
+      } catch (err: unknown) {
         logger.error(`Failed to update topic ${topic.id}:`, err);
-        errors.push({ id: topic.id, error: err.message });
+        errors.push({ id: topic.id, error: err instanceof Error ? err.message : 'Failed to update topic' });
       }
     }
 
@@ -130,8 +150,46 @@ export async function POST(request: NextRequest) {
       message: `Successfully updated ${updatedCount} topics.`,
       errors: errors.length > 0 ? errors : undefined,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Bulk enrichment failed:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Bulk enrichment failed' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const adminSecret = request.headers.get(ADMIN_SECRET_HEADER);
+    if (!adminSecret) {
+      return NextResponse.json({ error: 'Missing Admin Secret' }, { status: 401 });
+    }
+
+    const adminUser = await db.query.mppscUsers.findFirst({
+      where: (users, { and, eq }) =>
+        and(eq(users.role, 'admin'), eq(users.adminSecret, adminSecret)),
+    });
+
+    if (!adminUser) {
+      return NextResponse.json({ error: 'Invalid Admin Secret' }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const topicId = searchParams.get('topicId');
+
+    if (!topicId) {
+      return NextResponse.json({ error: 'Topic ID is required' }, { status: 400 });
+    }
+
+    await db
+      .update(syllabusTopics)
+      .set({
+        aiContent: null,
+        aiContentEn: null,
+      })
+      .where(eq(syllabusTopics.id, topicId));
+
+    return NextResponse.json({ success: true, message: `Cleared AI content for topic: ${topicId}` });
+  } catch (error: unknown) {
+    logger.error('Failed to clear topic AI content:', error);
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to clear topic AI content' }, { status: 500 });
   }
 }
