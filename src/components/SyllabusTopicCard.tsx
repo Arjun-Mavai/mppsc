@@ -164,7 +164,7 @@ export const SyllabusTopicCard: React.FC<SyllabusTopicCardProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           {hasAiContent && (
             <div className="inline-flex items-center rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[9px] font-black tracking-widest text-indigo-600 uppercase shadow-sm">
-              <Sparkles className="mr-1.5 h-3 w-3 fill-indigo-600/20" /> Rich Notes
+              <Sparkles className="mr-1.5 h-3 w-3 fill-indigo-600/20" /> View Details
             </div>
           )}
           {isLocked ? (

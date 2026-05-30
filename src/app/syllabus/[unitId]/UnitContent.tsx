@@ -447,7 +447,7 @@ export default function UnitContent({
                     <div className="flex flex-wrap items-center gap-3">
                       {topic.introduction && (
                         <span className="inline-flex items-center rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-[10px] font-black tracking-widest text-indigo-600 uppercase">
-                          <Sparkles className="mr-2 h-3.5 w-3.5 fill-indigo-600/20" /> Rich Notes
+                          <Sparkles className="mr-2 h-3.5 w-3.5 fill-indigo-600/20" /> View Details
                         </span>
                       )}
                       {locked ? (
