@@ -133,34 +133,14 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
     [prefetchUnit, router]
   );
 
-  // Hydration fix for Persist middleware
+  // Hydration fix for Persist middleware & URL Sync
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setIsMounted(true);
-      const urlLang = searchParams.get('lang');
-      if (urlLang === 'en' || urlLang === 'hi') {
-        if (urlLang !== language) setLanguage(urlLang);
-      }
-    }, 0);
-    return () => clearTimeout(timeoutId);
-  }, []);
-
-  useEffect(() => {
-    if (!isMounted) return;
-
-    const unlockedUnitIds = Object.keys(syllabusData.units).filter(
-      (unitId) => isSubscribed || unitId === 'unit_1'
-    );
-    const warmupCount = isSubscribed ? 4 : 1;
-    const warmupUnitIds = unlockedUnitIds.slice(0, warmupCount);
-
-    const runWarmup = () => {
-      warmupUnitIds.forEach(prefetchUnit);
-    };
-
-    const warmupTimer = setTimeout(runWarmup, 120);
-    return () => clearTimeout(warmupTimer);
-  }, [isMounted, isSubscribed, prefetchUnit, syllabusData.units]);
+    setIsMounted(true);
+    const urlLang = searchParams.get('lang');
+    if ((urlLang === 'en' || urlLang === 'hi') && urlLang !== language) {
+      setLanguage(urlLang);
+    }
+  }, [searchParams, language, setLanguage]);
 
   // Keyboard shortcut for Command Palette
   useEffect(() => {
