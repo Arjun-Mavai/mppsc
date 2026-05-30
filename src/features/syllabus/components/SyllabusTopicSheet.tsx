@@ -294,7 +294,7 @@ export function SyllabusTopicSheet({
               >
                 {isHindi ? 'एक्सपर्ट डिकोडिंग' : 'Expert Decoding'}
               </button>
-              <button
+              {/* <button
                 onClick={() => setViewMode('official')}
                 className={cn(
                   'flex-1 rounded-xl py-2.5 text-[10px] font-black uppercase tracking-widest transition-all',
@@ -304,7 +304,7 @@ export function SyllabusTopicSheet({
                 )}
               >
                 {isHindi ? 'आधिकारिक' : 'Official'}
-              </button>
+              </button> */}
             </div>
           </div>
 
