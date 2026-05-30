@@ -645,6 +645,7 @@ export function SyllabusTopicSheet({
                         {topic.potential_mains_questions.map((q, i) => {
                           const cleanQ = q
                             .replace(/\[\s*MPPSC\s*\]/gi, '')
+                            .replace(/\[\s*Expected\s*\]/gi, '')
                             .replace(/[\(（]\s*\d+\s*(?:Marks|marks|अंक)\s*[\)）]/g, '')
                             .replace(/\s+/g, ' ')
                             .trim();
