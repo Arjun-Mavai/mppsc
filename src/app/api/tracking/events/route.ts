@@ -56,12 +56,16 @@ export async function POST(req: Request) {
 
     // 🌍 EXTRACT IP AND LOCATION FROM VERCEL/CLOUDFLARE HEADERS
     const ip = headerList.get('x-forwarded-for')?.split(',')[0]?.trim() || headerList.get('cf-connecting-ip') || 'Unknown IP';
-    const city = headerList.get('x-vercel-ip-city') || headerList.get('cf-ipcity');
+    const rawCity = headerList.get('x-vercel-ip-city') || headerList.get('cf-ipcity');
+    let city: string | null = rawCity;
+    if (rawCity) {
+      try { city = decodeURIComponent(rawCity); } catch { city = rawCity; }
+    }
     const region = headerList.get('x-vercel-ip-country-region');
     const country = headerList.get('x-vercel-ip-country') || headerList.get('cf-ipcountry');
     
     // Build location string
-    let locationParts = [];
+    const locationParts: string[] = [];
     if (city) locationParts.push(city);
     if (region) locationParts.push(region);
     if (country) locationParts.push(country);
