@@ -24,6 +24,8 @@ export interface TelemetryEvent {
   userAgent?: string;
   referrer?: string;
   actionDetails?: string;
+  ip?: string;
+  location?: string;
 }
 
 /**
@@ -98,6 +100,9 @@ function formatTelemetryMessage(event: TelemetryEvent): string {
   const deviceType = event.device ? `[${event.device}]` : '';
   const browserOs = event.userAgent ? parseReadableUserAgent(event.userAgent) : 'Unknown Browser';
   const connectionDisplay = `📱 ${escapeHTML(browserOs)} ${deviceType}`;
+  const locationDisplay = event.location ? `🌍 <b>Location:</b> ${escapeHTML(event.location)}` : '';
+  const ipDisplay = event.ip && event.ip !== 'Unknown IP' ? ` | 🖥️ <code>${escapeHTML(event.ip)}</code>` : '';
+
 
   // Time in IST (Day, Date, and Time format)
   const dateObj = new Date();
@@ -135,6 +140,7 @@ function formatTelemetryMessage(event: TelemetryEvent): string {
       `👀 <b>Page Visited:</b> <code>${escapeHTML(event.path)}</code>${landingBadge}\n\n` +
       `${userDisplay}\n` +
       `${connectionDisplay}\n` +
+      (locationDisplay ? `${locationDisplay}${ipDisplay}\n` : '') +
       (event.referrer ? `🔍 <b>Referrer:</b> <code>${escapeHTML(event.referrer)}</code>\n` : '') +
       `📅 <b>Date & Time:</b> ${timestamp}\n\n` +
       `${tags} #PageView`;
@@ -148,6 +154,7 @@ function formatTelemetryMessage(event: TelemetryEvent): string {
       (event.previousPath ? `➡️ <b>Navigated to:</b> <code>${escapeHTML(event.previousPath)}</code>\n\n` : '\n') +
       `${userDisplay}\n` +
       `${connectionDisplay}\n` +
+      (locationDisplay ? `${locationDisplay}${ipDisplay}\n` : '') +
       `📅 <b>Date & Time:</b> ${timestamp}\n\n` +
       `${tags} #DwellTime`;
   } else {
@@ -158,6 +165,7 @@ function formatTelemetryMessage(event: TelemetryEvent): string {
       `📍 <b>Active Page:</b> <code>${escapeHTML(event.path)}</code>\n\n` +
       `${userDisplay}\n` +
       `${connectionDisplay}\n` +
+      (locationDisplay ? `${locationDisplay}${ipDisplay}\n` : '') +
       `📅 <b>Date & Time:</b> ${timestamp}\n\n` +
       `${tags} #UserAction`;
   }

@@ -54,6 +54,19 @@ export async function POST(req: Request) {
     const sanitize = <T extends string | null | undefined>(str: T, max = 500): T => 
       typeof str === 'string' ? str.substring(0, max) as T : str;
 
+    // 🌍 EXTRACT IP AND LOCATION FROM VERCEL/CLOUDFLARE HEADERS
+    const ip = headerList.get('x-forwarded-for')?.split(',')[0]?.trim() || headerList.get('cf-connecting-ip') || 'Unknown IP';
+    const city = headerList.get('x-vercel-ip-city') || headerList.get('cf-ipcity');
+    const region = headerList.get('x-vercel-ip-country-region');
+    const country = headerList.get('x-vercel-ip-country') || headerList.get('cf-ipcountry');
+    
+    // Build location string
+    let locationParts = [];
+    if (city) locationParts.push(city);
+    if (region) locationParts.push(region);
+    if (country) locationParts.push(country);
+    const location = locationParts.length > 0 ? locationParts.join(', ') : undefined;
+
     const validatedEvent: TelemetryEvent = {
       ...body,
       path: body.path.substring(0, 255),
@@ -62,6 +75,8 @@ export async function POST(req: Request) {
       userAgent: sanitize(body.userAgent, 500),
       actionDetails: sanitize(body.actionDetails, 1000),
       guestName: sanitize(body.guestName, 100),
+      ip,
+      location,
     };
 
     // 🚀 ASYNCHRONOUS BACKGROUND DISPATCH
