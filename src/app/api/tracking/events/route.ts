@@ -55,14 +55,17 @@ export async function POST(req: Request) {
       typeof str === 'string' ? str.substring(0, max) as T : str;
 
     // 🌍 EXTRACT IP AND LOCATION FROM VERCEL/CLOUDFLARE HEADERS
-    const ip = headerList.get('x-forwarded-for')?.split(',')[0]?.trim() || headerList.get('cf-connecting-ip') || 'Unknown IP';
-    const rawCity = headerList.get('x-vercel-ip-city') || headerList.get('cf-ipcity');
+    const isCloudflare = !!headerList.get('cf-connecting-ip');
+    const ip = headerList.get('cf-connecting-ip') || headerList.get('x-forwarded-for')?.split(',')[0]?.trim() || 'Unknown IP';
+    
+    const rawCity = isCloudflare ? headerList.get('cf-ipcity') : (headerList.get('x-vercel-ip-city') || headerList.get('cf-ipcity'));
     let city: string | null = rawCity;
     if (rawCity) {
       try { city = decodeURIComponent(rawCity); } catch { city = rawCity; }
     }
-    const region = headerList.get('x-vercel-ip-country-region');
-    const country = headerList.get('x-vercel-ip-country') || headerList.get('cf-ipcountry');
+    
+    const region = isCloudflare ? null : headerList.get('x-vercel-ip-country-region');
+    const country = isCloudflare ? headerList.get('cf-ipcountry') : (headerList.get('x-vercel-ip-country') || headerList.get('cf-ipcountry'));
     
     // Build location string
     const locationParts: string[] = [];
