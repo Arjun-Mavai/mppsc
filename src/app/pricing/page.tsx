@@ -479,9 +479,8 @@ function PricingPageInner() {
           {/* FOMO badge — Now just above pricing */}
           <div className="mb-10 flex justify-center">
             <div className="relative inline-flex items-center gap-3 rounded-full border border-amber-200 bg-amber-50/80 backdrop-blur-sm px-5 py-2.5 shadow-xl shadow-amber-500/5">
-              <Flame className="h-4 w-4 text-orange-600 animate-pulse" />
               <span className="text-sm font-black text-amber-900 uppercase tracking-tight">
-                {hi ? '🚀 MPPSC 2027 संस्थापक बैच' : '🚀 MPPSC 2027 Founding Batch'}
+                {hi ? 'अर्ली बर्ड ऑफर — MPPSC 2027 🚀' : 'Early Bird Offer — MPPSC 2027 🚀'}
               </span>
             </div>
           </div>
