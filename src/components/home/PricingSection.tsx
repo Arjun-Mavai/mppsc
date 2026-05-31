@@ -53,9 +53,8 @@ export function PricingSection() {
         {/* FOMO badge - "first 100 students" with joined count */}
         <div className="mb-8 flex justify-center">
           <div className="relative inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2">
-            <Flame className="h-3.5 w-3.5 text-red-500 animate-pulse" />
             <span className="text-xs font-bold text-amber-900 uppercase tracking-tight">
-              {hi ? '🚀 MPPSC 2027 संस्थापक बैच' : '🚀 MPPSC 2027 Founding Batch'}
+              {hi ? 'अर्ली बर्ड ऑफर — MPPSC 2027 🚀' : 'Early Bird Offer — MPPSC 2027 🚀'}
             </span>
           </div>
         </div>

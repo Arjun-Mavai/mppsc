@@ -59,6 +59,7 @@ export function PricingCard({
   isPopular,
   href,
 }: PricingCardProps) {
+  const [showAllFeatures, setShowAllFeatures] = React.useState(false);
   const hi = language === 'hi';
   const p = pricing;
 
@@ -248,17 +249,14 @@ export function PricingCard({
           <div className="mb-5">
             { (isPro || isMains || isCombo) ? (
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-bold text-amber-700 uppercase tracking-wider flex items-center gap-1">
-                  🔥 Founding Batch Price
-                </span>
-                <div className="flex items-baseline gap-2.5">
+                <div className="flex items-baseline gap-2.5 mt-1">
                   <span className="text-4xl font-black tracking-tighter text-slate-900">₹{price}</span>
                   <span className="relative inline-flex items-center">
                     <span className="absolute inset-[-2] rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 p-[1px]" />
                     <span className="relative rounded-full bg-white px-2.5 py-0.5 text-[11px] font-bold text-slate-800">
                       {hi
-                        ? `लगभग ₹${Math.round(monthly)}/माह`
-                        : `~₹${Math.round(monthly)}/month`}
+                        ? `लगभग ₹${Math.round(monthly / 4)}/सप्ताह`
+                        : `~₹${Math.round(monthly / 4)}/week`}
                     </span>
                   </span>
                 </div>
@@ -300,8 +298,8 @@ export function PricingCard({
           <div className="mb-5 h-px w-full bg-slate-100" />
 
           {/* Features List */}
-          <ul className="mb-8 flex-1 space-y-3.5 text-left">
-            {features.map((f, i) => (
+          <ul className={cn("flex-1 space-y-3.5 text-left", features.length > 5 && !showAllFeatures ? "mb-4" : "mb-8")}>
+            {(showAllFeatures ? features : features.slice(0, 5)).map((f, i) => (
               <FeatureItem 
                 key={f.en} 
                 f={f} 
@@ -313,26 +311,22 @@ export function PricingCard({
                 language={language}
               />
             ))}
-            {/* Validity Item if not in features already */}
-            {/* {!isUpgrade && (
-              <li
-                className={cn(
-                  'flex items-start gap-3 text-sm font-medium',
-                  isProShell ? 'text-slate-900' : 'text-slate-700'
-                )}
-              >
-                <Clock
-                  className={cn(
-                    'mt-0.5 h-4.5 w-4.5 shrink-0',
-                    isLite ? 'text-blue-500' : featureIconTone
-                  )}
-                />
-                <span>
-                  {hi ? (isLite ? '6 महीने तक वैध' : validityText) : validityText}
-                </span>
-              </li>
-            )} */}
           </ul>
+
+          {features.length > 5 && (
+             <div className="mb-8 flex justify-center">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowAllFeatures(!showAllFeatures);
+                  }}
+                  className="text-xs font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1 transition-colors bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-full border border-amber-200"
+                >
+                  {showAllFeatures ? (hi ? 'कम दिखाएं' : 'Show Less') : (hi ? `+${features.length - 5} और देखें` : `+${features.length - 5} More Features`)}
+                  <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", showAllFeatures && "rotate-180")} />
+                </button>
+             </div>
+          )}
 
           {/* Sample Material Link Above Button */}
           {isPro && (
