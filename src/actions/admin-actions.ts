@@ -334,6 +334,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
     }
 
     let recentGuests: any[] = [];
+    const DASHBOARD_GUEST_LEAD_LIMIT = 1000;
     try {
       recentGuests = await db
         .select({
@@ -347,7 +348,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
         .from(guests)
         .where(eq(guests.examType, 'mppsc'))
         .orderBy(desc(guests.createdAt))
-        .limit(100);
+        .limit(DASHBOARD_GUEST_LEAD_LIMIT);
     } catch (guestErr) {
       logger.error('Dashboard Stats Error (Recent Guests):', guestErr, { category: 'admin' });
     }

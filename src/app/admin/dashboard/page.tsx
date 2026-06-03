@@ -19,6 +19,7 @@ import {
   CreditCard,
   Sparkles,
   FileQuestion,
+  Search,
 } from 'lucide-react';
 import { AdminDashboardResponse } from '@/types/admin';
 import { getGuestLeadSourceLabel } from '@/lib/lead-source';
@@ -112,6 +113,7 @@ export default function AdminDashboardPage() {
     pyqLeads: true,
     intelLeads: true,
   });
+  const [guestSearch, setGuestSearch] = useState('');
 
   const toggle = (key: string) => setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
 
@@ -420,11 +422,32 @@ export default function AdminDashboardPage() {
                 </div>
               </CardHeader>
               {!collapsed.guests && (
-                <CardContent className="scrollbar-hide max-h-[400px] space-y-4 overflow-y-auto pt-0 pr-2">
-                  {recentGuests.length === 0 ? (
-                    <p className="text-xs text-slate-400">No guests yet.</p>
-                  ) : (
-                    recentGuests.map((g) => (
+                <CardContent className="space-y-4 pt-0 pr-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" aria-hidden="true" />
+                    <input
+                      type="text"
+                      aria-label="Search guest leads"
+                      placeholder="Search guests by name, email, or number..."
+                      value={guestSearch}
+                      onChange={(e) => setGuestSearch(e.target.value)}
+                      className="w-full rounded-md border border-slate-200 bg-white px-9 py-2 text-xs shadow-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div className="scrollbar-hide max-h-[400px] space-y-4 overflow-y-auto pr-2">
+                    {(() => {
+                      const s = guestSearch.toLowerCase();
+                      const filteredGuests = s === '' ? recentGuests : recentGuests.filter((g) => {
+                        return (
+                          (g.name && g.name.toLowerCase().includes(s)) ||
+                          (g.mobile && g.mobile.includes(s)) ||
+                          (g.email && g.email.toLowerCase().includes(s))
+                        );
+                      });
+                      if (filteredGuests.length === 0) {
+                        return <p className="text-xs text-slate-400">No guests found.</p>;
+                      }
+                      return filteredGuests.map((g) => (
                       <div
                         key={g.id}
                         className="flex items-start justify-between border-b border-slate-50 pb-3 last:border-0"
@@ -452,7 +475,8 @@ export default function AdminDashboardPage() {
                         </span>
                       </div>
                     ))
-                  )}
+                    })()}
+                  </div>
                 </CardContent>
               )}
             </Card>

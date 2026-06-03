@@ -352,9 +352,33 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
                             <Lock size={10} className="fill-amber-500/10" />
                           </div>
                         ) : key === 'unit_1' ? (
-                          <span className="text-[7px] font-black text-emerald-600 tracking-wider bg-emerald-50 border border-emerald-100 rounded px-1">
-                            FREE
-                          </span>
+                          <div className="relative">
+                            {/* Premium FREE Badge */}
+                            <div className="relative z-10 flex items-center justify-center rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-2.5 py-0.5 shadow-[0_0_15px_rgba(16,185,129,0.5)] border border-emerald-300">
+                              <div className="absolute inset-0 rounded-full animate-ping bg-emerald-400/40 blur-[2px] -z-10" />
+                              <span className="text-[9px] font-black tracking-widest text-white uppercase drop-shadow-sm">
+                                FREE
+                              </span>
+                            </div>
+
+                            {/* Arrow and Boy pointing UP */}
+                            <motion.div
+                              initial={{ opacity: 0, y: 15, scale: 0.8 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              transition={{ duration: 0.7, ease: "easeOut", delay: 0.3 }}
+                              className="absolute right-1 top-full mt-1.5 pointer-events-none select-none z-30 flex flex-col items-center"
+                            >
+                              <svg width="35" height="40" viewBox="0 0 35 40" fill="none" className="filter drop-shadow-[0_2.5px_4px_rgba(236,72,153,0.6)]">
+                                {/* Sweep from bottom left to top right */}
+                                <path d="M 5 35 Q 10 15 25 5" stroke="#ec4899" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+                                {/* Arrowhead pointing Up/Right */}
+                                <path d="M 17 8 L 25 5 L 26 14" stroke="#ec4899" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                              </svg>
+                              <div className="text-2xl filter drop-shadow-md -mt-3 -ml-4 -scale-x-100">
+                                🚶‍♂️
+                              </div>
+                            </motion.div>
+                          </div>
                         ) : null}
                       </div>
 
