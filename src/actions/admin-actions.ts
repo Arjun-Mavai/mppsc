@@ -347,7 +347,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
         .from(guests)
         .where(eq(guests.examType, 'mppsc'))
         .orderBy(desc(guests.createdAt))
-        .limit(100);
+        .limit(1000);
     } catch (guestErr) {
       logger.error('Dashboard Stats Error (Recent Guests):', guestErr, { category: 'admin' });
     }
