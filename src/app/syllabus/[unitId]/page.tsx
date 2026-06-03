@@ -56,6 +56,8 @@ export default async function UnitPage({ params }: Props) {
         .replace(/\[\s*(?:[A-Za-z\/\s0-9&_-]+)?\s*\d{4}\s*\]/gi, '') // Strips [UPPCS 2022], [UPPSC 2022], [MPPSC 2020], [2022]
         .replace(/\(\s*(?:[A-Za-z\/\s0-9&_-]+)?\s*\d{4}\s*\)/gi, '') // Strips (UPPSC 2014), (RAS/RTS 2018), (2014)
         .replace(/(?:UPPCS|MPPSC|UPSC|UPPSC|CGPSC|BPSC|RAS|RTS|IAS|Exam)?\s*\d{4}/gi, '') // Strips standalone UPPCS 2022 or 2022
+        .replace(/\[\s*[A-Za-z\/\s_-]+\s*\]/gi, '') // Strips [MPPSC], [UPPCS], etc. without years
+        .replace(/^\d+\.\s*/, '') // Strips leading list numbers like "1. "
         .replace(/\s+/g, ' ')
         .trim();
     };
