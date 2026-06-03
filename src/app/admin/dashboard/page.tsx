@@ -424,10 +424,11 @@ export default function AdminDashboardPage() {
               {!collapsed.guests && (
                 <CardContent className="space-y-4 pt-0 pr-2">
                   <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" aria-hidden="true" />
                     <input
                       type="text"
-                      placeholder="Search guests by name or number..."
+                      aria-label="Search guest leads"
+                      placeholder="Search guests by name, email, or number..."
                       value={guestSearch}
                       onChange={(e) => setGuestSearch(e.target.value)}
                       className="w-full rounded-md border border-slate-200 bg-white px-9 py-2 text-xs shadow-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
@@ -435,8 +436,8 @@ export default function AdminDashboardPage() {
                   </div>
                   <div className="scrollbar-hide max-h-[400px] space-y-4 overflow-y-auto pr-2">
                     {(() => {
-                      const filteredGuests = recentGuests.filter((g) => {
-                        const s = guestSearch.toLowerCase();
+                      const s = guestSearch.toLowerCase();
+                      const filteredGuests = s === '' ? recentGuests : recentGuests.filter((g) => {
                         return (
                           (g.name && g.name.toLowerCase().includes(s)) ||
                           (g.mobile && g.mobile.includes(s)) ||
