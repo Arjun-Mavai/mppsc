@@ -3,7 +3,7 @@
 import { Resend } from 'resend';
 import { logger } from '@/lib/logger';
 import { db } from '@/db';
-import { sql } from 'drizzle-orm';
+import { sql, eq } from 'drizzle-orm';
 import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
 
 /**
@@ -31,6 +31,7 @@ interface PaymentNotification {
   paymentId: string;
   isUpgrade?: boolean;
   error?: string; // Optional error details for failures
+  examType?: string; // Optional exam type (e.g. MPPSC, UPSC)
 }
 
 interface EmailFailureNotification {
@@ -122,7 +123,7 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
     // 🚀 TELEGRAM NOTIFICATION (MPPSC ZEN Branding)
     const telegramMessage =
       `👮 <b>MPPSC ZEN</b>\n` +
-      `${type === 'new_payment' ? '💰 <b>New Payment</b>' : type === 'upgrade' ? '🚀 <b>Plan Upgrade</b>' : '⚠️ <b>Payment Failed</b>'}\n\n` +
+      `${type === 'new_payment' ? '💰 <b>New Payment</b>' : type === 'upgrade' ? '🚀 <b>Plan Upgrade</b>' : '⚠️ <b>Payment Failed</b>'}${data.examType ? ` (${data.examType.toUpperCase()})` : ''}\n\n` +
       `👤 User: ${escapeHTML(userName)}\n` +
       `📧 Email: ${escapeHTML(userEmail)}\n` +
       `🎟️ Plan: ${planTier.toUpperCase()}${isUpgrade ? ' (Upgrade)' : ''}\n` +
@@ -257,15 +258,33 @@ export async function notifyAdminOnVerificationFailure(data: {
   try {
     const { userId, orderId, paymentId, error } = data;
 
+    // Fetch user details for better admin context
+    let userInfo = '';
+    if (userId && userId !== 'unknown') {
+      try {
+        const user = await db.query.mppscUsers.findFirst({
+          where: (users, { eq }) => eq(users.id, userId),
+          columns: { name: true, email: true, phone: true },
+        });
+        if (user) {
+          userInfo = `👤 <b>User:</b> ${escapeHTML(user.name || 'Unknown')}\n` +
+                     `📧 <b>Email:</b> ${escapeHTML(user.email || 'N/A')}\n` +
+                     (user.phone ? `📞 <b>Phone:</b> ${escapeHTML(user.phone)}\n` : '');
+        }
+      } catch (err) {
+        // Ignore DB fetch errors
+      }
+    }
+
     const telegramMessage =
       `👮 <b>MPPSC ZEN SECURITY</b>\n` +
       `🛡️ <b>VERIFICATION FAILURE!</b>\n\n` +
       `Payment verification process encountered an error.\n\n` +
-      `👤 User ID: <code>${userId}</code>\n` +
-      `🆔 Order ID: <code>${orderId}</code>\n` +
-      `${paymentId ? `🆔 PayID: <code>${paymentId}</code>\n` : ''}` +
-      `❌ Error: ${escapeHTML(error)}\n` +
-      `⏱️ Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
+      (userInfo || `👤 <b>User ID:</b> <code>${userId}</code>\n`) +
+      `🆔 <b>Order ID:</b> <code>${orderId}</code>\n` +
+      `${paymentId ? `🆔 <b>PayID:</b> <code>${paymentId}</code>\n` : ''}` +
+      `❌ <b>Error:</b> ${escapeHTML(error)}\n` +
+      `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
 
     await sendTelegramNotification(telegramMessage);
 

@@ -103,6 +103,12 @@ const ADMIN_ROUTES = [
     description: 'Official mains paper JSON → DB + syllabus link',
   },
   {
+    href: '/admin/telegram-system',
+    label: 'Telegram Content',
+    icon: BookOpen,
+    description: 'Prompt generator for Telegram channel',
+  },
+  {
     href: '/admin/pyq-insights',
     label: 'PYQ Insights',
     icon: Brain,

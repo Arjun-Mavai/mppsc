@@ -61,7 +61,7 @@ export async function POST(req: Request) {
     // with garbage signature like "abc" (odd hex → different buffer length)
     const isValidHex = /^[a-f0-9]+$/i.test(razorpay_signature);
     if (!isValidHex || razorpay_signature.length !== generated_signature.length) {
-      notifyAdminOnVerificationFailure({
+      await notifyAdminOnVerificationFailure({
         userId,
         orderId: razorpay_order_id,
         error: 'Malformed payment signature format (Upgrade route)',
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
     );
 
     if (!isValidSignature) {
-      notifyAdminOnVerificationFailure({
+      await notifyAdminOnVerificationFailure({
         userId,
         orderId: razorpay_order_id,
         paymentId: razorpay_payment_id,
@@ -123,7 +123,7 @@ export async function POST(req: Request) {
           metadata: { orderUserId, razorpay_order_id },
         }
       );
-      notifyAdminOnVerificationFailure({
+      await notifyAdminOnVerificationFailure({
         userId,
         orderId: razorpay_order_id,
         paymentId: razorpay_payment_id,
@@ -226,7 +226,7 @@ export async function POST(req: Request) {
       });
       
       // 🚨 Notify admin that user email failed
-      notifyAdminOnEmailFailure({
+      await notifyAdminOnEmailFailure({
         userName: user.name || 'Unknown',
         userEmail: user.email!,
         errorMessage: typeof emailError === 'object' && emailError !== null && 'message' in emailError 
@@ -237,7 +237,7 @@ export async function POST(req: Request) {
     }
 
     // 📧 Notify Admin of Upgrade (Non-blocking)
-    notifyAdminOnPayment({
+    await notifyAdminOnPayment({
       type: 'upgrade',
       userName: user.name || 'Unknown',
       userEmail: user.email!,
@@ -246,6 +246,7 @@ export async function POST(req: Request) {
       orderId: razorpay_order_id,
       paymentId: razorpay_payment_id,
       isUpgrade: true,
+      examType: user.examType || 'mppsc',
     }).catch(() => {}); // Fire and forget
 
     // ── Log Activity ──────────────────────────────────────────────
@@ -280,7 +281,7 @@ export async function POST(req: Request) {
       userId: requestUserId,
       metadata: { razorpay_order_id: requestOrderId, razorpay_payment_id: requestPaymentId },
     });
-    notifyAdminOnVerificationFailure({
+    await notifyAdminOnVerificationFailure({
       userId: requestUserId || 'unknown',
       orderId: requestOrderId || 'unknown',
       paymentId: requestPaymentId || undefined,

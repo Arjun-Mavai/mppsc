@@ -73,7 +73,7 @@ export async function POST(req: Request) {
     // with garbage signature like "abc" (odd hex → different buffer length)
     const isValidHex = /^[a-f0-9]+$/i.test(razorpay_signature);
     if (!isValidHex || razorpay_signature.length !== generated_signature.length) {
-      notifyAdminOnVerificationFailure({
+      await notifyAdminOnVerificationFailure({
         userId,
         orderId: razorpay_order_id,
         error: 'Malformed payment signature format (API route)',
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
     );
 
     if (!isValidSignature) {
-      notifyAdminOnVerificationFailure({
+      await notifyAdminOnVerificationFailure({
         userId,
         orderId: razorpay_order_id,
         paymentId: razorpay_payment_id,
@@ -113,7 +113,7 @@ export async function POST(req: Request) {
       where: eq(mppscUsers.id, userId),
     });
     if (!user || user.email === null) {
-      notifyAdminOnVerificationFailure({
+      await notifyAdminOnVerificationFailure({
         userId,
         orderId: razorpay_order_id,
         paymentId: razorpay_payment_id,
@@ -145,7 +145,7 @@ export async function POST(req: Request) {
           orderId: razorpay_order_id,
         },
       });
-      notifyAdminOnVerificationFailure({
+      await notifyAdminOnVerificationFailure({
         userId,
         orderId: razorpay_order_id,
         paymentId: razorpay_payment_id,
@@ -279,7 +279,7 @@ export async function POST(req: Request) {
         userId,
         metadata: { to: user.email },
       });
-      notifyAdminOnEmailFailure({
+      await notifyAdminOnEmailFailure({
         userName: user.name || 'Unknown',
         userEmail: user.email!,
         errorMessage: 'RESEND_API_KEY is not configured on the server',
@@ -301,7 +301,7 @@ export async function POST(req: Request) {
           metadata: { to: user.email!, fromEmail },
         });
 
-        notifyAdminOnEmailFailure({
+        await notifyAdminOnEmailFailure({
           userName: user.name || 'Unknown',
           userEmail: user.email!,
           errorMessage:
@@ -315,7 +315,7 @@ export async function POST(req: Request) {
 
     // 📧 Step 9: Notify Admin (Non-blocking)
     // Admin ko bhi email bhejo ki naya payment aaya hai
-    notifyAdminOnPayment({
+    await notifyAdminOnPayment({
       type: 'new_payment',
       userName: user.name || 'Unknown',
       userEmail: user.email!,
@@ -323,6 +323,7 @@ export async function POST(req: Request) {
       amountInRupees: amountInPaise / 100,
       orderId: razorpay_order_id,
       paymentId: razorpay_payment_id,
+      examType: user.examType || 'mppsc',
     }).catch(() => {}); // Fire and forget, don't block response
 
     // ── Log Activity ──────────────────────────────────────────────
@@ -357,7 +358,7 @@ export async function POST(req: Request) {
       userId: requestUserId,
       metadata: { razorpay_order_id: requestOrderId, razorpay_payment_id: requestPaymentId },
     });
-    notifyAdminOnVerificationFailure({
+    await notifyAdminOnVerificationFailure({
       userId: requestUserId || 'unknown',
       orderId: requestOrderId || 'unknown',
       paymentId: requestPaymentId,

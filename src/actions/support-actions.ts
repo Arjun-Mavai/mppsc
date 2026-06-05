@@ -29,8 +29,8 @@ export async function submitSupportTicket(data: any) {
       examType: 'mppsc' as const, // 🔒 Explicitly tag as MPPSC
     });
 
-    // 🚀 Send Telegram alert asynchronously (fully non-blocking)
-    notifyAdminOnSupportTicket({
+    // 🚀 Send Telegram alert synchronously to ensure it completes before action returns
+    await notifyAdminOnSupportTicket({
       name,
       email,
       phone,
@@ -38,7 +38,7 @@ export async function submitSupportTicket(data: any) {
       message,
       pagePath,
     }).catch((err) => {
-      logger.error('Support ticket Telegram alert failed (non-blocking catches)', err);
+      logger.error('Support ticket Telegram alert failed', err);
     });
 
     // revalidatePath('/admin/dashboard'); // If we show tickets there

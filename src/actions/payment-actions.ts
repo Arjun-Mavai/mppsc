@@ -271,7 +271,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         metadata: { userId, orderId: razorpay_order_id, sigLength: razorpay_signature.length },
       });
       
-      notifyAdminOnVerificationFailure({
+      await notifyAdminOnVerificationFailure({
         userId: userId || 'unknown',
         orderId: razorpay_order_id,
         error: 'Malformed payment signature rejected (timingSafeEqual safety check)',
@@ -291,7 +291,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         metadata: { userId, orderId: razorpay_order_id },
       });
 
-      notifyAdminOnVerificationFailure({
+      await notifyAdminOnVerificationFailure({
         userId: userId || 'unknown',
         orderId: razorpay_order_id,
         paymentId: razorpay_payment_id,
@@ -342,7 +342,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         metadata: { orderUserId, requestUserId: userId, orderId: razorpay_order_id },
       });
 
-      notifyAdminOnVerificationFailure({
+      await notifyAdminOnVerificationFailure({
         userId: userId || 'unknown',
         orderId: razorpay_order_id,
         paymentId: razorpay_payment_id,
@@ -432,7 +432,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
     if (!isUpgradePurchase) {
       const paidUser = await db.query.mppscUsers.findFirst({
         where: eq(mppscUsers.id, userId!),
-        columns: { name: true, email: true },
+        columns: { name: true, email: true, examType: true },
       });
 
       if (paidUser?.email) {
@@ -498,7 +498,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
             userId,
             metadata: { to: paidUser.email },
           });
-          notifyAdminOnEmailFailure({
+          await notifyAdminOnEmailFailure({
             userName: paidUser.name || 'Unknown',
             userEmail: paidUser.email,
             errorMessage: 'RESEND_API_KEY is not configured on the server',
@@ -519,7 +519,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
               userId,
               metadata: { to: paidUser.email, fromEmail },
             });
-            notifyAdminOnEmailFailure({
+            await notifyAdminOnEmailFailure({
               userName: paidUser.name || 'Unknown',
               userEmail: paidUser.email,
               errorMessage:
@@ -531,7 +531,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
           }
         }
 
-        notifyAdminOnPayment({
+        await notifyAdminOnPayment({
           type: 'new_payment',
           userName: paidUser.name || 'Unknown',
           userEmail: paidUser.email,
@@ -539,33 +539,9 @@ export async function verifyPayment(input: VerifyPaymentInput) {
           amountInRupees: amountInPaise / 100,
           orderId: razorpay_order_id,
           paymentId: razorpay_payment_id,
+          examType: paidUser.examType || 'mppsc',
         }).catch(() => {});
       }
-    }
-
-    // 🚀 Step 7: Notify via Telegram
-    try {
-      const amountInRupees = amountInPaise / 100;
-      const userResult = await db.query.mppscUsers.findFirst({
-        where: eq(mppscUsers.id, userId as string),
-        columns: { name: true, email: true, phone: true, examType: true },
-      });
-
-      const examLabel = userResult?.examType?.toUpperCase() || 'UNKNOWN';
-      
-      const message = `👮 <b>MPPSC ZEN</b>\n` +
-        `💰 <b>Payment Successful (${examLabel})!</b>\n\n` +
-        `👤 User: ${escapeHTML(userResult?.name || 'Unknown')}\n` +
-        `📧 Email: ${escapeHTML(userResult?.email || 'N/A')}\n` +
-        `📞 Phone: ${userResult?.phone || 'N/A'}\n` +
-        `🎟️ Plan: ${String(resolved.paymentLabel).toUpperCase()} (tier ${String(planTier).toUpperCase()})\n` +
-        `💵 Amount: ₹${amountInRupees}\n` +
-        `🆔 Payment ID: <code>${razorpay_payment_id}</code>\n` +
-        `✅ Access granted instantly.`;
-
-      await sendTelegramNotification(message);
-    } catch (err) {
-      logger.error('Telegram notification failed for payment', { err });
     }
 
     logger.info('Payment verified successfully', {
@@ -584,7 +560,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
       category: 'payment',
     });
     
-    notifyAdminOnVerificationFailure({
+    await notifyAdminOnVerificationFailure({
       userId: userId || 'unknown',
       orderId: razorpay_order_id,
       paymentId: razorpay_payment_id,
