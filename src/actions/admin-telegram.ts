@@ -84,10 +84,10 @@ export async function sendTelegramBotMessage(rawText: string) {
     .replace(/&/g, '&amp;')
     // Bold
     .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-    // Italic
-    .replace(/(?<!\w)_(.*?)_(?!\w)/g, '<i>$1</i>')
     // Underline (custom markdown or just supporting existing <u>)
     .replace(/__(.*?)__/g, '<u>$1</u>')
+    // Italic
+    .replace(/(?<!\w)_(.*?)_(?!\w)/g, '<i>$1</i>')
     // Strikethrough
     .replace(/~~(.*?)~~/g, '<s>$1</s>')
     // Convert Telegram native quotes `> ` to blockquote

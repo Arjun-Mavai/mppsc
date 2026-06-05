@@ -236,7 +236,7 @@ export async function POST(req: Request) {
       }).catch(() => {});
     }
 
-    // 📧 Notify Admin of Upgrade (Non-blocking)
+    // 📧 Notify Admin of Upgrade
     await notifyAdminOnPayment({
       type: 'upgrade',
       userName: user.name || 'Unknown',
@@ -247,7 +247,7 @@ export async function POST(req: Request) {
       paymentId: razorpay_payment_id,
       isUpgrade: true,
       examType: user.examType || 'mppsc',
-    }).catch(() => {}); // Fire and forget
+    }).catch(() => {}); // Swallow errors to not fail the main request
 
     // ── Log Activity ──────────────────────────────────────────────
     try {

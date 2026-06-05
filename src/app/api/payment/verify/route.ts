@@ -313,7 +313,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // 📧 Step 9: Notify Admin (Non-blocking)
+    // 📧 Step 9: Notify Admin
     // Admin ko bhi email bhejo ki naya payment aaya hai
     await notifyAdminOnPayment({
       type: 'new_payment',
@@ -324,7 +324,7 @@ export async function POST(req: Request) {
       orderId: razorpay_order_id,
       paymentId: razorpay_payment_id,
       examType: user.examType || 'mppsc',
-    }).catch(() => {}); // Fire and forget, don't block response
+    }).catch(() => {}); // Swallow errors to not fail the main request
 
     // ── Log Activity ──────────────────────────────────────────────
     try {

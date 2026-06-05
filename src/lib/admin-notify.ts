@@ -3,7 +3,7 @@
 import { Resend } from 'resend';
 import { logger } from '@/lib/logger';
 import { db } from '@/db';
-import { sql, eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
 
 /**

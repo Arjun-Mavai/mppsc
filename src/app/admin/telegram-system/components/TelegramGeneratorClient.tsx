@@ -37,7 +37,7 @@ export default function TelegramGeneratorClient({
     if (!selectedTopic || !track) return '';
 
     const commonFooter = `* Make the post highly searchable with these exact hashtags at the very bottom:
-#MPPSC_${track === 'prelims' ? 'Pre' : 'Mains'} #Day${dayNumber} #Unit${parseUnitNumber(selectedUnit)} ${subject ? '#' + subject.replace(/\\s+/g, '') : '#[SubjectNameWithoutSpaces]'}
+#MPPSC_${track === 'prelims' ? 'Pre' : 'Mains'} #Day${dayNumber} #Unit${parseUnitNumber(selectedUnit)} ${subject ? '#' + subject.replace(/\s+/g, '') : '#[SubjectNameWithoutSpaces]'}
 
 * Then append these links EXACTLY as shown at the very end of the post (Do not change the text or remove the HTML):
 
