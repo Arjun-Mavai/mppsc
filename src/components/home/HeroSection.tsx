@@ -2,7 +2,6 @@
 
 import { useTransition } from 'react';
 import { BookOpen, Sparkles, Zap, ChevronRight, Star, ShieldCheck, Trophy, Crown } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useRouter } from 'next/navigation';
 import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
@@ -112,8 +111,8 @@ export function HeroSection() {
       {/* 🎭 BEYOND-PREMIUM ATMOSPHERE */}
       <div className="pointer-events-none absolute inset-0 z-0">
         {/* Animated Aurora Glows */}
-        <div className="absolute top-[-10%] left-[-10%] h-[800px] w-[800px] rounded-full bg-indigo-600/15 blur-[140px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] h-[700px] w-[700px] rounded-full bg-amber-600/10 blur-[140px]" />
+        <div className="absolute top-[-10%] left-[-10%] h-[800px] w-[800px] rounded-full bg-indigo-600/15 opacity-60 md:opacity-100 blur-[60px] md:blur-[140px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] h-[700px] w-[700px] rounded-full bg-amber-600/10 opacity-60 md:opacity-100 blur-[60px] md:blur-[140px]" />
 
         {/* Cinematic Particles / Grid */}
         <div
@@ -131,7 +130,7 @@ export function HeroSection() {
       <div className="relative z-10 flex w-full max-w-6xl flex-col items-center justify-center text-center -translate-y-4 md:-translate-y-6">
 
         {/* Status Badge */}
-        <div className="animate-fade-in-up mb-8 inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-5 py-2 backdrop-blur-xl transition-colors hover:border-white/10">
+        <div className="animate-fade-in-up mb-8 inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-5 py-2 backdrop-blur-sm md:backdrop-blur-xl transition-colors hover:border-white/10">
           <Trophy size={15} className="text-amber-400 animate-bounce" />
           <span className="text-[11px] font-black tracking-[0.25em] text-slate-200 uppercase">
             {t.badge}
@@ -260,35 +259,26 @@ export function HeroSection() {
       <div className="absolute bottom-0 h-40 w-full bg-gradient-to-t from-[#020408] to-transparent" />
 
       {/* Loading Portal Overlay */}
-      <AnimatePresence>
-        {isPending && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-[#020408]/90 backdrop-blur-2xl"
-          >
-            <div className="flex flex-col items-center gap-8">
-              <div className="relative flex h-20 w-20 items-center justify-center">
-                <div className="absolute inset-0 animate-ping rounded-full bg-amber-500/20" />
-                <div className="h-full w-full animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
-                <Star size={24} className="absolute text-amber-500 animate-pulse" />
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <p className="text-[11px] font-black tracking-[0.5em] text-amber-500 uppercase">Syncing Data</p>
-                <div className="h-1 w-32 overflow-hidden rounded-full bg-white/5">
-                  <motion.div
-                    initial={{ x: '-100%' }}
-                    animate={{ x: '100%' }}
-                    transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
-                    className="h-full w-full bg-gradient-to-r from-transparent via-amber-500 to-transparent"
-                  />
-                </div>
+      {isPending && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#020408]/90 backdrop-blur-md md:backdrop-blur-2xl animate-fade-in-up transition-opacity duration-300">
+          <div className="flex flex-col items-center gap-8">
+            <div className="relative flex h-20 w-20 items-center justify-center">
+              <div className="absolute inset-0 animate-ping rounded-full bg-amber-500/20" />
+              <div className="h-full w-full animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
+              <Star size={24} className="absolute text-amber-500 animate-pulse" />
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-[11px] font-black tracking-[0.5em] text-amber-500 uppercase">Syncing Data</p>
+              <div className="h-1 w-32 overflow-hidden rounded-full bg-white/5 relative">
+                <div 
+                  className="absolute top-0 bottom-0 left-0 w-full bg-gradient-to-r from-transparent via-amber-500 to-transparent"
+                  style={{ animation: 'marquee-scroll 1.5s linear infinite', width: '200%' }}
+                />
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      )}
 
     </section>
   );
