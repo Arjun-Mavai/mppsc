@@ -71,6 +71,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [shouldFetchAuth, setShouldFetchAuth] = useState(false);
 
   // Use Global Store
   const {
@@ -266,8 +267,8 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
       }
       return result;
     },
-    // Ensure background refresh is always active unless actively logging out
-    enabled: !isLoggingOut,
+    // Ensure background refresh is always active unless actively logging out, and delay for guests
+    enabled: !isLoggingOut && shouldFetchAuth,
     staleTime: 5 * 60 * 1000, // 5 minutes fresh, refetches automatically on window focus 
     retry: false,
   });
@@ -279,10 +280,18 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
 
   // ─── EFFECTS (Optimized & Consolidated) ──────────────────────────────────
   
-  // 1. Mount Status (Hydration)
+  // 1. Mount Status & Auth Fetch Delay (Hydration)
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    // Optimization: If we have a cached user, we can fetch immediately to check if session is still valid.
+    // If not, delay the check by 1.5 seconds to let the critical UI render first for guests.
+    if (globalUser) {
+      setShouldFetchAuth(true);
+    } else {
+      const timer = setTimeout(() => setShouldFetchAuth(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [globalUser]);
 
   // 2. Master Auth State Sync (Eliminates Effect Chaining)
   useEffect(() => {
