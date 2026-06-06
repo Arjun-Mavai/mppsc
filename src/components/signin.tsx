@@ -236,14 +236,17 @@ export default function LoginPage() {
                   <Button
                     type="button"
                     onClick={() => handleSubmit(undefined, true)}
+                    disabled={loading}
                     className="h-8 flex-1 bg-amber-600 text-xs font-bold text-white hover:bg-amber-700 shadow-sm"
                   >
+                    {loading ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : null}
                     Yes, Login & Kick Others
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setShowConfirmDialog(false)}
+                    disabled={loading}
                     className="h-8 flex-1 border-amber-200 bg-white text-xs font-bold text-amber-700 hover:bg-amber-100"
                   >
                     Cancel

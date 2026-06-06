@@ -136,6 +136,7 @@ export async function loginUserAction(formData: LoginParams) {
     // ── Access Expiry Check ────────────────────────────────────
     let currentPlanTier = (user.planTier as any) || 'free';
     let currentIsSubscribed = !!user.isSubscribed;
+    let currentAccessGrants = user.accessGrants;
 
     if (user.accessExpiresAt) {
       const now = new Date();
@@ -153,6 +154,7 @@ export async function loginUserAction(formData: LoginParams) {
 
         currentPlanTier = 'free';
         currentIsSubscribed = false;
+        currentAccessGrants = serializeAccessGrants(['mppsc_pre']);
       }
     }
 
@@ -275,12 +277,7 @@ export async function loginUserAction(formData: LoginParams) {
       sameSite: 'lax',
     });
 
-    const fresh = await db.query.mppscUsers.findFirst({
-      where: eq(mppscUsers.id, user.id),
-      columns: { accessGrants: true },
-    });
-
-    const freshGrants = parseAccessGrants(fresh?.accessGrants);
+    const freshGrants = parseAccessGrants(currentAccessGrants);
 
     return {
       success: true,
