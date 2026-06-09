@@ -51,11 +51,22 @@ export function UnitCard({
   // Build View All URL
   const viewAllUrl = `/syllabus/quiz/pyq/intelligence/questions?unit=${unitId}&source=${variant}${year ? `&year=${year}` : ''}`;
 
+  const unitNum = parseInt(unitId.replace('unit_', '')) || 1;
+  const cardColors = [
+    { bg: 'bg-[#f0fdfa]/80', hoverBg: 'hover:bg-[#f0fdfa]', border: 'border-[#ccfbf1]', text: 'text-[#0f766e]', activeBg: 'bg-[#f0fdfa]' },
+    { bg: 'bg-[#fdf2f8]/80', hoverBg: 'hover:bg-[#fdf2f8]', border: 'border-[#fce7f3]', text: 'text-[#be185d]', activeBg: 'bg-[#fdf2f8]' },
+    { bg: 'bg-[#ecfdf5]/80', hoverBg: 'hover:bg-[#ecfdf5]', border: 'border-[#d1fae5]', text: 'text-[#047857]', activeBg: 'bg-[#ecfdf5]' },
+    { bg: 'bg-[#fffbeb]/80', hoverBg: 'hover:bg-[#fffbeb]', border: 'border-[#fef3c7]', text: 'text-[#b45309]', activeBg: 'bg-[#fffbeb]' },
+    { bg: 'bg-[#f5f3ff]/80', hoverBg: 'hover:bg-[#f5f3ff]', border: 'border-[#ede9fe]', text: 'text-[#6d28d9]', activeBg: 'bg-[#f5f3ff]' },
+  ];
+  const colorIndex = (unitNum - 1) % cardColors.length;
+  const colorTheme = cardColors[colorIndex];
+
   return (
     <div className={cn(
       "rounded-xl border transition-colors",
       theme === 'light' 
-        ? "border-[#E5E5EA] bg-white hover:bg-[#F5F5F7]" 
+        ? `${colorTheme.border} ${isExpanded ? colorTheme.activeBg : cn(colorTheme.bg, colorTheme.hoverBg)}`
         : "border-slate-800/50 bg-slate-800/30 hover:bg-slate-800/50"
     )}>
       {/* Header */}
@@ -117,7 +128,7 @@ export function UnitCard({
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className={cn("border-t", theme === 'light' ? "border-[#E5E5EA]" : "border-slate-800/50")}>
+            <div className={cn("border-t", theme === 'light' ? colorTheme.border : "border-slate-800/50")}>
               {/* Header with View All button */}
               <div className="flex items-center justify-between px-4 py-3 sm:px-5">
                 <span className="text-[10px] font-semibold tracking-wider text-slate-500 uppercase">

@@ -1,10 +1,13 @@
+import { logger } from './logger';
+
 /**
  * Simple HTML escape for Telegram messages
  * Bhai, agar user name mein '<' ya '&' ho, to Telegram API error de deta hai.
  * Isliye humein isse escape karna padega.
  */
-export function escapeHTML(str: string): string {
-  return str
+export function escapeHTML(str: string | null | undefined): string {
+  if (!str) return '';
+  return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
@@ -41,15 +44,65 @@ export async function sendTelegramNotification(message: string) {
     });
 
     if (!response.ok) {
-      console.error('Telegram API Error:', await response.text());
+      const errorText = await response.text();
+      logger.error('Telegram API Error', new Error(errorText), { category: 'telegram' });
     }
   } catch (error: any) {
     if (error.name === 'AbortError') {
-      console.error('Telegram notification timed out');
+      logger.error('Telegram notification timed out', error, { category: 'telegram' });
     } else {
-      console.error('Failed to send Telegram notification:', error);
+      logger.error('Failed to send Telegram notification', error, { category: 'telegram' });
     }
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+interface LeadNotificationInput {
+  type: 'New Lead' | 'Returning Lead' | 'Registration' | 'Admin Grant';
+  name: string | null | undefined;
+  email: string;
+  phone?: string | null | undefined;
+  plan?: string;
+  exam?: string;
+  source?: string;
+  attemptCount?: number;
+  status?: string;
+}
+
+/**
+ * Premium Lead Formatter
+ * Bhai, formatting ek hi jagah rakhenge to consistency bani rahegi.
+ */
+export async function sendLeadNotification(input: LeadNotificationInput) {
+  const { type, name, email, phone, plan, exam, source, attemptCount, status } = input;
+
+  const planEmoji: Record<string, string> = {
+    lite: '⚡', pro: '👑', upgrade: '🚀', mains: '🏛️', combo: '💎',
+  };
+
+  const formattedTime = new Date().toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  const message =
+    `👮 <b>MPPSC ZEN</b>\n` +
+    `📝 <b>${type} — ${status || 'Processed'}</b>\n\n` +
+    `👤 Name: ${escapeHTML(name || 'Unknown User')}\n` +
+    `📧 Email: ${escapeHTML(email)}\n` +
+    (phone ? `📞 Phone: <code>${escapeHTML(phone)}</code>\n` : '') +
+    (plan ? `${planEmoji[plan.toLowerCase()] || '🎯'} Plan: <b>${plan.toUpperCase()}</b>\n` : '') +
+    (exam ? `📋 Exam: <b>${exam.toUpperCase()}</b>\n` : '') +
+    (source ? `🔍 Source: <code>${escapeHTML(source)}</code>\n` : '') +
+    (attemptCount && attemptCount > 1 ? `🔄 Attempt: #${attemptCount}\n` : '') +
+    `⏱️ Time: ${formattedTime} IST\n\n` +
+    `⚠️ <i>Status: ${status || 'System Logged'}</i>`;
+
+  return sendTelegramNotification(message);
 }

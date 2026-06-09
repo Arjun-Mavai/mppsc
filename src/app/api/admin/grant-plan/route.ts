@@ -4,8 +4,9 @@ import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
-import { cookies } from 'next/headers';
+import { NextResponse, after } from 'next/server';
 import { z } from 'zod';
+import { sendLeadNotification } from '@/lib/telegram';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🎁 GRANT PLAN — Admin gives Lite/Pro without payment
@@ -121,6 +122,24 @@ export async function POST(request: Request) {
         },
       });
 
+      // 🚀 Send Telegram alert asynchronously
+      after(async () => {
+        try {
+          await sendLeadNotification({
+            type: 'Admin Grant',
+            name: name.trim(),
+            email: existing.email,
+            phone: phone?.trim(),
+            plan: planTier,
+            status: `Plan Granted (Existing User Upgraded) — ${months} months. Reason: ${reason || 'Admin grant'}`
+          });
+        } catch (e) {
+          logger.error('Telegram plan grant notification failed', e, {
+            category: 'telegram',
+          });
+        }
+      });
+
       return NextResponse.json({
         success: true,
         message: `${name} upgraded to ${planTier} (${months} months) — existing user updated`,
@@ -161,6 +180,24 @@ export async function POST(request: Request) {
         reason: grantMeta.grantReason,
         isNewUser: true,
       },
+    });
+
+    // 🚀 Send Telegram alert asynchronously
+    after(async () => {
+      try {
+        await sendLeadNotification({
+          type: 'Admin Grant',
+          name: name.trim(),
+          email: normalizedEmail,
+          phone: phone?.trim(),
+          plan: planTier,
+          status: `Plan Granted (New User Created) — ${months} months. Reason: ${reason || 'Admin grant'}`
+        });
+      } catch (e) {
+        logger.error('Telegram plan grant new user notification failed', e, {
+          category: 'telegram',
+        });
+      }
     });
 
     return NextResponse.json({

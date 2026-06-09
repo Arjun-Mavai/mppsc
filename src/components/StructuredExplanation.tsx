@@ -291,7 +291,7 @@ const renderClassic = () => {
         ) : null}
 
         {inter ? (
-          <section className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-slate-50/95 p-4 shadow-sm">
+          <section className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-slate-50/95 p-3 sm:p-4 shadow-sm">
             <Stethoscope
               className="pointer-events-none absolute -right-2 -bottom-4 h-28 w-28 text-slate-200/60"
               strokeWidth={1}
@@ -310,8 +310,8 @@ const renderClassic = () => {
         {(elim || veteran) && (
           <div className="grid gap-4 sm:grid-cols-2">
             {elim ? (
-              <div className="rounded-2xl border border-amber-200/90 bg-amber-50/95 p-4 shadow-sm">
-                <h5 className="mb-2 flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-amber-900">
+              <div className="rounded-2xl border border-amber-200/90 bg-amber-50/95 p-3 sm:p-4 shadow-sm">
+                <h5 className="mb-2 flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-amber-990">
                   <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
                   <Zap className="h-3.5 w-3.5 text-amber-500" />
                   {contentLang === 'hi' ? 'एलिमिनेशन रणनीति' : 'Elimination Strategy'}
@@ -320,7 +320,7 @@ const renderClassic = () => {
               </div>
             ) : null}
             {veteran ? (
-              <div className="rounded-2xl border border-rose-200/90 bg-rose-50/95 p-4 shadow-sm">
+              <div className="rounded-2xl border border-rose-200/90 bg-rose-50/95 p-3 sm:p-4 shadow-sm">
                 <h5 className="mb-2 flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-rose-900">
                   <Target className="h-3.5 w-3.5 text-rose-600" />
                   <Brain className="h-3.5 w-3.5 text-rose-400" />
@@ -335,21 +335,21 @@ const renderClassic = () => {
         )}
 
         {mnemonic ? (
-          <section className="relative overflow-hidden rounded-2xl border border-emerald-200/90 bg-emerald-50/95 p-4 shadow-sm">
+          <section className="relative overflow-hidden rounded-2xl border border-emerald-200/90 bg-emerald-50/95 p-3 sm:p-4 shadow-sm">
             <Brain className="pointer-events-none absolute -right-1 -bottom-3 h-24 w-24 text-emerald-200/45" strokeWidth={1} />
             <h5 className="relative mb-2 flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-900">
               <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
               <Brain className="h-3.5 w-3.5 text-pink-400" />
               {contentLang === 'hi' ? 'स्मरण भंडार (निमोनिक)' : 'Memory Vault (Mnemonic)'}
             </h5>
-            <div className="relative rounded-xl border border-emerald-100/80 bg-white/90 p-3 text-[13px] font-semibold italic text-emerald-950 shadow-inner">
+            <div className="relative rounded-xl border border-emerald-100/80 bg-white/90 p-2.5 sm:p-3 text-[13px] font-semibold italic text-emerald-950 shadow-inner">
               {parseExpertText(mnemonic, contentLang)}
             </div>
           </section>
         ) : null}
 
         {sourceLine ? (
-          <div className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 sm:px-4 sm:py-3 shadow-sm sm:flex-row sm:items-center">
             <span className="inline-flex w-fit shrink-0 rounded-full bg-slate-600 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest text-white">
               {contentLang === 'hi' ? 'स्रोत' : 'Source'}
             </span>
@@ -367,7 +367,7 @@ const renderClassic = () => {
               {facts.map((fact: string, i: number) => (
                 <div
                   key={i}
-                  className="flex gap-2 rounded-xl border border-slate-200 bg-white p-3 text-[13px] leading-relaxed text-slate-800 shadow-sm"
+                  className="flex gap-2 rounded-xl border border-slate-200 bg-white p-2.5 sm:p-3 text-[13px] leading-relaxed text-slate-800 shadow-sm"
                 >
                   <Play className="mt-0.5 h-4 w-4 shrink-0 fill-emerald-600 text-emerald-600" />
                   <span>{coerceExplanationToString(fact, contentLang)}</span>
@@ -378,14 +378,14 @@ const renderClassic = () => {
         ) : null}
 
         {mainsText ? (
-          <section className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 text-sm leading-relaxed text-slate-800 shadow-sm">
+          <section className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 sm:px-4 sm:py-3 text-sm leading-relaxed text-slate-800 shadow-sm">
             <span className="font-black text-slate-900">MAINS: </span>
             <span className="italic text-slate-700">{mainsText}</span>
           </section>
         ) : null}
 
         {mantra ? (
-          <section className="relative overflow-hidden rounded-2xl border border-amber-200/80 bg-amber-50/80 p-4 shadow-sm">
+          <section className="relative overflow-hidden rounded-2xl border border-amber-200/80 bg-amber-50/80 p-3 sm:p-4 shadow-sm">
             <Trophy className="pointer-events-none absolute -right-1 -bottom-2 h-24 w-24 text-amber-200/45" strokeWidth={1} />
             <h5 className="relative mb-2 flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-amber-950/95">
               <Sparkles className="h-3.5 w-3.5 text-amber-600" />
@@ -402,7 +402,7 @@ const renderClassic = () => {
       <div className={cn('animate-in fade-in mt-4 duration-500', className)}>
         <div
           className={cn(
-            'relative rounded-2xl border border-slate-200 bg-gradient-to-b from-slate-50 to-slate-100/90 p-3 shadow-md sm:p-4',
+            'relative rounded-xl border border-slate-200 bg-gradient-to-b from-slate-50 to-slate-100/90 p-2 shadow-md sm:p-4',
             darkMode && 'border-slate-300/80 from-slate-50 to-white shadow-lg ring-1 ring-white/20'
           )}
         >

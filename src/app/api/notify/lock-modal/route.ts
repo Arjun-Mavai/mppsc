@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
 
 /**
@@ -99,7 +99,13 @@ export async function POST(req: Request) {
       `${tag} #PurchaseIntent #LockModal`;
 
     // Fire-and-forget — don't let Telegram latency affect the API response
-    sendTelegramNotification(message).catch(() => {});
+    after(async () => {
+      try {
+        await sendTelegramNotification(message);
+      } catch (e) {
+        // Silent fail inside background task
+      }
+    });
 
     return NextResponse.json({ success: true });
   } catch {

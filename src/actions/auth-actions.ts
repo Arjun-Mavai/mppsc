@@ -7,8 +7,9 @@ import { cookies, headers } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { logger } from '@/lib/logger';
 import { parseAccessGrants, serializeAccessGrants } from '@/lib/access-grants';
-import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
+import { sendTelegramNotification, sendLeadNotification, escapeHTML } from '@/lib/telegram';
 import { v4 as uuidv4 } from 'uuid';
+import { after } from 'next/server';
 import { hasActiveAuthSession, touchAuthLoginMetadata } from '@/lib/auth-session-metadata';
 
 import { AuthenticatedUser } from '@/types/auth';
@@ -220,37 +221,24 @@ export async function loginUserAction(formData: LoginParams) {
     }
 
     // ── Telegram Notification ───────────────────────────────────
-    try {
-      const userAgent = headersList.get('user-agent') || 'Unknown Device';
-      const grants = Array.isArray(user.accessGrants)
-        ? user.accessGrants
-        : typeof user.accessGrants === 'string'
-          ? JSON.parse(user.accessGrants)
-          : ['mppsc_pre'];
-
-      const telegramMessage =
-        `🔑 <b>New Login Detected</b> ${force ? '(FORCED)' : ''}\n\n` +
-        `👤 <b>User:</b> ${escapeHTML(user.name || 'Anonymous')}\n` +
-        `📧 <b>Email:</b> ${escapeHTML(user.email)}\n` +
-        `📞 <b>Phone:</b> ${escapeHTML(user.phone || 'Not Provided')}\n` +
-        `🏆 <b>Plan:</b> ${escapeHTML(user.planTier?.toUpperCase() || 'FREE')}\n` +
-        `🔓 <b>Grants:</b> ${escapeHTML(Array.isArray(grants) ? grants.join(', ') : 'None')}\n` +
-        `📱 <b>Device:</b> ${escapeHTML(userAgent.slice(0, 100))}\n` +
-        `🌐 <b>IP:</b> ${escapeHTML(ip)}\n` +
-        `🔢 <b>Session v:</b> ${newVersion}\n` +
-        `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST\n\n` +
-        `⚠️ <i>Previous sessions on other devices have been invalidated.</i>`;
-
-      // 🚀 Send Telegram alert asynchronously (fully non-blocking)
-      sendTelegramNotification(telegramMessage).catch((e) => {
+    after(async () => {
+      try {
+        const userAgent = headersList.get('user-agent') || 'Unknown Device';
+        
+        await sendLeadNotification({
+          type: 'Returning Lead', // Login is a returning event
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          plan: user.planTier || 'FREE',
+          status: `Login Detected ${force ? '(FORCED)' : ''} — IP: ${ip} | Device: ${userAgent.slice(0, 50)}`
+        });
+      } catch (e) {
         logger.error('Telegram login notification failed (non-blocking)', e, {
           category: 'telegram',
         });
-      });
-    } catch (e) {
-      // Catch for construction errors
-      logger.error('Error building Telegram notification', e, { category: 'telegram' });
-    }
+      }
+    });
 
     // ── Sign JWT Token ──────────────────────────────────────────
     const payload = {

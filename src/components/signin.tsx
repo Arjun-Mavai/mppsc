@@ -79,11 +79,9 @@ export default function LoginPage() {
         // Wait a bit for store to sync then redirect
         setTimeout(() => {
           if (storeUser && shouldRedirectPreSyllabusToMains(storeUser as any)) {
-            window.location.href = '/mains';
-          } else if (storeUser.isSubscribed) {
-            window.location.href = '/syllabus/quiz/pyq';
+            window.location.href = '/mains/syllabus';
           } else {
-            window.location.href = '/';
+            window.location.href = '/dashboard';
           }
         }, 600);
       } else {

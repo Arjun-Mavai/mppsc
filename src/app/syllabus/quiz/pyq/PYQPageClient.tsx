@@ -275,13 +275,13 @@ export default function PYQPageClient({
             <div className="space-y-4 text-center">
               <h2 className="text-2xl font-bold text-slate-900">
                 {language === 'hi'
-                  ? 'सभी विषय प्रश्न (2020-2025)'
-                  : 'All Subject Questions (2020-2025)'}
+                  ? 'सभी विषय प्रश्न (2020-2026)'
+                  : 'All Subject Questions (2020-2026)'}
               </h2>
               <p className="text-slate-600">
                 {language === 'hi'
-                  ? 'पिछले 6 वर्षों के सभी प्रश्न विषयवार व्यवस्थित'
-                  : 'All questions from past 6 years organized by subject'}
+                  ? 'पिछले 7 वर्षों के सभी प्रश्न विषयवार व्यवस्थित'
+                  : 'All questions from past 7 years organized by subject'}
               </p>
               <Button onClick={() => setViewMode('year')} variant="outline" className="mt-4">
                 <ArrowLeft className="mr-2 h-4 w-4" />

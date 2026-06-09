@@ -1,10 +1,11 @@
 'use server';
 
 import { Resend } from 'resend';
+import { after } from 'next/server';
 import { logger } from '@/lib/logger';
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
-import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
+import { sendTelegramNotification, sendLeadNotification, escapeHTML } from '@/lib/telegram';
 
 /**
  * 📧 ADMIN NOTIFICATION SYSTEM
@@ -121,24 +122,22 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
     });
 
     // 🚀 TELEGRAM NOTIFICATION (MPPSC ZEN Branding)
-    const telegramMessage =
-      `👮 <b>MPPSC ZEN</b>\n` +
-      `${type === 'new_payment' ? '💰 <b>New Payment</b>' : type === 'upgrade' ? '🚀 <b>Plan Upgrade</b>' : '⚠️ <b>Payment Failed</b>'}${data.examType ? ` (${data.examType.toUpperCase()})` : ''}\n\n` +
-      `👤 User: ${escapeHTML(userName)}\n` +
-      `📧 Email: ${escapeHTML(userEmail)}\n` +
-      `🎟️ Plan: ${planTier.toUpperCase()}${isUpgrade ? ' (Upgrade)' : ''}\n` +
-      `💵 Amount: <b>₹${amountInRupees}</b>\n` +
-      `🆔 PayID: <code>${paymentId}</code>\n` +
-      `⏱️ Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST` +
-      `${data.error ? `\n\n❌ Error: ${escapeHTML(data.error!)}` : ''}`;
-
-    try {
-      await sendTelegramNotification(telegramMessage);
-    } catch (telegramError) {
-      logger.error('Telegram admin notification failed (non-blocking)', telegramError, {
-        category: 'telegram',
-      });
-    }
+    after(async () => {
+      try {
+        await sendLeadNotification({
+          type: type === 'new_payment' ? 'Registration' : 'Admin Grant',
+          name: userName,
+          email: userEmail,
+          plan: planTier,
+          status: `${type === 'new_payment' ? '💰 New Payment Received' : type === 'upgrade' ? '🚀 Plan Upgrade' : '⚠️ Payment Failed'} — Amount: ₹${amountInRupees}${data.error ? ` (Error: ${data.error})` : ''}`,
+          phone: undefined // Not provided in PaymentNotification interface
+        });
+      } catch (telegramError) {
+        logger.error('Telegram admin notification failed (non-blocking)', telegramError, {
+          category: 'telegram',
+        });
+      }
+    });
 
     if (error) {
       logger.error('Failed to send admin notification email', error, { category: 'email' });
@@ -224,17 +223,23 @@ export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) 
     }
 
     // 🚀 TELEGRAM NOTIFICATION (MPPSC ZEN Branding)
-    const telegramMessage =
-      `👮 <b>MPPSC ZEN ALERT</b>\n` +
-      `🚨 <b>USER EMAIL FAILED!</b>\n\n` +
-      `User ne payment kiya but unhe welcome email nahi gaya. <b>Manual Action Required!</b>\n\n` +
-      `👤 User: ${escapeHTML(userName)}\n` +
-      `📧 Email: ${escapeHTML(userEmail)}\n` +
-      `🆔 PayID: <code>${paymentId}</code>\n` +
-      `❌ Error: ${escapeHTML(errorMessage)}\n` +
-      `⏱️ Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
+    after(async () => {
+      try {
+        const telegramMessage =
+          `👮 <b>MPPSC ZEN ALERT</b>\n` +
+          `🚨 <b>USER EMAIL FAILED!</b>\n\n` +
+          `User ne payment kiya but unhe welcome email nahi gaya. <b>Manual Action Required!</b>\n\n` +
+          `👤 User: ${escapeHTML(userName)}\n` +
+          `📧 Email: ${escapeHTML(userEmail)}\n` +
+          `🆔 PayID: <code>${paymentId}</code>\n` +
+          `❌ Error: ${escapeHTML(errorMessage)}\n` +
+          `⏱️ Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
 
-    await sendTelegramNotification(telegramMessage);
+        await sendTelegramNotification(telegramMessage);
+      } catch (e) {
+        logger.error('Telegram email failure notification failed', e);
+      }
+    });
   } catch (error) {
     // Last resort: Log to DB if even this fails
     logger.error('CRITICAL: Even admin notification failed!', error, {
@@ -255,46 +260,48 @@ export async function notifyAdminOnVerificationFailure(data: {
   paymentId?: string;
   error: string;
 }) {
-  try {
-    const { userId, orderId, paymentId, error } = data;
+  const { userId, orderId, paymentId, error } = data;
 
-    // Fetch user details for better admin context
-    let userInfo = '';
-    if (userId && userId !== 'unknown') {
-      try {
-        const user = await db.query.mppscUsers.findFirst({
-          where: (users, { eq }) => eq(users.id, userId),
-          columns: { name: true, email: true, phone: true },
-        });
-        if (user) {
-          userInfo = `👤 <b>User:</b> ${escapeHTML(user.name || 'Unknown')}\n` +
-                     `📧 <b>Email:</b> ${escapeHTML(user.email || 'N/A')}\n` +
-                     (user.phone ? `📞 <b>Phone:</b> ${escapeHTML(user.phone)}\n` : '');
+  after(async () => {
+    try {
+      // Fetch user details for better admin context
+      let userInfo = '';
+      if (userId && userId !== 'unknown') {
+        try {
+          const user = await db.query.mppscUsers.findFirst({
+            where: (users, { eq }) => eq(users.id, userId),
+            columns: { name: true, email: true, phone: true },
+          });
+          if (user) {
+            userInfo = `👤 <b>User:</b> ${escapeHTML(user.name || 'Unknown')}\n` +
+                       `📧 <b>Email:</b> ${escapeHTML(user.email || 'N/A')}\n` +
+                       (user.phone ? `📞 <b>Phone:</b> ${escapeHTML(user.phone)}\n` : '');
+          }
+        } catch (err) {
+          // Ignore DB fetch errors
         }
-      } catch (err) {
-        // Ignore DB fetch errors
       }
+
+      const telegramMessage =
+        `👮 <b>MPPSC ZEN SECURITY</b>\n` +
+        `🛡️ <b>VERIFICATION FAILURE!</b>\n\n` +
+        `Payment verification process encountered an error.\n\n` +
+        (userInfo || `👤 <b>User ID:</b> <code>${userId}</code>\n`) +
+        `🆔 <b>Order ID:</b> <code>${orderId}</code>\n` +
+        `${paymentId ? `🆔 <b>PayID:</b> <code>${paymentId}</code>\n` : ''}` +
+        `❌ <b>Error:</b> ${escapeHTML(error)}\n` +
+        `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
+
+      await sendTelegramNotification(telegramMessage);
+
+      logger.warn('Admin notified of verification failure via Telegram', {
+        category: 'payment',
+        metadata: { userId, orderId, error: String(error) },
+      });
+    } catch (err) {
+      logger.error('Failed to send verification failure notification', err);
     }
-
-    const telegramMessage =
-      `👮 <b>MPPSC ZEN SECURITY</b>\n` +
-      `🛡️ <b>VERIFICATION FAILURE!</b>\n\n` +
-      `Payment verification process encountered an error.\n\n` +
-      (userInfo || `👤 <b>User ID:</b> <code>${userId}</code>\n`) +
-      `🆔 <b>Order ID:</b> <code>${orderId}</code>\n` +
-      `${paymentId ? `🆔 <b>PayID:</b> <code>${paymentId}</code>\n` : ''}` +
-      `❌ <b>Error:</b> ${escapeHTML(error)}\n` +
-      `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
-
-    await sendTelegramNotification(telegramMessage);
-
-    logger.warn('Admin notified of verification failure via Telegram', {
-      category: 'payment',
-      metadata: { userId, orderId, error: String(error) },
-    });
-  } catch (err) {
-    logger.error('Failed to send verification failure notification', err);
-  }
+  });
 }
 
 /**
@@ -333,45 +340,47 @@ export async function notifyAdminOnSupportTicket(data: {
   message: string;
   pagePath?: string | null;
 }) {
-  try {
-    const { name, email, phone, category, message, pagePath } = data;
+  const { name, email, phone, category, message, pagePath } = data;
 
-    // 🎯 Map category to emoji and label
-    const categoryMap: Record<string, { emoji: string; label: string }> = {
-      pre_content: { emoji: '📚', label: 'Prelims Content' },
-      mains_content: { emoji: '🏛️', label: 'Mains Content' },
-      payment: { emoji: '💳', label: 'Payment Issue' },
-      technical: { emoji: '⚙️', label: 'Technical Issue' },
-      general: { emoji: '❓', label: 'General Enquiry' },
-      content: { emoji: '📄', label: 'Content Query' },
-    };
+  after(async () => {
+    try {
+      // 🎯 Map category to emoji and label
+      const categoryMap: Record<string, { emoji: string; label: string }> = {
+        pre_content: { emoji: '📚', label: 'Prelims Content' },
+        mains_content: { emoji: '🏛️', label: 'Mains Content' },
+        payment: { emoji: '💳', label: 'Payment Issue' },
+        technical: { emoji: '⚙️', label: 'Technical Issue' },
+        general: { emoji: '❓', label: 'General Enquiry' },
+        content: { emoji: '📄', label: 'Content Query' },
+      };
 
-    const cat = String(category || 'general').toLowerCase();
-    const catInfo = categoryMap[cat] || { emoji: '📋', label: cat.toUpperCase() };
+      const cat = String(category || 'general').toLowerCase();
+      const catInfo = categoryMap[cat] || { emoji: '📋', label: cat.toUpperCase() };
 
-    const telegramMessage =
-      `👮 <b>MPPSC ZEN</b>\n` +
-      `🎫 <b>New Support Ticket</b>\n\n` +
-      `👤 <b>Student:</b> ${escapeHTML(name)}\n` +
-      `📧 <b>Email:</b> ${escapeHTML(email)}\n` +
-      (phone ? `📞 <b>Phone:</b> ${escapeHTML(phone)}\n` : '') +
-      `${catInfo.emoji} <b>Category:</b> ${catInfo.label}\n` +
-      (pagePath ? `🌐 <b>Source:</b> <code>${escapeHTML(pagePath)}</code>\n` : '') +
-      `💬 <b>Query Message:</b>\n` +
-      `${escapeHTML(message)}\n\n` +
-      `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
+      const telegramMessage =
+        `👮 <b>MPPSC ZEN</b>\n` +
+        `🎫 <b>New Support Ticket</b>\n\n` +
+        `👤 <b>Student:</b> ${escapeHTML(name)}\n` +
+        `📧 <b>Email:</b> ${escapeHTML(email)}\n` +
+        (phone ? `📞 <b>Phone:</b> ${escapeHTML(phone)}\n` : '') +
+        `${catInfo.emoji} <b>Category:</b> ${catInfo.label}\n` +
+        (pagePath ? `🌐 <b>Source:</b> <code>${escapeHTML(pagePath)}</code>\n` : '') +
+        `💬 <b>Query Message:</b>\n` +
+        `${escapeHTML(message)}\n\n` +
+        `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
 
-    await sendTelegramNotification(telegramMessage);
+      await sendTelegramNotification(telegramMessage);
 
-    logger.info('Admin notified of support ticket via Telegram', {
-      category: 'telegram',
-      metadata: { email, ticketCategory: cat },
-    });
-  } catch (error) {
-    // Graceful & non-blocking
-    logger.error('Failed to send Telegram support ticket notification (non-blocking)', error, {
-      category: 'telegram',
-    });
-  }
+      logger.info('Admin notified of support ticket via Telegram', {
+        category: 'telegram',
+        metadata: { email, ticketCategory: cat },
+      });
+    } catch (error) {
+      // Graceful & non-blocking
+      logger.error('Failed to send Telegram support ticket notification (non-blocking)', error, {
+        category: 'telegram',
+      });
+    }
+  });
 }
 

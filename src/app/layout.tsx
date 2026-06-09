@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-// import { Outfit, Playfair_Display } from 'next/font/google';
+import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
 import PwaRegistry from '@/components/PwaRegistry';
 import { Suspense } from 'react';
@@ -21,17 +21,17 @@ const SupportButton = dynamic(() =>
   import('@/components/SupportButton').then((m) => m.SupportButton)
 );
 
-// const outfit = Outfit({
-//   subsets: ['latin'],
-//   variable: '--font-outfit',
-//   display: 'swap',
-// });
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
 
-// const playfair = Playfair_Display({
-//   subsets: ['latin'],
-//   variable: '--font-playfair',
-//   display: 'swap',
-// });
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-outfit',
+  display: 'swap',
+});
 
 export const viewport: Viewport = {
   themeColor: '#4c1d95',
@@ -133,7 +133,7 @@ export default async function RootLayout({
   };
 
   return (
-    <html lang="en">
+    <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
       <head>
         <Script
           id="schema-website"
@@ -165,7 +165,7 @@ export default async function RootLayout({
         {/* End Facebook Pixel Code */}
       </head>
       <body
-        className={`bg-gray-50 font-sans text-gray-900 antialiased`}
+        className="bg-gray-50 font-sans text-gray-900 antialiased"
       >
         {process.env.NEXT_PUBLIC_DISABLE_CONTENT_PROTECTION !== 'true' && (
           <Script id="global-content-protection" strategy="afterInteractive">

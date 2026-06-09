@@ -20,7 +20,8 @@ import Razorpay from 'razorpay';
 import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import { z } from 'zod';
-import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
+import { after } from 'next/server';
+import { sendLeadNotification } from '@/lib/telegram';
 import {
   notifyAdminOnVerificationFailure,
   notifyAdminOnEmailFailure,
@@ -96,6 +97,8 @@ export async function startPayment(input: StartPaymentInput) {
     }
 
     let userId: string;
+    let finalAttemptCount = 1;
+
     if (existingUser) {
       // Existing user: update name/phone/metadata only
       //
@@ -127,18 +130,28 @@ export async function startPayment(input: StartPaymentInput) {
         }
       }
 
+      const prevAttempts = typeof existingMeta.attemptCount === 'number' ? existingMeta.attemptCount : 0;
+      finalAttemptCount = prevAttempts + 1;
+
       await db
         .update(mppscUsers)
         .set({
           name: name.trim(),
           phone: phone.trim(),
-          metadata: JSON.stringify({ ...existingMeta, source }),
+          metadata: JSON.stringify({
+            ...existingMeta,
+            source,
+            attemptedPlan: planType,
+            lastAttemptAt: new Date().toISOString(),
+            attemptCount: finalAttemptCount,
+          }),
         })
         .where(eq(mppscUsers.id, existingUser.id));
       userId = existingUser.id;
     } else {
       // New user: create account
       userId = uuidv4();
+      finalAttemptCount = 1;
       const tempPassword = await bcrypt.hash(uuidv4(), 10);
       await db.insert(mppscUsers).values({
         id: userId,
@@ -148,12 +161,40 @@ export async function startPayment(input: StartPaymentInput) {
         password: tempPassword,
         isActive: false,
         role: 'user',
-        metadata: JSON.stringify({ source }),
+        metadata: JSON.stringify({
+          source,
+          attemptedPlan: planType,
+          lastAttemptAt: new Date().toISOString(),
+          attemptCount: 1,
+        }),
         planTier: 'free',
         examType: examType, // Set exam type on registration
         accessGrants: serializeAccessGrants(['mppsc_pre']),
       });
     }
+
+    // 🚀 TELEGRAM LEAD ALERT — Phase 1 complete, user saved
+    // ─────────────────────────────────────────────────────────────
+    // Hum `after()` use kar rahe hain taaki notification background mein jaaye
+    // aur user ko Razorpay order creation mein koi delay na mile.
+    // ─────────────────────────────────────────────────────────────
+    after(async () => {
+      try {
+        await sendLeadNotification({
+          type: isReturning ? 'Returning Lead' : 'New Lead',
+          name: name.trim(),
+          email: normalizedEmail,
+          phone: phone.trim(),
+          plan: planType,
+          exam: examType,
+          source: source,
+          attemptCount: finalAttemptCount,
+          status: 'Checkout Started — Awaiting Payment'
+        });
+      } catch (e) {
+        logger.error('Telegram lead notification failed', e, { category: 'telegram' });
+      }
+    });
 
     // ── PHASE 2: Create Razorpay Order (Server-Side Pricing)
     if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { logger } from '@/lib/logger';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { sendLeadNotification } from '@/lib/telegram';
 
 const registerSchema = z.object({
   name: z.string().min(2).max(100),
@@ -80,6 +81,24 @@ export async function POST(req: Request) {
         })
         .where(eq(mppscUsers.id, existingUser.id));
 
+      // 🚀 Send Telegram alert asynchronously
+      after(async () => {
+        try {
+          await sendLeadNotification({
+            type: 'Registration',
+            name: name,
+            email: normalizedEmail,
+            phone: phone,
+            source: source,
+            status: 'Inactive Signup Updated (Checkout Re-initiated)'
+          });
+        } catch (e) {
+          logger.error('Telegram registration refresh notification failed', e, {
+            category: 'telegram',
+          });
+        }
+      });
+
       return NextResponse.json({ userId: existingUser.id, isNew: false });
     }
 
@@ -98,6 +117,24 @@ export async function POST(req: Request) {
       role: 'guest',
       metadata: JSON.stringify({ source }),
       planTier: 'free',
+    });
+
+    // 🚀 Send Telegram alert asynchronously
+    after(async () => {
+      try {
+        await sendLeadNotification({
+          type: 'Registration',
+          name: name,
+          email: normalizedEmail,
+          phone: phone,
+          source: source,
+          status: 'New Inactive Signup (Checkout Initiated)'
+        });
+      } catch (e) {
+        logger.error('Telegram registration notification failed', e, {
+          category: 'telegram',
+        });
+      }
     });
 
     return NextResponse.json({ userId, isNew: true });

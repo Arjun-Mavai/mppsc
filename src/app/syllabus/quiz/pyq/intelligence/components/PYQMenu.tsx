@@ -59,7 +59,7 @@ export function PYQMenu({ isHindi, currentPage, theme = 'dark' }: PYQMenuProps) 
         <div className={cn("h-1.5 w-1.5 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]", theme === 'light' ? "bg-indigo-500" : "bg-emerald-500")} />
         {isHindi ? 'मेनू' : 'Menu'}
       </div>
-      <h3 className={cn("flex items-center gap-3 text-2xl font-black tracking-tight sm:text-3xl", theme === 'light' ? "text-indigo-600" : "text-amber-500")}>
+      <h3 className={cn("flex items-center gap-3 text-2xl font-black tracking-tight sm:text-3xl", theme === 'light' ? "text-slate-900" : "text-amber-500")}>
         {isHindi ? 'प्रीमियम इंटेलिजेंस टूल्स' : 'Premium Intelligence Tools'}
       </h3>
     </div>
@@ -72,6 +72,8 @@ export function PYQMenu({ isHindi, currentPage, theme = 'dark' }: PYQMenuProps) 
       header={header}
       gradientFrom="from-emerald-600/20"
       gradientTo="to-teal-500/10"
+      theme={theme}
+      className={cn(theme === 'light' ? 'bg-[#f0fdfa]/80 border-[#ccfbf1]' : '')}
     >
       <CardContent className="p-4 sm:p-6">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -122,7 +124,7 @@ export function PYQMenu({ isHindi, currentPage, theme = 'dark' }: PYQMenuProps) 
                         className={cn(
                           'text-lg font-black tracking-tight transition-colors',
                           isActive
-                            ? (theme === 'light' ? 'text-indigo-600' : 'text-emerald-500')
+                            ? (theme === 'light' ? 'text-slate-900' : 'text-emerald-500')
                             : (theme === 'light' ? 'text-[#1D1D1F] group-hover:text-indigo-600' : 'text-slate-200 group-hover:text-emerald-400')
                         )}
                       >
@@ -132,7 +134,7 @@ export function PYQMenu({ isHindi, currentPage, theme = 'dark' }: PYQMenuProps) 
                         className={cn(
                           'text-[10px] font-bold tracking-[0.1em] uppercase',
                           isActive 
-                            ? (theme === 'light' ? 'text-indigo-400' : 'text-slate-400') 
+                            ? (theme === 'light' ? 'text-slate-500' : 'text-slate-400') 
                             : (theme === 'light' ? 'text-[#86868B] group-hover:text-indigo-400' : 'text-slate-500 group-hover:text-slate-400')
                         )}
                       >

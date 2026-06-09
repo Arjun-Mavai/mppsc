@@ -16,6 +16,7 @@ interface ExpandableCardProps {
   className?: string;
   gradientFrom?: string;
   gradientTo?: string;
+  theme?: 'light' | 'dark';
 }
 
 export function ExpandableCard({
@@ -28,6 +29,7 @@ export function ExpandableCard({
   className,
   gradientFrom = 'from-blue-500/20',
   gradientTo = 'to-cyan-500/20',
+  theme = 'dark',
 }: ExpandableCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
@@ -44,23 +46,30 @@ export function ExpandableCard({
         `bg-gradient-to-r ${gradientFrom} ${gradientTo}`
       )} />
       <Card className={cn(
-        'relative z-10 overflow-hidden rounded-[2rem] border-slate-800 bg-slate-900 shadow-2xl',
+        'relative z-10 overflow-hidden rounded-[2rem] shadow-2xl border',
+        theme === 'light'
+          ? (className?.includes('bg-') ? 'shadow-md' : 'border-slate-200/80 bg-white shadow-md')
+          : (className?.includes('bg-') ? '' : 'border-slate-800 bg-slate-900'),
         className
       )}>
         <div
           className={cn(
-            'flex cursor-pointer items-center justify-between border-b border-white/5 bg-transparent px-6 py-6',
+            'flex cursor-pointer items-center justify-between bg-transparent px-6 py-6',
+            theme === 'light' ? 'border-b border-slate-100' : 'border-b border-white/5',
             headerClassName
           )}
           onClick={handleToggle}
         >
           {header}
           <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 bg-slate-800 shadow-inner transition-colors">
+            <div className={cn(
+              "flex h-10 w-10 items-center justify-center rounded-full shadow-inner transition-colors",
+              theme === 'light' ? "border border-slate-200 bg-slate-50" : "border border-slate-700 bg-slate-800"
+            )}>
               {isExpanded ? (
-                <ChevronUp className="h-5 w-5 text-blue-400" />
+                <ChevronUp className={cn("h-5 w-5", theme === 'light' ? "text-indigo-600" : "text-blue-400")} />
               ) : (
-                <ChevronDown className="h-5 w-5 text-slate-400" />
+                <ChevronDown className={cn("h-5 w-5", theme === 'light' ? "text-slate-500" : "text-slate-400")} />
               )}
             </div>
           </div>

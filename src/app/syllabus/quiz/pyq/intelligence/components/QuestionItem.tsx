@@ -248,29 +248,45 @@ export function QuestionItem({
   }
 
   if (variant === 'compact') {
+    const correctOpt = normalizedOptions[correctIdx];
+    const correctDisplay = correctOpt 
+      ? (isHindi ? correctOpt.text : correctOpt.textEn || correctOpt.text) 
+      : '';
+
     return (
       <div className={cn("group/question relative transition-colors", theme === 'light' ? "bg-white" : "")}>
         <div
           className={cn(
-            "flex cursor-pointer items-start gap-3 p-4 transition-all sm:p-5",
+            "flex cursor-pointer flex-col px-2 py-3.5 transition-all sm:p-5 gap-2",
             theme === 'light' ? "hover:bg-[#F5F5F7]" : "hover:bg-slate-800/40"
           )}
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          <span className={cn(
-            "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-mono text-[10px]",
-            theme === 'light' ? "bg-[#F5F5F7] text-[#86868B]" : "bg-slate-800 text-slate-500"
-          )}>
-            {index + 1}
-          </span>
+          {/* Top line: Q-number and Chevron */}
+          <div className="flex items-center justify-between">
+            <span className={cn(
+              "text-[10px] font-black uppercase tracking-widest",
+              theme === 'light' ? "text-blue-600" : "text-blue-500"
+            )}>
+              Q{index + 1}
+            </span>
+            <div className="flex items-center gap-2">
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4 text-emerald-400" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-slate-600" />
+              )}
+            </div>
+          </div>
 
+          {/* Second line: Question Text (Spans full width from left) */}
           <div className="min-w-0 flex-1">
             <p
               className={cn(
-                'text-sm leading-relaxed transition-colors',
+                'text-sm leading-relaxed transition-colors font-bold',
                 theme === 'light'
-                  ? (isExpanded ? 'text-[#1D1D1F]' : 'text-[#86868B]')
-                  : (isExpanded ? 'text-white' : 'text-slate-300'),
+                  ? 'text-[#1D1D1F]'
+                  : (isExpanded ? 'text-white' : 'text-slate-200'),
                 !isExpanded && 'line-clamp-2'
               )}
             >
@@ -278,17 +294,28 @@ export function QuestionItem({
             </p>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          {/* Third line: Correct Option/Answer in blue bold text */}
+          {correctDisplay && (
+            <p className={cn(
+              "text-sm font-extrabold sm:text-base leading-relaxed",
+              theme === 'light' ? "text-blue-600" : "text-blue-400"
+            )}>
+              {correctDisplay}
+            </p>
+          )}
+
+          {/* Fourth line: Badges/Action row */}
+          <div className="flex flex-wrap items-center gap-2 pt-1">
             {question.subject && (
               <Badge
                 variant="outline"
-                className="hidden h-5 border-emerald-500/30 bg-emerald-500/10 px-1.5 text-[9px] font-black tracking-tight text-emerald-400 uppercase sm:inline-flex"
+                className="h-5 border-emerald-500/30 bg-emerald-500/10 px-1.5 text-[9px] font-black tracking-tight text-emerald-400 uppercase"
               >
                 {question.subject}
               </Badge>
             )}
             {question.qNo && (
-              <span className="font-mono text-[10px] text-slate-500">Q{question.qNo}</span>
+              <span className="font-mono text-[10px] text-slate-500">SET-Q{question.qNo}</span>
             )}
             {showYear && <YearBadge year={question.year} variant="emerald" />}
             {repeatCount > 1 && (
@@ -297,11 +324,17 @@ export function QuestionItem({
                 {isHindi ? `${repeatCount}x रिपीट` : `Repeated ${repeatCount}x`}
               </Badge>
             )}
-            {isExpanded ? (
-              <ChevronUp className="h-4 w-4 text-emerald-400" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-slate-600" />
-            )}
+            <Badge
+              variant="outline"
+              className={cn(
+                "h-5 border-blue-500/20 bg-blue-500/10 px-1.5 text-[9px] font-black tracking-tight text-blue-400 uppercase transition-all select-none",
+                isExpanded && "border-amber-500/20 bg-amber-500/10 text-amber-400"
+              )}
+            >
+              {isExpanded 
+                ? (isHindi ? 'कम विवरण' : 'Less Detail') 
+                : (isHindi ? 'अधिक विवरण' : 'More Detail')}
+            </Badge>
           </div>
         </div>
 
@@ -315,21 +348,12 @@ export function QuestionItem({
             >
               <div
                 className={cn(
-                  'space-y-3 border-t px-4 py-4 sm:px-5',
+                  'space-y-3 border-t px-2 py-3 sm:px-4',
                   theme === 'light'
                     ? 'border-slate-200 bg-[#F5F5F7]'
                     : 'border-slate-800/50 bg-slate-900/50'
                 )}
               >
-                {/* Full question text */}
-                <p
-                  className={cn(
-                    'text-sm leading-relaxed',
-                    theme === 'light' ? 'text-[#1D1D1F]' : 'text-slate-200'
-                  )}
-                >
-                  {displayText}
-                </p>
 
                 {/* Alternate language */}
                 {altText && altText !== displayText && (
@@ -377,7 +401,7 @@ export function QuestionItem({
                       'rounded-lg border p-3 text-sm leading-relaxed',
                       theme === 'light'
                         ? 'border-slate-200 bg-white text-slate-800'
-                        : 'border-emerald-500/20 bg-emerald-500/5 text-slate-200'
+                        : 'border-emerald-500/20 bg-emerald-50/5 text-slate-200'
                     )}
                   >
                     <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
@@ -391,22 +415,6 @@ export function QuestionItem({
                     ) : null}
                   </div>
                 ) : null}
-
-                {/* View full question link */}
-                {!hideFullQuestionLink && (
-                  <Link
-                    href={`/syllabus/quiz/pyq/question/${question.id}`}
-                    className={cn(
-                      'mt-3 inline-flex items-center gap-1.5 text-xs font-medium',
-                      theme === 'light'
-                        ? 'text-indigo-600 hover:text-indigo-800'
-                        : 'text-emerald-400 hover:text-emerald-300'
-                    )}
-                  >
-                    {isHindi ? 'पूरा प्रश्न देखें' : 'View full question'}
-                    <ArrowRight className="h-3 w-3" />
-                  </Link>
-                )}
               </div>
             </motion.div>
           )}

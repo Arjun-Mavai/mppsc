@@ -16,9 +16,13 @@ export const NavbarLogo = memo(function NavbarLogo({ user }: NavbarLogoProps) {
       return;
     }
     const v = getProductPortalNavVisibility(user);
-    if (v.showPrePortalNav) router.push('/syllabus/quiz/pyq');
-    else if (v.showMainsNav) router.push('/mains/syllabus');
-    else router.push('/dashboard');
+    if (v.showPrePortalNav) {
+      router.push('/dashboard');
+    } else if (v.showMainsNav) {
+      router.push('/mains/syllabus');
+    } else {
+      router.push('/dashboard');
+    }
   }, [router, user]);
 
   return (

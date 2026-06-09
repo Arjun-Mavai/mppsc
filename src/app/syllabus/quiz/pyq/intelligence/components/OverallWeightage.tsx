@@ -94,14 +94,17 @@ export function OverallWeightage({
         )} />
 
         <Card className={cn(
-          "relative z-10 overflow-hidden rounded-[2rem] shadow-2xl transition-all duration-300",
+          "relative z-10 overflow-hidden rounded-[2rem] shadow-2xl transition-all duration-300 border",
           theme === 'light' 
-            ? "border-[#E5E5EA] bg-white backdrop-blur-none" 
+            ? "border-[#fce7f3] bg-[#fdf2f8]/80 backdrop-blur-none" 
             : "border-white/[0.03] bg-[#080510]/80 backdrop-blur-xl"
         )}>
           {/* Main Header - Same style as Paper Analysis year header */}
           <div
-            className="flex cursor-pointer items-center justify-between border-b border-white/[0.05] bg-transparent px-6 py-6"
+            className={cn(
+              "flex cursor-pointer items-center justify-between bg-transparent px-6 py-6",
+              theme === 'light' ? 'border-b border-[#fce7f3]' : 'border-b border-white/[0.05]'
+            )}
             onClick={toggleMainSection}
           >
             <div className="flex flex-col gap-1">
@@ -109,7 +112,7 @@ export function OverallWeightage({
                 <div className={cn("h-1.5 w-1.5 rounded-full", theme === 'light' ? "bg-indigo-500" : "bg-emerald-500")} />
                 {isHindi ? 'MPPSC प्रिलिम्स' : 'MPPSC Prelims'}
               </div>
-              <h3 className={cn("flex items-center gap-3 text-2xl font-black tracking-tight sm:text-3xl", theme === 'light' ? "text-indigo-600" : "text-amber-500")}>
+              <h3 className={cn("flex items-center gap-3 text-2xl font-black tracking-tight sm:text-3xl", theme === 'light' ? "text-slate-900" : "text-amber-500")}>
                 {isHindi ? 'कुल वेटेज' : 'Overall Weightage'}
                 <Badge
                   variant="outline"
@@ -165,13 +168,23 @@ export function OverallWeightage({
                 transition={{ duration: 0.3, ease: 'easeInOut' }}
                 className="overflow-hidden"
               >
-                <CardContent className="p-4 sm:p-6">
+                <CardContent className="px-1.5 py-4 sm:p-6">
                   <div className="space-y-4">
                     {/* All Subject Cards Inside */}
-                    {subjectsWithCounts.map((sub) => {
+                    {subjectsWithCounts.map((sub, idx) => {
                       const variant = SUBJECT_VARIANTS[sub.color];
                       const Icon = sub.icon;
                       const isSubjectExpanded = expandedSubjects.includes(sub.name);
+
+                      const cardColors = [
+                        { bg: 'bg-[#f0fdfa]/80', hoverBg: 'hover:bg-[#f0fdfa]', border: 'border-[#ccfbf1]', text: 'text-[#0f766e]', activeBg: 'bg-[#f0fdfa]' },
+                        { bg: 'bg-[#fdf2f8]/80', hoverBg: 'hover:bg-[#fdf2f8]', border: 'border-[#fce7f3]', text: 'text-[#be185d]', activeBg: 'bg-[#fdf2f8]' },
+                        { bg: 'bg-[#ecfdf5]/80', hoverBg: 'hover:bg-[#ecfdf5]', border: 'border-[#d1fae5]', text: 'text-[#047857]', activeBg: 'bg-[#ecfdf5]' },
+                        { bg: 'bg-[#fffbeb]/80', hoverBg: 'hover:bg-[#fffbeb]', border: 'border-[#fef3c7]', text: 'text-[#b45309]', activeBg: 'bg-[#fffbeb]' },
+                        { bg: 'bg-[#f5f3ff]/80', hoverBg: 'hover:bg-[#f5f3ff]', border: 'border-[#ede9fe]', text: 'text-[#6d28d9]', activeBg: 'bg-[#f5f3ff]' },
+                      ];
+                      const colorIndex = idx % cardColors.length;
+                      const colorTheme = cardColors[colorIndex];
 
                       return (
                         <div
@@ -179,7 +192,7 @@ export function OverallWeightage({
                           className={cn(
                             'rounded-[1.5rem] border transition-all duration-300',
                             theme === 'light'
-                              ? (isSubjectExpanded ? 'border-indigo-100 bg-indigo-50/30' : 'border-[#E5E5EA] bg-white hover:bg-[#F5F5F7]')
+                              ? (isSubjectExpanded ? `${colorTheme.border} ${colorTheme.activeBg}` : `${colorTheme.border} ${colorTheme.bg} ${colorTheme.hoverBg}`)
                               : (isSubjectExpanded ? 'border-white/10 bg-white/[0.05]' : 'border-white/[0.03] bg-white/[0.02] hover:bg-white/[0.04]')
                           )}
                         >
@@ -257,7 +270,7 @@ export function OverallWeightage({
                                 exit={{ height: 0, opacity: 0 }}
                                 className="overflow-hidden"
                               >
-                                <div className={cn("space-y-3 border-t p-0", theme === 'light' ? "border-[#E5E5EA]" : "border-white/[0.05]")}>
+                                <div className={cn("space-y-3 border-t p-0", theme === 'light' ? colorTheme.border : "border-white/[0.05]")}>
                                   {(() => {
                                     // Find questions for this subject
                                     const subjectData = subjectQuestionsData.find(

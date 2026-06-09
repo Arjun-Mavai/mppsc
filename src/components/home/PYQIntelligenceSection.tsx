@@ -23,12 +23,13 @@ const TOPIC_DATA = [
 
 // Real year-wise question counts (MPPSC Prelims Paper 1, approx 100 Qs each)
 const YEAR_BARS = [
-  { year: '2020', count: 100, pct: 82 },
-  { year: '2021', count: 100, pct: 86 },
-  { year: '2022', count: 100, pct: 89 },
-  { year: '2023', count: 100, pct: 91 },
-  { year: '2024', count: 100, pct: 95 },
-  { year: '2025', count: 100, pct: 100 },
+  { year: '2020', count: 100, pct: 70 },
+  { year: '2021', count: 100, pct: 75 },
+  { year: '2022', count: 100, pct: 80 },
+  { year: '2023', count: 100, pct: 85 },
+  { year: '2024', count: 100, pct: 90 },
+  { year: '2025', count: 100, pct: 95 },
+  { year: '2026', count: 100, pct: 100 },
 ];
 
 export function PYQIntelligenceSection() {
@@ -49,7 +50,7 @@ export function PYQIntelligenceSection() {
               variant="outline"
               className="border-pink-200 bg-pink-50 px-4 py-1 text-sm font-bold text-pink-700"
             >
-              {isHindi ? '6 साल का PYQ डेटा · 2020–2025' : '6-Year PYQ Data · 2020–2025'}
+              {isHindi ? '7 साल का PYQ डेटा · 2020–2026' : '7-Year PYQ Data · 2020–2026'}
             </Badge>
 
             <h2 className="text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl leading-[1.05]">
@@ -60,8 +61,8 @@ export function PYQIntelligenceSection() {
 
             <p className="text-lg leading-relaxed font-medium text-slate-600">
               {isHindi
-                ? 'MPPSC Prelims के 2020-2025 के 600+ प्रश्नों का गहरा विश्लेषण। Topic-wise trends, rising subjects और high-yield facts — सब एक जगह, ताकि आप 20% पढ़ाई से 80% सवाल cover कर सकें।'
-                : 'Deep analysis of 600+ MPPSC Prelims questions from 2020–2025. Topic trends, rising subjects, and high-yield facts — so you can cover 80% of questions with just 20% of the syllabus.'}
+                ? 'MPPSC Prelims के 2020-2026 के 700+ प्रश्नों का गहरा विश्लेषण। Topic-wise trends, rising subjects और high-yield facts — सब एक जगह, ताकि आप 20% पढ़ाई से 80% सवाल cover कर सकें।'
+                : 'Deep analysis of 700+ MPPSC Prelims questions from 2020–2026. Topic trends, rising subjects, and high-yield facts — so you can cover 80% of questions with just 20% of the syllabus.'}
             </p>
 
             <div className="flex flex-wrap gap-2.5">
@@ -136,9 +137,9 @@ export function PYQIntelligenceSection() {
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
                       <Zap className="h-3 w-3 text-emerald-400" />
-                      {isHindi ? 'Year-wise Coverage · 6 वर्ष' : 'Year-wise Coverage · 6 Years'}
+                      {isHindi ? 'Year-wise Coverage · 7 वर्ष' : 'Year-wise Coverage · 7 Years'}
                     </span>
-                    <span className="text-[10px] font-black text-slate-500">2020–2025</span>
+                    <span className="text-[10px] font-black text-slate-500">2020–2026</span>
                   </div>
                   <div className="flex items-end gap-2.5 h-16">
                     {YEAR_BARS.map((bar, i) => (
@@ -159,7 +160,7 @@ export function PYQIntelligenceSection() {
                   </div>
                   <div className="flex items-center justify-between text-[10px] font-semibold text-slate-500">
                     <span>{isHindi ? '100 प्रश्न प्रति वर्ष' : '100 Questions/Year'}</span>
-                    <span className="text-emerald-400 font-black">{isHindi ? '600 कुल PYQ' : '600 Total PYQ'}</span>
+                    <span className="text-emerald-400 font-black">{isHindi ? '700 कुल PYQ' : '700 Total PYQ'}</span>
                   </div>
                 </div>
 
