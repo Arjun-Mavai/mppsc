@@ -4,11 +4,15 @@ import React from 'react';
 import Image from 'next/image';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useRouter } from 'next/navigation';
+import { Crown, Sparkles, User } from 'lucide-react';
+import { hasPreAccess, hasMainsAccess } from '@/lib/access-grants';
 
 interface DashboardHeaderProps {
   user: {
     name: string | null;
     planTier: string | null;
+    isSubscribed?: boolean | null;
+    accessGrants?: any;
   };
 }
 
@@ -16,6 +20,10 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
   const { language } = useSettingsStore();
   const isHindi = language === 'hi';
   const router = useRouter();
+
+  const hasPre = hasPreAccess(user);
+  const hasMains = hasMainsAccess(user);
+  const isCombo = hasPre && hasMains;
 
   return (
     <div className="sticky top-6 z-50 mx-auto max-w-5xl px-4">
@@ -40,6 +48,38 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Moved Status Badges to Top Right */}
+          <div className="hidden sm:flex items-center">
+            {isCombo ? (
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-3 py-1.5 text-[9px] font-black uppercase tracking-wider">
+                <Crown size={12} className="text-amber-400 fill-amber-400/20 shrink-0" />
+                <span className="bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200 bg-clip-text text-transparent">
+                  COMBO MEMBER
+                </span>
+              </div>
+            ) : hasMains ? (
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-3 py-1.5 text-[9px] font-black uppercase tracking-wider">
+                <Crown size={12} className="text-emerald-400 fill-emerald-400/20 shrink-0" />
+                <span className="bg-gradient-to-r from-emerald-300 via-teal-400 to-emerald-300 bg-clip-text text-transparent">
+                  MAINS ACCESS
+                </span>
+              </div>
+            ) : hasPre ? (
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-3 py-1.5 text-[9px] font-black uppercase tracking-wider">
+                <Sparkles size={12} className="text-amber-400 fill-amber-400/20 shrink-0" />
+                <span className="bg-gradient-to-r from-amber-300 via-orange-400 to-amber-300 bg-clip-text text-transparent">
+                  PRELIMS ACCESS
+                </span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-[9px] font-black uppercase tracking-wider text-slate-500 border border-slate-200">
+                <User size={12} className="text-slate-500 shrink-0" />
+                <span>FREE LEARNER</span>
+              </div>
+            )}
+          </div>
+          
+          <div className="h-6 w-px bg-slate-100 hidden sm:block" />
           
           <button 
             onClick={() => router.push('/profile')}

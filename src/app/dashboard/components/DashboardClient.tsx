@@ -105,12 +105,23 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
       <main className="relative z-10 mx-auto max-w-5xl px-4 py-8">
         
         {/* PREMIUM WELCOME CARD */}
-        <div className="relative mb-8 overflow-hidden rounded-[2.5rem] bg-[#131926] p-6 md:p-8 text-white shadow-xl border border-slate-800/80">
+        <div className="relative mb-8 overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] p-6 md:p-8 text-white shadow-2xl border border-slate-800/80">
           <div className="absolute top-[-50%] left-[-20%] h-[200px] w-[200px] rounded-full bg-indigo-500/10 blur-[60px]" />
           <div className="absolute bottom-[-50%] right-[-10%] h-[250px] w-[250px] rounded-full bg-violet-600/10 blur-[80px]" />
           
+          {/* PRO Badge in Top Right */}
+          {(hasPre || hasMains) && (
+            <div className="absolute top-6 right-6 z-20">
+              <div className="flex items-center gap-1.5 rounded-full bg-amber-400/10 px-3 py-1.5 text-[10px] font-black tracking-[0.2em] text-amber-400 border border-amber-400/20 shadow-2xl backdrop-blur-md">
+                <Crown size={12} className="fill-amber-400" />
+                PRO
+              </div>
+            </div>
+          )}
+
           <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div className="space-y-4">
+              {/* Premium Status Badge Restored */}
               <div className="flex flex-wrap items-center gap-2">
                 {isCombo ? (
                   <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200 bg-clip-text text-transparent">
