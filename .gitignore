@@ -70,3 +70,10 @@ db-backup.sh
 
 *.log
 *.bak
+
+# database backups
+/backups/*
+!/backups/learning/
+!/backups/learning/**/*.md
+*.sqlite
+*.sql
