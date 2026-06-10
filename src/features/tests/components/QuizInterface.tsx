@@ -181,7 +181,13 @@ export function QuizInterface(props: QuizInterfaceProps) {
     setIsSubmittingGuest(true);
     try {
       localStorage.setItem('mppsc_guest_name', guestName.trim());
-      await createGuestUser({ name: guestName, email: guestEmail, mobile: guestMobile });
+      useSettingsStore.getState().setGuestLead({ name: guestName.trim(), email: guestEmail.trim(), phone: guestMobile.trim() });
+      await createGuestUser({ 
+        name: guestName, 
+        email: guestEmail, 
+        mobile: guestMobile,
+        referrer: document.referrer 
+      });
 
       // 🎯 Track Lead generated when Guest gives contact info
       trackFbStandardEvent('Lead', {

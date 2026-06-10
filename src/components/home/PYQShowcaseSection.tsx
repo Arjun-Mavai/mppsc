@@ -182,8 +182,8 @@ export function PYQShowcaseSection() {
                   className="mx-auto lg:mx-0 max-w-xl text-left text-base sm:text-xl font-medium leading-relaxed text-slate-500 min-h-[4.5rem] sm:min-h-[auto]"
                 >
                   {isHindi 
-                    ? 'रटना छोड़ो, कॉन्सेप्ट पकड़ो। 2020-2025 तक के 600+ प्रश्नों की ऐसी "Smart Explanations" जो एग्जाम हॉल में आपको दूसरों से आगे रखेगी।'
-                    : 'Stop memorizing, start understanding. Decoded insights from 2020-2025 to give you the competitive edge in MPPSC Prelims.'}
+                    ? 'रटना छोड़ो, कॉन्सेप्ट पकड़ो। 2020-2026 तक के 700+ प्रश्नों की ऐसी "Smart Explanations" जो एग्जाम हॉल में आपको दूसरों से आगे रखेगी।'
+                    : 'Stop memorizing, start understanding. Decoded insights from 2020-2026 to give you the competitive edge in MPPSC Prelims.'}
                 </m.p>
               </div>
 
@@ -302,10 +302,10 @@ export function PYQShowcaseSection() {
                         <m.div key="c0" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }} className="space-y-5 text-left">
                           <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
                             <span>Select Exam Year</span>
-                            <span className="text-emerald-500">2020-2025</span>
+                            <span className="text-emerald-500">2020-2026</span>
                           </div>
                           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                              {['2025', '2024', '2023', '2022', '2021', '2020'].map((y, i) => (
+                              {['2026', '2025', '2024', '2023', '2022', '2021', '2020'].map((y, i) => (
                                 <Badge key={y} className={cn("px-4 py-2 text-[10px] font-black rounded-xl shrink-0 border-none transition-all", i === 0 ? "bg-emerald-500 text-black shadow-lg shadow-emerald-500/20" : "bg-white/5 text-slate-500 hover:bg-white/10")}>
                                     {y}
                                 </Badge>
@@ -338,7 +338,7 @@ export function PYQShowcaseSection() {
                           ))}
                           <div className="pt-4 border-t border-white/5">
                               <Badge className="bg-amber-500/10 text-amber-500 border-none px-3 py-1 font-black text-[8px] sm:text-[9px] uppercase tracking-widest">
-                                2020-2025: 600+ Questions Decoded
+                                2020-2026: 700+ Questions Decoded
                               </Badge>
                           </div>
                         </m.div>

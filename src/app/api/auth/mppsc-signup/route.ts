@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -6,6 +6,7 @@ import { randomUUID } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
+import { sendLeadNotification } from '@/lib/telegram';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🔐 ADMIN SIGNUP API — Sirf admin hi naya user bana sakta h
@@ -169,6 +170,24 @@ export async function POST(request: Request) {
     logger.info(
       `User created by admin: ${email} | tier: ${planTier} | expires: ${accessExpiresAt?.toISOString() || 'never'}`
     );
+
+    // 🚀 Send Telegram alert asynchronously
+    after(async () => {
+      try {
+        await sendLeadNotification({
+          type: 'Admin Grant',
+          name: name.trim(),
+          email: email.toLowerCase().trim(),
+          phone: phone?.trim(),
+          plan: planTier,
+          status: `New User Created by Admin (Role: ${role.toUpperCase()}) — Expires: ${accessExpiresAt ? accessExpiresAt.toLocaleDateString('en-IN') : 'Never'}`
+        });
+      } catch (e) {
+        logger.error('Telegram admin user creation notification failed', e, {
+          category: 'telegram',
+        });
+      }
+    });
 
     return NextResponse.json({
       success: true,

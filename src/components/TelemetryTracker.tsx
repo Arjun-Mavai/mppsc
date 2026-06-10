@@ -13,6 +13,18 @@ export function TelemetryTracker() {
   const prevPathnameRef = useRef<string | null>(null);
   const entryTimeRef = useRef<number>(Date.now());
   const lastTrackedPathRef = useRef<string | null>(null);
+  const tabSessionStartRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      let sessionStart = sessionStorage.getItem('mppsc_tab_session_start');
+      if (!sessionStart) {
+        sessionStart = Date.now().toString();
+        sessionStorage.setItem('mppsc_tab_session_start', sessionStart);
+      }
+      tabSessionStartRef.current = parseInt(sessionStart, 10);
+    }
+  }, []);
 
   // Detect device classification
   const getDeviceType = (): string => {
@@ -57,6 +69,9 @@ export function TelemetryTracker() {
     // 1. Report transition (dwell time) for the PREVIOUS page (if any exists)
     if (prevPathnameRef.current && prevPathnameRef.current !== fullPath) {
       const durationSeconds = Math.round((now - entryTimeRef.current) / 1000);
+      const sessionDurationSeconds = tabSessionStartRef.current 
+        ? Math.round((now - tabSessionStartRef.current) / 1000) 
+        : durationSeconds;
       
       // Ignore super-fast bounce micro-clicks (less than 1s) to prevent spam
       if (durationSeconds >= 1) {
@@ -65,6 +80,7 @@ export function TelemetryTracker() {
           path: prevPathnameRef.current,
           previousPath: fullPath,
           duration: durationSeconds,
+          sessionDuration: sessionDurationSeconds,
           user: user ? {
             id: user.id,
             name: user.name,
@@ -132,6 +148,9 @@ export function TelemetryTracker() {
       const now = Date.now();
       const guestName = localStorage.getItem('mppsc_guest_name');
       const durationSeconds = Math.round((now - entryTimeRef.current) / 1000);
+      const sessionDurationSeconds = tabSessionStartRef.current 
+        ? Math.round((now - tabSessionStartRef.current) / 1000) 
+        : durationSeconds;
 
       if (durationSeconds >= 1) {
         reportedRef.current = fullPath;
@@ -139,6 +158,7 @@ export function TelemetryTracker() {
           type: 'page_dwell',
           path: fullPath,
           duration: durationSeconds,
+          sessionDuration: sessionDurationSeconds,
           user: user ? {
             id: user.id,
             name: user.name,

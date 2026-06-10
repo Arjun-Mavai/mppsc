@@ -5,7 +5,8 @@ export interface TelemetryEvent {
   type: 'page_view' | 'page_dwell' | 'action';
   path: string;
   previousPath?: string;
-  duration?: number; // in seconds
+  duration?: number; // in seconds (current page)
+  sessionDuration?: number; // in seconds (total tab session)
   user?: {
     id?: string;
     name?: string;
@@ -157,9 +158,12 @@ function formatTelemetryMessage(event: TelemetryEvent): string {
     title = isPaymentPath ? `⏱️ <b>PAYMENT FUNNEL EXIT SURVEY</b>` : title;
     
     const stayTime = event.duration ? formatDuration(event.duration) : '0s';
+    const totalSessionTime = event.sessionDuration ? formatDuration(event.sessionDuration) : null;
+    
     body = 
       `${title}\n` +
-      `⏱️ <b>Time Spent:</b> <b>${stayTime}</b> on <code>${escapeHTML(event.path)}</code>\n` +
+      `⏱️ <b>Time on Page:</b> <b>${stayTime}</b> (<code>${escapeHTML(event.path)}</code>)\n` +
+      (totalSessionTime ? `🕒 <b>Total Tab Session:</b> <b>${totalSessionTime}</b> (Open to Close/Switch)\n` : '') +
       (event.previousPath ? `➡️ <b>Navigated to:</b> <code>${escapeHTML(event.previousPath)}</code>\n\n` : '\n') +
       `${userDisplay}\n` +
       `${connectionDisplay}\n` +

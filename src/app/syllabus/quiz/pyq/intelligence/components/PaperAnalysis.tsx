@@ -44,7 +44,7 @@ export function PaperAnalysis({ stats, repeatedQuestions, isHindi, theme = 'dark
       </div>
 
       <div className="space-y-4">
-        {years.map((year) => {
+        {years.map((year, idx) => {
           const yearStats = stats.filter((s) => s.year === year);
           const totalQuestions = yearStats.reduce((acc, curr) => acc + curr.count, 0);
           const sortedUnits = [...yearStats].sort((a, b) => {
@@ -56,6 +56,16 @@ export function PaperAnalysis({ stats, repeatedQuestions, isHindi, theme = 'dark
           });
           const isExpanded = expandedYears.includes(year);
 
+          const cardColors = [
+            { bg: 'bg-[#f0fdfa]/80', border: 'border-[#ccfbf1]', hoverBg: 'hover:bg-[#f0fdfa]' },
+            { bg: 'bg-[#fdf2f8]/80', border: 'border-[#fce7f3]', hoverBg: 'hover:bg-[#fdf2f8]' },
+            { bg: 'bg-[#ecfdf5]/80', border: 'border-[#d1fae5]', hoverBg: 'hover:bg-[#ecfdf5]' },
+            { bg: 'bg-[#fffbeb]/80', border: 'border-[#fef3c7]', hoverBg: 'hover:bg-[#fffbeb]' },
+            { bg: 'bg-[#f5f3ff]/80', border: 'border-[#ede9fe]', hoverBg: 'hover:bg-[#f5f3ff]' },
+          ];
+          const colorIndex = (idx + 2) % cardColors.length;
+          const colorTheme = cardColors[colorIndex];
+
           return (
             <div key={year} className="relative">
             <div className={cn(
@@ -63,14 +73,17 @@ export function PaperAnalysis({ stats, repeatedQuestions, isHindi, theme = 'dark
                 theme === 'light' ? "bg-indigo-500/10" : "bg-gradient-to-r from-emerald-500/20 to-teal-500/20"
               )} />
               <Card className={cn(
-                "relative z-10 overflow-hidden rounded-[2rem] shadow-2xl transition-all duration-300",
+                "relative z-10 overflow-hidden rounded-[2rem] shadow-2xl transition-all duration-300 border",
                 theme === 'light' 
-                  ? "border-[#E5E5EA] bg-white hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)]" 
+                  ? `${colorTheme.border} ${colorTheme.bg} hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)]` 
                   : "border-slate-800 bg-slate-900 shadow-2xl"
               )}>
                 {/* Year Header */}
                 <div
-                  className="flex cursor-pointer items-center justify-between border-b border-white/5 bg-transparent px-6 py-6"
+                  className={cn(
+                    "flex cursor-pointer items-center justify-between bg-transparent px-6 py-6",
+                    theme === 'light' ? `border-b ${colorTheme.border}` : "border-b border-white/5"
+                  )}
                   onClick={() => toggleYear(year)}
                 >
                   <div className="flex flex-col gap-1">
@@ -130,7 +143,7 @@ export function PaperAnalysis({ stats, repeatedQuestions, isHindi, theme = 'dark
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden"
                     >
-                      <CardContent className="p-4 sm:p-6">
+                      <CardContent className="px-1.5 py-4 sm:p-6">
                         <div className="space-y-4">
                           {sortedUnits.map((unitStat) => {
                             // Map questions to QuestionData format (including qNo)

@@ -93,7 +93,7 @@ export default function RepeatedQuestionsClient({
                   {isHindi ? 'सबसे ज्यादा दोहराए गए प्रश्न' : 'Most Repeated Questions'}
                 </h1>
                 <p className="text-xs font-medium text-slate-500">
-                  {questions.length} Patterns Found (2020-2025) • AI-Powered ⚡
+                  {questions.length} Patterns Found (2020-2026) • AI-Powered ⚡
                 </p>
               </div>
             </div>
@@ -124,8 +124,8 @@ export default function RepeatedQuestionsClient({
                 </h2>
                 <p className="text-sm leading-relaxed text-indigo-200/80 sm:text-base">
                   {isHindi
-                    ? 'यह एआई-पावर्ड सिस्टम 2020-2025 के हजारों प्रश्नों को स्कैन करता है। यह FTS5 (Full Text Search) तकनीक और BM25 रैंकिंग का उपयोग करके न केवल समान शब्द, बल्कि मिलते-जुलते पैटर्न और अर्थ भी पहचानता है।'
-                    : 'This AI-powered system scans thousands of questions from 2020-2025. Using FTS5 (Full Text Search) technology and BM25 ranking, it identifies not just exact matches but also similar patterns and semantic meanings.'}
+                    ? 'यह एआई-पावर्ड सिस्टम 2020-2026 के हजारों प्रश्नों को स्कैन करता है। यह FTS5 (Full Text Search) तकनीक और BM25 रैंकिंग का उपयोग करके न केवल समान शब्द, बल्कि मिलते-जुलते पैटर्न और अर्थ भी पहचानता है।'
+                    : 'This AI-powered system scans thousands of questions from 2020-2026. Using FTS5 (Full Text Search) technology and BM25 ranking, it identifies not just exact matches but also similar patterns and semantic meanings.'}
                 </p>
 
                 <div className="flex flex-wrap gap-4 pt-2">
@@ -133,7 +133,7 @@ export default function RepeatedQuestionsClient({
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-900 font-bold">
                       1
                     </span>
-                    Scope: 2020-2025 (Paper 1)
+                    Scope: 2020-2026 (Paper 1)
                   </div>
                   <div className="flex items-center gap-2 text-xs font-medium text-indigo-300">
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-900 font-bold">

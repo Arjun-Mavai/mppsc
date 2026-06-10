@@ -48,7 +48,12 @@ async function DashboardDataWrapper({ user, totalTopics }: { user: any, totalTop
 
   return (
     <DashboardClient 
-      user={{ name: user.name, planTier: user.planTier }}
+      user={{ 
+        name: user.name, 
+        planTier: user.planTier, 
+        isSubscribed: user.isSubscribed, 
+        accessGrants: user.accessGrants 
+      }}
       analyticsData={analyticsData}
       syllabusProgress={syllabusProgress}
       totalTopics={totalTopics}

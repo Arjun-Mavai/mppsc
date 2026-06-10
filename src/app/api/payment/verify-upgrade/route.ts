@@ -241,6 +241,7 @@ export async function POST(req: Request) {
       type: 'upgrade',
       userName: user.name || 'Unknown',
       userEmail: user.email!,
+      userPhone: user.phone,
       planTier: planTier as 'lite' | 'pro',
       amountInRupees: paidAmount / 100,
       orderId: razorpay_order_id,

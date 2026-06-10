@@ -202,13 +202,13 @@ export default function PYQAnalysisGuideClient() {
                         <div className="space-y-3">
                           <p className="text-sm font-bold text-slate-700 leading-relaxed">
                              {activeTab === 'hindi' 
-                               ? 'पूरे समय (2020-2025) का औसत हिस्सा।' 
+                               ? 'पूरे समय (2020-2026) का औसत हिस्सा।' 
                                : 'Average share since 2020.'}
                           </p>
                           <div className="bg-white/80 p-4 rounded-xl text-xs font-bold border border-blue-100">
                              <div className="flex flex-col gap-1">
                                <p className="text-blue-600">Overall Weight Logic:</p>
-                               <p className="text-slate-700 font-black">20% Overall Weight = Out of 100 total questions (2020-25), 20 came from here.</p>
+                               <p className="text-slate-700 font-black">20% Overall Weight = Out of 100 total questions (2020-26), 20 came from here.</p>
                              </div>
                           </div>
                         </div>

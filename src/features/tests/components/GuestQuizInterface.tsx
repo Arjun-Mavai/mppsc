@@ -194,6 +194,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     // ⚡ INSTANT START: Save to localStorage and close dialog immediately
     try {
       localStorage.setItem('mppsc_guest_name', guestName.trim());
+      useSettingsStore.getState().setGuestLead({ name: guestName.trim(), email: guestEmail.trim(), phone: guestMobile.trim() });
     } catch (error) {
       logger.error('Failed to persist guest name to localStorage', error, {
         category: 'auth',
@@ -204,8 +205,12 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     
     // 🔥 FIRE-AND-FORGET: DB write happens in background - no waiting!
     // This is non-blocking - user can start quiz immediately
-    createGuestUser({ name: guestName, email: guestEmail, mobile: guestMobile })
-      .catch((error) => {
+    createGuestUser({ 
+      name: guestName, 
+      email: guestEmail, 
+      mobile: guestMobile, 
+      referrer: document.referrer 
+    }).catch((error) => {
         // Silent fail - localStorage backup is already saved
         logger.error('Guest entry creation failed (background)', error, {
           category: 'auth',

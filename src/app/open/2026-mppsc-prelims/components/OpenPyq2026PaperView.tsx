@@ -8,7 +8,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, ChevronDown, Filter, Eye, EyeOff, Star, Trophy, Loader2, Check, Sparkles } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Filter, Eye, EyeOff, Star, Trophy, Loader2, Check, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +33,45 @@ import type { OpenPaperViewQuestion } from '@/lib/map-quiz-to-open-paper-view';
 import { normalizeCorrectAnswer } from '@/lib/quiz-scoring';
 
 export type { OpenPaperViewQuestion };
+
+const CARD_THEMES = [
+  {
+    border: 'border-blue-200/60 hover:border-blue-300',
+    accent: '#3b82f6',
+    ring: 'ring-blue-500/25',
+    numberBg: 'bg-blue-100/60 text-blue-600 border-blue-200',
+    badge: 'border-blue-500/20 bg-blue-500/10 text-blue-600 hover:bg-blue-500/20',
+    bg: 'bg-blue-50/60',
+    bgActive: 'bg-blue-50/90',
+  },
+  {
+    border: 'border-pink-200/60 hover:border-pink-300',
+    accent: '#ec4899',
+    ring: 'ring-pink-500/25',
+    numberBg: 'bg-pink-100/60 text-pink-600 border-pink-200',
+    badge: 'border-pink-500/20 bg-pink-500/10 text-pink-600 hover:bg-pink-500/20',
+    bg: 'bg-pink-50/60',
+    bgActive: 'bg-pink-50/90',
+  },
+  {
+    border: 'border-emerald-200/60 hover:border-emerald-300',
+    accent: '#10b981',
+    ring: 'ring-emerald-500/25',
+    numberBg: 'bg-emerald-100/60 text-emerald-600 border-emerald-200',
+    badge: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20',
+    bg: 'bg-emerald-50/60',
+    bgActive: 'bg-emerald-50/90',
+  },
+  {
+    border: 'border-amber-200/60 hover:border-amber-300',
+    accent: '#f59e0b',
+    ring: 'ring-amber-500/25',
+    numberBg: 'bg-amber-100/60 text-amber-600 border-amber-200',
+    badge: 'border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20',
+    bg: 'bg-amber-50/60',
+    bgActive: 'bg-amber-50/90',
+  },
+];
 
 function openRowToQuestion(q: OpenPaperViewQuestion): Question {
   const opts = parseQuestionOptions(q.options);
@@ -73,7 +112,7 @@ export function OpenPyq2026PaperView({
   const isHindi = language === 'hi';
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const [showAllExpanded, setShowAllExpanded] = useState(false);
+  const [showAnswersOnCollapsed, setShowAnswersOnCollapsed] = useState(false);
   const [filterYear, setFilterYear] = useState<number | null>(null);
 
   const searchParams = useSearchParams();
@@ -94,7 +133,6 @@ export function OpenPyq2026PaperView({
     if (isPdfMode && filteredQuestions.length > 0) {
       const t = setTimeout(() => {
         setExpandedIds(new Set(filteredQuestions.map((q) => q.id)));
-        setShowAllExpanded(true);
       }, 0);
       return () => clearTimeout(t);
     }
@@ -109,15 +147,6 @@ export function OpenPyq2026PaperView({
     });
   }, []);
 
-  const toggleAll = useCallback(() => {
-    if (showAllExpanded) {
-      setExpandedIds(new Set());
-    } else {
-      setExpandedIds(new Set(filteredQuestions.map((q) => q.id)));
-    }
-    setShowAllExpanded(!showAllExpanded);
-  }, [showAllExpanded, filteredQuestions]);
-
   const colorClass = getUnitColor(unitId);
   const headerTitle =
     formalTitleHi && formalTitleEn
@@ -128,33 +157,32 @@ export function OpenPyq2026PaperView({
 
   return (
     <div
-      className="min-h-screen bg-slate-950 pb-24 text-slate-200 selection:bg-violet-500/30"
+      className="min-h-screen bg-[#FAFBFD] pb-24 text-slate-900 selection:bg-violet-500/30"
       data-open-pyq-paper="true"
     >
-      <div className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] animate-pulse rounded-full bg-violet-600/10 blur-[120px]" />
-        <div
-          className="absolute right-[-10%] bottom-[-10%] h-[600px] w-[600px] animate-pulse rounded-full bg-amber-600/5 blur-[120px]"
-          style={{ animationDelay: '2s' }}
-        />
-        <div className="absolute top-[30%] left-[20%] h-[400px] w-[400px] rounded-full bg-purple-600/5 blur-[100px]" />
+      {/* Light Multi-Gradient Background */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
+        <div className="absolute top-[-10%] left-[-10%] h-[60%] w-[60%] rounded-full bg-indigo-50/60 blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] h-[60%] w-[60%] rounded-full bg-emerald-50/60 blur-[120px]" />
+        <div className="absolute top-[20%] right-[-5%] h-[50%] w-[50%] rounded-full bg-rose-50/60 blur-[120px]" />
+        <div className="absolute bottom-[20%] left-[-5%] h-[50%] w-[50%] rounded-full bg-amber-50/40 blur-[120px]" />
       </div>
 
-      <div className="sticky top-0 z-50 border-b border-white/[0.03] bg-slate-950/70 backdrop-blur-2xl">
+      <div className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-2xl">
         <div className="mx-auto max-w-4xl px-4 sm:px-6">
-          <div className="flex min-h-16 items-start gap-3 py-2.5 sm:items-center sm:gap-4 sm:py-0">
+          <div className="flex h-16 items-center justify-between gap-4">
             <Button
               variant="ghost"
               size="icon"
               type="button"
               onClick={() => router.push(backHref)}
-              className="group rounded-xl bg-white/5 text-slate-400 transition-all hover:bg-white/10 hover:text-white active:scale-95"
+              className="group rounded-xl bg-slate-100 text-slate-600 transition-all hover:bg-slate-200 hover:text-slate-900 active:scale-95"
               aria-label="Back to home"
             >
               <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
             </Button>
             <div className="min-w-0 flex-1">
-              <h1 className="line-clamp-3 text-[11px] font-bold leading-snug tracking-tight text-white sm:line-clamp-2 sm:text-sm md:text-base md:leading-snug">
+              <h1 className="truncate text-base font-black tracking-tight text-slate-900 sm:text-lg">
                 {headerTitle}
               </h1>
               <div className="flex items-center gap-2">
@@ -174,21 +202,21 @@ export function OpenPyq2026PaperView({
         </div>
       </div>
 
-      <div className="border-b border-white/[0.03] bg-slate-950/20">
+      <div className="sticky top-16 z-40 border-b border-slate-200 bg-white/80 backdrop-blur-xl">
         <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-3">
               {uniqueYears.length > 1 && (
                 <div className="no-scrollbar flex items-center gap-2 overflow-x-auto pb-1">
-                  <div className="flex h-9 items-center rounded-2xl bg-white/5 p-1">
+                  <div className="flex h-9 items-center rounded-2xl bg-slate-100 p-1">
                     <button
                       type="button"
                       onClick={() => setFilterYear(null)}
                       className={cn(
                         'h-full rounded-xl px-4 text-[10px] font-black tracking-widest transition-all active:scale-95',
                         filterYear === null
-                          ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]'
-                          : 'text-slate-400 hover:text-white'
+                          ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200'
+                          : 'text-slate-500 hover:text-slate-900'
                       )}
                     >
                       ALL YEARS
@@ -201,8 +229,8 @@ export function OpenPyq2026PaperView({
                         className={cn(
                           'h-full rounded-xl px-4 text-[10px] font-black tracking-widest transition-all active:scale-95',
                           filterYear === y
-                            ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]'
-                            : 'text-slate-400 hover:text-white'
+                            ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200'
+                            : 'text-slate-500 hover:text-slate-900'
                         )}
                       >
                         {y}
@@ -216,41 +244,25 @@ export function OpenPyq2026PaperView({
             <Button
               variant="outline"
               size="sm"
-              onClick={toggleAll}
-              className="h-9 gap-2 rounded-xl border-white/5 bg-white/5 px-4 text-xs font-bold text-white transition-all hover:bg-white/10 active:scale-95 sm:ml-auto"
+              onClick={() => setShowAnswersOnCollapsed(!showAnswersOnCollapsed)}
+              className={cn(
+                "h-9 gap-2 rounded-xl border-slate-200 bg-white px-4 text-xs font-bold text-slate-700 hover:bg-slate-55 transition-all active:scale-95 sm:ml-auto",
+                showAnswersOnCollapsed && "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100/70"
+              )}
             >
-              <AnimatePresence mode="wait">
-                {showAllExpanded ? (
-                  <motion.div
-                    key="collapse"
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -5 }}
-                    className="flex items-center gap-2"
-                  >
-                    <EyeOff className="h-4 w-4 text-amber-500" />
-                    {isHindi ? 'सब बंद करें' : 'Collapse All'}
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="expand"
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -5 }}
-                    className="flex items-center gap-2"
-                  >
-                    <Eye className="h-4 w-4 text-amber-500" />
-                    {isHindi ? 'सब खोलें' : 'Expand All'}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <CheckCircle className={cn("h-4 w-4 transition-colors", showAnswersOnCollapsed ? "text-emerald-600" : "text-slate-400")} />
+              <span>
+                {isHindi 
+                  ? (showAnswersOnCollapsed ? 'उत्तर छिपाएं' : 'उत्तर दिखाएं') 
+                  : (showAnswersOnCollapsed ? 'Hide Answers' : 'Show Answers')}
+              </span>
             </Button>
           </div>
         </div>
       </div>
 
       <div
-        className="relative mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6"
+        className="relative mx-auto max-w-4xl space-y-4 px-1.5 py-6 sm:px-6"
         data-testid="open-pyq-questions-container"
       >
         {filteredQuestions.map((q, idx) => {
@@ -264,11 +276,26 @@ export function OpenPyq2026PaperView({
             .replace(/<[^>]*>/g, ' ')
             .replace(/\s+/g, ' ')
             .trim();
-          const previewShort =
-            previewPlain.length > 200 ? `${previewPlain.slice(0, 200)}…` : previewPlain;
-          const matchArr = q.matchPairs;
-          const hasMatch = Array.isArray(matchArr) && matchArr.length > 0;
           const parsedOpts = parseQuestionOptions(q.options);
+          const hasMatch = Array.isArray(q.matchPairs) && q.matchPairs.length > 0;
+
+          const correctAnswerIndex = normalizeCorrectAnswer(q.correctAnswer);
+          const correctOpt = parsedOpts[correctAnswerIndex];
+          const parsedCorrectOpt: {
+            text?: unknown;
+            text_en?: unknown;
+            textEn?: unknown;
+          } = typeof correctOpt === 'object' && correctOpt !== null
+            ? (correctOpt as Record<string, unknown>)
+            : { text: correctOpt };
+          const correctOptText = isHindi
+            ? (parsedCorrectOpt.text ?? correctOpt)
+            : (parsedCorrectOpt.text_en ?? parsedCorrectOpt.textEn ?? parsedCorrectOpt.text ?? correctOpt);
+          const correctDisplay = normalizeMultilineText(
+            typeof correctOptText === 'string' ? correctOptText : String(correctOptText ?? '')
+          );
+
+          const cardTheme = CARD_THEMES[idx % CARD_THEMES.length];
 
           return (
             <div
@@ -279,69 +306,85 @@ export function OpenPyq2026PaperView({
             >
               <div
                 className={cn(
-                  'absolute -inset-px rounded-[2rem] opacity-0 blur-md transition-opacity duration-500 group-hover:opacity-100',
+                  'absolute -inset-px rounded-[1.25rem] sm:rounded-[2rem] opacity-0 blur-md transition-opacity duration-500 group-hover:opacity-100',
                   isExpanded ? 'opacity-40' : ''
                 )}
                 style={{
-                  background: `linear-gradient(to right, ${isExpanded ? '#8b5cf6' : '#1e293b'}, transparent)`,
+                  background: `linear-gradient(to right, ${cardTheme.accent}, transparent)`,
                 }}
               />
 
               <Card
                 className={cn(
-                  'relative z-10 overflow-hidden rounded-[2rem] border-white/[0.03] bg-slate-900/40 shadow-2xl backdrop-blur-sm transition-all duration-300',
-                  isExpanded ? 'bg-slate-900/80 ring-1 ring-violet-500/20' : 'hover:bg-slate-900/60'
+                  'relative z-10 overflow-hidden rounded-[1.25rem] sm:rounded-[2rem] border shadow-[0_4px_20px_rgba(0,0,0,0.015)] transition-all duration-300',
+                  cardTheme.border,
+                  isExpanded ? `${cardTheme.bgActive} ring-2 ${cardTheme.ring} shadow-[0_8px_30px_rgba(0,0,0,0.03)]` : `${cardTheme.bg} hover:shadow-[0_8px_25px_rgba(0,0,0,0.03)]`
                 )}
               >
                 <div
-                  className="flex cursor-pointer items-start gap-5 p-5 sm:p-7"
+                  className="flex cursor-pointer flex-col pl-4 pr-3 py-4 sm:pl-7 sm:pr-7 sm:py-6 select-none gap-2.5"
                   onClick={() => toggleQuestion(q.id)}
                 >
-                  <div className="relative flex h-10 w-10 shrink-0 items-center justify-center">
-                    <div className="absolute inset-0 rotate-45 rounded-xl bg-amber-500/10 transition-colors group-hover:bg-amber-500/20" />
-                    <span className="relative text-sm font-black text-amber-500">{idx + 1}</span>
-                  </div>
-
-                  <div className="min-w-0 flex-1 pt-1">
-                    <p
-                      className={cn(
-                        'text-[15px] leading-[1.6] font-bold tracking-tight text-slate-200 sm:text-[17px]',
-                        !isExpanded && 'line-clamp-2'
-                      )}
-                    >
-                      {previewShort || '\u00a0'}
-                    </p>
-
-                    <div className="mt-3 flex items-center gap-3">
-                      <YearBadge
-                        year={q.year ?? 2020}
-                        variant="amber"
-                        className="border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[10px] font-black text-amber-500 uppercase"
-                      />
-                      {q.subject && (
-                        <Badge className="border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-black tracking-widest text-emerald-400 uppercase">
-                          {q.subject}
-                        </Badge>
-                      )}
-                      {q.qNo && (
-                        <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">
-                          SET-Q{q.qNo}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="mt-1 flex shrink-0 items-center">
+                  <div className="flex items-center justify-between">
+                    <span className={cn("inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider", cardTheme.numberBg)}>
+                      Q{idx + 1}
+                    </span>
                     <div
                       className={cn(
-                        'flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-slate-500 transition-all',
+                        'flex h-7 w-7 items-center justify-center rounded-full bg-white/50 text-slate-400 transition-all border border-slate-200',
                         isExpanded
-                          ? 'rotate-180 bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.5)]'
-                          : 'group-hover:text-slate-300'
+                          ? 'rotate-180 text-white shadow-sm'
+                          : 'group-hover:text-slate-700'
                       )}
+                      style={{
+                        backgroundColor: isExpanded ? cardTheme.accent : undefined,
+                        borderColor: isExpanded ? cardTheme.accent : undefined,
+                      }}
                     >
-                      <ChevronDown className="h-5 w-5" />
+                      <ChevronDown className="h-4 w-4" />
                     </div>
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    {isExpanded ? (
+                      <FormattedQuestionText
+                        text={stemFormatted}
+                        className="text-[16px] leading-[1.7] font-bold tracking-tight text-slate-900 sm:text-[18px]"
+                      />
+                    ) : (
+                      <p className="text-[16px] leading-[1.7] font-bold tracking-tight text-slate-800 line-clamp-2 sm:text-[18px]">
+                        {previewPlain || '\u00a0'}
+                      </p>
+                    )}
+                  </div>
+
+                  {!isExpanded && showAnswersOnCollapsed && q.type !== 'matching' && correctDisplay && (
+                    <div className="flex items-center gap-1.5 pt-0.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
+                        {isHindi ? 'सही उत्तर' : 'Correct Answer'}:
+                      </span>
+                      <span className="text-[14px] font-bold text-slate-700 truncate max-w-[85%]">
+                        {correctDisplay}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <YearBadge
+                      year={q.year ?? 2020}
+                      variant="amber"
+                      className="border-amber-200 bg-amber-50 px-2 py-0.5 text-[9px] font-bold text-amber-700 uppercase rounded-md"
+                    />
+                    {q.subject && (
+                      <Badge className="border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold tracking-widest text-emerald-700 hover:bg-emerald-50 uppercase rounded-md">
+                        {q.subject}
+                      </Badge>
+                    )}
+                    {q.qNo && (
+                      <span className="text-[9px] font-bold tracking-widest text-slate-400 uppercase">
+                        SET-Q{q.qNo}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -351,40 +394,23 @@ export function OpenPyq2026PaperView({
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+                      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                       className="overflow-hidden"
                     >
-                      <div className="space-y-6 border-t border-white/[0.05] bg-slate-950/40 p-5 sm:p-7">
-                        <div className="rounded-2xl border border-white/10 bg-slate-50 p-4 sm:p-5 text-slate-900 shadow-inner">
-                          <FormattedQuestionText
-                            text={stemFormatted}
-                            questionId={q.id}
-                            className="!text-slate-900 text-[15px] font-semibold leading-relaxed sm:text-[17px]"
-                          />
-                        </div>
-
+                      <div className="space-y-6 border-t border-dashed border-slate-200 bg-slate-50/30 pl-4 pr-3 py-5 sm:pl-7 sm:pr-7 sm:py-7">
                         {q.type === 'matching' && hasMatch && (
-                          <div className="rounded-2xl border border-white/5 bg-slate-900/50 p-4">
+                          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                             <RenderTableQuestion
                               matchPairs={q.matchPairs}
                               language={isHindi ? 'hi' : 'en'}
-                              darkMode={true}
+                              darkMode={false}
                             />
                           </div>
                         )}
 
-                        {/* {altText && altText !== displayText && (
-                          <div className="relative rounded-2xl border-l-[3px] border-amber-500/30 bg-amber-500/[0.03] p-4 text-[13px] leading-relaxed text-slate-400 italic">
-                            <div className="mb-1 text-[9px] font-black tracking-tighter text-amber-400/60 uppercase opacity-50">
-                              Translated Reference
-                            </div>
-                            <div dangerouslySetInnerHTML={{ __html: altText }} />
-                          </div>
-                        )} */}
-
                         {parsedOpts.length > 0 && (
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          {parsedOpts.slice(0, 4).map((opt, optIdx) => {
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            {parsedOpts.slice(0, 4).map((opt, optIdx) => {
                               const parsedOpt: {
                                 text?: unknown;
                                 text_en?: unknown;
@@ -393,7 +419,7 @@ export function OpenPyq2026PaperView({
                                 typeof opt === 'object' && opt !== null
                                   ? (opt as Record<string, unknown>)
                                   : { text: opt };
-                              const isCorrect = normalizeCorrectAnswer(q.correctAnswer) === optIdx;
+                              const isCorrect = correctAnswerIndex === optIdx;
                               const optText = isHindi
                                 ? (parsedOpt.text ?? opt)
                                 : (parsedOpt.text_en ?? parsedOpt.textEn ?? parsedOpt.text ?? opt);
@@ -405,42 +431,42 @@ export function OpenPyq2026PaperView({
                                 <div
                                   key={optIdx}
                                   className={cn(
-                                    'group/opt relative flex items-center gap-4 rounded-2xl border p-4 transition-all duration-300',
+                                    'group/opt relative flex items-center gap-3.5 rounded-2xl border p-4 transition-all duration-200',
                                     isCorrect
-                                      ? 'border-emerald-500/30 bg-emerald-500/[0.08] shadow-[0_0_20px_rgba(16,185,129,0.05)]'
-                                      : 'border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.05]'
+                                      ? 'border-emerald-200 bg-emerald-50/70 shadow-[0_4px_12px_rgba(16,185,129,0.04)]'
+                                      : 'border-slate-100 bg-white hover:bg-slate-50 hover:border-slate-200 hover:-translate-y-0.5'
                                   )}
                                 >
                                   <div
                                     className={cn(
-                                      'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black transition-all',
+                                      'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-black transition-all border',
                                       isCorrect
-                                        ? 'bg-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.4)]'
-                                        : 'bg-white/5 text-slate-500 group-hover/opt:bg-white/10 group-hover/opt:text-slate-300'
+                                        ? 'bg-emerald-500 border-emerald-600 text-white shadow-sm'
+                                        : 'bg-slate-50 border-slate-200 text-slate-500 group-hover/opt:bg-slate-100'
                                     )}
                                   >
                                     {String.fromCharCode(65 + optIdx)}
                                   </div>
                                   <div
                                     className={cn(
-                                      'flex-1 whitespace-pre-line text-sm leading-relaxed font-medium',
-                                      isCorrect ? 'text-emerald-100' : 'text-slate-300'
+                                      'flex-1 whitespace-pre-line text-sm leading-relaxed font-semibold transition-colors',
+                                      isCorrect ? 'text-emerald-900 font-semibold' : 'text-slate-600'
                                     )}
                                   >
                                     {optDisplay}
                                   </div>
                                   {isCorrect && (
-                                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20">
-                                      <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+                                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                                      <Check className="h-3 w-3 stroke-[3]" />
                                     </div>
                                   )}
                                 </div>
                               );
                             })}
-                        </div>
+                          </div>
                         )}
 
-                        <div className="space-y-4 pt-4">
+                        <div className="space-y-4 pt-2">
                           {(q.explanation || q.explanationEn || !!q.extendedData) && (
                             <StructuredExplanation
                               extendedData={q.extendedData}
@@ -452,7 +478,7 @@ export function OpenPyq2026PaperView({
                               explanationEn={q.explanationEn}
                               explanationHi={q.explanation_hi || q.explanation}
                               language={isHindi ? 'hi' : 'en'}
-                              darkMode={true}
+                              darkMode={false}
                               questionId={q.id}
                               questionText={rawStem}
                               guestMobile={guestMobile}
@@ -470,11 +496,11 @@ export function OpenPyq2026PaperView({
         })}
 
         {filteredQuestions.length === 0 && (
-          <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-white/10 bg-white/[0.02] p-20 text-center">
-            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white/5">
-              <Filter className="h-10 w-10 text-slate-600" />
+          <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-slate-200 bg-white/50 p-20 text-center">
+            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100">
+              <Filter className="h-10 w-10 text-slate-400" />
             </div>
-            <h3 className="text-xl font-black text-white">
+            <h3 className="text-xl font-black text-slate-800">
               {isHindi ? 'कोई प्रश्न नहीं मिला' : 'No matches found'}
             </h3>
             <p className="mx-auto mt-2 max-w-[250px] text-sm text-slate-500">
@@ -493,10 +519,10 @@ export function OpenPyq2026PaperView({
             viewport={{ once: true }}
             className="group relative mt-20"
           >
-            <div className="absolute -inset-1 rounded-[2.5rem] bg-gradient-to-r from-violet-500 via-amber-500 to-emerald-500 opacity-20 blur-xl transition-all duration-500 group-hover:opacity-40" />
+            <div className="absolute -inset-1 rounded-[2.5rem] bg-gradient-to-r from-violet-500 via-amber-500 to-emerald-500 opacity-20 blur-xl transition-all duration-500 group-hover:opacity-30" />
             
-            <Card className="relative z-10 overflow-hidden rounded-[2.5rem] border-white/[0.05] bg-slate-900/60 p-8 text-center backdrop-blur-xl sm:p-12">
-              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800 shadow-inner ring-1 ring-white/10">
+            <Card className="relative z-10 overflow-hidden rounded-[2.5rem] border-slate-200 bg-white p-8 text-center shadow-lg sm:p-12">
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 shadow-inner ring-1 ring-slate-200">
                 <motion.div
                   animate={{ 
                     rotate: [0, 10, -10, 10, 0],
@@ -512,11 +538,11 @@ export function OpenPyq2026PaperView({
                 </motion.div>
               </div>
 
-              <h2 className="font-display text-2xl font-black tracking-tight text-white sm:text-4xl">
+              <h2 className="font-display text-2xl font-black tracking-tight text-slate-900 sm:text-4xl">
                 {isHindi ? 'शानदार! आपने पूरा पेपर देख लिया' : 'Congratulations! You read them all'}
               </h2>
               
-              <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-slate-400 sm:text-lg">
+              <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-slate-600 sm:text-lg">
                 {isHindi 
                   ? 'हमें उम्मीद है कि ये premium explanations आपकी तैयारी में मदद करेंगी।' 
                   : 'We hope these premium explanations help you master the MPPSC syllabus.'}
@@ -528,7 +554,7 @@ export function OpenPyq2026PaperView({
                 <Button
                   onClick={() => router.push('/')}
                   variant="outline"
-                  className="h-12 rounded-2xl border-white/10 bg-white/5 px-8 font-bold text-white hover:bg-white/10"
+                  className="h-12 rounded-2xl border-slate-200 bg-slate-50 px-8 font-bold text-slate-700 hover:bg-slate-100"
                 >
                   {isHindi ? 'होम पर जाएं' : 'Back to Home'}
                 </Button>
@@ -598,13 +624,13 @@ function ZenFeedbackForm({ guestMobile, isHindi }: { guestMobile?: string; isHin
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mt-10 rounded-3xl bg-emerald-500/10 p-6 border border-emerald-500/20"
+        className="mt-10 rounded-3xl bg-emerald-50 p-6 border border-emerald-200"
       >
         <div className="flex flex-col items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-black">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-white">
             <Check className="h-6 w-6" />
           </div>
-          <p className="font-bold text-emerald-400">
+          <p className="font-bold text-emerald-800">
             {isHindi ? 'आपका फीडबैक मिल गया! धन्यवाद' : 'Feedback received! Thank you'}
           </p>
         </div>
@@ -626,11 +652,11 @@ function ZenFeedbackForm({ guestMobile, isHindi }: { guestMobile?: string; isHin
             className="absolute -top-16 -right-2 z-20 sm:-top-20 sm:-right-6"
           >
             <div className="flex flex-col items-center">
-              <div className="flex items-center gap-4 rounded-[2rem] bg-slate-800/95 px-6 py-3 shadow-2xl ring-1 ring-white/20 backdrop-blur-xl">
-                <span className="text-4xl sm:text-5xl filter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+              <div className="flex items-center gap-4 rounded-[2rem] bg-white px-6 py-3 shadow-2xl ring-1 ring-slate-200 text-slate-900">
+                <span className="text-4xl sm:text-5xl filter drop-shadow-[0_0_15px_rgba(0,0,0,0.1)]">
                   {ratingInfo.emoji}
                 </span>
-                <div className="flex flex-col">
+                <div className="flex flex-col text-left">
                   <span className={cn("text-xs font-black uppercase leading-none tracking-wider", ratingInfo.color.replace('bg-', 'text-'))}>
                     {rating} Stars
                   </span>
@@ -643,7 +669,7 @@ function ZenFeedbackForm({ guestMobile, isHindi }: { guestMobile?: string; isHin
               <motion.div 
                 animate={{ scale: [1, 1.4, 1], opacity: [0.5, 1, 0.5] }}
                 transition={{ repeat: Infinity, duration: 1.5 }}
-                className={cn("mt-2 h-1.5 w-12 rounded-full blur-[3px] shadow-[0_0_10px_rgba(0,0,0,0.5)]", ratingInfo.color)}
+                className={cn("mt-2 h-1.5 w-12 rounded-full blur-[3px] shadow-[0_0_10px_rgba(0,0,0,0.1)]", ratingInfo.color)}
               />
             </div>
           </motion.div>
@@ -661,7 +687,7 @@ function ZenFeedbackForm({ guestMobile, isHindi }: { guestMobile?: string; isHin
               onClick={() => setRating(star)}
               className={cn(
                 "group relative flex h-12 w-12 items-center justify-center rounded-2xl transition-all active:scale-90",
-                rating >= star ? "bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]" : "bg-white/5 text-slate-500 hover:bg-white/10"
+                rating >= star ? "bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
               )}
             >
               <Star className={cn("h-6 w-6", rating >= star ? "fill-black" : "group-hover:text-amber-500")} />
@@ -690,7 +716,7 @@ function ZenFeedbackForm({ guestMobile, isHindi }: { guestMobile?: string; isHin
                       "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
                       tags.includes(tag) 
                         ? "bg-sky-500 text-white shadow-lg shadow-sky-500/20" 
-                        : "bg-white/5 text-slate-400 hover:bg-white/10"
+                        : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                     )}
                   >
                     {tag}
@@ -707,7 +733,7 @@ function ZenFeedbackForm({ guestMobile, isHindi }: { guestMobile?: string; isHin
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder={isHindi ? 'यहाँ लिखें...' : 'Type here...'}
-                className="w-full min-h-[100px] rounded-2xl bg-white/5 border border-white/10 p-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                className="w-full min-h-[100px] rounded-2xl bg-white border border-slate-200 p-4 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
               />
             </div>
 

@@ -319,6 +319,7 @@ export async function POST(req: Request) {
       type: 'new_payment',
       userName: user.name || 'Unknown',
       userEmail: user.email!,
+      userPhone: user.phone,
       planTier: resolved.paymentLabel,
       amountInRupees: amountInPaise / 100,
       orderId: razorpay_order_id,
