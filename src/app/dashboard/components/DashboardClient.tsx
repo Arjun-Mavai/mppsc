@@ -251,11 +251,11 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                 showLock={showMainsLock}
                 lockTitle={isHindi ? 'मुख्य परीक्षा प्रीमियम' : 'Mains Premium'}
                 lockDesc={isHindi ? 'डबल-स्टाइल MODEL उत्तर और मेंस PYQ LIBRARY खोलें।' : 'Unlock expert double-style model answers mapped to your syllabus.'}
-                onUnlock={() => router.push('/mains')}
+                onUnlock={() => router.push('/mains/syllabus')}
                 unlockText={isHindi ? 'मेंस अनलॉक करें' : 'Unlock Mains'}
               >
                 <LauncherLink
-                  href="/mains"
+                  href="/mains/syllabus"
                   icon={<Crown size={18} />}
                   title={isHindi ? 'सिलेबस की गहरी समझ एवं PYQ एकीकरण' : 'Syllabus Deep Understanding & PYQ Integration'}
                   description={isHindi ? 'सिलेबस के हर टॉपिक को गहराई से समझें, पिछले वर्षों के प्रश्नों (PYQ) के साथ।' : 'Master syllabus topics in depth, perfectly integrated with previous year questions.'}
