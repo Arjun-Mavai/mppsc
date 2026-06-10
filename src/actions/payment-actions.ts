@@ -474,7 +474,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
     if (!isUpgradePurchase) {
       const paidUser = await db.query.mppscUsers.findFirst({
         where: eq(mppscUsers.id, userId!),
-        columns: { name: true, email: true, examType: true },
+        columns: { name: true, email: true, examType: true, phone: true },
       });
 
       if (paidUser?.email) {
@@ -577,6 +577,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
           type: 'new_payment',
           userName: paidUser.name || 'Unknown',
           userEmail: paidUser.email,
+          userPhone: paidUser.phone,
           planTier: resolved.paymentLabel,
           amountInRupees: amountInPaise / 100,
           orderId: razorpay_order_id,

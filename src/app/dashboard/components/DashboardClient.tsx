@@ -90,13 +90,13 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
   const showPyqLock = !hasPre;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#FAFBFD] pb-24 font-sans text-slate-900 selection:bg-indigo-500/30">
-      {/* Light Multi-Gradient Background */}
+    <div className="relative min-h-screen overflow-hidden bg-slate-50/50 pb-24 font-sans text-slate-900 selection:bg-indigo-500/30">
+      {/* Vibrant Premium Background Gradients */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
-        <div className="absolute top-[-10%] left-[-10%] h-[60%] w-[60%] rounded-full bg-indigo-50/60 blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] h-[60%] w-[60%] rounded-full bg-emerald-50/60 blur-[120px]" />
-        <div className="absolute top-[20%] right-[-5%] h-[50%] w-[50%] rounded-full bg-rose-50/60 blur-[120px]" />
-        <div className="absolute bottom-[20%] left-[-5%] h-[50%] w-[50%] rounded-full bg-amber-50/40 blur-[120px]" />
+        <div className="absolute top-[-20%] left-[-10%] h-[70%] w-[60%] rounded-full bg-blue-100/50 blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] h-[60%] w-[50%] rounded-full bg-emerald-100/50 blur-[120px]" />
+        <div className="absolute top-[30%] right-[-5%] h-[50%] w-[50%] rounded-full bg-purple-100/50 blur-[120px]" />
+        <div className="absolute bottom-[10%] left-[-5%] h-[50%] w-[40%] rounded-full bg-amber-100/40 blur-[120px]" />
       </div>
 
       {/* 🏷️ BILINGUAL HEADER */}
@@ -224,21 +224,21 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                   icon={<BookOpen size={18} />}
                   title={isHindi ? 'सिलेबस डीप-डाइव और Active Recall' : 'Syllabus Deep-Dive & Active Recall'}
                   description={isHindi ? 'सिलेबस टॉपिक्स की गहरी समझ, सक्रिय याद करने की पद्धति और एक्सपर्ट एक्सप्लेनेशन।' : 'Deep understanding of syllabus topics with active recall questions and expert explanations.'}
-                  color="blue"
+                  color="amber"
                 />
                 <LauncherLink
                   href="/syllabus/quiz/pyq"
                   icon={<Bookmark size={18} />}
                   title={isHindi ? 'परीक्षा स्तर टेस्ट प्रैक्टिस (Test Series)' : 'Exam-Level Test Practice (Test Series)'}
                   description={isHindi ? 'मॉक टेस्ट, यूनिट टेस्ट और परीक्षा-स्तर प्रश्नों के साथ संपूर्ण अभ्यास करें।' : 'Target weaknesses with unit-wise mocks and topic practice.'}
-                  color="blue"
+                  color="purple"
                 />
                 <LauncherLink
                   href="/free-quiz"
                   icon={<Zap size={18} />}
                   title={isHindi ? 'डेली फ्री क्विज़ (मेमरी बूस्टर)' : 'Daily Free Quiz (Memory Booster)'}
                   description={isHindi ? 'दैनिक प्रश्नों के साथ कठिन तथ्यों का रिवीजन करें' : 'Boost retention scores with daily revision micro-tests'}
-                  color="blue"
+                  color="emerald"
                 />
               </LauncherCard>
 
@@ -257,16 +257,16 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                 <LauncherLink
                   href="/mains"
                   icon={<Crown size={18} />}
-                  title={isHindi ? 'मॉडल उत्तर एवं विषय विश्लेषण' : 'Model Answers & Topic Insights'}
-                  description={isHindi ? 'हर विषय को परीक्षा की मांग और उत्तर लेखन दृष्टिकोण से समझें।' : 'Understand every topic through the lens of exam expectations and answer writing.'}
-                  color="emerald"
+                  title={isHindi ? 'सिलेबस की गहरी समझ एवं PYQ एकीकरण' : 'Syllabus Deep Understanding & PYQ Integration'}
+                  description={isHindi ? 'सिलेबस के हर टॉपिक को गहराई से समझें, पिछले वर्षों के प्रश्नों (PYQ) के साथ।' : 'Master syllabus topics in depth, perfectly integrated with previous year questions.'}
+                  color="purple"
                 />
                 <LauncherLink
                   href="/mains/syllabus/pyq-library"
                   icon={<Library size={18} />}
                   title={isHindi ? 'मेंस PYQ इनसाइट लाइब्रेरी' : 'Mains PYQ Insight Library'}
                   description={isHindi ? 'पिछले प्रश्नों में छिपी परीक्षा की सोच और प्रवृत्ति को समझें।' : 'Discover the patterns and expectations hidden within previous year questions.'}
-                  color="emerald"
+                  color="amber"
                 />
               </LauncherCard>
 
@@ -287,14 +287,14 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                   icon={<Sparkles size={18} />}
                   title={isHindi ? 'विषय-वार इंटेलिजेंस विश्लेषण' : 'Subject-wise PYQ Intelligence'}
                   description={isHindi ? 'विशिष्ट टॉपिक्स के पिछले सालों के प्रश्न और ट्रेंड्स' : 'Examine visual trends and repeated questions by subject'}
-                  color="amber"
+                  color="purple"
                 />
                 <LauncherLink
                   href="/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject"
                   icon={<History size={18} />}
                   title={isHindi ? 'वर्ष-वार पेपर्स (2020 - 2026)' : 'Year-wise PYQs (All Years)'}
                   description={isHindi ? 'सभी पिछले पेपर्स के प्रश्नों को व्याख्या के साथ हल करें' : 'Explore full past exam sheets with detailed explanations'}
-                  color="amber"
+                  color="blue"
                 />
               </LauncherCard>
 
@@ -310,14 +310,14 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                   icon={<History size={18} />}
                   title={isHindi ? 'टेस्ट प्रयास इतिहास (Attempt History)' : 'Test Attempt History'}
                   description={isHindi ? 'अपने हल किए गए टेस्ट और गलत उत्तरों की समीक्षा करें' : 'Review accuracy analysis and see incorrect answers'}
-                  color="purple"
+                  color="emerald"
                 />
                 <LauncherLink
                   href="/blogs"
                   icon={<BookOpen size={18} />}
                   title={isHindi ? 'परीक्षा रणनीति और ब्लॉग्स' : 'Syllabus & Strategy Blogs'}
                   description={isHindi ? 'अधिकारी बनने के टिप्स, बुकलिस्ट और सरकारी नोटिफिकेशन' : 'Explanatory posts, topper recommended tips and notifications'}
-                  color="purple"
+                  color="amber"
                 />
               </LauncherCard>
 
@@ -414,10 +414,17 @@ function LauncherCard({
     purple: 'bg-purple-600 text-purple-600 shadow-purple-200 border-purple-100',
   };
 
+  const cardBgMap = {
+    blue: 'bg-gradient-to-br from-blue-50/80 to-white/95 border-blue-100/60 shadow-blue-900/5',
+    emerald: 'bg-gradient-to-br from-emerald-50/80 to-white/95 border-emerald-100/60 shadow-emerald-900/5',
+    amber: 'bg-gradient-to-br from-amber-50/80 to-white/95 border-amber-100/60 shadow-amber-900/5',
+    purple: 'bg-gradient-to-br from-purple-50/80 to-white/95 border-purple-100/60 shadow-purple-900/5',
+  };
+
   return (
     <motion.div 
       whileHover={{ y: -4 }}
-      className="group relative flex flex-col overflow-hidden rounded-[2.5rem] bg-white/70 border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all"
+      className={cn("group relative flex flex-col overflow-hidden rounded-[2.5rem] border shadow-xl backdrop-blur-xl transition-all duration-300", cardBgMap[color])}
     >
       {showLock && (
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/95 backdrop-blur-[4px] p-8 text-center animate-in fade-in duration-300">
@@ -467,10 +474,10 @@ interface LauncherLinkProps {
 
 function LauncherLink({ href, icon, title, description, color }: LauncherLinkProps) {
   const colorMap = {
-    blue: 'bg-blue-50/30 hover:border-blue-200 hover:text-blue-600',
-    emerald: 'bg-emerald-50/30 hover:border-emerald-200 hover:text-emerald-600',
-    amber: 'bg-amber-50/30 hover:border-amber-200 hover:text-amber-600',
-    purple: 'bg-purple-50/30 hover:border-purple-200 hover:text-purple-600',
+    blue: 'bg-blue-50/50 hover:bg-blue-50 hover:border-blue-200 hover:shadow-sm hover:text-blue-700',
+    emerald: 'bg-emerald-50/50 hover:bg-emerald-50 hover:border-emerald-200 hover:shadow-sm hover:text-emerald-700',
+    amber: 'bg-amber-50/50 hover:bg-amber-50 hover:border-amber-200 hover:shadow-sm hover:text-amber-700',
+    purple: 'bg-purple-50/50 hover:bg-purple-50 hover:border-purple-200 hover:shadow-sm hover:text-purple-700',
   };
 
   const iconColorMap = {
@@ -499,7 +506,7 @@ function LauncherLink({ href, icon, title, description, color }: LauncherLinkPro
           </span>
           <ArrowRight size={14} className={cn("text-slate-300 group-hover/item:translate-x-1 transition-all", arrowColorMap[color])} />
         </div>
-        <p className="mt-1.5 text-[10px] font-semibold text-slate-500 leading-relaxed">
+        <p className="mt-1.5 text-[11px] font-medium text-slate-500 leading-snug group-hover/item:text-slate-600">
           {description}
         </p>
       </div>

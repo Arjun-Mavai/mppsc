@@ -26,6 +26,7 @@ interface PaymentNotification {
   type: 'new_payment' | 'upgrade' | 'failed';
   userName: string;
   userEmail: string;
+  userPhone?: string | null;
   planTier: string;
   amountInRupees: number;
   orderId: string;
@@ -62,7 +63,7 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
     const fromAddress = process.env.RESEND_FROM_EMAIL || 'mppsc@zenscroll.app';
     const fromEmail = `${fromName} <${fromAddress}>`;
 
-    const { type, userName, userEmail, planTier, amountInRupees, orderId, paymentId, isUpgrade } =
+    const { type, userName, userEmail, userPhone, planTier, amountInRupees, orderId, paymentId, isUpgrade } =
       data;
 
     // 📧 Different subject lines based on event type
@@ -130,7 +131,7 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
           email: userEmail,
           plan: planTier,
           status: `${type === 'new_payment' ? '💰 New Payment Received' : type === 'upgrade' ? '🚀 Plan Upgrade' : '⚠️ Payment Failed'} — Amount: ₹${amountInRupees}${data.error ? ` (Error: ${data.error})` : ''}`,
-          phone: undefined // Not provided in PaymentNotification interface
+          phone: userPhone || undefined
         });
       } catch (telegramError) {
         logger.error('Telegram admin notification failed (non-blocking)', telegramError, {

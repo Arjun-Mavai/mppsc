@@ -221,24 +221,8 @@ export async function loginUserAction(formData: LoginParams) {
     }
 
     // ── Telegram Notification ───────────────────────────────────
-    after(async () => {
-      try {
-        const userAgent = headersList.get('user-agent') || 'Unknown Device';
-        
-        await sendLeadNotification({
-          type: 'Returning Lead', // Login is a returning event
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
-          plan: user.planTier || 'FREE',
-          status: `Login Detected ${force ? '(FORCED)' : ''} — IP: ${ip} | Device: ${userAgent.slice(0, 50)}`
-        });
-      } catch (e) {
-        logger.error('Telegram login notification failed (non-blocking)', e, {
-          category: 'telegram',
-        });
-      }
-    });
+    // We purposefully DO NOT send a Telegram notification for every login
+    // to avoid rate-limiting and spam. The activity is safely logged to DB above.
 
     // ── Sign JWT Token ──────────────────────────────────────────
     const payload = {
