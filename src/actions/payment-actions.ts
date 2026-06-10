@@ -98,6 +98,7 @@ export async function startPayment(input: StartPaymentInput) {
 
     let userId: string;
     let finalAttemptCount = 1;
+    const isReturning = !!existingUser;
 
     if (existingUser) {
       // Existing user: update name/phone/metadata only
