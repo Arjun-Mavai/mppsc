@@ -204,364 +204,122 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
 
         {/* TAB 1: STUDY HUB (LAUNCHPAD PORTAL) */}
         {activeTab === 'study' && (
-          <div className="animate-in fade-in duration-300 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               
               {/* 1. PRELIMS PREP HUB */}
-              <motion.div 
-                whileHover={{ y: -6, scale: 1.01 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 15 }}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-[2rem] bg-blue-50/60 border border-blue-200/80 px-3.5 py-6 sm:p-6 shadow-sm hover:shadow-xl transition-all"
+              <LauncherCard
+                title={isHindi ? 'प्रिलिम्स विजय पथ' : 'Prelims Victory Path'}
+                subtitle={isHindi ? 'तैयारी का आधार' : 'The Foundation'}
+                icon={<GraduationCap className="h-6 w-6" />}
+                color="blue"
+                showLock={showPreLock}
+                lockTitle={isHindi ? 'प्रारंभिक परीक्षा प्रीमियम' : 'Prelims Premium'}
+                lockDesc={isHindi ? 'यूनिट/टॉपिक टेस्ट और प्रीलिम्स सिलेबस अनलॉक करें।' : 'Unlock Prelims units practice, mocks, and micro syllabus tracking.'}
+                onUnlock={() => router.push('/upgrade')}
+                unlockText={isHindi ? 'प्रीमियम अनलॉक करें' : 'Unlock Now'}
               >
-                {/* Decorative background circle */}
-                <div className="absolute -right-10 -bottom-10 h-32 w-32 rounded-full bg-blue-500/5 blur-2xl pointer-events-none" />
-                
-                {/* Lock Overlay if no access */}
-                {showPreLock && (
-                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/95 backdrop-blur-[2px] p-6 text-center animate-in fade-in duration-300">
-                    <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 border border-blue-100 text-blue-600">
-                      <Lock size={18} />
-                    </div>
-                    <h4 className="text-sm font-black text-slate-800 uppercase tracking-wider">{isHindi ? 'प्रारंभिक परीक्षा प्रीमियम' : 'Prelims Premium'}</h4>
-                    <p className="mt-1.5 text-[11px] text-slate-500 max-w-[220px] leading-relaxed">
-                      {isHindi ? 'यूनिट/टॉपिक टेस्ट और प्रीलिम्स सिलेबस अनलॉक करें।' : 'Unlock Prelims units practice, mocks, and micro syllabus tracking.'}
-                    </p>
-                    <button 
-                      onClick={() => router.push('/upgrade')}
-                      className="mt-4 flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-blue-700 transition-all cursor-pointer shadow-md"
-                    >
-                      <Sparkles size={11} className="fill-current text-white" />
-                      <span>{isHindi ? 'प्रीमियम अनलॉक करें' : 'Unlock Now'}</span>
-                    </button>
-                  </div>
-                )}
-
-                <div>
-                  {/* Centered top icon & header layout mirroring /syllabus design */}
-                  <div className="flex flex-col items-center text-center mb-5 mt-1">
-                    <div className="relative mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-blue-100/80 border border-blue-200 text-blue-600 shadow-md">
-                      <div className="absolute inset-0 rounded-full blur-md bg-blue-400/20 opacity-60" />
-                      <GraduationCap className="h-7 w-7 relative z-10" />
-                    </div>
-                    <span className="rounded-full bg-blue-100 border border-blue-200/80 px-3 py-1 text-[9px] font-black tracking-widest text-blue-600 uppercase mb-2">
-                      {isHindi ? 'प्रारंभिक परीक्षा' : 'Prelims Guide'}
-                    </span>
-                    <h3 className="text-xl sm:text-2xl font-black text-blue-900 mb-1 tracking-tight">{isHindi ? 'प्रिलिम्स विजय पथ' : 'Prelims Victory Pathway'}</h3>
-                    <p className="text-[11px] text-slate-500 leading-relaxed font-semibold max-w-[280px]">
-                      {isHindi ? 'सही दिशा, नियमित अभ्यास और प्रभावी रिविजन के साथ प्रिलिम्स की तैयारी।' : 'Master Prelims with the right direction, regular practice, and active revision.'}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2.5">
-                    <Link 
-                      href="/syllabus"
-                      className="flex items-center justify-between rounded-2xl bg-white/80 hover:bg-white p-3.5 transition-all group cursor-pointer border border-slate-200/60 hover:border-blue-300 shadow-sm"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 border border-blue-100 text-blue-600">
-                          <BookOpen size={16} />
-                        </div>
-                        <div>
-                          <span className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">
-                            {isHindi ? 'सिलेबस डीप-डाइव और Active Recall' : 'Syllabus Deep-Dive & Active Recall'}
-                          </span>
-                          <p className="text-[10px] text-slate-500 mt-0.5 leading-tight font-semibold">
-                            {isHindi ? 'सिलेबस टॉपिक्स की गहरी समझ, सक्रिय याद करने की पद्धति और एक्सपर्ट एक्सप्लेनेशन।' : 'Deep understanding of syllabus topics with active recall questions and expert explanations.'}
-                          </p>
-                        </div>
-                      </div>
-                      <ArrowRight size={14} className="text-slate-400 group-hover:text-blue-600 transition-transform group-hover:translate-x-1 shrink-0 ml-1" />
-                    </Link>
-
-                    <Link 
-                      href="/syllabus/quiz/pyq"
-                      className="flex items-center justify-between rounded-2xl bg-white/80 hover:bg-white p-3.5 transition-all group cursor-pointer border border-slate-200/60 hover:border-blue-300 shadow-sm"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 border border-blue-100 text-blue-600">
-                          <Bookmark size={16} />
-                        </div>
-                        <div>
-                          <span className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">
-                            {isHindi ? 'परीक्षा स्तर टेस्ट प्रैक्टिस (Test Series)' : 'Exam-Level Test Practice (Test Series)'}
-                          </span>
-                          <p className="text-[10px] text-slate-500 mt-0.5 leading-tight font-semibold">
-                            {isHindi ? 'मॉक टेस्ट, यूनिट टेस्ट और परीक्षा-स्तर प्रश्नों के साथ संपूर्ण अभ्यास करें।' : 'Target weaknesses with unit-wise mocks and topic practice.'}
-                          </p>
-                        </div>
-                      </div>
-                      <ArrowRight size={14} className="text-slate-400 group-hover:text-blue-600 transition-transform group-hover:translate-x-1 shrink-0 ml-1" />
-                    </Link>
-
-                    <Link 
-                      href="/free-quiz"
-                      className="flex items-center justify-between rounded-2xl bg-white/80 hover:bg-white p-3.5 transition-all group cursor-pointer border border-slate-200/60 hover:border-blue-300 shadow-sm"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 border border-blue-100 text-blue-600">
-                          <Zap size={16} />
-                        </div>
-                        <div>
-                          <span className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">
-                            {isHindi ? 'डेली फ्री क्विज़ (मेमरी बूस्टर)' : 'Daily Free Quiz (Memory Booster)'}
-                          </span>
-                          <p className="text-[10px] text-slate-500 mt-0.5 leading-tight font-semibold">
-                            {isHindi ? 'दैनिक प्रश्नों के साथ कठिन तथ्यों का रिवीजन करें' : 'Boost retention scores with daily revision micro-tests'}
-                          </p>
-                        </div>
-                      </div>
-                      <ArrowRight size={14} className="text-slate-400 group-hover:text-blue-600 transition-transform group-hover:translate-x-1 shrink-0 ml-1" />
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
+                <LauncherLink
+                  href="/syllabus"
+                  icon={<BookOpen size={18} />}
+                  title={isHindi ? 'सिलेबस डीप-डाइव और Active Recall' : 'Syllabus Deep-Dive & Active Recall'}
+                  description={isHindi ? 'सिलेबस टॉपिक्स की गहरी समझ, सक्रिय याद करने की पद्धति और एक्सपर्ट एक्सप्लेनेशन।' : 'Deep understanding of syllabus topics with active recall questions and expert explanations.'}
+                  color="blue"
+                />
+                <LauncherLink
+                  href="/syllabus/quiz/pyq"
+                  icon={<Bookmark size={18} />}
+                  title={isHindi ? 'परीक्षा स्तर टेस्ट प्रैक्टिस (Test Series)' : 'Exam-Level Test Practice (Test Series)'}
+                  description={isHindi ? 'मॉक टेस्ट, यूनिट टेस्ट और परीक्षा-स्तर प्रश्नों के साथ संपूर्ण अभ्यास करें।' : 'Target weaknesses with unit-wise mocks and topic practice.'}
+                  color="blue"
+                />
+                <LauncherLink
+                  href="/free-quiz"
+                  icon={<Zap size={18} />}
+                  title={isHindi ? 'डेली फ्री क्विज़ (मेमरी बूस्टर)' : 'Daily Free Quiz (Memory Booster)'}
+                  description={isHindi ? 'दैनिक प्रश्नों के साथ कठिन तथ्यों का रिवीजन करें' : 'Boost retention scores with daily revision micro-tests'}
+                  color="blue"
+                />
+              </LauncherCard>
 
               {/* 2. MAINS PREP HUB */}
-              <motion.div 
-                whileHover={{ y: -6, scale: 1.01 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 15 }}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-[2rem] bg-emerald-50/60 border border-emerald-200/80 px-3.5 py-6 sm:p-6 shadow-sm hover:shadow-xl transition-all"
+              <LauncherCard
+                title={isHindi ? 'मेंस राइटिंग स्टूडियो' : 'Mains Writing Studio'}
+                subtitle={isHindi ? 'लिखने की कला' : 'Master Writing'}
+                icon={<Crown className="h-6 w-6" />}
+                color="emerald"
+                showLock={showMainsLock}
+                lockTitle={isHindi ? 'मुख्य परीक्षा प्रीमियम' : 'Mains Premium'}
+                lockDesc={isHindi ? 'डबल-स्टाइल MODEL उत्तर और मेंस PYQ LIBRARY खोलें।' : 'Unlock expert double-style model answers mapped to your syllabus.'}
+                onUnlock={() => router.push('/mains')}
+                unlockText={isHindi ? 'मेंस अनलॉक करें' : 'Unlock Mains'}
               >
-                {/* Decorative background circle */}
-                <div className="absolute -right-10 -bottom-10 h-32 w-32 rounded-full bg-emerald-500/5 blur-2xl pointer-events-none" />
-                
-                {/* Lock Overlay if no access */}
-                {showMainsLock && (
-                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/95 backdrop-blur-[2px] p-6 text-center animate-in fade-in duration-300">
-                    <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600">
-                      <Lock size={18} />
-                    </div>
-                    <h4 className="text-sm font-black text-slate-800 uppercase tracking-wider">{isHindi ? 'मुख्य परीक्षा प्रीमियम' : 'Mains Premium'}</h4>
-                    <p className="mt-1.5 text-[11px] text-slate-500 max-w-[220px] leading-relaxed">
-                      {isHindi ? 'डबल-स्टाइल मॉडल उत्तर और मेंस PYQ लाइब्रेरी खोलें।' : 'Unlock expert double-style model answers mapped to your syllabus.'}
-                    </p>
-                    <button 
-                      onClick={() => router.push('/mains')}
-                      className="mt-4 flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-emerald-700 transition-all cursor-pointer shadow-md"
-                    >
-                      <Sparkles size={11} className="fill-current text-white" />
-                      <span>{isHindi ? 'मेंस अनलॉक करें' : 'Unlock Mains'}</span>
-                    </button>
-                  </div>
-                )}
-
-                <div>
-                  {/* Centered top icon & header layout mirroring /syllabus design */}
-                  <div className="flex flex-col items-center text-center mb-5 mt-1">
-                    <div className="relative mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100/80 border border-emerald-200 text-emerald-600 shadow-md">
-                      <div className="absolute inset-0 rounded-full blur-md bg-emerald-400/20 opacity-60" />
-                      <Crown className="h-7 w-7 relative z-10" />
-                    </div>
-                    <span className="rounded-full bg-emerald-100 border border-emerald-200/80 px-3 py-1 text-[9px] font-black tracking-widest text-emerald-600 uppercase mb-2">
-                      {isHindi ? 'मुख्य परीक्षा' : 'Mains Guide'}
-                    </span>
-                    <h3 className="text-xl sm:text-2xl font-black text-emerald-900 mb-1 tracking-tight">{isHindi ? 'मेंस उत्तर लेखन स्टूडियो' : 'Mains Answer Writing Studio'}</h3>
-                    <p className="text-[11px] text-slate-500 leading-relaxed font-semibold max-w-[280px]">
-                      {isHindi ? 'ज्ञान को संरचित, विश्लेषणात्मक और अंक प्राप्त करने वाले उत्तरों में बदलें।' : 'Transform knowledge into structured, analytical, and score-worthy answers.'}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2.5">
-                    <Link 
-                      href="/mains"
-                      className="flex items-center justify-between rounded-2xl bg-white/80 hover:bg-white p-3.5 transition-all group cursor-pointer border border-slate-200/60 hover:border-emerald-300 shadow-sm"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600">
-                          <Crown size={16} />
-                        </div>
-                        <div>
-                          <span className="text-sm font-bold text-slate-800 group-hover:text-emerald-600 transition-colors">
-                            {isHindi ? 'मॉडल उत्तर एवं विषय विश्लेषण' : 'Model Answers & Topic Insights'}
-                          </span>
-                          <p className="text-[10px] text-slate-500 mt-0.5 leading-tight font-semibold">
-                            {isHindi ? 'हर विषय को परीक्षा की मांग और उत्तर लेखन दृष्टिकोण से समझें।' : 'Understand every topic through the lens of exam expectations and answer writing.'}
-                          </p>
-                        </div>
-                      </div>
-                      <ArrowRight size={14} className="text-slate-400 group-hover:text-emerald-600 transition-transform group-hover:translate-x-1 shrink-0 ml-1" />
-                    </Link>
-
-                    <Link 
-                      href="/mains/syllabus/pyq-library"
-                      className="flex items-center justify-between rounded-2xl bg-white/80 hover:bg-white p-3.5 transition-all group cursor-pointer border border-slate-200/60 hover:border-emerald-300 shadow-sm"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600">
-                          <Library size={16} />
-                        </div>
-                        <div>
-                          <span className="text-sm font-bold text-slate-800 group-hover:text-emerald-600 transition-colors">
-                            {isHindi ? 'PYQ इनसाइट लाइब्रेरी' : 'PYQ Insight Library'}
-                          </span>
-                          <p className="text-[10px] text-slate-500 mt-0.5 leading-tight font-semibold">
-                            {isHindi ? 'पिछले प्रश्नों में छिपी परीक्षा की सोच और प्रवृत्ति को समझें।' : 'Discover the patterns and expectations hidden within previous year questions.'}
-                          </p>
-                        </div>
-                      </div>
-                      <ArrowRight size={14} className="text-slate-400 group-hover:text-emerald-600 transition-transform group-hover:translate-x-1 shrink-0 ml-1" />
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
+                <LauncherLink
+                  href="/mains"
+                  icon={<Crown size={18} />}
+                  title={isHindi ? 'मॉडल उत्तर एवं विषय विश्लेषण' : 'Model Answers & Topic Insights'}
+                  description={isHindi ? 'हर विषय को परीक्षा की मांग और उत्तर लेखन दृष्टिकोण से समझें।' : 'Understand every topic through the lens of exam expectations and answer writing.'}
+                  color="emerald"
+                />
+                <LauncherLink
+                  href="/mains/syllabus/pyq-library"
+                  icon={<Library size={18} />}
+                  title={isHindi ? 'मेंस PYQ इनसाइट लाइब्रेरी' : 'Mains PYQ Insight Library'}
+                  description={isHindi ? 'पिछले प्रश्नों में छिपी परीक्षा की सोच और प्रवृत्ति को समझें।' : 'Discover the patterns and expectations hidden within previous year questions.'}
+                  color="emerald"
+                />
+              </LauncherCard>
 
               {/* 3. PYQ INTELLIGENCE ENGINE */}
-              <motion.div 
-                whileHover={{ y: -6, scale: 1.01 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 15 }}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-[2rem] bg-amber-50/60 border border-amber-200/80 px-3.5 py-6 sm:p-6 shadow-sm hover:shadow-xl transition-all"
+              <LauncherCard
+                title={isHindi ? 'PYQ इंटेलिजेंस इंजन' : 'PYQ Intelligence Engine'}
+                subtitle={isHindi ? 'डेटा की शक्ति' : 'Power of Data'}
+                icon={<Sparkles className="h-6 w-6" />}
+                color="amber"
+                showLock={showPyqLock}
+                lockTitle={isHindi ? 'PYQ इंटेलिजेंस' : 'PYQ Intelligence'}
+                lockDesc={isHindi ? 'विषय-वार और वर्ष-वार इंटेलिजेंस विश्लेषण अनलॉक करें।' : 'Analyze repeating trends, and access bilingual mnemonics for PYQs.'}
+                onUnlock={() => router.push('/upgrade')}
+                unlockText={isHindi ? 'इंजन अनलॉक करें' : 'Unlock Engine'}
               >
-                {/* Decorative background circle */}
-                <div className="absolute -right-10 -bottom-10 h-32 w-32 rounded-full bg-amber-500/5 blur-2xl pointer-events-none" />
-                
-                {/* Lock Overlay if no access */}
-                {showPyqLock && (
-                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/95 backdrop-blur-[2px] p-6 text-center animate-in fade-in duration-300">
-                    <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 border border-amber-100 text-amber-600">
-                      <Lock size={18} />
-                    </div>
-                    <h4 className="text-sm font-black text-slate-800 uppercase tracking-wider">{isHindi ? 'PYQ इंटेलिजेंस' : 'PYQ Intelligence'}</h4>
-                    <p className="mt-1.5 text-[11px] text-slate-500 max-w-[220px] leading-relaxed">
-                      {isHindi ? 'विषय-वार और वर्ष-वार इंटेलिजेंस विश्लेषण अनलॉक करें।' : 'Analyze repeating trends, and access bilingual mnemonics for PYQs.'}
-                    </p>
-                    <button 
-                      onClick={() => router.push('/upgrade')}
-                      className="mt-4 flex items-center justify-center gap-1.5 rounded-xl bg-amber-600 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-amber-700 transition-all cursor-pointer shadow-md"
-                    >
-                      <Sparkles size={11} className="fill-current text-white" />
-                      <span>{isHindi ? 'इंजन अनलॉक करें' : 'Unlock Engine'}</span>
-                    </button>
-                  </div>
-                )}
-
-                <div>
-                  {/* Centered top icon & header layout mirroring /syllabus design */}
-                  <div className="flex flex-col items-center text-center mb-5 mt-1">
-                    <div className="relative mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100/80 border border-amber-200 text-amber-600 shadow-md">
-                      <div className="absolute inset-0 rounded-full blur-md bg-amber-400/20 opacity-60" />
-                      <Sparkles className="h-7 w-7 relative z-10 text-amber-650" />
-                    </div>
-                    <span className="rounded-full bg-amber-100 border border-amber-200/80 px-3 py-1 text-[9px] font-black tracking-widest text-amber-600 uppercase mb-2">
-                      {isHindi ? 'स्मार्ट विश्लेषण' : 'Intelligence Engine'}
-                    </span>
-                    <h3 className="text-xl sm:text-2xl font-black text-amber-900 mb-1 tracking-tight">{isHindi ? 'PYQ इंटेलिजेंस' : 'PYQ Intelligence Engine'}</h3>
-                    <p className="text-[11px] text-slate-500 leading-relaxed font-semibold max-w-[280px]">
-                      {isHindi ? 'पिछले वर्षों के प्रश्नों का SMART विश्लेषण और द्विभाषी याद रखने की मेमरी ट्रिक्स।' : 'Smart analysis of past exams with memory keys, weightage reports, and explanations.'}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2.5">
-                    <Link 
-                      href="/syllabus/quiz/pyq/intelligence"
-                      className="flex items-center justify-between rounded-2xl bg-white/80 hover:bg-white p-3.5 transition-all group cursor-pointer border border-slate-200/60 hover:border-amber-300 shadow-sm"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 border border-amber-100 text-amber-600">
-                          <Sparkles size={16} />
-                        </div>
-                        <div>
-                          <span className="text-sm font-bold text-slate-800 group-hover:text-amber-600 transition-colors">
-                            {isHindi ? 'विषय-वार इंटेलिजेंस विश्लेषण' : 'Subject-wise PYQ Intelligence'}
-                          </span>
-                          <p className="text-[10px] text-slate-500 mt-0.5 leading-tight font-semibold">
-                            {isHindi ? 'विशिष्ट टॉपिक्स के पिछले सालों के प्रश्न और ट्रेंड्स' : 'Examine visual trends and repeated questions by subject'}
-                          </p>
-                        </div>
-                      </div>
-                      <ArrowRight size={14} className="text-slate-400 group-hover:text-amber-600 transition-transform group-hover:translate-x-1 shrink-0 ml-1" />
-                    </Link>
-
-                    <Link 
-                      href="/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject"
-                      className="flex items-center justify-between rounded-2xl bg-white/80 hover:bg-white p-3.5 transition-all group cursor-pointer border border-slate-200/60 hover:border-amber-300 shadow-sm"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 border border-amber-100 text-amber-600">
-                          <History size={16} />
-                        </div>
-                        <div>
-                          <span className="text-sm font-bold text-slate-800 group-hover:text-amber-600 transition-colors">
-                            {isHindi ? 'वर्ष-वार पेपर्स (2020 - 2026)' : 'Year-wise PYQs (All Years)'}
-                          </span>
-                          <p className="text-[10px] text-slate-500 mt-0.5 leading-tight font-semibold">
-                            {isHindi ? 'सभी पिछले पेपर्स के प्रश्नों को व्याख्या के साथ हल करें' : 'Explore full past exam sheets with detailed explanations'}
-                          </p>
-                        </div>
-                      </div>
-                      <ArrowRight size={14} className="text-slate-400 group-hover:text-amber-600 transition-transform group-hover:translate-x-1 shrink-0 ml-1" />
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
+                <LauncherLink
+                  href="/syllabus/quiz/pyq/intelligence"
+                  icon={<Sparkles size={18} />}
+                  title={isHindi ? 'विषय-वार इंटेलिजेंस विश्लेषण' : 'Subject-wise PYQ Intelligence'}
+                  description={isHindi ? 'विशिष्ट टॉपिक्स के पिछले सालों के प्रश्न और ट्रेंड्स' : 'Examine visual trends and repeated questions by subject'}
+                  color="amber"
+                />
+                <LauncherLink
+                  href="/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject"
+                  icon={<History size={18} />}
+                  title={isHindi ? 'वर्ष-वार पेपर्स (2020 - 2026)' : 'Year-wise PYQs (All Years)'}
+                  description={isHindi ? 'सभी पिछले पेपर्स के प्रश्नों को व्याख्या के साथ हल करें' : 'Explore full past exam sheets with detailed explanations'}
+                  color="amber"
+                />
+              </LauncherCard>
 
               {/* 4. STRATEGIES & RECORD KEEPER */}
-              <motion.div 
-                whileHover={{ y: -6, scale: 1.01 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 15 }}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-[2rem] bg-purple-50/60 border border-purple-200/80 px-3.5 py-6 sm:p-6 shadow-sm hover:shadow-xl transition-all"
+              <LauncherCard
+                title={isHindi ? 'रणनीति और इतिहास' : 'Strategy & History'}
+                subtitle={isHindi ? 'सफलता का रोडमैप' : 'Success Roadmap'}
+                icon={<Compass className="h-6 w-6" />}
+                color="purple"
               >
-                {/* Decorative background circle */}
-                <div className="absolute -right-10 -bottom-10 h-32 w-32 rounded-full bg-purple-500/5 blur-2xl pointer-events-none" />
-
-                <div>
-                  {/* Centered top icon & header layout mirroring /syllabus design */}
-                  <div className="flex flex-col items-center text-center mb-5 mt-1">
-                    <div className="relative mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-purple-100/80 border border-purple-200 text-purple-600 shadow-md">
-                      <div className="absolute inset-0 rounded-full blur-md bg-purple-400/20 opacity-60" />
-                      <Compass className="h-7 w-7 relative z-10" />
-                    </div>
-                    <span className="rounded-full bg-purple-100 border border-purple-200/80 px-3 py-1 text-[9px] font-black tracking-widest text-purple-600 uppercase mb-2">
-                      {isHindi ? 'रणनीति मार्गदर्शक' : 'Strategy Guide'}
-                    </span>
-                    <h3 className="text-xl sm:text-2xl font-black text-purple-900 mb-1 tracking-tight">{isHindi ? 'रणनीति और इतिहास' : 'Strategy & History'}</h3>
-                    <p className="text-[11px] text-slate-500 leading-relaxed font-semibold max-w-[280px]">
-                      {isHindi ? 'अपने हल किए गए टेस्टों का इतिहास देखें और लेटेस्ट स्ट्रेटेजी ब्लॉग्स पढ़ें।' : 'Track past quiz attempts, correctness reports, and stay updated with tips.'}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2.5">
-                    <Link 
-                      href="/syllabus/test-history"
-                      className="flex items-center justify-between rounded-2xl bg-white/80 hover:bg-white p-3.5 transition-all group cursor-pointer border border-slate-200/60 hover:border-purple-300 shadow-sm"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-50 border border-purple-100 text-purple-600">
-                          <History size={16} />
-                        </div>
-                        <div>
-                          <span className="text-sm font-bold text-slate-800 group-hover:text-purple-600 transition-colors">
-                            {isHindi ? 'टेस्ट प्रयास इतिहास (Attempt History)' : 'Test Attempt History'}
-                          </span>
-                          <p className="text-[10px] text-slate-500 mt-0.5 leading-tight font-semibold">
-                            {isHindi ? 'अपने हल किए गए टेस्ट और गलत उत्तरों की समीक्षा करें' : 'Review accuracy analysis and see incorrect answers'}
-                          </p>
-                        </div>
-                      </div>
-                      <ArrowRight size={14} className="text-slate-400 group-hover:text-purple-600 transition-transform group-hover:translate-x-1 shrink-0 ml-1" />
-                    </Link>
-
-                    <Link 
-                      href="/blogs"
-                      className="flex items-center justify-between rounded-2xl bg-white/80 hover:bg-white p-3.5 transition-all group cursor-pointer border border-slate-200/60 hover:border-purple-300 shadow-sm"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-50 border border-purple-100 text-purple-600">
-                          <BookOpen size={16} />
-                        </div>
-                        <div>
-                          <span className="text-sm font-bold text-slate-800 group-hover:text-purple-600 transition-colors">
-                            {isHindi ? 'परीक्षा रणनीति और ब्लॉग्स' : 'Syllabus & Strategy Blogs'}
-                          </span>
-                          <p className="text-[10px] text-slate-500 mt-0.5 leading-tight font-semibold">
-                            {isHindi ? 'अधिकारी बनने के टिप्स, बुकलिस्ट और सरकारी नोटिफिकेशन' : 'Explanatory posts, topper recommended tips and notifications'}
-                          </p>
-                        </div>
-                      </div>
-                      <ArrowRight size={14} className="text-slate-400 group-hover:text-purple-600 transition-transform group-hover:translate-x-1 shrink-0 ml-1" />
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
+                <LauncherLink
+                  href="/syllabus/test-history"
+                  icon={<History size={18} />}
+                  title={isHindi ? 'टेस्ट प्रयास इतिहास (Attempt History)' : 'Test Attempt History'}
+                  description={isHindi ? 'अपने हल किए गए टेस्ट और गलत उत्तरों की समीक्षा करें' : 'Review accuracy analysis and see incorrect answers'}
+                  color="purple"
+                />
+                <LauncherLink
+                  href="/blogs"
+                  icon={<BookOpen size={18} />}
+                  title={isHindi ? 'परीक्षा रणनीति और ब्लॉग्स' : 'Syllabus & Strategy Blogs'}
+                  description={isHindi ? 'अधिकारी बनने के टिप्स, बुकलिस्ट और सरकारी नोटिफिकेशन' : 'Explanatory posts, topper recommended tips and notifications'}
+                  color="purple"
+                />
+              </LauncherCard>
 
             </div>
           </div>
@@ -624,5 +382,127 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
 
       </main>
     </div>
+  );
+}
+
+/** ──────────────────────────────────────────────────────────────────────────
+ * 🛠️ INTERNAL HELPER COMPONENTS (Production-Ready Clean Code)
+ * ────────────────────────────────────────────────────────────────────────── */
+
+interface LauncherCardProps {
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  color: 'blue' | 'emerald' | 'amber' | 'purple';
+  children: React.ReactNode;
+  showLock?: boolean;
+  lockTitle?: string;
+  lockDesc?: string;
+  onUnlock?: () => void;
+  unlockText?: string;
+}
+
+function LauncherCard({ 
+  title, subtitle, icon, color, children, 
+  showLock, lockTitle, lockDesc, onUnlock, unlockText 
+}: LauncherCardProps) {
+  
+  const colorMap = {
+    blue: 'bg-blue-600 text-blue-600 shadow-blue-200 border-blue-100',
+    emerald: 'bg-emerald-600 text-emerald-600 shadow-emerald-200 border-emerald-100',
+    amber: 'bg-amber-500 text-amber-600 shadow-amber-200 border-amber-100',
+    purple: 'bg-purple-600 text-purple-600 shadow-purple-200 border-purple-100',
+  };
+
+  return (
+    <motion.div 
+      whileHover={{ y: -4 }}
+      className="group relative flex flex-col overflow-hidden rounded-[2.5rem] bg-white/70 border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all"
+    >
+      {showLock && (
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/95 backdrop-blur-[4px] p-8 text-center animate-in fade-in duration-300">
+          <div className={cn("mb-4 flex h-14 w-14 items-center justify-center rounded-2xl shadow-sm", colorMap[color].replace('bg-', 'bg-').split(' ')[0] + '/10')}>
+            <Lock size={22} className={colorMap[color].split(' ')[1]} />
+          </div>
+          <h4 className="text-base font-black text-slate-800 uppercase tracking-wider">{lockTitle}</h4>
+          <p className="mt-2 text-xs text-slate-500 max-w-[240px] leading-relaxed font-medium">{lockDesc}</p>
+          <button 
+            onClick={onUnlock}
+            className={cn("mt-6 flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-[11px] font-black uppercase tracking-widest text-white transition-all cursor-pointer shadow-lg active:scale-95", colorMap[color].split(' ')[0])}
+          >
+            <Sparkles size={12} className="fill-current text-white" />
+            <span>{unlockText}</span>
+          </button>
+        </div>
+      )}
+
+      <div className="p-7">
+        <div className="flex items-center gap-4 mb-8">
+          <div className={cn("flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-lg", colorMap[color].split(' ')[0])}>
+            {icon}
+          </div>
+          <div>
+            <span className={cn("inline-block rounded-full px-3 py-0.5 text-[9px] font-black tracking-widest uppercase mb-0.5", colorMap[color].replace('bg-', 'bg-').split(' ')[0] + '/10', colorMap[color].split(' ')[1])}>
+              {subtitle}
+            </span>
+            <h3 className="text-xl font-black text-slate-900 tracking-tight">{title}</h3>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {children}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+interface LauncherLinkProps {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  color: 'blue' | 'emerald' | 'amber' | 'purple';
+}
+
+function LauncherLink({ href, icon, title, description, color }: LauncherLinkProps) {
+  const colorMap = {
+    blue: 'bg-blue-50/30 hover:border-blue-200 hover:text-blue-600',
+    emerald: 'bg-emerald-50/30 hover:border-emerald-200 hover:text-emerald-600',
+    amber: 'bg-amber-50/30 hover:border-amber-200 hover:text-amber-600',
+    purple: 'bg-purple-50/30 hover:border-purple-200 hover:text-purple-600',
+  };
+
+  const iconColorMap = {
+    blue: 'group-hover/item:bg-blue-600 text-blue-600',
+    emerald: 'group-hover/item:bg-emerald-600 text-emerald-600',
+    amber: 'group-hover/item:bg-amber-500 text-amber-600',
+    purple: 'group-hover/item:bg-purple-600 text-purple-600',
+  };
+
+  const arrowColorMap = {
+    blue: 'group-hover/item:text-blue-600',
+    emerald: 'group-hover/item:text-emerald-600',
+    amber: 'group-hover/item:text-amber-600',
+    purple: 'group-hover/item:text-purple-600',
+  };
+
+  return (
+    <Link href={href} className={cn("group/item flex items-start gap-4 p-4 rounded-3xl border border-transparent hover:bg-white transition-all", colorMap[color].split(' ')[0], colorMap[color].split(' ')[1], colorMap[color].split(' ')[2])}>
+      <div className={cn("mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white border border-slate-100 shadow-sm transition-all group-hover/item:text-white", iconColorMap[color])}>
+        {icon}
+      </div>
+      <div className="flex-1">
+        <div className="flex items-center justify-between">
+          <span className="text-[13px] font-black text-slate-900 leading-none">
+            {title}
+          </span>
+          <ArrowRight size={14} className={cn("text-slate-300 group-hover/item:translate-x-1 transition-all", arrowColorMap[color])} />
+        </div>
+        <p className="mt-1.5 text-[10px] font-semibold text-slate-500 leading-relaxed">
+          {description}
+        </p>
+      </div>
+    </Link>
   );
 }

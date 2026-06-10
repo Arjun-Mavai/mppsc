@@ -97,12 +97,14 @@ export function MainsGuestEntryDialog() {
       email: guestEmail.trim() || undefined,
       page: 'mppsc-mains',
       timestamp: new Date().toISOString(),
+      referrer: document.referrer,
     };
 
     try {
       // Save to localStorage
       localStorage.setItem('mppsc_mains_lead', JSON.stringify(lead));
       localStorage.setItem('mains_guest_lead', JSON.stringify(lead)); // Fallback support
+      localStorage.setItem('mppsc_guest_name', lead.name); // Global identity
 
       // 🎯 SYNC TO ZUSTAND STORE (for tracking throughout the app)
       setGuestLead({

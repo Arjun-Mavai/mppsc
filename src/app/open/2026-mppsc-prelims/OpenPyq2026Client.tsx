@@ -127,6 +127,8 @@ export default function OpenPyq2026Client({ questions, testTitle }: OpenPyq2026C
         at: Date.now(),
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      localStorage.setItem('mppsc_guest_name', name);
+      useSettingsStore.getState().setGuestLead({ name, email, phone: mobile });
       setSavedUser({ name, email, mobile });
       setLeadOpen(false);
       setPhase('paper');
@@ -135,6 +137,7 @@ export default function OpenPyq2026Client({ questions, testTitle }: OpenPyq2026C
         email,
         mobile,
         leadSource: GUEST_LEAD_SOURCE.OPEN_PYQ_2026,
+        referrer: document.referrer,
       });
       if (result && 'error' in result) {
         toast.error(

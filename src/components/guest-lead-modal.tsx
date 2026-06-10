@@ -20,6 +20,7 @@ export interface GuestLead {
   email?: string;
   page: string;
   timestamp: string;
+  referrer?: string;
 }
 
 export function AshokEmblemIcon({ className }: { className?: string }) {
@@ -143,6 +144,7 @@ async function saveGuestLead(lead: GuestLead, page: string) {
   // Save to both page-specific key and backup key for cross-module unlock support
   localStorage.setItem(key, JSON.stringify(lead));
   localStorage.setItem('mppsc_guest_lead', JSON.stringify(lead));
+  localStorage.setItem('mppsc_guest_name', lead.name); // Global identity
 
   // Send to backend
   try {
@@ -209,6 +211,7 @@ export function GuestLeadModal({
       email: formData.email || undefined,
       page,
       timestamp: new Date().toISOString(),
+      referrer: document.referrer,
     };
 
     // 🚀 INSTANT ASYNC BACKGROUND UNLOCK
@@ -216,6 +219,8 @@ export function GuestLeadModal({
     saveGuestLead(lead, page).catch((err) => {
       console.error('Failed to save guest lead in background:', err);
     });
+
+    useSettingsStore.getState().setGuestLead({ name: lead.name, phone: lead.phone, email: lead.email });
 
     // Close modal and resolve state instantly
     setIsOpen(false);

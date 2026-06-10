@@ -16,6 +16,7 @@ export interface GuestLeadPayload {
   email?: string;
   page: string;
   timestamp: string;
+  referrer?: string;
 }
 
 export async function POST(req: Request) {
@@ -37,6 +38,7 @@ export async function POST(req: Request) {
         mobile: body.phone,
         email: body.email,
         leadSource: body.page,
+        referrer: body.referrer,
       });
     } catch (dbError) {
       logger.error('Failed to save guest lead to DB (non-blocking)', dbError as Error, {
@@ -77,6 +79,7 @@ export async function POST(req: Request) {
           `📞 <b>Phone:</b> ${escapeHTML(body.phone)}\n` +
           (body.email ? `📧 <b>Email:</b> ${escapeHTML(body.email)}\n` : '') +
           `🎯 <b>Module Access:</b> <code>${displayCategory}</code>\n` +
+          (body.referrer ? `🔗 <b>Referrer:</b> <code>${escapeHTML(body.referrer)}</code>\n` : '') +
           `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST\n\n` +
           `${tags}`;
 

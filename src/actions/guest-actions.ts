@@ -29,6 +29,8 @@ export interface GuestData {
   mobile?: string;
   /** Set when captured from a specific funnel, e.g. public PYQ 2026 page. */
   leadSource?: string;
+  /** Browser referrer URL where the lead originated from. */
+  referrer?: string;
 }
 
 const OPEN_PYQ_2026_PATH = '/open/2026-mppsc-prelims';
@@ -99,7 +101,8 @@ function composeGuestTelegramBody(
   name: string,
   email: string | undefined,
   normalizedMobile: string,
-  statsSummary: string
+  statsSummary: string,
+  referrer: string | undefined
 ): string {
   const { title, tag, extra } = buildTelegramHeader(isReturning, leadSource);
   const safeName = escapeHTML(name.trim());
@@ -115,7 +118,8 @@ function composeGuestTelegramBody(
     `📱 <code>${normalizedMobile}</code>\n` +
     `📧 ${safeEmail}\n` +
     `🎯 <b>Platform/Exam:</b> MPPSC (Pre & Mains)\n` +
-    `🏷️ <b>Lead Source:</b> ${leadSourceLabel}\n\n` +
+    `🏷️ <b>Lead Source:</b> ${leadSourceLabel}\n` +
+    (referrer ? `🔗 <b>Referrer:</b> <code>${escapeHTML(referrer)}</code>\n\n` : '\n') +
     (statsSummary ? statsSummary + '\n\n' : '') +
     tag
   );
@@ -128,6 +132,7 @@ async function sendGuestLeadTelegram(params: {
   name: string;
   email: string | undefined;
   normalizedMobile: string;
+  referrer: string | undefined;
 }): Promise<void> {
   const stats = await safeStatsSummary();
   const body = composeGuestTelegramBody(
@@ -137,7 +142,8 @@ async function sendGuestLeadTelegram(params: {
     params.name,
     params.email,
     params.normalizedMobile,
-    stats
+    stats,
+    params.referrer
   );
   await sendTelegramOrLog(body);
 }
@@ -149,7 +155,7 @@ function isMissingLeadSourceColumnError(err: unknown): boolean {
 }
 
 export async function createGuestEntry(data: GuestData) {
-  const { name, email, mobile, leadSource } = data;
+  const { name, email, mobile, leadSource, referrer } = data;
 
   try {
     if (mobile && mobile.trim().length >= 10) {
@@ -198,6 +204,7 @@ export async function createGuestEntry(data: GuestData) {
               name,
               email,
               normalizedMobile,
+              referrer,
             });
           }
           return { error: 'Failed to save guest details' };
@@ -210,6 +217,7 @@ export async function createGuestEntry(data: GuestData) {
           name,
           email,
           normalizedMobile,
+          referrer,
         });
         return { success: true, guestId: existingGuest.id, isReturning: true };
       }
@@ -256,6 +264,7 @@ export async function createGuestEntry(data: GuestData) {
             name,
             email,
             normalizedMobile,
+            referrer,
           });
         }
         return { error: 'Failed to save guest details' };
@@ -268,6 +277,7 @@ export async function createGuestEntry(data: GuestData) {
         name,
         email,
         normalizedMobile,
+        referrer,
       });
       return { success: true, guestId, isReturning: false };
     }
