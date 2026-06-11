@@ -427,7 +427,7 @@ export function PaymentModal({
 
   return (
     <Dialog open={open} onOpenChange={showLoading ? undefined : onOpenChange} modal={false}>
-      <DialogContent className="border-zinc-200 bg-white text-black sm:max-w-[425px]">
+      <DialogContent className="border-zinc-200 bg-white text-black sm:max-w-[425px] max-h-[85vh] overflow-y-auto w-[calc(100vw-2rem)] p-4 sm:p-6 overflow-x-hidden">
         {showLoading ? (
           // ── Loading State: MPPSC facts while API calls process ──
           <div className="flex flex-col items-center justify-center space-y-6 py-8 text-center">
@@ -510,7 +510,7 @@ export function PaymentModal({
                 </div>
                 <Button
                   onClick={() => onSubmit(form.getValues())}
-                  className="mt-4 w-full bg-black py-2 font-bold text-white hover:bg-zinc-800"
+                  className="mt-4 w-full bg-black py-3 font-bold text-white hover:bg-zinc-800 h-auto whitespace-normal break-words leading-tight"
                   disabled={isLoading}
                 >
                   {`Pay — ${planName}`}
@@ -585,7 +585,7 @@ export function PaymentModal({
 
                 <Button
                   type="submit"
-                  className="mt-4 w-full bg-black py-2 font-bold text-white hover:bg-zinc-800"
+                  className="mt-4 w-full bg-black py-3 font-bold text-white hover:bg-zinc-800 h-auto whitespace-normal break-words leading-tight"
                   disabled={isLoading}
                 >
                   {`Pay — ${planName}`}
