@@ -633,13 +633,13 @@ export const getRepeatedQuestions = unstable_cache(
     }
   },
   ['pyq-repeated-questions-v14-2026'],
-  { revalidate: 3600, tags: ['pyq-insights', 'questions'] }
+  { revalidate: 604800, tags: ['pyq-insights', 'questions'] }
 );
 
 export const getUnifiedSubjectStatsCached = unstable_cache(
   getUnifiedSubjectStats,
   ['pyq-unified-stats-v14-2026'],
-  { revalidate: 3600, tags: ['pyq-insights', 'questions'] }
+  { revalidate: 604800, tags: ['pyq-insights', 'questions'] }
 );
 
 // ============================================
@@ -647,7 +647,8 @@ export const getUnifiedSubjectStatsCached = unstable_cache(
 // Uses canonical Prelims tests (see CANONICAL_TEST_IDS in pyq-constants).
 // ============================================
 
-export async function getUnitDistributionStats(limit?: number): Promise<UnitDistributionStats[]> {
+export const getUnitDistributionStats = unstable_cache(
+  async (limit?: number): Promise<UnitDistributionStats[]> => {
   try {
     const testIds = getCanonicalTestIds();
 
@@ -716,7 +717,10 @@ export async function getUnitDistributionStats(limit?: number): Promise<UnitDist
     console.error('Error in Unit Distribution Analysis:', error);
     return [];
   }
-}
+},
+['pyq-unit-distribution-v1-2026'],
+{ revalidate: 604800, tags: ['pyq-insights', 'questions'] }
+);
 
 // ============================================
 // Get Subject-wise Distribution for Intelligence Page
@@ -788,10 +792,11 @@ function mapUnitToSubject(unitId: string, unitTitle: string): { id: string; titl
   };
 }
 
-export async function getSubjectDistributionStats(): Promise<SubjectDistributionStats[]> {
+export const getSubjectDistributionStats = unstable_cache(
+  async (): Promise<SubjectDistributionStats[]> => {
   try {
-    // Use unified stats function for consistency
-    const unifiedStats = await getUnifiedSubjectStats();
+    // Use unified stats function for consistency (use Cached version for ultra speed)
+    const unifiedStats = await getUnifiedSubjectStatsCached();
 
     // Convert to legacy format for backwards compatibility
     const subjectDistributionStats: SubjectDistributionStats[] = [];
@@ -817,7 +822,10 @@ export async function getSubjectDistributionStats(): Promise<SubjectDistribution
     console.error('Error in Subject Distribution Analysis:', error);
     return [];
   }
-}
+},
+['pyq-subject-distribution-v1-2026'],
+{ revalidate: 604800, tags: ['pyq-insights', 'questions'] }
+);
 
 // ============================================
 // UNIFIED SUBJECT DISTRIBUTION - Used by BOTH pages

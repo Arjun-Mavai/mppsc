@@ -47,7 +47,7 @@ const getCachedBaseSyllabusData = unstable_cache(
     }
   },
   ['syllabus-base-data-v3'],
-  { revalidate: 60, tags: ['tests'] }
+  { revalidate: 604800, tags: ['tests'] }
 );
 
 /**
