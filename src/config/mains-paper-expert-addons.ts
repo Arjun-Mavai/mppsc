@@ -81,8 +81,64 @@ CRITICAL: Since this is a pure Hindi paper, you MUST set all \`_en\` keys to \`n
 WORD LIMITS & FORMATTING RULES:
 - 50 Marks Essay: Target ~1000 words. Provide a highly dense, expert essay spanning this length. At the very top, label it explicitly: "**निबंध (लगभग 1000 शब्द)**".
 - 25 Marks Essay: Target ~500 words. At the very top, label it explicitly: "**निबंध (लगभग 500 शब्द)**".
-- 25 Marks Draft/Report (प्रारूप लेखन): Target ~250 words. सरकारी शैली (संदर्भ, विषय, मांग/निर्णय, समापन)। At the very top, label it: "**प्रारूप लेखन (लगभग 250 शब्द)**".
+- 25 Marks Draft/Report (प्रारूप लेखन):
+  The format should look exactly like a handwritten MPPSC mains answer sheet draft.
 
+  Requirements:
+  ✓ Maintain proper top heading
+  ✓ Maintain left-right alignment
+  ✓ Keep subject line separate
+  ✓ Show sender and receiver positions correctly
+  ✓ Show signature block
+  ✓ Use Hindi only
+  ✓ Use monospaced formatting
+  ✓ Use code block (markdown text block)
+  ✓ Do not explain the format
+  ✓ Directly generate the final draft
+
+  Whenever I ask:
+  - शासकीय पत्र
+  - अर्धशासकीय पत्र
+  - परिपत्र
+  - अधिसूचना
+  - कार्यालय आदेश
+  - अनुस्मारक
+  - पृष्ठांकन
+  - प्रेस विज्ञप्ति
+
+  show them exactly in visual layout form.
+
+  Output example style:
+  ┌──────────────────────────────────────────────────┐
+  │                    शासकीय पत्र                     │
+  ├──────────────────────────────────────────────────┤
+  │ पत्र क्रमांक : _______                               │
+  │                               स्थान : _______    │
+  │                               दिनांक : _______   │
+  ├──────────────────────────────────────────────────┤
+  │ सेवा में,                                           │
+  │ _________________________                        │
+  │ _________________________                        │
+  ├──────────────────────────────────────────────────┤
+  │ विषय : _________________________                 │
+  ├──────────────────────────────────────────────────┤
+  │ महोदय,                                            │
+  │                                                  │
+  │ पत्र का मुख्य भाग...                                  │
+  │                                                  │
+  ├──────────────────────────────────────────────────┤
+  │ संलग्नक :                                          │
+  │ 1. _______                                       │
+  │ 2. _______                                       │
+  │                                                  │
+  │                                           भवदीय  │
+  │                                           हस्ताक्षर │
+  │                                           नाम    │
+  │                                           पदनाम   │
+  └──────────────────────────────────────────────────┘
+
+  Do not write explanations.
+  Generate only the formatted draft.
 STRUCTURE & FLOW (The Golden Thread):
 1. **Dynamic Engaging Start (प्रस्तावना)**: Start with a powerful, engaging hook. ALWAYS begin with a quote from a relevant philosopher, a famous Indian personality, or a precise Constitutional Article / legal backing (especially for Polity/Social issues). Use Markdown blockquotes \`> \` for these quotes so the UI highlights them beautifully.
 2. **Multidimensional Interconnection (बहुआयामी दृष्टिकोण)**: The essay MUST interconnect multiple subjects. Show the student how a single topic weaves through History, Geography, Polity, Economy, Environment, and Society. Demonstrate a broad "Administrator's Mindset" (प्रशासकीय सोच).
