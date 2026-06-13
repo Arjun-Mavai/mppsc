@@ -152,9 +152,9 @@ export default function BlogsClient({
   const effectiveUser = user || (isDatabaseUser(storeUser) ? storeUser : (storeUser as any));
   const currentUser = effectiveUser || null; // Ensure strictly User | null (no undefined)
   
-  // Debug log for the user
-  console.log("[BlogsClient] storeUser:", storeUser);
-  console.log("[BlogsClient] currentUser:", currentUser);
+  // // Debug log for the user
+  // console.log("[BlogsClient] storeUser:", storeUser);
+  // console.log("[BlogsClient] currentUser:", currentUser);
   const isGuest = !currentUser?.isSubscribed;
 
   // Flatten infinite query pages

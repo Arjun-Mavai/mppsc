@@ -11,6 +11,15 @@
  * 2. Ye file input validate karti hai (Zod schemas use karke) aur DB me save karti hai.
  * 3. Cache revalidate karti hai (`/admin/mains`) taaki naya data turant dikhe.
  * 
+ * 🍔 THE CACHING RESTAURANT STORY (Dual Cache Burst):
+ * - Database = Kitchen, UI/HTML = Waiter's Tray.
+ * - getMainsSyllabusTree & getAllMainsPapersWithSyllabus (Data Queries) are wrapped in `unstable_cache`.
+ * - Jab student page kholta hai, Data RAM (fridge) se 0ms me aata hai. Waiter turant serve karta hai.
+ * - Jab admin data save/upload karta hai toh 2 bomb fat-te hain:
+ *   1. revalidatePath('/mains/syllabus') -> Waiter ki tray ka purana HTML faik deta hai. (UI Cache Burst)
+ *   2. revalidateTag('mains_syllabus', {expire:0}) -> Fridge ka purana data faik deta hai. (RAM/DB Cache Burst)
+ * - Isse next click pe 0 seconds lagte hain aur hamesha fresh data milta hai!
+ * 
  * 📑 FUNCTION INDEX (Timeline):
  * - `getMainsProgressOverview`: (Optimized) Pure syllabus ka progress dikhata hai (Kitne topics published hain).
  * - `getMainsDetailedProgressOverview`: Unit-wise aur Part-wise detailed progress dikhata hai.
@@ -26,7 +35,7 @@ import { db } from '@/db';
 import { mainsPapers, mainsUnits, mainsTopics, mainsContent } from '@/db/schema';
 import { eq, and, sql, count, asc, desc } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 import { assertAdmin, verifyAuth } from '@/lib/auth';
 import type { MainsUnitPart } from '@/lib/mains-syllabus-unit-label';
 import { isMainsVaultUnlockedUser } from '@/lib/mains-vault-access';
@@ -89,64 +98,68 @@ function blobFromError(error: unknown): string {
 
 // 1. Get Progress Overview for Admin (optimized: 2 queries instead of 9)
 /** 📊 Admin Dashboard ke liye pure syllabus ka progress fetch karta hai. */
-export async function getMainsProgressOverview() {
-  try {
-    const papers = await db.select().from(mainsPapers).orderBy(mainsPapers.displayOrder);
-    
-    // Single aggregated query: units + topics stats per paper
-    const statsPerPaper = await db
-      .select({
-        paperId: mainsUnits.paperId,
-        unitsCount: count(sql`DISTINCT ${mainsUnits.id}`),
-        totalTopics: count(mainsTopics.id),
-        publishedTopics: count(mainsContent.id),
-      })
-      .from(mainsUnits)
-      .leftJoin(mainsTopics, eq(mainsTopics.unitId, mainsUnits.id))
-      .leftJoin(mainsContent, eq(mainsContent.topicId, mainsTopics.id))
-      .groupBy(mainsUnits.paperId);
-
-    // Build lookup map for O(1) access
-    const statsMap = new Map<string, typeof statsPerPaper[number]>(
-      statsPerPaper
-        .filter((s): s is typeof s & { paperId: string } => !!s.paperId)
-        .map((s) => [s.paperId, s])
-    );
-
-    const overview = papers.map((paper) => {
-      const stats = statsMap.get(paper.id) ?? { 
-        unitsCount: 0, 
-        totalTopics: 0, 
-        publishedTopics: 0 
-      };
+export const getMainsProgressOverview = unstable_cache(
+  async () => {
+    try {
+      const papers = await db.select().from(mainsPapers).orderBy(mainsPapers.displayOrder);
       
-      const totalTopics = Number(stats.totalTopics ?? 0);
-      return {
-        ...paper,
-        unitsCount: Number(stats.unitsCount ?? 0),
-        totalTopics,
-        publishedTopics: Number(stats.publishedTopics ?? 0),
-        progress: totalTopics > 0 
-          ? Math.round((Number(stats.publishedTopics ?? 0) / totalTopics) * 100) 
-          : 0
-      };
-    });
+      // Single aggregated query: units + topics stats per paper
+      const statsPerPaper = await db
+        .select({
+          paperId: mainsUnits.paperId,
+          unitsCount: count(sql`DISTINCT ${mainsUnits.id}`),
+          totalTopics: count(mainsTopics.id),
+          publishedTopics: count(mainsContent.id),
+        })
+        .from(mainsUnits)
+        .leftJoin(mainsTopics, eq(mainsTopics.unitId, mainsUnits.id))
+        .leftJoin(mainsContent, eq(mainsContent.topicId, mainsTopics.id))
+        .groupBy(mainsUnits.paperId);
 
-    return { success: true, data: overview };
-  } catch (error) {
-    console.error('Mains Overview Error:', error);
-    const blob = blobFromError(error);
-    if (/no such table:?\s*mains_/i.test(blob)) {
-      return {
-        success: false as const,
-        error: 'mains_tables_missing' as const,
-        hint:
-          'Mains tables missing on this DB. Run: `npm run db:migrate` (local) or `USE_PROD_DB=true npm run db:migrate` (Turso URL in .env). One-shot: `npm run db:setup:mains:remote`.',
-      };
+      // Build lookup map for O(1) access
+      const statsMap = new Map<string, typeof statsPerPaper[number]>(
+        statsPerPaper
+          .filter((s): s is typeof s & { paperId: string } => !!s.paperId)
+          .map((s) => [s.paperId, s])
+      );
+
+      const overview = papers.map((paper) => {
+        const stats = statsMap.get(paper.id) ?? { 
+          unitsCount: 0, 
+          totalTopics: 0, 
+          publishedTopics: 0 
+        };
+        
+        const totalTopics = Number(stats.totalTopics ?? 0);
+        return {
+          ...paper,
+          unitsCount: Number(stats.unitsCount ?? 0),
+          totalTopics,
+          publishedTopics: Number(stats.publishedTopics ?? 0),
+          progress: totalTopics > 0 
+            ? Math.round((Number(stats.publishedTopics ?? 0) / totalTopics) * 100) 
+            : 0
+        };
+      });
+
+      return { success: true as const, data: overview };
+    } catch (error) {
+      console.error('Mains Overview Error:', error);
+      const blob = blobFromError(error);
+      if (/no such table:?\s*mains_/i.test(blob)) {
+        return {
+          success: false as const,
+          error: 'mains_tables_missing' as const,
+          hint:
+            'Mains tables missing on this DB. Run: `npm run db:migrate` (local) or `USE_PROD_DB=true npm run db:migrate` (Turso URL in .env). One-shot: `npm run db:setup:mains:remote`.',
+        };
+      }
+      return { success: false as const, error: 'Failed to fetch overview' as const, detail: blob.slice(0, 220) };
     }
-    return { success: false as const, error: 'Failed to fetch overview', detail: blob.slice(0, 220) };
-  }
-}
+  },
+  ['mains-progress-overview-v1'],
+  { tags: ['mains_syllabus'], revalidate: 604800 } // Cache 7 days, bursts on upload
+);
 
 /** 📊 DETAILED PROGRESS TRACKER (PART-WISE)
  * Bhai, ye action admin ko detailed breakdown dega:
@@ -232,7 +245,11 @@ export async function upsertMainsPaper(rawInput: MainsPaperInput) {
     } else {
       await db.insert(mainsPapers).values({ ...data, id });
     }
+    // 💥 DUAL CACHE BURST:
+    // 1. Path: UI/HTML Frontend Cache expire karo
+    // 2. Tag: DB/RAM Backend Data Cache expire karo (0 seconds me)
     revalidatePath('/admin/mains');
+    revalidateTag('mains_syllabus', { expire: 0 });
     return { success: true as const, id };
   } catch (error) {
     logger.error('upsertMainsPaper failed', error);
@@ -252,7 +269,9 @@ export async function upsertMainsUnit(rawInput: MainsUnitInput) {
     } else {
       await db.insert(mainsUnits).values({ ...data, id });
     }
+    // 💥 DUAL CACHE BURST (Path for UI, Tag for DB RAM Cache)
     revalidatePath('/admin/mains');
+    revalidateTag('mains_syllabus', { expire: 0 });
     return { success: true as const, id };
   } catch (error) {
     logger.error('upsertMainsUnit failed', error);
@@ -308,8 +327,10 @@ export async function upsertMainsContent(topicId: string, rawInput: MainsContent
       .set({ status: 'published' })
       .where(eq(mainsTopics.id, topicId));
 
+    // 💥 DUAL CACHE BURST (Path for UI, Tag for DB RAM Cache)
     revalidatePath('/admin/mains');
     revalidatePath(`/mains/syllabus`);
+    revalidateTag('mains_syllabus', { expire: 0 });
     return { success: true as const };
   } catch (error) {
     logger.error('Upsert Content Error:', error);
@@ -325,8 +346,10 @@ export async function adminDeleteMainsContentForTopic(topicId: string) {
     await assertAdmin();
     await db.delete(mainsContent).where(eq(mainsContent.topicId, topicId));
     await db.update(mainsTopics).set({ status: 'draft' }).where(eq(mainsTopics.id, topicId));
+    // 💥 DUAL CACHE BURST (Path for UI, Tag for DB RAM Cache)
     revalidatePath('/admin/mains');
     revalidatePath('/mains/syllabus');
+    revalidateTag('mains_syllabus', { expire: 0 });
     return { success: true as const };
   } catch (error) {
     console.error('adminDeleteMainsContentForTopic', error);
@@ -336,62 +359,66 @@ export async function adminDeleteMainsContentForTopic(topicId: string) {
 
 // 5. Get Detailed Syllabus Tree for a Paper (Admin & Student)
 /** 🌳 Student aur Admin dono ke liye paper ka pura structure (Units -> Topics) fetch karta hai. */
-export async function getMainsSyllabusTree(paperId: string) {
-  try {
-    const units = await db
-      .query.mainsUnits.findMany({
-        where: eq(mainsUnits.paperId, paperId),
-        orderBy: [asc(mainsUnits.part), asc(mainsUnits.displayOrder), asc(mainsUnits.id)],
-        with: {
-          topics: {
-            columns: {
-              id: true,
-              unitId: true,
-              titleHi: true,
-              titleEn: true,
-              displayOrder: true,
-              status: true,
-              createdAt: true,
-              examType: true,
-            },
-            orderBy: [mainsTopics.displayOrder],
-            with: {
-              content: {
-                columns: {
-                  id: true,
-                  updatedAt: true,
+export const getMainsSyllabusTree = unstable_cache(
+  async (paperId: string) => {
+    try {
+      const units = await db
+        .query.mainsUnits.findMany({
+          where: eq(mainsUnits.paperId, paperId),
+          orderBy: [asc(mainsUnits.part), asc(mainsUnits.displayOrder), asc(mainsUnits.id)],
+          with: {
+            topics: {
+              columns: {
+                id: true,
+                unitId: true,
+                titleHi: true,
+                titleEn: true,
+                displayOrder: true,
+                status: true,
+                createdAt: true,
+                examType: true,
+              },
+              orderBy: [mainsTopics.displayOrder],
+              with: {
+                content: {
+                  columns: {
+                    id: true,
+                    updatedAt: true,
+                  },
                 },
               },
             },
           },
-        },
-      });
-    return { success: true, data: units };
-  } catch (error: unknown) {
-    const blob = `${error instanceof Error ? error.message : ''} ${typeof error === 'object' && error && 'cause' in error ? String((error as { cause?: unknown }).cause) : ''}`;
-    // eslint-disable-next-line no-console
-    console.error('[getMainsSyllabusTree] failed', { paperId, blob });
-    if (/no such table:?\s*mains_/i.test(blob)) {
-      return {
-        success: false,
-        error: 'mains_tables_missing' as const,
-        hint:
-          'Run `npm run db:migrate` (local) or `USE_PROD_DB=true npm run db:migrate` (Turso). Full setup: `npm run db:setup:mains:remote`.',
-        data: [],
-      };
+        });
+      return { success: true as const, data: units };
+    } catch (error: unknown) {
+      const blob = `${error instanceof Error ? error.message : ''} ${typeof error === 'object' && error && 'cause' in error ? String((error as { cause?: unknown }).cause) : ''}`;
+      // eslint-disable-next-line no-console
+      console.error('[getMainsSyllabusTree] failed', { paperId, blob });
+      if (/no such table:?\s*mains_/i.test(blob)) {
+        return {
+          success: false as const,
+          error: 'mains_tables_missing' as const,
+          hint:
+            'Run `npm run db:migrate` (local) or `USE_PROD_DB=true npm run db:migrate` (Turso). Full setup: `npm run db:setup:mains:remote`.',
+          data: [],
+        };
+      }
+      if (/no such column/i.test(blob)) {
+        return {
+          success: false as const,
+          error: 'schema_outdated' as const,
+          hint:
+            'Database missing a newer column (e.g. `mains_content.rich_payload` or mains PYQ fields). Run: `npm run db:migrate` or `npm run db:setup:mains:remote`.',
+          detail: blob.slice(0, 500),
+        };
+      }
+      return { success: false as const, error: 'Failed to fetch syllabus tree' as const, detail: blob.slice(0, 500) };
     }
-    if (/no such column/i.test(blob)) {
-      return {
-        success: false as const,
-        error: 'schema_outdated' as const,
-        hint:
-          'Database missing a newer column (e.g. `mains_content.rich_payload` or mains PYQ fields). Run: `npm run db:migrate` or `npm run db:setup:mains:remote`.',
-        detail: blob.slice(0, 500),
-      };
-    }
-    return { success: false as const, error: 'Failed to fetch syllabus tree', detail: blob.slice(0, 500) };
-  }
-}
+  },
+  ['mains-syllabus-tree-v1'],
+  { tags: ['mains_syllabus'], revalidate: 604800 }
+);
 
 /** Topic + unit + paper + optional expert content (for `/mains/syllabus/[paperId]/[topicId]`). */
 /** 📖 Student side par jab koi topic kholta hai, toh uska content aur navigation links fetch karne ke liye. */
@@ -479,56 +506,60 @@ export async function getTopicContentForAdmin(topicId: string) {
 
 /** Get all papers 1-6 with their full units and topics tree for the global Syllabus Menu */
 /** 📚 Dropdowns aur menus me dikhane ke liye saare papers aur unke units ka data. */
-export async function getAllMainsPapersWithSyllabus() {
-  try {
-    const papers = await db.query.mainsPapers.findMany({
-      orderBy: [asc(mainsPapers.displayOrder)],
-      with: {
-        units: {
-          orderBy: [asc(mainsUnits.part), asc(mainsUnits.displayOrder), asc(mainsUnits.id)],
-          with: {
-            topics: {
-              columns: {
-                id: true,
-                unitId: true,
-                titleHi: true,
-                titleEn: true,
-                displayOrder: true,
-                status: true,
+export const getAllMainsPapersWithSyllabus = unstable_cache(
+  async () => {
+    try {
+      const papers = await db.query.mainsPapers.findMany({
+        orderBy: [asc(mainsPapers.displayOrder)],
+        with: {
+          units: {
+            orderBy: [asc(mainsUnits.part), asc(mainsUnits.displayOrder), asc(mainsUnits.id)],
+            with: {
+              topics: {
+                columns: {
+                  id: true,
+                  unitId: true,
+                  titleHi: true,
+                  titleEn: true,
+                  displayOrder: true,
+                  status: true,
+                },
+                orderBy: [mainsTopics.displayOrder],
               },
-              orderBy: [mainsTopics.displayOrder],
             },
           },
         },
-      },
-    });
+      });
 
-    const data = papers.map((p) => ({
-      id: p.id,
-      paperNumber: p.paperNumber,
-      titleEn: p.titleEn,
-      titleHi: p.titleHi,
-      units: p.units.map((u) => ({
-        id: u.id,
-        unitNumber: u.unitNumber,
-        part: (u.part || 'NONE') as MainsUnitPart,
-        titleHi: u.titleHi,
-        titleEn: u.titleEn,
-        topics: u.topics.map((t) => ({
-          id: t.id,
-          titleHi: t.titleHi,
-          titleEn: t.titleEn,
-          status: t.status ?? 'draft',
+      const data = papers.map((p) => ({
+        id: p.id,
+        paperNumber: p.paperNumber,
+        titleEn: p.titleEn,
+        titleHi: p.titleHi,
+        units: p.units.map((u) => ({
+          id: u.id,
+          unitNumber: u.unitNumber,
+          part: (u.part || 'NONE') as MainsUnitPart,
+          titleHi: u.titleHi,
+          titleEn: u.titleEn,
+          topics: u.topics.map((t) => ({
+            id: t.id,
+            titleHi: t.titleHi,
+            titleEn: t.titleEn,
+            status: t.status ?? 'draft',
+          })),
         })),
-      })),
-    }));
+      }));
 
-    return { success: true as const, data };
-  } catch (error) {
-    console.error('getAllMainsPapersWithSyllabus failed:', error);
-    return { success: false as const, error: 'fetch_failed' as const };
-  }
-}
+      return { success: true as const, data };
+    } catch (error) {
+      console.error('getAllMainsPapersWithSyllabus failed:', error);
+      return { success: false as const, error: 'fetch_failed' as const };
+    }
+  },
+  ['all-mains-papers-syllabus-v1'],
+  { tags: ['mains_syllabus'], revalidate: 604800 }
+);
 
 
 /** 🕒 TRACK RECENT SYLLABUS ACTIVITY
