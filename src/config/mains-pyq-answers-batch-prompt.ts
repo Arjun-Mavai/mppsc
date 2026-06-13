@@ -14,7 +14,7 @@ export type PyqBatchQuestion = {
 
 const MARK_POINT_PRESENTATION = (isEssay: boolean) => `
 POINT-FIRST PRESENTATION (mandatory — students read in our UI as fast-scan bullets)
-- **Every** model answer (**answer_hi** and **answer_en**) MUST be written as **vertical points**: each non-empty line starts with **"- "** (hyphen + space). No free-flow paragraphs; no essay blocks.${isEssay ? ' (EXCEPTION: For Paper 6 Essays, you may use standard paragraphs without the `- ` prefix.)' : ''}
+- **Every** model answer (**answer_hi** and **answer_en**) MUST be written as **vertical points**: each non-empty line starts with **"- "** (hyphen + space). No free-flow paragraphs; no essay blocks.${isEssay ? ' (EXCEPTION: For Paper 6 Essays and Draft Writing, you may use standard paragraphs or preformatted visual blocks without the `- ` prefix.)' : ''}
 - Let **m** = marks from the stem line in this batch. Choose density by **m** (some papers/years use **5** or **11** instead of 7 or 10 — follow the **actual m** printed):
   • **m = 2** (~≤20 words total per variant): **2–4 bullets** only; each bullet **≤12 words**; ultra-tight “examiner hook” feel; **zero** long sentences.
   • **m = 5** (short): **4–6 bullets**; ~35–45 words total; each bullet one crisp fact or judgement.

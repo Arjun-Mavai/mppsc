@@ -3,6 +3,7 @@
 import { cn } from '@/lib/utils';
 import { variants as syllabusCardVariants } from '@/components/SyllabusTopicCard';
 import { memo, type ReactNode } from 'react';
+import { OfficialLetterViewer } from './OfficialLetterViewer';
 
 const PALETTE = ['pink', 'emerald', 'amber', 'sky'] as const;
 type PaletteKey = (typeof PALETTE)[number];
@@ -245,6 +246,19 @@ export const PyqAnswerProse = memo(({
   /** Slightly richer tracking/legibility for long-form mains models (light reading). */
   readerAccent?: boolean;
 }) => {
+  // Trigger letter viewer if it explicitly has AI alignment tags or if it's 12.5/15m Hindi
+  const isDraftFormat = lang === 'hi' && (
+    marks === 15 || 
+    marks === 12.5 || 
+    text.includes('[मध्य में') || 
+    text.includes('[Center Align]') ||
+    text.includes('प्रारूप लेखन')
+  );
+
+  if (isDraftFormat) {
+    return <OfficialLetterViewer text={text} theme={theme} />;
+  }
+
   const lines = text.replace(/\r\n/g, '\n').split('\n');
   const tint = sectionTint ?? 0;
   const headingBar =

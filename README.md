@@ -1550,7 +1550,7 @@ https://levelup.gitconnected.com/the-4-lines-every-claude-md-needs-2717a46866f6
 
 1. Don’t assume. Don’t hide confusion. Surface tradeoffs.
 
-2. Minimum code that solves the problem. Nothing speculative.
+2. Minimum code that solves the problem. Nothing speculative..
 
 3. Touch only what you must. Clean up only your own mess.
 
