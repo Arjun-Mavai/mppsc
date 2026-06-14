@@ -9,6 +9,7 @@ import {
   Zap, 
   Sparkles 
 } from './icons';
+import { hasPreAccess, hasMainsAccess } from '@/lib/access-grants';
 
 interface NavItem {
   name: string;
@@ -60,31 +61,61 @@ export const DesktopNavigation = memo(function DesktopNavigation({
         })}
       
       {/* User Badge */}
-      {user && user.isSubscribed && user.planTier === 'pro' ? (
-        /* Pro Badge — Premium Gold/Amber Gradient style */
-        <div className="group relative overflow-hidden rounded-full p-[1px]">
-          {/* Animated Gradient Border */}
-          <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600" />
-          <div className="relative flex cursor-default items-center gap-2 rounded-full bg-slate-900 px-4 py-1.5 text-sm font-bold text-white transition-colors group-hover:bg-slate-800">
-            {/* Glossy overlay effect */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-50" />
-            <Sparkles size={12} className="relative z-10 fill-amber-400 text-amber-400" />
-            <span className="relative z-10 text-[10px] font-black tracking-widest uppercase">
-              Pro
-            </span>
+      {(() => {
+        if (!user || !user.isSubscribed) return null;
+        
+        const hasPre = hasPreAccess(user);
+        const hasMains = hasMainsAccess(user);
+        
+        if (hasPre && hasMains) {
+          return (
+            <div className="group relative overflow-hidden rounded-full p-[1px]">
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600" />
+              <div className="relative flex cursor-default items-center gap-2 rounded-full bg-slate-900 px-4 py-1.5 text-sm font-bold text-white transition-colors group-hover:bg-slate-800">
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-50" />
+                <Sparkles size={12} className="relative z-10 fill-amber-400 text-amber-400" />
+                <span className="relative z-10 text-[10px] font-black tracking-widest uppercase text-amber-50">PRO+</span>
+              </div>
+            </div>
+          );
+        }
+        
+        if (hasMains) {
+          return (
+            <div className="group relative overflow-hidden rounded-full p-[1px]">
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-600" />
+              <div className="relative flex cursor-default items-center gap-2 rounded-full bg-slate-900 px-4 py-1.5 text-sm font-bold text-white transition-colors group-hover:bg-slate-800">
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-50" />
+                <Sparkles size={12} className="relative z-10 fill-emerald-400 text-emerald-400" />
+                <span className="relative z-10 text-[10px] font-black tracking-widest uppercase">MAINS</span>
+              </div>
+            </div>
+          );
+        }
+        
+        if (hasPre) {
+          return (
+            <div className="group relative overflow-hidden rounded-full p-[1px]">
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600" />
+              <div className="relative flex cursor-default items-center gap-2 rounded-full bg-slate-900 px-4 py-1.5 text-sm font-bold text-white transition-colors group-hover:bg-slate-800">
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-50" />
+                <Sparkles size={12} className="relative z-10 fill-amber-400 text-amber-400" />
+                <span className="relative z-10 text-[10px] font-black tracking-widest uppercase">PRO</span>
+              </div>
+            </div>
+          );
+        }
+        
+        return (
+          <div className="relative overflow-hidden rounded-full p-[1.5px]">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-cyan-500 to-blue-500" />
+            <div className="relative flex cursor-default items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white">
+              <Sparkles size={12} className="fill-blue-400 text-blue-400" />
+              <span className="text-[10px] font-black tracking-wide uppercase">LITE</span>
+            </div>
           </div>
-        </div>
-      ) : user && user.isSubscribed && user.planTier === 'lite' ? (
-        /* Lite Badge — Seamless Pink/Purple gradient */
-        <div className="relative overflow-hidden rounded-full p-[1.5px]">
-          {/* Static Gradient Border for Performance */}
-          <div className="absolute inset-0 bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500" />
-          <div className="relative flex cursor-default items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white">
-            <Sparkles size={12} className="fill-pink-500 text-pink-500" />
-            <span className="text-[10px] font-black tracking-wide uppercase">Lite</span>
-          </div>
-        </div>
-      ) : null}
+        );
+      })()}
     </nav>
   );
 });

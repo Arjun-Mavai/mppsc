@@ -11,7 +11,7 @@ export const mppscUsers = sqliteTable(
     password: text('password').notNull(),
     name: text('name'),
     isSubscribed: integer('is_subscribed', { mode: 'boolean' }).default(false),
-    planTier: text('plan_tier', { enum: ['free', 'lite', 'pro'] }).default('free'),
+    planTier: text('plan_tier', { enum: ['free', 'lite', 'pro', 'mains', 'combo'] }).default('free'),
     role: text('role').default('guest'), // 'guest' | 'admin'
     adminSecret: text('admin_secret'), // Secure key for admin operations (nullable)
     deletedAt: integer('deleted_at', { mode: 'timestamp' }), // Soft delete support

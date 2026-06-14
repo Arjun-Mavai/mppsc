@@ -12,6 +12,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:migrate:remote": "USE_PROD_DB=true drizzle-kit migrate",
     "db:push": "node scripts/safe-db-push.mjs",
+    "db:pull": "npx tsx scripts/db-pull.ts",
     "db:studio": "drizzle-kit studio",
     "db:seed:mains": "npx tsx src/scripts/seed-mains.ts",
     "db:seed:mains:remote": "USE_PROD_DB=true npx tsx src/scripts/seed-mains.ts",

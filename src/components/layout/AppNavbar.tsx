@@ -429,18 +429,74 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                                   {user.name?.charAt(0).toUpperCase() || 'U'}
                                 </AvatarFallback>
                               </Avatar>
-                              {user.isSubscribed && user.planTier === 'pro' && (
-                                <div className="absolute -right-1 -bottom-1 rounded-full border-2 border-white bg-amber-400 p-0.5 text-white">
-                                  <Sparkles size={10} className="fill-white" />
-                                </div>
+                              {user.isSubscribed && (hasPreAccess(user) || hasMainsAccess(user)) && (
+                                (() => {
+                                  const hasPre = hasPreAccess(user);
+                                  const hasMains = hasMainsAccess(user);
+                                  let bgColor = "bg-blue-400";
+                                  if (hasPre && hasMains) bgColor = "bg-amber-500";
+                                  else if (hasMains) bgColor = "bg-emerald-500";
+                                  else if (hasPre) bgColor = "bg-amber-500";
+                                  
+                                  return (
+                                    <div className={`absolute -right-1 -bottom-1 rounded-full border-2 border-white p-0.5 text-white ${bgColor}`}>
+                                      <Sparkles size={10} className="fill-white" />
+                                    </div>
+                                  );
+                                })()
                               )}
                             </div>
                             <div className="flex flex-1 flex-col">
                               <div className="flex items-center gap-2">
                                 <span className="text-sm font-bold text-slate-900">{user.name}</span>
-                                {user.isSubscribed && (
-                                  <span className="rounded border border-amber-200 bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 uppercase">{user.planTier}</span>
-                                )}
+                              {user.isSubscribed && (
+                                (() => {
+                                  const hasPre = hasPreAccess(user);
+                                  const hasMains = hasMainsAccess(user);
+                                  
+                                  if (hasPre && hasMains) {
+                                    return (
+                                      <div className="relative overflow-hidden rounded-md p-[1px]">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600" />
+                                        <div className="relative flex items-center rounded-md bg-slate-900 px-1.5 py-0.5 text-white">
+                                          <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-50" />
+                                          <span className="relative z-10 text-[9px] font-black tracking-widest uppercase text-amber-50">PRO+</span>
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  if (hasMains) {
+                                    return (
+                                      <div className="relative overflow-hidden rounded-md p-[1px]">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-600" />
+                                        <div className="relative flex items-center rounded-md bg-slate-900 px-1.5 py-0.5 text-white">
+                                          <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-50" />
+                                          <span className="relative z-10 text-[9px] font-black tracking-widest uppercase">MAINS</span>
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  if (hasPre) {
+                                    return (
+                                      <div className="relative overflow-hidden rounded-md p-[1px]">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600" />
+                                        <div className="relative flex items-center rounded-md bg-slate-900 px-1.5 py-0.5 text-white">
+                                          <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-50" />
+                                          <span className="relative z-10 text-[9px] font-black tracking-widest uppercase">PRO</span>
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  return (
+                                    <div className="relative overflow-hidden rounded-md p-[1px]">
+                                      <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-cyan-500 to-blue-500" />
+                                      <div className="relative flex items-center rounded-md bg-slate-900 px-1.5 py-0.5 text-white">
+                                        <span className="relative z-10 text-[9px] font-black tracking-widest uppercase">LITE</span>
+                                      </div>
+                                    </div>
+                                  );
+                                })()
+                              )}
                               </div>
                               <span className="mt-1 truncate text-xs text-slate-500">{user.email}</span>
                             </div>
