@@ -56,7 +56,11 @@ async function sendWhatsAppInteractive(toPhone: string, text: string, buttons: {
       },
       body: JSON.stringify(payload)
     });
-    return await res.json();
+    const data = await res.json();
+    if (!res.ok) {
+      logger.error('WhatsApp Interactive API Error Response', new Error(JSON.stringify(data)), { category: 'api' });
+    }
+    return data;
   } catch (error) {
     logger.error('WhatsApp Interactive API Error', error, { category: 'api' });
     return null;
@@ -85,7 +89,11 @@ async function sendWhatsAppText(toPhone: string, text: string) {
       },
       body: JSON.stringify(payload)
     });
-    return await res.json();
+    const data = await res.json();
+    if (!res.ok) {
+      logger.error('WhatsApp Text API Error Response', new Error(JSON.stringify(data)), { category: 'api' });
+    }
+    return data;
   } catch (error) {
     logger.error('WhatsApp Text API Error', error, { category: 'api' });
     return null;
