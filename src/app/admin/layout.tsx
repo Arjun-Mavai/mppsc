@@ -109,6 +109,12 @@ const ADMIN_ROUTES = [
     description: 'Prompt generator for Telegram channel',
   },
   {
+    href: '/admin/support-inbox',
+    label: 'Support Inbox',
+    icon: HelpCircle,
+    description: 'WhatsApp & Telegram CRM',
+  },
+  {
     href: '/admin/pyq-insights',
     label: 'PYQ Insights',
     icon: Brain,

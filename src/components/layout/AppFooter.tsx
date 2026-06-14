@@ -26,6 +26,7 @@ export function AppFooter() {
   if (pathname.startsWith('/syllabus/quiz')) return null;
   if (pathname.startsWith('/free-quiz')) return null;
   if (pathname.startsWith('/mains/syllabus')) return null;
+  if (pathname.startsWith('/admin/support-inbox')) return null;
 
   return (
     <footer className="min-h-[250px] border-t border-slate-200 bg-slate-50 py-12 pb-24 sm:min-h-[200px] md:pb-12">

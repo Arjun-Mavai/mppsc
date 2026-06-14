@@ -18,6 +18,7 @@ import {
 } from '@/config/mppsc-product-copy';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { cn } from '@/lib/utils';
+import { safeGetSessionStorage, safeRemoveSessionStorage } from '@/lib/safe-session-storage';
 
 function ThankYouContent() {
   const searchParams = useSearchParams();
@@ -49,7 +50,7 @@ function ThankYouContent() {
   // 🔒 Step 1: Security Redirection Check
   useEffect(() => {
     const isFreshPayment =
-      typeof window !== 'undefined' && sessionStorage.getItem('payment_success_fresh');
+      typeof window !== 'undefined' && safeGetSessionStorage('payment_success_fresh');
     const allowedSku =
       skuParam && ['lite', 'pro', 'upgrade', 'mains', 'combo'].includes(skuParam);
     const hasValidParams =
@@ -64,7 +65,7 @@ function ThankYouContent() {
 
     const timer = setTimeout(() => {
       if (typeof window !== 'undefined') {
-        sessionStorage.removeItem('payment_success_fresh');
+        safeRemoveSessionStorage('payment_success_fresh');
       }
     }, 1000);
 

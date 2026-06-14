@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     url: `${baseUrl}${pagePath}`,
     siteName: 'Mindful MPPSC',
     type: 'website',
-    images: [{ url: '/og-hero.webp', width: 1200, height: 630, alt: 'Mindful MPPSC' }],
+    images: [{ url: '/og-hero.png', width: 1200, height: 630, alt: 'Mindful MPPSC' }],
   },
 };
 

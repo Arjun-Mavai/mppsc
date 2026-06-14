@@ -21,6 +21,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { canAccessBlog } from '@/lib/access-control';
 import { getBlogs } from '@/actions/blog-actions';
 import type { mppscUsers, contentBlogs } from '@/db/schema';
+import { safeGetSessionStorage, safeSetSessionStorage } from '@/lib/safe-session-storage';
 
 // Type Definitions derived from Drizzle Schema
 type User = typeof mppscUsers.$inferSelect;
@@ -173,7 +174,7 @@ export default function BlogsClient({
 
     const readFromUrl = () => {
       const params = new URLSearchParams(window.location.search);
-      const savedRaw = window.sessionStorage.getItem('blogs:last-filters');
+      const savedRaw = safeGetSessionStorage('blogs:last-filters');
       const saved = savedRaw ? JSON.parse(savedRaw) : null;
 
       const nextUnit =
@@ -258,7 +259,7 @@ export default function BlogsClient({
       window.history.replaceState(null, '', nextUrl);
     }
 
-    window.sessionStorage.setItem(
+    safeSetSessionStorage(
       'blogs:last-filters',
       JSON.stringify({
         unit: activeUnit,

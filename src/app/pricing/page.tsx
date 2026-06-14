@@ -232,7 +232,12 @@ function PricingPageInner() {
   const isProUser = planTier === 'pro';
   const isLiteUser = planTier === 'lite';
   const [mppscSegment, setMppscSegment] = useState<MppscPricingSegmentKey>(
-    () => (searchParams.get('need') === 'mains' ? 'mains' : 'combo')
+    () => {
+      const need = searchParams.get('need');
+      if (need === 'mains') return 'mains';
+      if (need === 'pre') return 'pre';
+      return 'combo';
+    }
   );
   const [showAllMainsCards, setShowAllMainsCards] = useState(false);
 

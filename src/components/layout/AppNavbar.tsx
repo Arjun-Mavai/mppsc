@@ -366,7 +366,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   const isCompleted = searchParams.get('completed') === 'true';
   const isQuizPlay = (pathname.includes('/quiz/play') || pathname.includes('/free-quiz/play')) && !isCompleted;
   
-  if (isQuizPlay) return null;
+  if (isQuizPlay || pathname.startsWith('/admin')) return null;
 
   return (
     <header className="fixed top-0 right-0 left-0 z-50 [animation:navbar-scroll_linear_both] border-b border-slate-200 bg-white/80 shadow-sm backdrop-blur-md transition-all duration-300 [animation-range:0px_50px] [animation-timeline:scroll()]">

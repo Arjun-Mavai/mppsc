@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { safeGetSessionStorage, safeSetSessionStorage } from '@/lib/safe-session-storage';
 
 export function TelemetryTracker() {
   const pathname = usePathname();
@@ -17,10 +18,10 @@ export function TelemetryTracker() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      let sessionStart = sessionStorage.getItem('mppsc_tab_session_start');
+      let sessionStart = safeGetSessionStorage('mppsc_tab_session_start');
       if (!sessionStart) {
         sessionStart = Date.now().toString();
-        sessionStorage.setItem('mppsc_tab_session_start', sessionStart);
+        safeSetSessionStorage('mppsc_tab_session_start', sessionStart);
       }
       tabSessionStartRef.current = parseInt(sessionStart, 10);
     }

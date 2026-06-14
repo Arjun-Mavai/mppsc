@@ -156,7 +156,7 @@ export function SupportChat() {
    *
    * @returns Sanitized user name or default greeting
    */
-  const getUserDisplayName = (): string => {
+  const getUserDisplayName = React.useCallback((): string => {
     try {
       // Strategy 1: Check localStorage for guest name (from quiz)
       // This is set when guest users take tests
@@ -187,11 +187,11 @@ export function SupportChat() {
       console.error('[SupportChat] Error getting user name:', error);
       return 'there';
     }
-  };
+  }, [user?.name]);
 
   // Get display name once on mount and when user changes
   // Memoize to prevent unnecessary re-renders
-  const displayName = React.useMemo(() => getUserDisplayName(), [user?.name]);
+  const displayName = React.useMemo(() => getUserDisplayName(), [user?.name, getUserDisplayName]);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -200,7 +200,7 @@ export function SupportChat() {
     phone: '',
     message: '',
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting] = useState(false);
   
   // 🎯 Detect exam context from pathname and user access grants
   const userAccessGrants = user?.accessGrants || [];
@@ -221,14 +221,14 @@ export function SupportChat() {
     const message = isMainsPage
       ? 'Hi, I have a query regarding the MPPSC Mains module.'
       : 'Hi, I need help with the MPPSC App. My query is:';
-    window.open(`https://wa.me/918766451748?text=${encodeURIComponent(message)}`, '_blank');
+    const waNumber = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP_NUMBER || '917489388350';
+    window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const handleTelegram = () => {
-    const url = isMainsPage
-      ? 'https://t.me/MPPSC_Support_Bot?start=mppsc_mains_query'
-      : 'https://t.me/mppss_26_bot';
-    window.open(url, '_blank');
+    const botUsername = process.env.NEXT_PUBLIC_SUPPORT_TELEGRAM_BOT_USERNAME || 'mppsc_conversation_bot';
+    const startParam = isMainsPage ? 'mains' : 'prelims';
+    window.open(`https://t.me/${botUsername}?start=${startParam}`, '_blank');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -258,7 +258,7 @@ export function SupportChat() {
       });
       
       setFormData({ ...formData, message: '' });
-    } catch (error) {
+    } catch (_error) {
       // Construction failed
     }
   };

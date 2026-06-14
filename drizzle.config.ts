@@ -7,7 +7,7 @@ loadEnv({ path: '.env.local', override: true });
 
 const localDbPath = `file:${path.resolve(
   process.cwd(),
-  'backups/turso-backup-20260513-095501/mppsc-mains-target-2026-arjun-gurjar.sqlite'
+  'mppsc_local_dev.db'
 )}`;
 /** Same rule as `src/db/index.ts` (NEXT: NODE_ENV defaults to development when unset; tsx/cli often omits it). */
 const nodeEnv = process.env.NODE_ENV || 'development';

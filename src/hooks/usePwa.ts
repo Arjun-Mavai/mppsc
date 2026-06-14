@@ -83,17 +83,23 @@ export function usePwa() {
     // 4. Register Service Worker (Manual Registration)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(
-          (registration) => {
-            logger.debug('ServiceWorker registration successful with scope: ', {
-              scope: registration.scope,
-              category: 'system',
-            });
-          },
-          (err) => {
-            logger.error('ServiceWorker registration failed: ', err, { category: 'system' });
-          }
-        );
+        try {
+          navigator.serviceWorker.register('/sw.js').then(
+            (registration) => {
+              logger.debug('ServiceWorker registration successful with scope: ', {
+                scope: registration.scope,
+                category: 'system',
+              });
+            },
+            (err) => {
+              logger.error('ServiceWorker registration failed: ', err, { category: 'system' });
+            }
+          ).catch((err) => {
+            logger.error('ServiceWorker Promise caught error: ', err, { category: 'system' });
+          });
+        } catch (err) {
+          logger.error('ServiceWorker sync error: ', err, { category: 'system' });
+        }
       });
     }
 

@@ -1,4 +1,5 @@
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { safeGetSessionStorage, safeSetSessionStorage } from '@/lib/safe-session-storage';
 
 /**
  * Client-side utility to easily track custom actions/interactions (like modal opens, CTAs, clicks)
@@ -10,7 +11,7 @@ export function trackAction(actionDetails: string, extraData?: Record<string, an
   try {
     // 🛡️ DEDUPLICATION: Prevent duplicate identical alerts within 30 seconds to save network bandwidth
     const cacheKey = `mppsc_track_${actionDetails.replace(/\s+/g, '_')}`;
-    const lastTracked = sessionStorage.getItem(cacheKey);
+    const lastTracked = safeGetSessionStorage(cacheKey);
     const nowTime = Date.now();
     
     if (lastTracked) {
@@ -19,7 +20,7 @@ export function trackAction(actionDetails: string, extraData?: Record<string, an
         return; // Skip duplicate spam
       }
     }
-    sessionStorage.setItem(cacheKey, nowTime.toString());
+    safeSetSessionStorage(cacheKey, nowTime.toString());
 
     const { user, guestLead } = useSettingsStore.getState();
     const guestName = localStorage.getItem('mppsc_guest_name');

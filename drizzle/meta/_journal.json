@@ -211,6 +211,13 @@
       "when": 1779819515040,
       "tag": "0029_add_system_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "6",
+      "when": 1781439482354,
+      "tag": "0030_silent_sage",
+      "breakpoints": true
     }
   ]
 }
