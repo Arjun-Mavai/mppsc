@@ -77,3 +77,5 @@ db-backup.sh
 !/backups/learning/**/*.md
 *.sqlite
 *.sql
+*.db-info
+/scratch/
