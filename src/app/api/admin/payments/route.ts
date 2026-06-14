@@ -62,11 +62,20 @@ export async function GET(req: Request) {
     const totalRevenue = allPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
     const liteCount = allPayments.filter((p) => p.planTier === 'lite').length;
     const proCount = allPayments.filter((p) => p.planTier === 'pro').length;
+    const mainsCount = allPayments.filter((p) => p.planTier === 'mains').length;
+    const comboCount = allPayments.filter((p) => p.planTier === 'combo').length;
+
     const liteRevenue = allPayments
       .filter((p) => p.planTier === 'lite')
       .reduce((s, p) => s + (p.amount || 0), 0);
     const proRevenue = allPayments
       .filter((p) => p.planTier === 'pro')
+      .reduce((s, p) => s + (p.amount || 0), 0);
+    const mainsRevenue = allPayments
+      .filter((p) => p.planTier === 'mains')
+      .reduce((s, p) => s + (p.amount || 0), 0);
+    const comboRevenue = allPayments
+      .filter((p) => p.planTier === 'combo')
       .reduce((s, p) => s + (p.amount || 0), 0);
 
     const todayPayments = allPayments.filter((p) => p.createdAt && p.createdAt >= todayStart);
@@ -76,13 +85,13 @@ export async function GET(req: Request) {
     // ── Daily chart data (last 30 days) ──
     const dailyMap = new Map<
       string,
-      { count: number; revenue: number; lite: number; pro: number }
+      { count: number; revenue: number; lite: number; pro: number; mains: number; combo: number }
     >();
     for (let i = 29; i >= 0; i--) {
       const d = new Date(todayStart);
       d.setDate(d.getDate() - i);
       const key = d.toISOString().split('T')[0];
-      dailyMap.set(key, { count: 0, revenue: 0, lite: 0, pro: 0 });
+      dailyMap.set(key, { count: 0, revenue: 0, lite: 0, pro: 0, mains: 0, combo: 0 });
     }
     for (const p of allPayments) {
       if (!p.createdAt) continue;
@@ -93,6 +102,8 @@ export async function GET(req: Request) {
         entry.revenue += p.amount || 0;
         if (p.planTier === 'lite') entry.lite++;
         if (p.planTier === 'pro') entry.pro++;
+        if (p.planTier === 'mains') entry.mains++;
+        if (p.planTier === 'combo') entry.combo++;
       }
     }
     const dailyChart = Array.from(dailyMap.entries()).map(([date, data]) => ({
@@ -125,8 +136,12 @@ export async function GET(req: Request) {
         totalRevenue,
         liteCount,
         proCount,
+        mainsCount,
+        comboCount,
         liteRevenue,
         proRevenue,
+        mainsRevenue,
+        comboRevenue,
         today: todayPayments.length,
         todayRevenue: todayPayments.reduce((s, p) => s + (p.amount || 0), 0),
         week: weekPayments.length,

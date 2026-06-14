@@ -7,7 +7,6 @@ import { eq, sql, and } from 'drizzle-orm';
 import { addHours } from 'date-fns';
 import { Resend } from 'resend';
 import { appPath } from '@/lib/app-url';
-import { PRICING_DEFAULTS } from '@/config/pricing';
 import { mergePricingRow } from '@/lib/pricing-merge';
 import { mergeMppscProductCopy, paymentLabelToMppscSegment } from '@/config/mppsc-product-copy';
 import { renderMppscPaymentWelcomeEmail } from '@/lib/welcome-payment-email';
@@ -471,121 +470,181 @@ export async function verifyPayment(input: VerifyPaymentInput) {
     // PaymentModal calls this server action — NOT /api/payment/verify — so this block is required
     // for first-time payers to receive mail and use /auth/set-password. Upgrade skips (already has password).
     const isUpgradePurchase = (order.notes?.planType as string | undefined) === 'upgrade';
-    if (!isUpgradePurchase) {
-      const paidUser = await db.query.mppscUsers.findFirst({
-        where: eq(mppscUsers.id, userId!),
-        columns: { name: true, email: true, examType: true, phone: true },
-      });
-
-      if (paidUser?.email) {
-        const token = uuidv4();
-        const expires = addHours(new Date(), 1);
-
-        await db.insert(verificationTokens).values({
-          identifier: userId!,
-          token,
-          expires,
-        });
-
-        const resendApiKey = process.env.RESEND_API_KEY;
-        const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC ZEN';
-        const fromAddress =
-          process.env.RESEND_FROM_EMAIL ||
-          process.env.EMAIL_FROM_ADDRESS ||
-          'no-reply@mppsc.zenscroll.app';
-        const fromEmail = `${fromName} <${fromAddress}>`;
-        const actionUrl = `${appPath('auth/set-password')}?token=${token}`;
-
-        const welcomePlan: 'lite' | 'pro' =
-          resolved.paymentLabel === 'mains' || resolved.paymentLabel === 'combo'
-            ? 'pro'
-            : planTier === 'lite'
-              ? 'lite'
-              : 'pro';
-
-        const mergedMppscCopy =
-          examType === 'mppsc'
-            ? mergeMppscProductCopy(
-                (pricingRow as Record<string, unknown> | null)?.mppscProductCopyJson as
-                  | string
-                  | null
-                  | undefined
-              )
-            : null;
-
-        let emailHtml: string;
-        let emailSubject =
-          '🎉 Welcome to MPPSC ZEN — Set Your Password';
-        if (examType === 'mppsc' && mergedMppscCopy) {
-          const segmentCopy =
-            mergedMppscCopy[paymentLabelToMppscSegment(resolved.paymentLabel)];
-          const rend = await renderMppscPaymentWelcomeEmail({
-            name: paidUser.name || 'Student',
-            actionUrl,
-            segmentCopy,
-          });
-          emailHtml = rend.html;
-          emailSubject = rend.subject;
-        } else {
-          emailHtml = await renderWelcomeSetPasswordEmailHtml({
-            name: paidUser.name || 'Student',
-            actionUrl,
-            planTier: welcomePlan,
-          });
-        }
-
-        if (!resendApiKey) {
-          logger.error('RESEND_API_KEY missing — welcome email skipped after payment', undefined, {
-            category: 'email',
-            userId,
-            metadata: { to: paidUser.email },
-          });
-          await notifyAdminOnEmailFailure({
-            userName: paidUser.name || 'Unknown',
-            userEmail: paidUser.email,
-            errorMessage: 'RESEND_API_KEY is not configured on the server',
-            paymentId: razorpay_payment_id,
-          }).catch(() => {});
-        } else {
-          const resend = new Resend(resendApiKey);
-          const { error: emailError } = await resend.emails.send({
-            from: fromEmail,
-            to: [paidUser.email],
-            subject: emailSubject,
-            html: emailHtml,
+    
+    after(async () => {
+      try {
+        if (!isUpgradePurchase) {
+          const paidUser = await db.query.mppscUsers.findFirst({
+            where: eq(mppscUsers.id, userId!),
+            columns: { name: true, email: true, examType: true, phone: true },
           });
 
-          if (emailError) {
-            logger.error('Failed to send welcome email via Resend', emailError, {
-              category: 'email',
-              userId,
-              metadata: { to: paidUser.email, fromEmail },
+          if (paidUser?.email) {
+            const token = uuidv4();
+            const expires = addHours(new Date(), 24);
+
+            await db.insert(verificationTokens).values({
+              identifier: userId!,
+              token,
+              expires,
             });
-            await notifyAdminOnEmailFailure({
+            
+            // 🚀 Send WhatsApp Welcome Alert (COMMENTED OUT FOR NOW)
+            // Note: Uncomment this once the 'zenscroll_alert' template is officially approved by Meta.
+            /*
+            const WHATSAPP_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
+            const PHONE_ID = process.env.WHATSAPP_PHONE_ID;
+            if (WHATSAPP_TOKEN && PHONE_ID && paidUser.phone) {
+              try {
+                const waPayload = {
+                  messaging_product: "whatsapp",
+                  to: paidUser.phone.startsWith('91') ? paidUser.phone : `91${paidUser.phone}`,
+                  type: "template",
+                  template: {
+                    name: "zenscroll_alert", 
+                    language: { code: "en_US" },
+                    components: [
+                      {
+                        type: "header",
+                        parameters: [
+                          {
+                            type: "image",
+                            image: {
+                              link: "https://mppsc.zenscroll.app/og-hero.png"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        type: "body",
+                        parameters: [
+                          {
+                            type: "text",
+                            text: paidUser.name || "Aspirant"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                };
+
+                await fetch(`https://graph.facebook.com/v21.0/${PHONE_ID}/messages`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${WHATSAPP_TOKEN}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(waPayload),
+                });
+              } catch (waErr) {
+                logger.error('Failed to send WhatsApp welcome alert', waErr, { category: 'api', userId });
+              }
+            }
+            */
+
+            const resendApiKey = process.env.RESEND_API_KEY;
+            const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC ZEN';
+            const fromAddress =
+              process.env.RESEND_FROM_EMAIL ||
+              process.env.EMAIL_FROM_ADDRESS ||
+              'no-reply@mppsc.zenscroll.app';
+            const fromEmail = `${fromName} <${fromAddress}>`;
+            const actionUrl = `${appPath('auth/set-password')}?token=${token}`;
+
+            const welcomePlan: 'lite' | 'pro' =
+              resolved.paymentLabel === 'mains' || resolved.paymentLabel === 'combo'
+                ? 'pro'
+                : planTier === 'lite'
+                  ? 'lite'
+                  : 'pro';
+
+            const mergedMppscCopy =
+              examType === 'mppsc'
+                ? mergeMppscProductCopy(
+                    (pricingRow as Record<string, unknown> | null)?.mppscProductCopyJson as
+                      | string
+                      | null
+                      | undefined
+                  )
+                : null;
+
+            let emailHtml: string;
+            let emailSubject =
+              '🎉 Welcome to MPPSC ZEN — Set Your Password';
+            if (examType === 'mppsc' && mergedMppscCopy) {
+              const segmentCopy =
+                mergedMppscCopy[paymentLabelToMppscSegment(resolved.paymentLabel)];
+              const rend = await renderMppscPaymentWelcomeEmail({
+                name: paidUser.name || 'Student',
+                actionUrl,
+                segmentCopy,
+              });
+              emailHtml = rend.html;
+              emailSubject = rend.subject;
+            } else {
+              emailHtml = await renderWelcomeSetPasswordEmailHtml({
+                name: paidUser.name || 'Student',
+                actionUrl,
+                planTier: welcomePlan,
+              });
+            }
+
+            if (!resendApiKey) {
+              logger.error('RESEND_API_KEY missing — welcome email skipped after payment', undefined, {
+                category: 'email',
+                userId,
+                metadata: { to: paidUser.email },
+              });
+              await notifyAdminOnEmailFailure({
+                userName: paidUser.name || 'Unknown',
+                userEmail: paidUser.email,
+                errorMessage: 'RESEND_API_KEY is not configured on the server',
+                paymentId: razorpay_payment_id,
+              }).catch(() => {});
+            } else {
+              const resend = new Resend(resendApiKey);
+              const { error: emailError } = await resend.emails.send({
+                from: fromEmail,
+                to: [paidUser.email],
+                subject: emailSubject,
+                html: emailHtml,
+              });
+
+              if (emailError) {
+                logger.error('Failed to send welcome email via Resend', emailError, {
+                  category: 'email',
+                  userId,
+                  metadata: { to: paidUser.email, fromEmail },
+                });
+                await notifyAdminOnEmailFailure({
+                  userName: paidUser.name || 'Unknown',
+                  userEmail: paidUser.email,
+                  errorMessage:
+                    typeof emailError === 'object' && emailError !== null && 'message' in emailError
+                      ? String(emailError.message)
+                      : JSON.stringify(emailError),
+                  paymentId: razorpay_payment_id,
+                }).catch(() => {});
+              }
+            }
+
+            await notifyAdminOnPayment({
+              type: 'new_payment',
               userName: paidUser.name || 'Unknown',
               userEmail: paidUser.email,
-              errorMessage:
-                typeof emailError === 'object' && emailError !== null && 'message' in emailError
-                  ? String(emailError.message)
-                  : JSON.stringify(emailError),
+              userPhone: paidUser.phone,
+              planTier: resolved.paymentLabel,
+              amountInRupees: amountInPaise / 100,
+              orderId: razorpay_order_id,
               paymentId: razorpay_payment_id,
+              examType: paidUser.examType || 'mppsc',
             }).catch(() => {});
           }
         }
-
-        await notifyAdminOnPayment({
-          type: 'new_payment',
-          userName: paidUser.name || 'Unknown',
-          userEmail: paidUser.email,
-          userPhone: paidUser.phone,
-          planTier: resolved.paymentLabel,
-          amountInRupees: amountInPaise / 100,
-          orderId: razorpay_order_id,
-          paymentId: razorpay_payment_id,
-          examType: paidUser.examType || 'mppsc',
-        }).catch(() => {});
+      } catch (err) {
+        logger.error('Background tasks failed in verifyPayment', err, { category: 'payment', metadata: { userId, orderId: razorpay_order_id } });
       }
-    }
+    });
 
     logger.info('Payment verified successfully', {
       category: 'payment',

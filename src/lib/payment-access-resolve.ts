@@ -9,7 +9,7 @@ import { notesPlanTypeMatchesAmount } from '@/lib/plan-security';
 
 export type ResolvedPayment = {
   allowedAmount: boolean;
-  planTier: 'free' | 'lite' | 'pro';
+  planTier: 'free' | 'lite' | 'pro' | 'mains' | 'combo';
   accessGrants: string[];
   months: number;
   paymentLabel: 'lite' | 'pro' | 'mains' | 'combo' | 'upgrade';
@@ -53,7 +53,7 @@ export function resolveVerifiedPayment(
   const comboPaise = (pricing.comboPrice ?? PRICING_DEFAULTS.comboPrice) * 100;
 
   const priorGrants = parseAccessGrants(priorGrantsRaw);
-  const prior = String(priorPlanTier ?? 'free').toLowerCase() as 'free' | 'lite' | 'pro';
+  const prior = String(priorPlanTier ?? 'free').toLowerCase() as 'free' | 'lite' | 'pro' | 'mains' | 'combo';
   const pt = String(notesPlanType ?? '').trim().toLowerCase();
 
   const fail = (): ResolvedPayment => ({
@@ -70,7 +70,7 @@ export function resolveVerifiedPayment(
     const months = pricing.comboMonths ?? PRICING_DEFAULTS.comboMonths;
     return {
       allowedAmount: true,
-      planTier: 'pro',
+      planTier: 'combo',
       accessGrants: mergeGrantsAfterComboPurchase(),
       months,
       paymentLabel: 'combo',
@@ -87,7 +87,7 @@ export function resolveVerifiedPayment(
       : ['mppsc_mains'];
     return {
       allowedAmount: true,
-      planTier: paidPrelimsProduct ? prior : 'free',
+      planTier: paidPrelimsProduct ? 'combo' : 'mains',
       accessGrants: grants,
       months,
       paymentLabel: 'mains',

@@ -47,11 +47,56 @@ export async function sendTelegramNotification(message: string) {
       const errorText = await response.text();
       logger.error('Telegram API Error', new Error(errorText), { category: 'telegram' });
     }
-  } catch (error: any) {
-    if (error.name === 'AbortError') {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === 'AbortError') {
       logger.error('Telegram notification timed out', error, { category: 'telegram' });
     } else {
       logger.error('Failed to send Telegram notification', error, { category: 'telegram' });
+    }
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+export async function sendHumanRequestTelegramNotification(message: string) {
+  const BOT_TOKEN = process.env.TELEGRAM_HUMAN_REQUEST_BOT_TOKEN;
+  const CHAT_ID = process.env.TELEGRAM_HUMAN_REQUEST_CHAT_ID;
+
+  if (!BOT_TOKEN || !CHAT_ID) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(
+        '[Telegram] TELEGRAM_HUMAN_REQUEST_BOT_TOKEN or TELEGRAM_HUMAN_REQUEST_CHAT_ID missing; human request notification skipped'
+      );
+    }
+    return;
+  }
+
+  // ⏱️ AbortController to prevent hanging (5s timeout)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text: message,
+        parse_mode: 'Markdown', // Using Markdown here since webhook routes format human alerts in Markdown
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.error('Telegram Human Request API Error', new Error(errorText), { category: 'telegram' });
+    }
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      logger.error('Telegram human request notification timed out', error, { category: 'telegram' });
+    } else {
+      logger.error('Failed to send Telegram human request notification', error, { category: 'telegram' });
     }
   } finally {
     clearTimeout(timeoutId);

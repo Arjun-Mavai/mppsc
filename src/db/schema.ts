@@ -11,7 +11,7 @@ export const mppscUsers = sqliteTable(
     password: text('password').notNull(),
     name: text('name'),
     isSubscribed: integer('is_subscribed', { mode: 'boolean' }).default(false),
-    planTier: text('plan_tier', { enum: ['free', 'lite', 'pro'] }).default('free'),
+    planTier: text('plan_tier', { enum: ['free', 'lite', 'pro', 'mains', 'combo'] }).default('free'),
     role: text('role').default('guest'), // 'guest' | 'admin'
     adminSecret: text('admin_secret'), // Secure key for admin operations (nullable)
     deletedAt: integer('deleted_at', { mode: 'timestamp' }), // Soft delete support
@@ -1153,23 +1153,23 @@ export const pricingConfig = sqliteTable('pricing_config', {
   litePrice: integer('lite_price').default(99),
   liteOriginalPrice: integer('lite_original_price').default(299),
   liteValidityText: text('lite_validity_text').default('Valid till Exam'),
-  liteMonths: integer('lite_months').default(8),
+  liteMonths: integer('lite_months').default(6),
   proPrice: integer('pro_price').default(299),
   proOriginalPrice: integer('pro_original_price').default(999),
-  proValidityText: text('pro_validity_text').default('Valid for 1 Year'),
-  proMonths: integer('pro_months').default(12),
+  proValidityText: text('pro_validity_text').default('Valid for 6 Months'),
+  proMonths: integer('pro_months').default(6),
   upgradePrice: integer('upgrade_price').default(199),
   upgradeOriginalPrice: integer('upgrade_original_price').default(299),
   /** MPPSC Mains vault SKU (₹ rupees server-side ×100 → paise). */
   mainsPrice: integer('mains_price').default(1499),
   mainsOriginalPrice: integer('mains_original_price').default(2499),
-  mainsValidityText: text('mains_validity_text').default('Valid till MPPSC 2026 Mains'),
-  mainsMonths: integer('mains_months').default(12),
+  mainsValidityText: text('mains_validity_text').default('Valid for 6 Months'),
+  mainsMonths: integer('mains_months').default(6),
   /** MPPSC Pre+Mains combo SKU */
   comboPrice: integer('combo_price').default(2499),
   comboOriginalPrice: integer('combo_original_price').default(3999),
-  comboValidityText: text('combo_validity_text').default('Pre + Mains — full access'),
-  comboMonths: integer('combo_months').default(12),
+  comboValidityText: text('combo_validity_text').default('Pre + Mains — Valid for 6 Months'),
+  comboMonths: integer('combo_months').default(6),
   /** Optional overrides merged with defaults — admin + app only reads for `id=mppsc`. */
   mppscProductCopyJson: text('mppsc_product_copy_json'),
   urgencyText: text('urgency_text').default('Special Offer'),
@@ -1245,3 +1245,53 @@ export const systemSettings = sqliteTable('system_settings', {
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
 });
 
+
+
+// WhatsApp Campaign Tracking
+export const whatsappCampaignLogs = sqliteTable('whatsapp_campaign_logs', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  guestId: text('guest_id').references(() => guests.id, { onDelete: 'cascade' }).notNull(),
+  messageId: text('message_id').notNull(),
+  status: text('status').default('SENT').notNull(), // SENT, DELIVERED, READ, REPLIED
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),  
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),  
+});
+
+// Support Conversations (Inbox for WhatsApp/Telegram)
+export const supportConversations = sqliteTable('support_conversations', {
+  id: text('id').primaryKey(),
+  platform: text('platform', { enum: ['whatsapp', 'telegram'] }).notNull(),
+  guestId: text('guest_id').references(() => guests.id),
+  guestName: text('guest_name'),
+  guestPhone: text('guest_phone'), // WhatsApp number or Telegram ID
+  language: text('language').default('PENDING'), // EN, HI, PENDING
+  status: text('status', { enum: ['open', 'resolved'] }).default('open'), 
+  unreadCount: integer('unread_count').default(0),
+  lastMessageAt: integer('last_message_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+});
+
+export const supportMessages = sqliteTable('support_messages', {
+  id: text('id').primaryKey(),
+  conversationId: text('conversation_id').references(() => supportConversations.id, { onDelete: 'cascade' }).notNull(),
+  sender: text('sender', { enum: ['user', 'bot', 'admin'] }).notNull(),
+  text: text('text').notNull(),
+  messageType: text('message_type', { enum: ['text', 'image', 'interactive'] }).default('text'), 
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+});
+
+export const supportConversationsRelations = relations(supportConversations, ({ many, one }) => ({
+  messages: many(supportMessages),
+  guest: one(guests, {
+    fields: [supportConversations.guestId],
+    references: [guests.id],
+  }),
+}));
+
+export const supportMessagesRelations = relations(supportMessages, ({ one }) => ({
+  conversation: one(supportConversations, {
+    fields: [supportMessages.conversationId],
+    references: [supportConversations.id],
+  }),
+}));

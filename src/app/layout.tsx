@@ -43,41 +43,41 @@ export const viewport: Viewport = {
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://mppsc.zenscroll.app';
 export const metadata: Metadata = {
   title: {
-    default: 'Mindful MPPSC - Crack MPPSC 2026 | Bilingual Tests & Mnemonics',
-    template: '%s | Mindful MPPSC',
+    default: 'MPPSC ZenScroll | Preparation becomes easier when direction is clear',
+    template: '%s | MPPSC ZenScroll',
   },
   description:
-    "Master the new MPPSC 2026 pattern with India's first bilingual mnemonic-based platform. Get 100+ topic tests, 5+ years PYQs, and smart explanations in Hindi & English.",
+    "MPPSC की तैयारी में सबसे बड़ी चुनौती सामग्री (Content) की कमी नहीं होती। चुनौती होती है: क्या पढ़ना है, कितना पढ़ना है और परीक्षा वास्तव में क्या पूछ रही है। Join ZenScroll for pure conceptual clarity.",
   keywords: [
-    'MPPSC 2026 Test Series',
-    'MPPSC Prelims Mock Test',
-    'MPPSC Previous Year Papers',
-    'MPPSC Mnemonics',
-    'MPPSC Notes Hindi',
+    'MPPSC 2026',
+    'MPPSC Prelims & Mains',
+    'MPPSC Syllabus Hub',
+    'MPPSC PYQ Analysis',
+    'MPPSC Smart Preparation',
   ],
   metadataBase: new URL(baseUrl),
   openGraph: {
     type: 'website',
     locale: 'en_IN',
     url: baseUrl,
-    title: 'MPPSC 2026 Elite Test Series | नवीनतम पैटर्न पर आधारित सर्वश्रेष्ठ अभ्यास',
+    title: 'MPPSC ZenScroll | Syllabus, PYQs & Right Direction',
     description:
-      'Looking for MPPSC 2026 Test Series? Get 5+ Years PYQs, Topic-wise Tests, and Mnemonics in Hindi & English. The smartest way to clear MPPSC Prelims.',
-    siteName: 'Mindful MPPSC',
+      'क्या पढ़ना है, कितना पढ़ना है और परीक्षा वास्तव में क्या पूछ रही है? ZenScroll के साथ अपनी तैयारी को स्पष्ट और उद्देश्यपूर्ण बनाएं।',
+    siteName: 'MPPSC ZenScroll',
     images: [
       {
-        url: '/og-hero.webp',
+        url: '/og-hero.png',
         width: 1200,
         height: 630,
-        alt: 'Mindful MPPSC - Crack MPPSC 2026',
+        alt: 'MPPSC ZenScroll',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Mindful MPPSC | Best App for MPPSC 2026',
-    description: "Master MPPSC with India's first Bilingual Mnemonic App.",
-    images: ['/og-hero.webp'],
+    title: 'MPPSC ZenScroll | Clear Direction for MPPSC',
+    description: "Preparation becomes easier when direction is clear. Understand the syllabus and connect PYQs effectively.",
+    images: ['/og-hero.png'],
   },
   manifest: '/manifest.json',
   icons: {
@@ -207,11 +207,17 @@ export default async function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(function(registration) {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                  }, function(err) {
-                    console.log('ServiceWorker registration failed: ', err);
-                  });
+                  try {
+                    navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    }, function(err) {
+                      console.log('ServiceWorker registration failed: ', err);
+                    }).catch(function(err) {
+                      console.log('ServiceWorker Promise caught error: ', err);
+                    });
+                  } catch (err) {
+                    console.log('ServiceWorker sync error: ', err);
+                  }
                 });
               }
             `,

@@ -19,6 +19,7 @@ import {
   Crown,
   Zap,
   Copy,
+  BookOpen,
 } from 'lucide-react';
 
 interface PaymentRecord {
@@ -40,8 +41,12 @@ interface Stats {
   totalRevenue: number;
   liteCount: number;
   proCount: number;
+  mainsCount: number;
+  comboCount: number;
   liteRevenue: number;
   proRevenue: number;
+  mainsRevenue: number;
+  comboRevenue: number;
   today: number;
   todayRevenue: number;
   week: number;
@@ -57,6 +62,8 @@ interface DailyData {
   revenue: number;
   lite: number;
   pro: number;
+  mains: number;
+  combo: number;
 }
 
 type FilterType = 'all' | 'today' | 'week' | 'month';
@@ -157,45 +164,11 @@ export default function PaymentsPage() {
         </div>
 
         {/* ── Plan Breakdown ── */}
-        <div className="grid grid-cols-2 gap-3">
-          <Card className="border-blue-100 bg-blue-50/30">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100">
-                <Zap className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-blue-500 uppercase">Lite Plan</p>
-                <p className="text-lg font-black text-slate-900">{stats.liteCount}</p>
-                <p className="text-[11px] text-slate-500">{formatRupees(stats.liteRevenue)}</p>
-              </div>
-              {stats.total > 0 && (
-                <div className="ml-auto text-right">
-                  <span className="text-sm font-bold text-blue-600">
-                    {Math.round((stats.liteCount / stats.total) * 100)}%
-                  </span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          <Card className="border-amber-100 bg-amber-50/30">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100">
-                <Crown className="h-5 w-5 text-amber-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-amber-500 uppercase">Pro Plan</p>
-                <p className="text-lg font-black text-slate-900">{stats.proCount}</p>
-                <p className="text-[11px] text-slate-500">{formatRupees(stats.proRevenue)}</p>
-              </div>
-              {stats.total > 0 && (
-                <div className="ml-auto text-right">
-                  <span className="text-sm font-bold text-amber-600">
-                    {Math.round((stats.proCount / stats.total) * 100)}%
-                  </span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <PlanCard title="Pre (PRO)" count={stats.proCount} revenue={stats.proRevenue} total={stats.total} color="amber" icon={<Crown className="h-5 w-5 text-amber-600" />} />
+          <PlanCard title="Mains" count={stats.mainsCount} revenue={stats.mainsRevenue} total={stats.total} color="emerald" icon={<BookOpen className="h-5 w-5 text-emerald-600" />} />
+          <PlanCard title="Combo (PRO+)" count={stats.comboCount} revenue={stats.comboRevenue} total={stats.total} color="violet" icon={<Crown className="h-5 w-5 text-violet-600" />} />
+          <PlanCard title="Lite (Legacy)" count={stats.liteCount} revenue={stats.liteRevenue} total={stats.total} color="blue" icon={<Zap className="h-5 w-5 text-blue-600" />} />
         </div>
 
         {/* ── Daily Chart (last 30 days) ── */}
@@ -208,10 +181,13 @@ export default function PaymentsPage() {
               </div>
               <div className="flex gap-3 text-[10px]">
                 <span className="flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full bg-blue-500" /> Lite
+                  <span className="h-2 w-2 rounded-full bg-amber-500" /> Pro
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full bg-amber-500" /> Pro
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" /> Mains
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-violet-500" /> Pro+
                 </span>
               </div>
             </div>
@@ -220,7 +196,9 @@ export default function PaymentsPage() {
               {dailyChart.map((d) => {
                 const totalH = (d.count / maxChartVal) * 100;
                 const liteH = d.count > 0 ? (d.lite / d.count) * totalH : 0;
-                const proH = totalH - liteH;
+                const proH = d.count > 0 ? (d.pro / d.count) * totalH : 0;
+                const mainsH = d.count > 0 ? (d.mains / d.count) * totalH : 0;
+                const comboH = totalH - liteH - proH - mainsH;
                 return (
                   <div
                     key={d.date}
@@ -232,20 +210,26 @@ export default function PaymentsPage() {
                       <p>
                         {d.count} orders • ₹{(d.revenue / 100).toLocaleString('en-IN')}
                       </p>
-                      {d.lite > 0 && <p className="text-blue-300">Lite: {d.lite}</p>}
                       {d.pro > 0 && <p className="text-amber-300">Pro: {d.pro}</p>}
+                      {d.mains > 0 && <p className="text-emerald-300">Mains: {d.mains}</p>}
+                      {d.combo > 0 && <p className="text-violet-300">Pro+: {d.combo}</p>}
+                      {d.lite > 0 && <p className="text-blue-300">Lite: {d.lite}</p>}
                     </div>
                     {/* Bar */}
                     <div className="flex w-full flex-col justify-end" style={{ height: '100%' }}>
                       {d.count > 0 ? (
                         <>
                           <div
-                            className="w-full rounded-t-sm bg-amber-400 transition-all"
-                            style={{ height: `${proH}%`, minHeight: proH > 0 ? 2 : 0 }}
+                            className="w-full rounded-t-sm bg-violet-400 transition-all"
+                            style={{ height: `${comboH}%`, minHeight: comboH > 0 ? 2 : 0 }}
                           />
                           <div
-                            className="w-full rounded-b-sm bg-blue-400 transition-all"
-                            style={{ height: `${liteH}%`, minHeight: liteH > 0 ? 2 : 0 }}
+                            className="w-full bg-emerald-400 transition-all"
+                            style={{ height: `${mainsH}%`, minHeight: mainsH > 0 ? 2 : 0 }}
+                          />
+                          <div
+                            className="w-full rounded-b-sm bg-amber-400 transition-all"
+                            style={{ height: `${proH}%`, minHeight: proH > 0 ? 2 : 0 }}
                           />
                         </>
                       ) : (
@@ -452,7 +436,81 @@ function MetricCard({
   );
 }
 
+function PlanCard({
+  title,
+  count,
+  revenue,
+  total,
+  color,
+  icon,
+}: {
+  title: string;
+  count: number;
+  revenue: number;
+  total: number;
+  color: string;
+  icon: React.ReactNode;
+}) {
+  const bgColors: Record<string, string> = {
+    emerald: 'border-emerald-100 bg-emerald-50/30',
+    amber: 'border-amber-100 bg-amber-50/30',
+    violet: 'border-violet-100 bg-violet-50/30',
+    blue: 'border-blue-100 bg-blue-50/30',
+    purple: 'border-purple-100 bg-purple-50/30',
+  };
+  const iconColors: Record<string, string> = {
+    emerald: 'bg-emerald-100',
+    amber: 'bg-amber-100',
+    violet: 'bg-violet-100',
+    blue: 'bg-blue-100',
+    purple: 'bg-purple-100',
+  };
+  const textColors: Record<string, string> = {
+    emerald: 'text-emerald-500',
+    amber: 'text-amber-500',
+    violet: 'text-violet-500',
+    blue: 'text-blue-500',
+    purple: 'text-purple-500',
+  };
+
+  return (
+    <Card className={bgColors[color] || bgColors.blue}>
+      <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${iconColors[color] || iconColors.blue}`}>
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <p className={`text-xs font-bold uppercase ${textColors[color] || textColors.blue}`}>{title}</p>
+          <p className="text-lg font-black text-slate-900">{count}</p>
+          <p className="text-[11px] text-slate-500">{formatRupees(revenue)}</p>
+        </div>
+        {total > 0 && (
+          <div className="mt-2 text-left sm:ml-auto sm:mt-0 sm:text-right">
+            <span className={`text-sm font-bold ${textColors[color] || textColors.blue}`}>
+              {Math.round((count / total) * 100)}%
+            </span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function PlanBadge({ plan }: { plan: string | null }) {
+  if (plan === 'combo') {
+    return (
+      <Badge className="border-violet-200 bg-violet-100 px-1.5 py-0 text-[10px] font-bold text-violet-700 hover:bg-violet-100">
+        <Crown className="mr-0.5 h-2.5 w-2.5" /> PRO+
+      </Badge>
+    );
+  }
+  if (plan === 'mains') {
+    return (
+      <Badge className="border-emerald-200 bg-emerald-100 px-1.5 py-0 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100">
+        <BookOpen className="mr-0.5 h-2.5 w-2.5" /> MAINS
+      </Badge>
+    );
+  }
   if (plan === 'pro') {
     return (
       <Badge className="border-amber-200 bg-amber-100 px-1.5 py-0 text-[10px] font-bold text-amber-700 hover:bg-amber-100">

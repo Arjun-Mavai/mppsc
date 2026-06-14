@@ -112,10 +112,30 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
           {/* PRO Badge in Top Right */}
           {(hasPre || hasMains) && (
             <div className="absolute top-6 right-6 z-20">
-              <div className="flex items-center gap-1.5 rounded-full bg-amber-400/10 px-3 py-1.5 text-[10px] font-black tracking-[0.2em] text-amber-400 border border-amber-400/20 shadow-2xl backdrop-blur-md">
-                <Crown size={12} className="fill-amber-400" />
-                PRO
-              </div>
+              {(() => {
+                if (isCombo) {
+                  return (
+                    <div className="flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1.5 text-[10px] font-black tracking-[0.2em] text-amber-500 border border-amber-500/20 shadow-2xl backdrop-blur-md">
+                      <Sparkles size={12} className="fill-amber-500" />
+                      PRO+
+                    </div>
+                  );
+                }
+                if (hasMains) {
+                  return (
+                    <div className="flex items-center gap-1.5 rounded-full bg-emerald-400/10 px-3 py-1.5 text-[10px] font-black tracking-[0.2em] text-emerald-400 border border-emerald-400/20 shadow-2xl backdrop-blur-md">
+                      <Sparkles size={12} className="fill-emerald-400" />
+                      MAINS
+                    </div>
+                  );
+                }
+                return (
+                  <div className="flex items-center gap-1.5 rounded-full bg-amber-400/10 px-3 py-1.5 text-[10px] font-black tracking-[0.2em] text-amber-400 border border-amber-400/20 shadow-2xl backdrop-blur-md">
+                    <Crown size={12} className="fill-amber-400" />
+                    PRO
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -124,8 +144,8 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
               {/* Premium Status Badge Restored */}
               <div className="flex flex-wrap items-center gap-2">
                 {isCombo ? (
-                  <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200 bg-clip-text text-transparent">
-                    <Crown size={12} className="text-amber-400 fill-amber-400/20 shrink-0" />
+                  <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-300 via-orange-400 to-amber-300 bg-clip-text text-transparent">
+                    <Sparkles size={12} className="text-amber-400 fill-amber-400/20 shrink-0" />
                     <span>PREMIUM COMBO MEMBER</span>
                   </div>
                 ) : hasMains ? (

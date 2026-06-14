@@ -21,8 +21,15 @@ export function InstallPrompt() {
     );
     setIsMobile(isMobileDevice);
 
+    let hasDismissed = false;
+    try {
+      hasDismissed = !!sessionStorage.getItem('ios-prompt-dismissed');
+    } catch(e) {
+      // Ignored
+    }
+
     // If iOS and not standalone, show prompt after a delay (once per session)
-    if (isIos && !isPwaInstalled && !sessionStorage.getItem('ios-prompt-dismissed')) {
+    if (isIos && !isPwaInstalled && !hasDismissed) {
       const timer = setTimeout(() => {
         console.log('[PWA] Auto-showing iOS prompt');
         setShowIosPrompt(true);
@@ -52,7 +59,11 @@ export function InstallPrompt() {
       setDismissed(true);
       setShowIosPrompt(false);
       if (isIos) {
-        sessionStorage.setItem('ios-prompt-dismissed', 'true');
+        try {
+          sessionStorage.setItem('ios-prompt-dismissed', 'true');
+        } catch(e) {
+          // Ignored
+        }
       }
     }, 300);
   };

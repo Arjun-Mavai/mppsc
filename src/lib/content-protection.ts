@@ -21,6 +21,15 @@ function simpleHash(str: string): string {
   return Math.abs(hash).toString(16);
 }
 
+function safeGetSessionId(): string {
+  if (typeof window === 'undefined') return 'ssr';
+  try {
+    return window.sessionStorage.getItem('_sid') || 'unknown';
+  } catch (e) {
+    return 'blocked';
+  }
+}
+
 // ============================================================================
 // 1. WATERMARK GENERATION (Subtle, embedded in HTML)
 // ============================================================================
@@ -36,7 +45,7 @@ export function generateWatermarkMeta(userId: string | undefined) {
   if (!userId) return {};
 
   const timestamp = Math.floor(Date.now() / 1000); // Unix timestamp
-  const sessionId = typeof window !== 'undefined' ? sessionStorage.getItem('_sid') || 'unknown' : 'ssr';
+  const sessionId = safeGetSessionId();
 
   return {
     'data-watermark': `user-${userId.slice(0, 8)}-time-${timestamp}`,
@@ -53,7 +62,7 @@ export function generateFingerprint(userId: string | undefined): string {
   if (!userId) return 'anonymous';
 
   const timestamp = Math.floor(Date.now() / 1000);
-  const sessionId = typeof window !== 'undefined' ? sessionStorage.getItem('_sid') || 'unknown' : 'ssr';
+  const sessionId = safeGetSessionId();
   const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
 
   const combined = `${userId}|${sessionId}|${timestamp}|${userAgent}`;

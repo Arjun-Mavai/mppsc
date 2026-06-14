@@ -1,4 +1,5 @@
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { safeGetSessionStorage, safeSetSessionStorage } from '@/lib/safe-session-storage';
 
 /**
  * Fires a Telegram notification to the admin channel when a premium lock modal opens.
@@ -13,11 +14,11 @@ export function notifyLockModalOpen(modalType: 'prelims' | 'mains') {
   try {
     // 60-second deduplication per modal type
     const cacheKey = `mppsc_lock_notify_${modalType}`;
-    const lastSent = sessionStorage.getItem(cacheKey);
+    const lastSent = safeGetSessionStorage(cacheKey);
     if (lastSent && Date.now() - parseInt(lastSent, 10) < 60 * 1000) {
       return; // Skip — already notified within the last 60 seconds
     }
-    sessionStorage.setItem(cacheKey, Date.now().toString());
+    safeSetSessionStorage(cacheKey, Date.now().toString());
 
     const { user, guestLead } = useSettingsStore.getState();
     const guestName = localStorage.getItem('mppsc_guest_name');
