@@ -74,7 +74,7 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
     progress: { total: number; done: number };
     questions: { id: string; variantCount: number; previewHi: string; previewEn?: string; marks: number; part: string }[];
   } | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loadingType, setLoadingType] = useState<'generate' | 'save' | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [variantPurgeText, setVariantPurgeText] = useState('');
   const [variantPurging, setVariantPurging] = useState(false);
@@ -665,7 +665,7 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
                   <Button
                     type="button"
                     className="font-black"
-                    disabled={loading || !(workspaces[i]?.paperId)}
+                    disabled={loadingType !== null || !(workspaces[i]?.paperId)}
                     onClick={async () => {
                       const pid = workspaces[i]?.paperId;
                       const targetId = workspaces[i]?.targetQuestionId;
@@ -673,31 +673,36 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
                       const pObj = papers.find(p => p.id === pid);
                       const bSize = pObj?.paperNumber === 6 ? 2 : 8;
                       setActiveWs(i);
-                      setLoading(true);
+                      setLoadingType('generate');
                       
-                      let r;
-                      if (targetId) {
-                        r = await adminBuildPyqAnswersBatchPrompt(pid, 1, 0, targetId);
-                      } else {
-                        r = await adminBuildPyqAnswersBatchPrompt(pid, bSize, i);
-                      }
-                      
-                      setLoading(false);
-                      if (!r.success) {
-                        toast.error((r as { error?: string }).error ?? 'Prompt failed');
-                        return;
-                      }
-                      patchWorkspace(i, { promptPreview: r.prompt });
-                      if (targetId) {
-                        toast.success(`Generated targeted prompt for 1 stem`);
-                      } else {
-                        toast.success(
-                          `Batch ${i + 1}: ${r.meta.count} question(s) in prompt (pool order #${i * bSize + 1}–${i * bSize + r.meta.count})`
-                        );
+                      try {
+                        let r;
+                        if (targetId) {
+                          r = await adminBuildPyqAnswersBatchPrompt(pid, 1, 0, targetId);
+                        } else {
+                          r = await adminBuildPyqAnswersBatchPrompt(pid, bSize, i);
+                        }
+                        
+                        if (!r.success) {
+                          toast.error((r as { error?: string }).error ?? 'Prompt failed');
+                          return;
+                        }
+                        patchWorkspace(i, { promptPreview: r.prompt });
+                        if (targetId) {
+                          toast.success(`Generated targeted prompt for 1 stem`);
+                        } else {
+                          toast.success(
+                            `Batch ${i + 1}: ${r.meta.count} question(s) in prompt (pool order #${i * bSize + 1}–${i * bSize + r.meta.count})`
+                          );
+                        }
+                      } catch (err: any) {
+                        toast.error(err?.message || 'An unexpected error occurred while generating the prompt.');
+                      } finally {
+                        setLoadingType(null);
                       }
                     }}
                   >
-                    {loading && activeWs === i ? (
+                    {loadingType === 'generate' && activeWs === i ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : null}
                     {workspaces[i]?.targetQuestionId ? 'Generate for selected stem' : 'Generate prompt'}
@@ -742,44 +747,50 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
                 <Button
                   type="button"
                   className="mt-3 bg-emerald-600 font-black hover:bg-emerald-700"
-                  disabled={loading || !(workspaces[i]?.pasteJson ?? '').trim() || !(workspaces[i]?.paperId)}
+                  disabled={loadingType !== null || !(workspaces[i]?.pasteJson ?? '').trim() || !(workspaces[i]?.paperId)}
                   onClick={async () => {
                     const pid = workspaces[i]?.paperId;
                     const paste = workspaces[i]?.pasteJson ?? '';
                     if (!pid || !paste.trim()) return;
                     setActiveWs(i);
-                    setLoading(true);
-                    const r = await adminPastePyqAnswersBatchJson(pid, paste);
-                    setLoading(false);
-                    if (!r.success) {
-                      const msg = (r as { error?: string }).error ?? 'Save failed';
-                      toast.error(msg.length > 120 ? 'JSON / paste rejected — expand details ↓' : msg, {
-                        description: msg.length > 120 ? msg : undefined,
-                        duration: 28_000,
-                      });
-                      return;
+                    setLoadingType('save');
+                    
+                    try {
+                      const r = await adminPastePyqAnswersBatchJson(pid, paste);
+                      if (!r.success) {
+                        const msg = (r as { error?: string }).error ?? 'Save failed';
+                        toast.error(msg.length > 120 ? 'JSON / paste rejected — expand details ↓' : msg, {
+                          description: msg.length > 120 ? msg : undefined,
+                          duration: 28_000,
+                        });
+                        return;
+                      }
+                      const typed = r as {
+                        variantsUpserted?: number;
+                        insightQuestionsUpdated?: number;
+                        warningCount?: number;
+                        warnings?: string[];
+                      };
+                      toast.success(
+                        `Batch ${i + 1} saved — ${typed.variantsUpserted ?? 0} variants, ${typed.insightQuestionsUpdated ?? 0} insights`
+                      );
+                      if (typed.warningCount && (typed.warnings?.length ?? 0) > 0) {
+                        toast.message('Some rows were skipped', {
+                          description: typed.warnings!.slice(0, 8).join('\n'),
+                          duration: 12_000,
+                        });
+                      }
+                      patchWorkspace(i, { pasteJson: '' });
+                      await loadOverview();
+                      await loadDetail(pid);
+                    } catch (err: any) {
+                      toast.error(err?.message || 'An unexpected error occurred while saving to database. Ensure your JSON is valid.');
+                    } finally {
+                      setLoadingType(null);
                     }
-                    const typed = r as {
-                      variantsUpserted?: number;
-                      insightQuestionsUpdated?: number;
-                      warningCount?: number;
-                      warnings?: string[];
-                    };
-                    toast.success(
-                      `Batch ${i + 1} saved — ${typed.variantsUpserted ?? 0} variants, ${typed.insightQuestionsUpdated ?? 0} insights`
-                    );
-                    if (typed.warningCount && (typed.warnings?.length ?? 0) > 0) {
-                      toast.message('Some rows were skipped', {
-                        description: typed.warnings!.slice(0, 8).join('\n'),
-                        duration: 12_000,
-                      });
-                    }
-                    patchWorkspace(i, { pasteJson: '' });
-                    await loadOverview();
-                    await loadDetail(pid);
                   }}
                 >
-                  {loading && activeWs === i ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {loadingType === 'save' && activeWs === i ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   <Save className="mr-2 h-4 w-4" />
                   Save batch to database
                 </Button>

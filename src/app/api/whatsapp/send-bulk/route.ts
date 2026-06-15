@@ -3,34 +3,67 @@ import { db } from '@/db';
 import { guests, whatsappCampaignLogs } from '@/db/schema';
 import { inArray } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import { nanoid } from 'nanoid';
 
 export async function POST(req: Request) {
   try {
-    const { studentIds, senderMode } = await req.json();
+    const { studentIds, senderMode, templateName, imageUrl, manualContacts } = await req.json();
 
-    if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
-      return NextResponse.json({ error: 'Invalid or empty guest IDs' }, { status: 400 });
+    if ((!studentIds || studentIds.length === 0) && (!manualContacts || manualContacts.length === 0)) {
+      return NextResponse.json({ error: 'Please provide recipients (selected or manual)' }, { status: 400 });
     }
 
-    // Fetch guests using Drizzle
-    const selectedGuests = await db
-      .select({ id: guests.id, name: guests.name, mobile: guests.mobile })
-      .from(guests)
-      .where(inArray(guests.id, studentIds));
+    let finalGuests: any[] = [];
 
-    if (selectedGuests.length === 0) {
-      return NextResponse.json({ error: 'No valid guests found' }, { status: 404 });
+    // 1. Fetch selected guests from DB
+    if (studentIds && studentIds.length > 0) {
+      const selectedGuests = await db
+        .select({ id: guests.id, name: guests.name, mobile: guests.mobile })
+        .from(guests)
+        .where(inArray(guests.id, studentIds));
+      finalGuests = [...selectedGuests];
     }
 
-    // 🛡️ PRODUCTION SAFETY: Limit bulk send to 100 students per request to avoid Vercel timeouts
-    if (selectedGuests.length > 100) {
-      return NextResponse.json({ error: 'Bulk send limited to 100 students per batch' }, { status: 400 });
+    // 2. Handle manual contacts (insert/update them in DB to get an ID for logging)
+    if (manualContacts && manualContacts.length > 0) {
+      for (const mc of manualContacts) {
+        if (!mc.mobile) continue;
+        const normalizedMobile = mc.mobile.replace(/\D/g, ''); // Ensure numbers only
+        if (!normalizedMobile) continue;
+
+        // Ensure manual contact exists in DB
+        let existingGuest = await db.select({ id: guests.id, name: guests.name, mobile: guests.mobile }).from(guests).where(inArray(guests.mobile, [normalizedMobile])).get();
+        if (!existingGuest) {
+          const newId = nanoid();
+          await db.insert(guests).values({
+            id: newId,
+            name: mc.name || 'Student',
+            mobile: normalizedMobile,
+            leadSource: 'Manual',
+          });
+          existingGuest = { id: newId, name: mc.name || 'Student', mobile: normalizedMobile };
+        }
+        
+        // Prevent duplicates in final array if they were also selected in the UI
+        if (!finalGuests.some(g => g.id === existingGuest!.id)) {
+           finalGuests.push(existingGuest);
+        }
+      }
+    }
+
+    if (finalGuests.length === 0) {
+      return NextResponse.json({ error: 'No valid guests found to send messages' }, { status: 404 });
+    }
+
+    // 🛡️ PRODUCTION SAFETY: Limit bulk send to 100 students per batch
+    if (finalGuests.length > 100) {
+      return NextResponse.json({ error: 'Bulk send limited to 100 recipients per batch' }, { status: 400 });
     }
 
     const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
     const PHONE_ID = senderMode === 'TEST' 
-      ? (process.env.WHATSAPP_TEST_PHONE_ID || '1015817634951119') // Meta's Test Phone ID
-      : process.env.WHATSAPP_PHONE_ID; // Your Main Business Number
+      ? (process.env.WHATSAPP_TEST_PHONE_ID || '1015817634951119') 
+      : process.env.WHATSAPP_PHONE_ID; 
 
     if (!ACCESS_TOKEN || !PHONE_ID) {
       logger.error('Missing WhatsApp API credentials', undefined, { category: 'api' });
@@ -39,29 +72,56 @@ export async function POST(req: Request) {
 
     let sentCount = 0;
     const startTime = Date.now();
-    const MAX_EXECUTION_TIME = 25000; // 25 seconds (Vercel safety margin)
+    const MAX_EXECUTION_TIME = 25000; 
     const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
-    for (const guest of selectedGuests) {
+    const selectedTemplate = templateName || 'mppsc_pyq_promo';
+
+    for (const guest of finalGuests) {
       if (!guest.mobile) continue;
       
-      // 🛡️ Safety check: Stop if we are nearing the function timeout
       if (Date.now() - startTime > MAX_EXECUTION_TIME) {
         logger.warn('Bulk send partially completed: Nearing function timeout', { category: 'api' });
         break;
       }
 
-      // ⏱️ Rate Limiting Delay (100ms)
       await delay(100);
 
       try {
+        // Construct template payload dynamically
+        const components: any[] = [
+          {
+            type: 'body',
+            parameters: [
+              {
+                type: 'text',
+                text: guest.name || 'Student'
+              }
+            ]
+          }
+        ];
+
+        // If template requires image header (like zenscroll_alert)
+        if (selectedTemplate === 'zenscroll_alert' && imageUrl) {
+           components.unshift({
+             type: 'header',
+             parameters: [
+               {
+                 type: 'image',
+                 image: { link: imageUrl }
+               }
+             ]
+           });
+        }
+
         const payload = {
           messaging_product: 'whatsapp',
           to: guest.mobile,
           type: 'template',
           template: {
-            name: 'hello_world',
-            language: { code: 'en_US' },
+            name: selectedTemplate,
+            language: { code: 'en' },
+            components: components
           },
         };
 
@@ -78,7 +138,6 @@ export async function POST(req: Request) {
 
         if (response.ok && data.messages && data.messages[0]) {
           const messageId = data.messages[0].id;
-          // Log success to DB using Drizzle
           await db.insert(whatsappCampaignLogs).values({
             guestId: guest.id,
             messageId: messageId,

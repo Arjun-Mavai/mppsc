@@ -29,6 +29,7 @@ import {
   IndianRupee,
   CreditCard,
   BarChart3,
+  MessageSquare,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -113,6 +114,12 @@ const ADMIN_ROUTES = [
     label: 'Support Inbox',
     icon: HelpCircle,
     description: 'WhatsApp & Telegram CRM',
+  },
+  {
+    href: '/admin/whatsapp',
+    label: 'WhatsApp Marketing',
+    icon: MessageSquare,
+    description: 'Send dynamic templates',
   },
   {
     href: '/admin/pyq-insights',
