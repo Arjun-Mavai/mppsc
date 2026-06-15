@@ -1,6 +1,6 @@
 import { NextResponse, after } from 'next/server';
 import { db } from '@/db';
-import { whatsappCampaignLogs } from '@/db/schema';
+import { whatsappCampaignLogs, supportMessages } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { saveIncomingMessage, saveOutgoingMessage } from '@/actions/support-inbox-actions';
 import { sendHumanRequestTelegramNotification } from '@/lib/telegram';
@@ -142,10 +142,15 @@ export async function POST(req: Request) {
                 const newStatus = statusObj.status?.toUpperCase();
 
                 if (messageId && newStatus) {
-                  await db
-                    .update(whatsappCampaignLogs)
-                    .set({ status: newStatus, updatedAt: new Date() })
-                    .where(eq(whatsappCampaignLogs.messageId, messageId));
+                  const statusLower = newStatus.toLowerCase();
+                  await Promise.allSettled([
+                    db.update(whatsappCampaignLogs)
+                      .set({ status: newStatus, updatedAt: new Date() })
+                      .where(eq(whatsappCampaignLogs.messageId, messageId)),
+                    db.update(supportMessages)
+                      .set({ status: statusLower as any })
+                      .where(eq(supportMessages.id, messageId))
+                  ]);
                 }
               }
 
@@ -336,34 +341,48 @@ export async function POST(req: Request) {
                   } else if (interactiveData === 'FDBK_BAD') {
                     responseText = `😞 हमें खेद है कि आपको हमारा सपोर्ट पसंद नहीं आया।\n\nक्या आप हमें बता सकते हैं कि क्या समस्या रही? आपके सुझाव से हम खुद को बेहतर बना सकते हैं! (कृपया अपना जवाब टाइप करके भेजें)`;
                   } else {
-                    // Default Greeting
-                    responseText = `🎉 *Welcome to MPPSC ZenScroll*\n\n` +
-                      `MPPSC की तैयारी में सबसे बड़ी चुनौती सामग्री (Content) की कमी नहीं होती।\n\n` +
-                      `चुनौती होती है:\n` +
-                      `📌 क्या पढ़ना है\n` +
-                      `📌 कितना पढ़ना है\n` +
-                      `📌 और परीक्षा वास्तव में क्या पूछ रही है\n\n` +
-                      `ZenScroll का उद्देश्य केवल सामग्री देना नहीं,\n` +
-                      `बल्कि सिलेबस, PYQs और उत्तर लेखन के बीच संबंध को स्पष्ट करना है।\n` +
-                      `ताकि तैयारी अधिक व्यवस्थित, स्पष्ट और उद्देश्यपूर्ण बन सके।\n\n` +
-                      `🌐 Please select your language\n` +
-                      `🌐 कृपया अपनी भाषा चुनें:`;
-                    buttons = [
-                      { id: 'LANG_EN', title: 'English' },
-                      { id: 'LANG_HI', title: 'हिंदी' }
-                    ];
+                    const textContent = incomingText.trim().toLowerCase();
+                    const isGreeting = ['hi', 'hello', 'hey', 'namaste', 'help', 'start'].includes(textContent);
+                    
+                    if (isGreeting || saveRes.unreadCount === 1) {
+                      responseText = `🎉 *Welcome to MPPSC ZenScroll*\n\n` +
+                        `MPPSC की तैयारी में सबसे बड़ी चुनौती सामग्री (Content) की कमी नहीं होती।\n\n` +
+                        `चुनौती होती है:\n` +
+                        `📌 क्या पढ़ना है\n` +
+                        `📌 कितना पढ़ना है\n` +
+                        `📌 और परीक्षा वास्तव में क्या पूछ रही है\n\n` +
+                        `ZenScroll का उद्देश्य केवल सामग्री देना नहीं,\n` +
+                        `बल्कि सिलेबस, PYQs और उत्तर लेखन के बीच संबंध को स्पष्ट करना है।\n` +
+                        `ताकि तैयारी अधिक व्यवस्थित, स्पष्ट और उद्देश्यपूर्ण बन सके।\n\n` +
+                        `🌐 Please select your language\n` +
+                        `🌐 कृपया अपनी भाषा चुनें:`;
+                      buttons = [
+                        { id: 'LANG_EN', title: 'English' },
+                        { id: 'LANG_HI', title: 'हिंदी' }
+                      ];
+                    } else {
+                      // If the previous message was a button click (like 'Payment Issue'), 
+                      // this text message is their problem description.
+                      if (saveRes.previousUserText?.startsWith('[Button:')) {
+                        responseText = `✅ *सन्देश प्राप्त हुआ (Message Received)*\n\nआपकी बात हम तक पहुँच गई है। हमारी टीम जल्द ही आपसे संपर्क करेगी। धन्यवाद!`;
+                      } else {
+                        return; // Ignore subsequent messages to prevent spam
+                      }
+                    }
                   }
 
                   // Send the response back
+                  let sentData = null;
                   if (buttons && buttons.length > 0 && buttons.length <= 3) { // WhatsApp supports max 3 buttons
-                    await sendWhatsAppInteractive(fromNumber, responseText, buttons);
+                    sentData = await sendWhatsAppInteractive(fromNumber, responseText, buttons);
                   } else {
-                    await sendWhatsAppText(fromNumber, responseText);
+                    sentData = await sendWhatsAppText(fromNumber, responseText);
                   }
 
-                  // Save outgoing bot message to DB
+                  // Save outgoing bot message to DB with meta message ID
                   if (convId) {
-                    await saveOutgoingMessage(convId, responseText, 'bot');
+                    const metaMessageId = sentData?.messages?.[0]?.id;
+                    await saveOutgoingMessage(convId, responseText, 'bot', metaMessageId);
                   }
                 }
               }

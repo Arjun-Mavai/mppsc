@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Send, Search, CheckCircle2, MoreVertical, Phone, Globe, ChevronLeft, MessageCircleOff } from 'lucide-react';
+import { Send, Search, CheckCircle2, MoreVertical, Phone, Globe, ChevronLeft, MessageCircleOff, Check, CheckCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getConversations, getMessages, sendAdminReply, markAsRead } from '@/actions/support-inbox-actions';
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ type Message = {
   text: string;
   sender: 'bot' | 'user' | 'admin';
   timestamp: string;
+  status?: string | null;
 };
 
 type Conversation = {
@@ -55,7 +56,8 @@ export default function SupportInbox() {
             id: m.id,
             text: m.text,
             sender: m.sender as 'bot' | 'user' | 'admin',
-            timestamp: new Date(m.createdAt || new Date()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            timestamp: new Date(m.createdAt || new Date()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            status: m.status
           }));
           setActiveMessages(formatted);
         }
@@ -83,7 +85,8 @@ export default function SupportInbox() {
       id: Date.now().toString(),
       text: textToSend,
       sender: 'admin',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: 'sent'
     }]);
 
     // Send via API and Save to DB
@@ -248,10 +251,14 @@ export default function SupportInbox() {
                   
                   <div className={cn(
                     "flex items-center justify-end gap-1 mt-1",
-                    msg.sender === 'bot' ? "text-zinc-400" : "text-zinc-400"
+                    msg.sender === 'bot' ? "text-zinc-500" : "text-emerald-800"
                   )}>
-                    <span className="text-[10px]">{msg.timestamp}</span>
-                    {msg.sender !== 'user' && <CheckCircle2 size={12} className="text-zinc-400" />}
+                    <span className="text-[10px] opacity-70">{msg.timestamp}</span>
+                    {msg.sender !== 'user' && (
+                      msg.status === 'read' ? <CheckCheck size={14} className="text-blue-500" /> :
+                      msg.status === 'delivered' ? <CheckCheck size={14} className="text-zinc-400" /> :
+                      <Check size={14} className="text-zinc-400" />
+                    )}
                   </div>
                 </div>
               </div>
@@ -259,8 +266,8 @@ export default function SupportInbox() {
           </div>
 
           {/* Input */}
-          <div className="absolute bottom-0 w-full bg-white border-t border-zinc-200">
-            <div className="flex overflow-x-auto gap-2 px-4 py-2 scrollbar-hide bg-zinc-50 border-b border-zinc-100 items-center">
+          <div className="absolute bottom-0 w-full bg-[#f0f2f5]">
+            <div className="flex overflow-x-auto gap-2 px-4 py-2 scrollbar-hide bg-[#f0f2f5] items-center">
               <button
                 onClick={handleResolveFeedback}
                 className="whitespace-nowrap rounded-full bg-emerald-100 border border-emerald-200 px-3 py-1.5 text-xs font-bold text-emerald-800 shadow-sm hover:bg-emerald-200 transition-colors flex items-center gap-1 shrink-0"
@@ -283,8 +290,8 @@ export default function SupportInbox() {
               <textarea
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
-                placeholder="Type a reply (Saves to DB, Push to user requires API setup)..."
-                className="flex-1 max-h-32 min-h-[44px] resize-none rounded-xl border border-zinc-300 bg-zinc-50 px-4 py-3 text-sm focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                placeholder="Type a message..."
+                className="flex-1 max-h-32 min-h-[44px] resize-none rounded-2xl border-0 bg-white px-4 py-3 text-[15px] focus:outline-none focus:ring-0 shadow-sm"
                 rows={1}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
@@ -296,9 +303,9 @@ export default function SupportInbox() {
               <button 
                 onClick={handleSend}
                 disabled={!replyText.trim()}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-50 disabled:pointer-events-none"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#00a884] text-white shadow-sm transition-colors hover:bg-[#008f6f] disabled:opacity-50 disabled:pointer-events-none"
               >
-                <Send size={18} className="ml-1" />
+                <Send size={18} className="ml-0.5" />
               </button>
             </div>
           </div>
