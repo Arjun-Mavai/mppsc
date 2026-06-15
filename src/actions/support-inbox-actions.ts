@@ -69,6 +69,13 @@ export async function saveIncomingMessage({
         .where(eq(supportConversations.id, conv.id));
     }
 
+    // Fetch the previous user message before inserting the new one
+    const prevMsg = await db.select().from(supportMessages)
+      .where(and(eq(supportMessages.conversationId, conv.id), eq(supportMessages.sender, 'user')))
+      .orderBy(desc(supportMessages.createdAt))
+      .limit(1)
+      .then(res => res[0]);
+
     // 2. Save the message
     await db.insert(supportMessages).values({
       id: nanoid(),
@@ -78,7 +85,7 @@ export async function saveIncomingMessage({
       createdAt: new Date(),
     });
 
-    return { success: true, conversationId: conv.id, unreadCount: conv.unreadCount || 1 };
+    return { success: true, conversationId: conv.id, unreadCount: conv.unreadCount || 1, previousUserText: prevMsg?.text };
   } catch (error) {
     console.error('Error saving incoming message:', error);
     return { success: false };

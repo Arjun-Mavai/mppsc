@@ -344,7 +344,7 @@ export async function POST(req: Request) {
                     const textContent = incomingText.trim().toLowerCase();
                     const isGreeting = ['hi', 'hello', 'hey', 'namaste', 'help', 'start'].includes(textContent);
                     
-                    if (isGreeting) {
+                    if (isGreeting || saveRes.unreadCount === 1) {
                       responseText = `🎉 *Welcome to MPPSC ZenScroll*\n\n` +
                         `MPPSC की तैयारी में सबसे बड़ी चुनौती सामग्री (Content) की कमी नहीं होती।\n\n` +
                         `चुनौती होती है:\n` +
@@ -361,7 +361,9 @@ export async function POST(req: Request) {
                         { id: 'LANG_HI', title: 'हिंदी' }
                       ];
                     } else {
-                      if (saveRes.unreadCount === 1) {
+                      // If the previous message was a button click (like 'Payment Issue'), 
+                      // this text message is their problem description.
+                      if (saveRes.previousUserText?.startsWith('[Button:')) {
                         responseText = `✅ *सन्देश प्राप्त हुआ (Message Received)*\n\nआपकी बात हम तक पहुँच गई है। हमारी टीम जल्द ही आपसे संपर्क करेगी। धन्यवाद!`;
                       } else {
                         return; // Ignore subsequent messages to prevent spam
