@@ -121,6 +121,8 @@ export async function POST(req: Request) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
+    console.log('--- WhatsApp Webhook Triggered (Vercel Force Deploy) ---');
+
     const body = await req.json();
 
     if (body.object === 'whatsapp_business_account') {
