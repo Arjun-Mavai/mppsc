@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Send, Search, Check, CheckCheck, MoreVertical, Phone, Globe, ChevronLeft, MessageCircleOff } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Send, Search, Check, CheckCheck, MoreVertical, Phone, Globe, ChevronLeft, MessageCircleOff, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getConversations, getMessages, sendAdminReply, markAsRead } from '@/actions/support-inbox-actions';
 import { toast } from 'sonner';
@@ -31,6 +31,26 @@ export default function SupportInbox() {
   const [replyText, setReplyText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 150;
+      setShowScrollBottom(!isAtBottom);
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [activeMessages.length, activeId]);
+
   // Polling to keep inbox live
   useEffect(() => {
     const fetchInbox = async () => {
@@ -48,6 +68,8 @@ export default function SupportInbox() {
   // Fetch active conversation messages
   useEffect(() => {
     if (activeId) {
+      setActiveMessages([]); // Immediately clear previous chat's messages to avoid confusion
+      
       const fetchMsgs = async () => {
         const res = await getMessages(activeId);
         if (res.success) {
@@ -98,7 +120,7 @@ export default function SupportInbox() {
   const handleResolveFeedback = async () => {
     if (!activeId || !activeConversation) return;
     
-    const textToSend = '✅ आपकी समस्या का समाधान कर दिया गया है।\n\nआपको हमारा सपोर्ट कैसा लगा? कृपया नीचे दिए गए बटनों में से कोई एक चुनें (How was your experience?):';
+    const textToSend = '✅ क्या आपकी समस्या का समाधान हो गया है? (Has your query been resolved?)\n\nआपको हमारा सपोर्ट कैसा लगा? कृपया नीचे दिए गए बटनों में से कोई एक चुनें (How was your experience?):\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*';
     
     // Optimistically add to UI
     setActiveMessages(prev => [...prev, {
@@ -124,12 +146,17 @@ export default function SupportInbox() {
   };
 
   const QUICK_REPLIES = [
-    { label: '👋 Hi (Hindi)', text: 'नमस्ते! 🙏 MPPSC ZenScroll की सपोर्ट टीम से जुड़ने के लिए धन्यवाद। मैं आपकी क्या सहायता कर सकता हूँ?' },
-    { label: '👋 Hi (English)', text: 'Hello! 🙏 Thank you for reaching out to MPPSC ZenScroll support. How can I help you today?' },
-    { label: '💳 Pre Payment', text: '🎯 *Prelims Intelligence Course*\n\nHere is your secure payment link:\n🔗 https://mppsc.zenscroll.app/pricing?need=pre\n\n⚡ (Let us know once the payment is completed!)' },
-    { label: '💳 Mains Payment', text: '🏛️ *Mains Syllabus Hub*\n\nHere is your secure payment link:\n🔗 https://mppsc.zenscroll.app/pricing?need=mains\n\n⚡ (Let us know once the payment is completed!)' },
-    { label: '💳 Combo Payment', text: '🔥 *Super Combo (Pre + Mains)*\n\nHere is your secure payment link:\n🔗 https://mppsc.zenscroll.app/pricing?need=combo\n\n⚡ (Let us know once the payment is completed!)' },
-    { label: '📚 Mains Demo', text: '🏛️ *Mains Module Demo*\n\nOur Mains module offers deep structural clarity mapped directly to the syllabus tree, completely distinct from traditional PDF dumps!\n\nCheck it out here:\n🔗 https://mppsc.zenscroll.app/mains' },
+    { label: '👋 Hi (Hindi)', text: 'नमस्ते! 🙏 मैं अर्जुन बात कर रहा हूँ। MPPSC ZenScroll की सपोर्ट टीम से जुड़ने के लिए धन्यवाद। मैं आपकी क्या सहायता कर सकता हूँ?\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*' },
+    { label: '👋 Hi (English)', text: 'Hello! 🙏 This is Arjun. Thank you for reaching out to MPPSC ZenScroll support. How can I help you today?\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*' },
+    { label: '💳 Pre Payment', text: '🎯 *Prelims Intelligence Course*\n\nHere is your secure payment link:\n🔗 https://mppsc.zenscroll.app/pricing?need=pre\n\n⚡ (Let us know once the payment is completed!)\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*' },
+    { label: '💳 Mains Payment', text: '🏛️ *Mains Syllabus Hub*\n\nHere is your secure payment link:\n🔗 https://mppsc.zenscroll.app/pricing?need=mains\n\n⚡ (Let us know once the payment is completed!)\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*' },
+    { label: '⚙️ Tech Fixed', text: '🛠️ *Issue Resolved / तकनीकी समस्या हल*\n\nHi! We have fixed the technical issue you were facing. Please refresh the app or try again now.\nनमस्ते! आपके द्वारा बताई गई तकनीकी समस्या को हमने हल कर दिया है। कृपया ऐप को रिफ्रेश करें।\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*' },
+    { label: '⏳ Follow up', text: '⏳ *Follow up / प्रतीक्षा*\n\nHi! We are waiting for your reply. Let us know if you still need help with this.\nनमस्ते! हम आपके उत्तर की प्रतीक्षा कर रहे हैं। यदि आपको अभी भी सहायता चाहिए, तो कृपया हमें बताएं।\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*' },
+    { label: '🔐 Login Issue', text: '🔐 *Login Assistance / लॉगिन सहायता*\n\nHi! Are you facing issues logging in? Please make sure to login using the exact same Google Account that you used during the payment.\nनमस्ते! क्या आपको लॉगिन में समस्या आ रही है? कृपया उसी Google अकाउंट से लॉगिन करें जिससे आपने पेमेंट किया था।\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*' },
+    { label: '🎁 Pre Demo', text: '🎁 *Prelims Intelligence Course - Free Demo*\n\nHi! Before you decide, check out our Prelims Demo. It features deep structural syllabus insights and free practice quizzes!\n\n🔗 Free Quiz: https://mppsc.zenscroll.app/free-quiz\n🔗 Prelims Syllabus: https://mppsc.zenscroll.app/syllabus\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*' },
+    { label: '🎁 Mains Demo', text: '🎁 *Mains Syllabus Hub & PYQ Library - Free Demo*\n\nHi! We highly recommend checking out our Mains Demo. It contains actual Double-Style Model Answers directly mapped to the syllabus tree!\n\n🔗 Mains Demo: https://mppsc.zenscroll.app/mains\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*' },
+    { label: '📄 2026 Paper Solution', text: '📄 *MPPSC 2026 Official Prelims Paper Solution*\n\nHi! You can check the complete MPPSC 2026 Prelims Official Paper Solution with detailed analytics here:\n\n🔗 Paper Solution: https://mppsc.zenscroll.app/paper-solution\n🔗 Prelims Syllabus: https://mppsc.zenscroll.app/syllabus\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*' },
+    { label: '📞 Request Call', text: '📞 *Schedule a Call / कॉल बुक करें*\n\nHi! It seems your query requires a detailed explanation. Let me know a good time to call you today, and our academic counselor will reach out.\nनमस्ते! आपकी समस्या को गहराई से समझने के लिए, कृपया हमें कॉल करने का एक सही समय बताएं।\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*' },
   ];
 
   const filteredConversations = conversations.filter(c => 
@@ -181,9 +208,17 @@ export default function SupportInbox() {
               <div className="flex items-center gap-2">
                 <span className={cn(
                   "px-1.5 py-0.5 rounded text-[10px] font-bold border flex items-center gap-1",
-                  chat.platform === 'whatsapp' ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-blue-200 bg-blue-50 text-blue-700"
+                  chat.platform === 'whatsapp' ? "border-[#25D366]/30 bg-[#25D366]/10 text-[#075E54]" : "border-[#24A1DE]/30 bg-[#24A1DE]/10 text-[#24A1DE]"
                 )}>
-                  {chat.platform === 'whatsapp' ? '🟢 WA' : '🔵 TG'}
+                  {chat.platform === 'whatsapp' ? (
+                    <>
+                      <svg className="w-3 h-3 text-[#25D366]" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg> WhatsApp
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-3 h-3 text-[#24A1DE]" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.888-.662 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg> Telegram
+                    </>
+                  )}
                 </span>
                 
                 {chat.unreadCount > 0 && (
@@ -223,7 +258,11 @@ export default function SupportInbox() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-3 flex flex-col bg-[#efeae2] bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')] bg-repeat relative">
+          <div 
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+            className="flex-1 overflow-y-auto min-h-0 p-4 space-y-3 flex flex-col bg-[#efeae2] bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')] bg-repeat relative"
+          >
             <div className="absolute inset-0 bg-white/40 pointer-events-none"></div> {/* Subtle overlay to make text readable */}
             
             <div className="text-center my-2 relative z-10">
@@ -272,6 +311,18 @@ export default function SupportInbox() {
                 </div>
               </div>
             ))}
+            
+            <div ref={messagesEndRef} className="h-1 shrink-0" />
+            
+            {/* Scroll to Bottom Button */}
+            {showScrollBottom && (
+              <button
+                onClick={scrollToBottom}
+                className="sticky bottom-2 right-2 ml-auto z-20 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#54656f] shadow-md border border-[#d1d7db] hover:bg-zinc-50 transition-all"
+              >
+                <ChevronDown size={20} />
+              </button>
+            )}
           </div>
 
           {/* Input */}

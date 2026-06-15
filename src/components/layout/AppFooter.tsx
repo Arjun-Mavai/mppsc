@@ -34,8 +34,12 @@ export function AppFooter() {
         {/* Brand Section */}
         <div className="order-last w-full text-center md:order-first md:w-auto md:text-left">
           <p className="text-lg font-bold text-slate-900">Mindful MPPSC</p>
-          <p className="mt-1 text-sm text-slate-500">© 2026 Mindful MPPSC. All rights reserved.</p>
-          <p className="mt-2 text-[10px] font-medium text-slate-400">Made with ❤️ for MP</p>
+          <p className="mt-1 text-sm text-slate-500">
+            House No. 29, Arjun Singh Gurjar, Ankaleshwar Avenue,<br />
+            Sirol, Morar, Gwalior, Madhya Pradesh 474006
+          </p>
+          <p className="mt-3 text-xs text-slate-400">© 2026 Mindful MPPSC. All rights reserved.</p>
+          <p className="mt-1 text-[10px] font-medium text-slate-300">Made with ❤️ for MP</p>
         </div>
 
         {/* Mobile Grid Layout (Icons + Text) */}

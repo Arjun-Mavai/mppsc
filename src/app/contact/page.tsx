@@ -73,6 +73,22 @@ export default function ContactPage() {
                       <p className="text-sm text-slate-500">+91 8766451748</p>
                     </div>
                   </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+                      <MapPin size={18} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-900">
+                        {language === 'hi' ? 'पता' : 'Address'}
+                      </p>
+                      <p className="text-sm text-slate-500">
+                        House No. 29, Arjun Singh Gurjar<br />
+                        Ankaleshwar Avenue, Sirol, Morar<br />
+                        Gwalior, Madhya Pradesh 474006
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </motion.div>
