@@ -1278,6 +1278,7 @@ export const supportMessages = sqliteTable('support_messages', {
   sender: text('sender', { enum: ['user', 'bot', 'admin'] }).notNull(),
   text: text('text').notNull(),
   messageType: text('message_type', { enum: ['text', 'image', 'interactive'] }).default('text'), 
+  status: text('status', { enum: ['sent', 'delivered', 'read', 'failed'] }),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
 });
 

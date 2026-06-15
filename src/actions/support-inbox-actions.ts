@@ -78,17 +78,17 @@ export async function saveIncomingMessage({
       createdAt: new Date(),
     });
 
-    return { success: true, conversationId: conv.id };
+    return { success: true, conversationId: conv.id, unreadCount: conv.unreadCount || 1 };
   } catch (error) {
     console.error('Error saving incoming message:', error);
     return { success: false };
   }
 }
 
-export async function saveOutgoingMessage(conversationId: string, text: string, sender: 'bot' | 'admin') {
+export async function saveOutgoingMessage(conversationId: string, text: string, sender: 'bot' | 'admin', messageId?: string) {
   try {
     await db.insert(supportMessages).values({
-      id: nanoid(),
+      id: messageId || nanoid(),
       conversationId,
       sender,
       text,
@@ -145,6 +145,7 @@ export async function sendAdminReply(conversationId: string, text: string, optio
     if (!conv) return { success: false, error: 'Conversation not found' };
 
     let apiSuccess = false;
+    let metaMessageId: string | undefined = undefined;
 
     if (conv.platform === 'telegram') {
       const BOT_TOKEN = process.env.TELEGRAM_CONVERSATION_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
@@ -165,8 +166,11 @@ export async function sendAdminReply(conversationId: string, text: string, optio
             reply_markup 
           })
         });
-        if (res.ok) apiSuccess = true;
-        else {
+        if (res.ok) {
+          apiSuccess = true;
+          const data = await res.json();
+          if (data.result?.message_id) metaMessageId = `tg_${data.result.message_id}`;
+        } else {
           const errorText = await res.text();
           logger.error('Telegram Admin Reply API error', new Error(errorText), { category: 'telegram' });
         }
@@ -206,8 +210,11 @@ export async function sendAdminReply(conversationId: string, text: string, optio
           },
           body: JSON.stringify(bodyPayload)
         });
-        if (res.ok) apiSuccess = true;
-        else {
+        if (res.ok) {
+          apiSuccess = true;
+          const data = await res.json();
+          if (data.messages?.[0]?.id) metaMessageId = data.messages[0].id;
+        } else {
           const errorText = await res.text();
           logger.error('WhatsApp Admin Reply API error', new Error(errorText), { category: 'api' });
         }
@@ -215,7 +222,7 @@ export async function sendAdminReply(conversationId: string, text: string, optio
     }
 
     if (apiSuccess) {
-      await saveOutgoingMessage(conversationId, text, 'admin');
+      await saveOutgoingMessage(conversationId, text, 'admin', metaMessageId);
       return { success: true };
     } else {
       return { success: false, error: 'Failed to send via API' };
