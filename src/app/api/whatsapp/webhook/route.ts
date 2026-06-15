@@ -169,6 +169,10 @@ export async function POST(req: Request) {
                   // Extract the ID of the button clicked
                   interactiveData = messageObj.interactive?.button_reply?.id;
                   incomingText = `[Button: ${messageObj.interactive?.button_reply?.title || 'Unknown'}]`;
+                } else if (messageObj.type === 'button') {
+                  // This is a Quick Reply button clicked from a Template message
+                  interactiveData = messageObj.button?.payload;
+                  incomingText = `[Template Button: ${messageObj.button?.text || 'Unknown'}]`;
                 } else {
                   incomingText = `[Unsupported Message Type: ${messageObj.type}]`;
                 }
@@ -342,9 +346,16 @@ export async function POST(req: Request) {
                     responseText = `😞 हमें खेद है कि आपको हमारा सपोर्ट पसंद नहीं आया।\n\nक्या आप हमें बता सकते हैं कि क्या समस्या रही? आपके सुझाव से हम खुद को बेहतर बना सकते हैं! (कृपया अपना जवाब टाइप करके भेजें)`;
                   } else {
                     const textContent = incomingText.trim().toLowerCase();
-                    const isGreeting = ['hi', 'hello', 'hey', 'namaste', 'help', 'start'].includes(textContent);
-                    
-                    if (isGreeting || saveRes.unreadCount === 1) {
+                    const isGreeting = ['hi', 'hello', 'hey', 'namaste', 'start', 'menu', 'main menu'].includes(textContent);
+                    const isSupportRequest = textContent.includes('talk to support') || textContent.includes('help') || incomingText.includes('[Template Button:');
+
+                    if (isSupportRequest) {
+                      responseText = `🔧 *Support Desk / सपोर्ट डेस्क*\n\nPlease select your language to continue / अपनी भाषा चुनें 👇`;
+                      buttons = [
+                        { id: 'SUPPORT_EN', title: 'English' },
+                        { id: 'SUPPORT_HI', title: 'हिंदी' }
+                      ];
+                    } else if (isGreeting) {
                       responseText = `🎉 *Welcome to MPPSC ZenScroll*\n\n` +
                         `MPPSC की तैयारी में सबसे बड़ी चुनौती सामग्री (Content) की कमी नहीं होती।\n\n` +
                         `चुनौती होती है:\n` +
@@ -366,7 +377,8 @@ export async function POST(req: Request) {
                       if (saveRes.previousUserText?.startsWith('[Button:')) {
                         responseText = `✅ *सन्देश प्राप्त हुआ (Message Received)*\n\nआपकी बात हम तक पहुँच गई है। हमारी टीम जल्द ही आपसे संपर्क करेगी। धन्यवाद!`;
                       } else {
-                        return; // Ignore subsequent messages to prevent spam
+                        // For random words like "Thanks", "Ok", or regular conversation: Do nothing.
+                        return;
                       }
                     }
                   }
