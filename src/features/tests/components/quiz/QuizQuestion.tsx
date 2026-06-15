@@ -172,7 +172,7 @@ export function QuizQuestion({
           return (
             <div
               key={idx}
-              onClick={() => onOptionSelect(idx)}
+              onClick={() => !showFeedback && onOptionSelect(idx)}
               className={cn(
                 'group relative cursor-pointer overflow-hidden rounded-xl border-2 p-4 transition-all duration-200 active:scale-[0.98] sm:p-5',
                 // Before answering — normal hover

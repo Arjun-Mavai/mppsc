@@ -52,6 +52,7 @@ import {
   FileText,
   Upload,
   Loader2,
+  HelpCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
@@ -67,6 +68,7 @@ import {
   getTestWithQuestions,
   updateTestContent,
   toggleInstantMode,
+  toggleStrictInstantMode,
 } from './actions';
 import { toast } from 'sonner';
 import { revalidateSyllabus } from '@/actions/revalidate';
@@ -98,6 +100,7 @@ interface AdminTest {
   isLiteAccess: boolean | null;
   isProAccess: boolean | null;
   isHidden: boolean | null;
+  isInstantMode: boolean | null;
   maxRetries: number | null;
   displayOrder: number | null;
   tags: string[] | null; // JSON array — ['MISC', '2026', 'no-instant-mode'] etc.
@@ -127,6 +130,7 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
   const [unitFilter, setUnitFilter] = useState<string | null>(null);
   const PAGE_SIZE = 30;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   // Filter tests by type + unit sub-filter
   const filteredTests = (() => {
@@ -198,6 +202,23 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
       } catch {
         setTests((prev) =>
           prev.map((t) => (t.id === testId ? { ...t, isHidden: currentValue } : t))
+        );
+        toast.error('Update failed');
+      }
+    });
+  };
+
+  // Strict Instant Mode toggle (isInstantMode DB column)
+  const handleToggleStrictInstantMode = (testId: string, currentValue: boolean) => {
+    const newValue = !currentValue;
+    setTests((prev) => prev.map((t) => (t.id === testId ? { ...t, isInstantMode: newValue } : t)));
+    startTransition(async () => {
+      try {
+        await toggleStrictInstantMode(testId, newValue);
+        toast.success(newValue ? 'Strict Instant Mode ENFORCED!' : 'Strict Instant Mode DISABLED!');
+      } catch {
+        setTests((prev) =>
+          prev.map((t) => (t.id === testId ? { ...t, isInstantMode: currentValue } : t))
         );
         toast.error('Update failed');
       }
@@ -444,24 +465,26 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
     <div className="min-h-screen bg-slate-50 font-sans">
       <div className="mx-auto max-w-6xl space-y-6 p-6">
         {/* ── Header ─────────────────────────────────────────── */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => router.push('/admin/dashboard')}>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3 sm:items-center sm:gap-4">
+            <Button variant="ghost" size="icon" className="mt-1 shrink-0 sm:mt-0" onClick={() => router.push('/admin/dashboard')}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
-                <Shield className="h-6 w-6 text-slate-700" />
-                Test Access Manager
+              <h1 className="flex items-center gap-2 text-xl font-bold text-slate-900 sm:text-2xl">
+                <Shield className="h-6 w-6 shrink-0 text-slate-700" />
+                <span className="leading-tight">Test Access Manager</span>
               </h1>
-              <p className="text-sm text-slate-500">
+              <p className="mt-1 text-xs text-slate-500 sm:text-sm">
                 Toggle karo kaun kaunsa test de sakta hai — turant reflect hoga
               </p>
             </div>
           </div>
-          <Badge variant="outline" className="px-3 py-1 text-sm">
-            {tests.length} Tests
-          </Badge>
+          
+          <div className="flex items-center gap-3 self-end sm:self-auto">
+            <Badge variant="outline" className="px-3 py-1 text-sm shadow-sm">
+              {tests.length} Tests
+            </Badge>
           <form
             action={async () => {
               try {
@@ -484,10 +507,12 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
               variant="outline"
               className="gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
             >
-              <RotateCcw className="h-4 w-4" />
-              Sync PYQ Parts
+              <RotateCcw className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">Sync PYQ Parts</span>
+              <span className="sm:hidden">Sync</span>
             </Button>
           </form>
+          </div>
         </div>
 
         {/* ── Filter Tabs ────────────────────────────────────── */}
@@ -976,7 +1001,7 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
                       </div>
 
                       {/* Controls: Hidden + Access Toggles */}
-                      <div className="flex shrink-0 items-center gap-6">
+                      <div className="mt-3 flex shrink-0 flex-wrap items-center gap-4 border-t border-slate-100 pt-3 md:mt-0 md:gap-6 md:border-0 md:pt-0">
                         {/* Hidden Toggle */}
                         <div className="flex flex-col items-center gap-1">
                           <span className="text-[10px] font-bold tracking-wider text-red-500 uppercase">
@@ -989,7 +1014,7 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
                           />
                         </div>
 
-                        <div className="h-8 w-px bg-slate-200" />
+                        <div className="hidden h-8 w-px bg-slate-200 sm:block" />
 
                         {/* Free Access */}
                         <div className="flex flex-col items-center gap-1">
@@ -1033,10 +1058,26 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
                           />
                         </div>
 
-                        {/* Instant Mode — 'no-instant-mode' tag toggle */}
+                        {/* Strict Instant Mode */}
                         <div className="flex flex-col items-center gap-1">
-                          <span className="text-[10px] font-bold tracking-wider text-purple-600 uppercase">
-                            Instant
+                          <span className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-pink-600 uppercase" title="Moves test to 'Fast Revision' tab. Starts with Instant Mode ON by default.">
+                            Strict Inst.
+                            <HelpCircle className="h-3 w-3 cursor-pointer text-slate-400 transition-colors hover:text-slate-700" onClick={() => setGuideOpen(true)} />
+                          </span>
+                          <Switch
+                            checked={test.isInstantMode ?? false}
+                            onCheckedChange={() =>
+                              handleToggleStrictInstantMode(test.id, test.isInstantMode ?? false)
+                            }
+                            className="data-[state=checked]:!bg-pink-500"
+                          />
+                        </div>
+
+                        {/* Instant Mode (User toggle) — 'no-instant-mode' tag toggle */}
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-purple-600 uppercase" title="Allow User Toggle">
+                            Allow Inst.
+                            <HelpCircle className="h-3 w-3 cursor-pointer text-slate-400 transition-colors hover:text-slate-700" onClick={() => setGuideOpen(true)} />
                           </span>
                           <Switch
                             checked={
@@ -1046,11 +1087,11 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
                               const isDisabled = test.tags?.includes('no-instant-mode') ?? false;
                               handleToggleInstantMode(test.id, isDisabled);
                             }}
-                            className="data-[state=checked]:bg-purple-500"
+                            className="data-[state=checked]:!bg-purple-500"
                           />
                         </div>
 
-                        <div className="h-8 w-px bg-slate-200" />
+                        <div className="hidden h-8 w-px bg-slate-200 sm:block" />
                         <button
                           onClick={() => handleEditContentClick(test.id, test.title)}
                           disabled={isPending}
@@ -1139,6 +1180,48 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
               </Button>
             </form>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Help Guide Dialog ─────────────────────────────── */}
+      <Dialog open={guideOpen} onOpenChange={setGuideOpen}>
+        <DialogContent className="max-w-md sm:rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl font-black">
+              <Zap className="h-5 w-5 text-amber-500 fill-amber-500/20" />
+              Instant Mode Controller
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm text-slate-600">
+            <div className="rounded-xl border border-pink-100 bg-pink-50 p-4">
+              <h3 className="mb-1 flex items-center gap-2 font-black text-pink-700">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-pink-200 text-xs shadow-inner">1</span>
+                STRICT INST. (Pink Switch)
+              </h3>
+              <p className="font-medium text-pink-900/80">Moves test to "Fast Revision" tab.</p>
+              <ul className="mt-2 list-inside list-disc space-y-1 text-xs font-semibold text-pink-800/70">
+                <li>Test starts with Instant Mode <strong>ON</strong> by default.</li>
+                <li>Applies to EVERYONE (Free & Premium).</li>
+                <li>Users <strong>CAN</strong> toggle it OFF if they want (Flexible!).</li>
+              </ul>
+            </div>
+
+            <div className="rounded-xl border border-purple-100 bg-purple-50 p-4">
+              <h3 className="mb-1 flex items-center gap-2 font-black text-purple-700">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-200 text-xs shadow-inner">2</span>
+                ALLOW INST. (Purple Switch)
+              </h3>
+              <p className="font-medium text-purple-900/80">Shows/Hides the Instant Mode toggle ⚡ inside test.</p>
+              <ul className="mt-2 list-inside list-disc space-y-2 text-xs font-semibold text-purple-800/70">
+                <li className="flex items-start gap-1"><span className="text-purple-600">ON:</span> <div>Premium users can use it. Free users see Upsell Popup.</div></li>
+                <li className="flex items-start gap-1"><span className="text-purple-600">OFF:</span> <div>Strict traditional exam. Toggle button is hidden for EVERYONE.</div></li>
+              </ul>
+            </div>
+            
+            <div className="text-center text-xs font-bold text-slate-400">
+              Made for simplified Marketing & Discipline control.
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

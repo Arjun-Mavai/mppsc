@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { supportConversations, supportMessages, guests } from '@/db/schema';
-import { eq, desc, asc, or } from 'drizzle-orm';
+import { eq, desc, asc, or, and } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { logger } from '@/lib/logger';
 
@@ -69,6 +69,13 @@ export async function saveIncomingMessage({
         .where(eq(supportConversations.id, conv.id));
     }
 
+    // Fetch the previous user message before inserting the new one
+    const prevMsg = await db.select().from(supportMessages)
+      .where(and(eq(supportMessages.conversationId, conv.id), eq(supportMessages.sender, 'user')))
+      .orderBy(desc(supportMessages.createdAt))
+      .limit(1)
+      .then(res => res[0]);
+
     // 2. Save the message
     await db.insert(supportMessages).values({
       id: nanoid(),
@@ -78,20 +85,21 @@ export async function saveIncomingMessage({
       createdAt: new Date(),
     });
 
-    return { success: true, conversationId: conv.id };
+    return { success: true, conversationId: conv.id, unreadCount: conv.unreadCount || 1, previousUserText: prevMsg?.text };
   } catch (error) {
     console.error('Error saving incoming message:', error);
     return { success: false };
   }
 }
 
-export async function saveOutgoingMessage(conversationId: string, text: string, sender: 'bot' | 'admin') {
+export async function saveOutgoingMessage(conversationId: string, text: string, sender: 'bot' | 'admin', messageId?: string) {
   try {
     await db.insert(supportMessages).values({
-      id: nanoid(),
+      id: messageId || nanoid(),
       conversationId,
       sender,
       text,
+      status: 'sent',
       createdAt: new Date(),
     });
 
@@ -145,6 +153,7 @@ export async function sendAdminReply(conversationId: string, text: string, optio
     if (!conv) return { success: false, error: 'Conversation not found' };
 
     let apiSuccess = false;
+    let metaMessageId: string | undefined = undefined;
 
     if (conv.platform === 'telegram') {
       const BOT_TOKEN = process.env.TELEGRAM_CONVERSATION_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
@@ -165,8 +174,11 @@ export async function sendAdminReply(conversationId: string, text: string, optio
             reply_markup 
           })
         });
-        if (res.ok) apiSuccess = true;
-        else {
+        if (res.ok) {
+          apiSuccess = true;
+          const data = await res.json();
+          if (data.result?.message_id) metaMessageId = `tg_${data.result.message_id}`;
+        } else {
           const errorText = await res.text();
           logger.error('Telegram Admin Reply API error', new Error(errorText), { category: 'telegram' });
         }
@@ -206,8 +218,11 @@ export async function sendAdminReply(conversationId: string, text: string, optio
           },
           body: JSON.stringify(bodyPayload)
         });
-        if (res.ok) apiSuccess = true;
-        else {
+        if (res.ok) {
+          apiSuccess = true;
+          const data = await res.json();
+          if (data.messages?.[0]?.id) metaMessageId = data.messages[0].id;
+        } else {
           const errorText = await res.text();
           logger.error('WhatsApp Admin Reply API error', new Error(errorText), { category: 'api' });
         }
@@ -215,7 +230,7 @@ export async function sendAdminReply(conversationId: string, text: string, optio
     }
 
     if (apiSuccess) {
-      await saveOutgoingMessage(conversationId, text, 'admin');
+      await saveOutgoingMessage(conversationId, text, 'admin', metaMessageId);
       return { success: true };
     } else {
       return { success: false, error: 'Failed to send via API' };

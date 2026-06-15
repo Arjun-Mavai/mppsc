@@ -38,6 +38,8 @@ interface GuestQuizInterfaceProps {
   initialInstantMode?: boolean;
   /** Skip auto-fullscreen on mount (e.g. public lead-gen pages). */
   skipAutoFullscreen?: boolean;
+  /** Whether the test is strictly an instant mode test from DB */
+  isInstantMode?: boolean;
 }
 
 export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
@@ -53,6 +55,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     user,
     initialInstantMode = false,
     skipAutoFullscreen = false,
+    isInstantMode = false,
   } = props;
 
   // No user ID props here as this IS for guests only.
@@ -381,7 +384,8 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
         title={title}
         mode={mode}
         timeLeft={timeLeft}
-        instantModeEnabled={effectiveInstantMode}
+        instantModeEnabled={instantModeEnabled}
+        isStrictInstantMode={false} // Removed strict lock
         isSubmitted={isSubmitted}
         language={language}
         onInstantModeToggle={() => {
@@ -415,7 +419,8 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
               totalQuestions={totalQuestions}
               selectedAnswer={answers[currentQuestion.id]}
               isAnswered={isAnswered}
-              instantModeEnabled={effectiveInstantMode}              isMarkedForReview={markedforReview.includes(currentQuestion.id)}
+              instantModeEnabled={effectiveInstantMode}
+              isMarkedForReview={markedforReview.includes(currentQuestion.id)}
               language={language}
               onOptionSelect={handleOptionSelect}
               onToggleReview={toggleMarkForReview}
@@ -425,7 +430,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
             />
 
             {effectiveInstantMode && isAnswered && (
-              <div className="mx-auto mt-4 max-w-3xl">
+              <div className="mx-auto mt-4 max-w-3xl animate-in fade-in slide-in-from-top-4 duration-500">
                 <QuizExplanation
                   question={currentQuestion}
                   language={language}

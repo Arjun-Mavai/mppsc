@@ -61,6 +61,7 @@ export const tests = sqliteTable(
     topicId: text('topic_id'), // To link to specific topic ID from syllabusData
     tags: text('tags', { mode: 'json' }), // JSON array of related tags e.g., ['history', 'ancient']
     isPro: integer('is_pro', { mode: 'boolean' }).default(false),
+    isInstantMode: integer('is_instant_mode', { mode: 'boolean' }).default(false),
     // ── Access Control Flags ──────────────────────────────────────────
     // Ye 3 flags admin panel se control hote hain
     // isFreeAccess = true → Free/Guest users bhi de sakte hain test
@@ -1278,6 +1279,7 @@ export const supportMessages = sqliteTable('support_messages', {
   sender: text('sender', { enum: ['user', 'bot', 'admin'] }).notNull(),
   text: text('text').notNull(),
   messageType: text('message_type', { enum: ['text', 'image', 'interactive'] }).default('text'), 
+  status: text('status', { enum: ['sent', 'delivered', 'read', 'failed'] }),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
 });
 
