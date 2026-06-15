@@ -37,6 +37,7 @@ interface FreeQuizPlayClientProps {
   testId: string;
   title: string;
   disableInstantMode?: boolean; // Tags se control — Pro feature lock
+  isInstantMode?: boolean;
   user?: { name: string; email: string; mobile?: string | null } | null;
 }
 
@@ -45,6 +46,7 @@ export function FreeQuizPlayClient({
   testId,
   title,
   disableInstantMode,
+  isInstantMode,
   user,
 }: FreeQuizPlayClientProps) {
   const router = useRouter();
@@ -59,6 +61,7 @@ export function FreeQuizPlayClient({
         questions.length * QUIZ_CONSTANTS.TIME_PER_QUESTION_MINUTES
       )}
       disableInstantMode={disableInstantMode}
+      isInstantMode={isInstantMode}
       user={user}
       onExit={() => router.push('/free-quiz')}
     />

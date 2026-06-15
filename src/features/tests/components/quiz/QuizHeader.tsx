@@ -11,6 +11,7 @@ interface QuizHeaderProps {
   mode: 'topic' | 'full' | 'pyq';
   timeLeft: number;
   instantModeEnabled: boolean;
+  isStrictInstantMode?: boolean;
   isSubmitted: boolean;
   language: string;
   onInstantModeToggle: () => void;
@@ -29,6 +30,7 @@ export function QuizHeader({
   mode,
   timeLeft,
   instantModeEnabled,
+  isStrictInstantMode,
   isSubmitted,
   language,
   onInstantModeToggle,

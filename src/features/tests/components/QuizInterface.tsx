@@ -77,6 +77,9 @@ export function QuizInterface(props: QuizInterfaceProps) {
 
   const { setLanguage } = useSettingsStore();
 
+  // Effective instant mode — if the test is an Instant Mode test, force it ON
+
+
   // UI state
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -368,6 +371,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
         mode={mode}
         timeLeft={timeLeft}
         instantModeEnabled={instantModeEnabled}
+        isStrictInstantMode={false} // Removed strict lock
         isSubmitted={isSubmitted}
         language={language}
         onInstantModeToggle={() => setInstantModeEnabled(!instantModeEnabled)}
@@ -404,7 +408,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
 
             {/* Explanation - no scroll limit, full content */}
             {instantModeEnabled && isAnswered && (
-              <div className="mx-auto mt-4 max-w-3xl">
+              <div className="mx-auto mt-4 max-w-3xl animate-in fade-in slide-in-from-top-4 duration-500">
                 <QuizExplanation
                   question={currentQuestion}
                   language={language}

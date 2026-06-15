@@ -15,6 +15,8 @@ import { db } from '@/db';
 import { tests, questions, freeQuizAttempts } from '@/db/schema';
 import { eq, and, desc, or } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
+import { headers } from 'next/headers';
+import { verifyAuth } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 import { sendTelegramNotification } from '@/lib/telegram';
 import { getTelegramStatsSummary } from '@/lib/telegram-stats-loader';
@@ -102,6 +104,7 @@ export const getCachedFreeQuizzes = unstable_cache(
           unitId: tests.unitId,
           tags: tests.tags,
           createdAt: tests.createdAt,
+          isInstantMode: tests.isInstantMode,
         })
         .from(tests)
         .where(
@@ -169,5 +172,44 @@ export async function getFreeQuizWithQuestions(testId: string) {
   } catch (error) {
     logger.error('getFreeQuizWithQuestions Error:', error);
     return null;
+  }
+}
+
+/**
+ * notifyInstantModeGuideClick — Telemetry for Instant Mode usage
+ */
+export async function notifyInstantModeGuideClick(clientGuestName?: string, clientGuestPhone?: string) {
+  try {
+    const user = await verifyAuth().catch(() => null);
+    const headersList = await headers();
+    const ip = headersList.get('x-forwarded-for')?.split(',')[0] || 'Unknown IP';
+    const city = headersList.get('x-vercel-ip-city') || 'Unknown City';
+    const region = headersList.get('x-vercel-ip-country-region') || 'Unknown Region';
+
+    let userInfo = '';
+    if (user) {
+      // Get phone from DB user model if we can (using db directly if verifyAuth doesn't return phone)
+      const phone = 'phone' in user ? (user as any).phone : 'N/A';
+      userInfo = `👤 *Registered User*
+📛 *Name:* ${user.name || 'Unknown'}
+📧 *Email:* ${user.email}
+📱 *Phone:* ${phone}`;
+    } else {
+      userInfo = `👤 *Guest User*
+📛 *Name:* ${clientGuestName || 'Not Provided'}
+📱 *Phone:* ${clientGuestPhone || 'Not Provided'}`;
+    }
+
+    const message = `⚡ *INSTANT MODE GUIDE OPENED* ⚡
+Someone is exploring the Instant Mode feature on the MPPSC Free Quiz page!
+
+${userInfo}
+
+🌍 *Location:* ${city}, ${region}
+💻 *IP:* \`${ip}\``;
+
+    await sendTelegramNotification(message);
+  } catch (error) {
+    logger.error('Failed to notify instant mode click', error);
   }
 }

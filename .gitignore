@@ -47,6 +47,10 @@ next-env.d.ts
 *.db-wal
 local*.db
 
+# backups
+/backups/*
+!/backups/learning/
+
 # AI & IDE Folders
 .cursor
 .gemini

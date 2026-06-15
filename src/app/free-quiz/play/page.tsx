@@ -70,7 +70,14 @@ async function FreeQuizDataFetcher({ searchParams }: { searchParams: Promise<{ t
   }
 
   const tags = Array.isArray(testData.tags) ? (testData.tags as string[]) : [];
-  const disableInstantMode = tags.includes('no-instant-mode');
+  
+  const isFastRevision = testData.isInstantMode ?? false;
+  
+  // Marketing Hook & Flexibility:
+  // - Agar Admin ne 'no-instant-mode' lagaya hai (Allow Inst OFF), toh strictly lock for everyone.
+  // - Agar Exam Mode test hai (!isFastRevision) aur user Guest hai (!user), toh lock kardo (Upsell Popup).
+  // - Agar Fast Revision test hai, toh Guest ko bhi toggle karne do taaki wo flexible feature experience kare.
+  const disableInstantMode = tags.includes('no-instant-mode') || (!isFastRevision && !user);
 
   return (
     <ProductionErrorBoundary>
@@ -79,6 +86,7 @@ async function FreeQuizDataFetcher({ searchParams }: { searchParams: Promise<{ t
         testId={testId}
         title={testData.title}
         disableInstantMode={disableInstantMode}
+        isInstantMode={testData.isInstantMode ?? false}
         user={
           user
             ? {

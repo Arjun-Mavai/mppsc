@@ -99,6 +99,7 @@ export async function saveOutgoingMessage(conversationId: string, text: string, 
       conversationId,
       sender,
       text,
+      status: 'sent',
       createdAt: new Date(),
     });
 

@@ -61,6 +61,7 @@ export const tests = sqliteTable(
     topicId: text('topic_id'), // To link to specific topic ID from syllabusData
     tags: text('tags', { mode: 'json' }), // JSON array of related tags e.g., ['history', 'ancient']
     isPro: integer('is_pro', { mode: 'boolean' }).default(false),
+    isInstantMode: integer('is_instant_mode', { mode: 'boolean' }).default(false),
     // ── Access Control Flags ──────────────────────────────────────────
     // Ye 3 flags admin panel se control hote hain
     // isFreeAccess = true → Free/Guest users bhi de sakte hain test

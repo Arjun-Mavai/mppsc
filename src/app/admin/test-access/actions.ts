@@ -40,6 +40,7 @@ export async function getAllTestsForAdmin() {
       topicId: tests.topicId,
       slug: tests.slug,
       totalQuestions: tests.totalQuestions,
+      isInstantMode: tests.isInstantMode,
       isPro: tests.isPro,
       maxRetries: tests.maxRetries,
       isFreeAccess: tests.isFreeAccess,
@@ -143,6 +144,23 @@ export async function toggleTestHidden(testId: string, isHidden: boolean) {
   revalidateTag('syllabus-topics', { expire: 0 }); // 🔥 FIX: TOPIC tests use this tag!
 
   logger.info(`Test hidden toggled: ${testId} → isHidden=${isHidden}`);
+  return { success: true };
+}
+
+/**
+ * toggleStrictInstantMode — Test ko Strict Instant Mode me set karo
+ * Is mode me test form me sirf submit button gayab ho jayega aur click pe ans dikhega.
+ */
+export async function toggleStrictInstantMode(testId: string, isInstantMode: boolean) {
+  await requireAdmin();
+
+  await db.update(tests).set({ isInstantMode }).where(eq(tests.id, testId));
+
+  revalidateTag('tests', { expire: 0 });
+  revalidateTag('tests-list', { expire: 0 });
+  revalidateTag('syllabus-topics', { expire: 0 });
+
+  logger.info(`Test Strict Instant Mode toggled: ${testId} → isInstantMode=${isInstantMode}`);
   return { success: true };
 }
 
