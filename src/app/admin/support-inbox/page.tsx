@@ -81,7 +81,13 @@ export default function SupportInbox() {
             status: m.status,
             timestamp: new Date(m.createdAt || new Date()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           }));
-          setActiveMessages(formatted);
+          setActiveMessages((prev) => {
+            // Prevent optimistic UI from disappearing if DB is lagging behind
+            if (formatted.length < prev.length) {
+              return prev;
+            }
+            return formatted;
+          });
         }
         await markAsRead(activeId);
       };
