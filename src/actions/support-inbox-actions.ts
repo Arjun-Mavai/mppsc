@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { supportConversations, supportMessages, guests } from '@/db/schema';
-import { eq, desc, asc, or } from 'drizzle-orm';
+import { eq, desc, asc, or, and } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { logger } from '@/lib/logger';
 
