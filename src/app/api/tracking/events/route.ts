@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { sendTelemetryEvent, TelemetryEvent } from '@/lib/telegram-events';
 import { logger } from '@/lib/logger';
 import { headers } from 'next/headers';
@@ -42,8 +42,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const body = (await req.json()) as TelemetryEvent;
-
+    let body: TelemetryEvent;
+    try {
+      body = (await req.json()) as TelemetryEvent;
+    } catch {
+      return NextResponse.json({ error: 'Invalid or missing JSON payload' }, { status: 400 });
+    }
     // 🛡️ PAYLOAD VALIDATION & CONSTRAINTS
     if (!body || !body.type || !body.path) {
       return NextResponse.json({ error: 'Invalid telemetry payload' }, { status: 400 });
@@ -87,12 +91,12 @@ export async function POST(req: Request) {
     };
 
     // 🚀 ASYNCHRONOUS BACKGROUND DISPATCH
-    // We intentionally DO NOT await this call, allowing Next.js to return 200 OK immediately
-    // and offload all Telegram requests out-of-band so it doesn't affect user interactions.
-    sendTelemetryEvent(validatedEvent).catch((err) => {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[Telemetry API] Background telemetry dispatch failed:', err);
-      }
+    after(() => {
+      sendTelemetryEvent(validatedEvent).catch((err) => {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[Telemetry API] Background telemetry dispatch failed:', err);
+        }
+      });
     });
 
     // Return immediate success

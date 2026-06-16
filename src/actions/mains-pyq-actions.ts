@@ -375,6 +375,20 @@ export async function getMainsPyqDetailedOverview() {
       }
     }
 
+    const marksBreakdownRaw = await db
+      .select({
+        marks: mainsPyqQuestions.marks,
+        count: count(),
+      })
+      .from(mainsPyqQuestions)
+      .groupBy(mainsPyqQuestions.marks)
+      .orderBy(mainsPyqQuestions.marks);
+
+    const marksBreakdown = marksBreakdownRaw.map(r => ({
+      marks: r.marks === null ? 0 : Number(r.marks),
+      count: Number(r.count)
+    }));
+
     return { 
       success: true as const, 
       data: detailedData,
@@ -389,7 +403,8 @@ export async function getMainsPyqDetailedOverview() {
         targetImported: targetImportedCount,
         targetMissing: missing.length,
         targetPrepared: targetPreparedCount,
-        targetPendingPrep: targetImportedCount - targetPreparedCount
+        targetPendingPrep: targetImportedCount - targetPreparedCount,
+        marksBreakdown
       }
     };
   } catch (error) {

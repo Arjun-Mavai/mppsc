@@ -225,6 +225,20 @@
       "when": 1781455180961,
       "tag": "0031_silly_squadron_supreme",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "6",
+      "when": 1781615309469,
+      "tag": "0032_odd_puppet_master",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "6",
+      "when": 1781617568679,
+      "tag": "0033_secret_luminals",
+      "breakpoints": true
     }
   ]
 }

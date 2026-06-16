@@ -113,19 +113,31 @@ export async function POST(request: Request) {
       shouldInvalidateSessions = true;
     }
 
-    if (planTier !== undefined && planTier !== targetUser.planTier) {
-      updates.planTier = planTier;
-      updates.accessGrants = getAccessGrantsForPlan(planTier);
-      updates.isSubscribed = planTier !== 'free';
-      changes.push(`plan→${planTier}`);
+    if (planTier !== undefined) {
+      if (planTier !== targetUser.planTier) {
+        updates.planTier = planTier;
+        updates.isSubscribed = planTier !== 'free';
+        changes.push(`plan→${planTier}`);
 
-      // Auto-set expiry when upgrading to paid plan
-      if (planTier !== 'free' && !accessMonths) {
-        const months = PLAN_MONTHS[planTier] || 7;
-        const expiry = new Date();
-        expiry.setMonth(expiry.getMonth() + months);
-        updates.accessExpiresAt = expiry;
-        changes.push(`expiry +${months}mo`);
+        // Auto-set expiry when upgrading to paid plan
+        if (planTier !== 'free' && !accessMonths) {
+          const months = PLAN_MONTHS[planTier] || 7;
+          const expiry = new Date();
+          expiry.setMonth(expiry.getMonth() + months);
+          updates.accessExpiresAt = expiry;
+          changes.push(`expiry +${months}mo`);
+        }
+      }
+
+      // ALWAYS sync access grants for the final plan tier to ensure UI matches DB!
+      // This fixes the bug where manual payments updated planTier but not accessGrants.
+      const finalPlanTier = planTier;
+      const expectedGrants = getAccessGrantsForPlan(finalPlanTier);
+      if (targetUser.accessGrants !== expectedGrants) {
+        updates.accessGrants = expectedGrants;
+        if (!changes.includes(`plan→${planTier}`)) {
+           changes.push(`synced access_grants`);
+        }
       }
     }
 
@@ -142,10 +154,14 @@ export async function POST(request: Request) {
     }
 
     if (accessMonths) {
-      const expiry = new Date();
+      const currentExpiry = targetUser.accessExpiresAt ? new Date(targetUser.accessExpiresAt) : new Date();
+      const baseDate = currentExpiry > new Date() ? currentExpiry : new Date();
+      
+      const expiry = new Date(baseDate);
       expiry.setMonth(expiry.getMonth() + accessMonths);
       updates.accessExpiresAt = expiry;
-      changes.push(`expiry +${accessMonths}mo`);
+      updates.updatedAt = new Date();
+      changes.push(`expiry extended ${accessMonths}mo (to ${expiry.toLocaleDateString()})`);
     }
 
     if (shouldInvalidateSessions) {

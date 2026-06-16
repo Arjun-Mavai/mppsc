@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "aa83a266-b990-4aa4-954f-4d359a87229e",
-  "prevId": "71c03966-e8a8-456c-b21c-677b2774be8d",
+  "id": "3552a85d-987c-461f-8f3f-7ba960bc176b",
+  "prevId": "aa83a266-b990-4aa4-954f-4d359a87229e",
   "tables": {
     "attempt_answers": {
       "name": "attempt_answers",
@@ -4347,6 +4347,14 @@
           "autoincrement": false,
           "default": "'open'"
         },
+        "human_active": {
+          "name": "human_active",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": false
+        },
         "unread_count": {
           "name": "unread_count",
           "type": "integer",
@@ -4429,6 +4437,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "media_url": {
+          "name": "media_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "message_type": {
@@ -5067,6 +5082,14 @@
         },
         "is_pro": {
           "name": "is_pro",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": false
+        },
+        "is_instant_mode": {
+          "name": "is_instant_mode",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
