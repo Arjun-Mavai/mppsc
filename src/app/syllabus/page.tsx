@@ -6,15 +6,15 @@ import { SyllabusClient } from '@/features/syllabus/components/SyllabusClient';
 import { SyllabusData } from '@/types/syllabus';
 
 export const metadata: Metadata = {
-  title: 'MPPSC 2026 Complete Syllabus — All 17 Units with Mnemonics',
+  title: 'MPPSC 2027 Complete Syllabus — All 10 Units Topic-wise Tracker',
   description:
-    'Complete MPPSC 2026 syllabus in Hindi & English. All 10 units with topic-wise mnemonics, tests, cards for syllabus, and quizzes. Start free preparation today!',
+    'Complete MPPSC 2027 syllabus in Hindi & English. Master all 10 units with our interactive topic-wise tracker, free tests, and PYQ insights. Start your preparation today!',
   keywords: [
-    'MPPSC Syllabus 2026',
+    'MPPSC Syllabus 2027',
     'MPPSC Syllabus Hindi',
-    'MPPSC Units',
-    'MPPSC Topics',
-    'MPPSC Preparation',
+    'MPPSC Prelims 10 Units',
+    'MPPSC Syllabus Tracker',
+    'MPPSC Preparation 2027',
   ],
 };
 

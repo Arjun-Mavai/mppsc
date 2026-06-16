@@ -1266,22 +1266,30 @@ export const supportConversations = sqliteTable('support_conversations', {
   guestName: text('guest_name'),
   guestPhone: text('guest_phone'), // WhatsApp number or Telegram ID
   language: text('language').default('PENDING'), // EN, HI, PENDING
-  status: text('status', { enum: ['open', 'resolved'] }).default('open'), 
+  status: text('status', { enum: ['open', 'resolved'] }).default('open'),
+  humanActive: integer('human_active', { mode: 'boolean' }).default(false), // true = admin replied, suppress bot
   unreadCount: integer('unread_count').default(0),
   lastMessageAt: integer('last_message_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
-});
+}, (table) => ({
+  guestPhoneIdx: index('idx_support_conv_guest_phone').on(table.guestPhone),
+  lastMessageAtIdx: index('idx_support_conv_last_msg').on(table.lastMessageAt),
+}));
 
 export const supportMessages = sqliteTable('support_messages', {
   id: text('id').primaryKey(),
   conversationId: text('conversation_id').references(() => supportConversations.id, { onDelete: 'cascade' }).notNull(),
   sender: text('sender', { enum: ['user', 'bot', 'admin'] }).notNull(),
   text: text('text').notNull(),
-  messageType: text('message_type', { enum: ['text', 'image', 'interactive'] }).default('text'), 
+  mediaUrl: text('media_url'), // For image messages (WhatsApp image URLs)
+  messageType: text('message_type', { enum: ['text', 'image', 'interactive'] }).default('text'),
   status: text('status', { enum: ['sent', 'delivered', 'read', 'failed'] }),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
-});
+}, (table) => ({
+  conversationIdIdx: index('idx_support_msg_conv_id').on(table.conversationId),
+  createdAtIdx: index('idx_support_msg_created_at').on(table.createdAt),
+}));
 
 export const supportConversationsRelations = relations(supportConversations, ({ many, one }) => ({
   messages: many(supportMessages),

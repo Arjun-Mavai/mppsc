@@ -1,5 +1,18 @@
+/**
+ * SUPPORT INBOX SERVER ACTIONS
+ * 
+ * This file handles all database operations for the Support Inbox system (WhatsApp & Telegram).
+ * It includes both public webhook handlers (saveIncomingMessage) and protected admin actions
+ * (sendAdminReply, getConversations, etc). 
+ * 
+ * Scalability & Security:
+ * - Admin actions are protected via assertAdmin() to prevent unauthorized access.
+ * - getConversations is limited to the top 100 recent chats to ensure fast load times and low memory usage.
+ */
+
 'use server';
 
+import { assertAdmin } from '@/lib/auth';
 import { db } from '@/db';
 import { supportConversations, supportMessages, guests } from '@/db/schema';
 import { eq, desc, asc, or, and } from 'drizzle-orm';
@@ -11,65 +24,85 @@ export async function saveIncomingMessage({
   guestPhone,
   guestName,
   text,
+  messageType = 'text',
+  mediaUrl,
 }: {
   platform: 'whatsapp' | 'telegram';
   guestPhone: string;
   guestName?: string;
   text: string;
+  messageType?: 'text' | 'image' | 'interactive';
+  mediaUrl?: string;
 }) {
   try {
     // Normalize phone: remove '+', spaces, etc.
+    // For WhatsApp, this gives us the pure number (e.g., 91999...)
+    // For Telegram, this gives us the numeric user ID
     const cleanPhone = guestPhone.replace(/\D/g, '');
+    let isFirstMessage = false;
 
     // 1. Find existing conversation for this phone/ID and platform
+    // Search using both normalized and raw formats to be safe
     let conv = await db.select().from(supportConversations)
       .where(
-        or(
-          eq(supportConversations.guestPhone, cleanPhone),
-          eq(supportConversations.guestPhone, `+${cleanPhone}`),
-          eq(supportConversations.guestPhone, guestPhone)
+        and(
+          eq(supportConversations.platform, platform),
+          or(
+            eq(supportConversations.guestPhone, cleanPhone),
+            eq(supportConversations.guestPhone, guestPhone),
+            eq(supportConversations.guestPhone, `+${cleanPhone}`)
+          )
         )
       ).limit(1).then(res => res[0]);
 
     if (!conv) {
-      // Find guest if exists
+      // Find guest if exists (linked by phone)
       let guestId = null;
       if (platform === 'whatsapp') {
         const guestRes = await db.select().from(guests).where(
           or(
             eq(guests.mobile, cleanPhone),
-            eq(guests.mobile, `+${cleanPhone}`),
-            eq(guests.mobile, guestPhone)
+            eq(guests.mobile, guestPhone),
+            eq(guests.mobile, `+${cleanPhone}`)
           )
-        ).limit(1);
-        if (guestRes.length > 0) guestId = guestRes[0].id;
+        ).limit(1).then(res => res[0]);
+        if (guestRes) guestId = guestRes.id;
       }
 
       // Create new conversation
       const newId = nanoid();
-      await db.insert(supportConversations).values({
+      const newConv = {
         id: newId,
         platform,
         guestId,
         guestName: guestName || 'Unknown User',
-        guestPhone,
+        guestPhone: cleanPhone, // Store normalized phone for consistency
         unreadCount: 1,
         lastMessageAt: new Date(),
-      });
+        humanActive: false,
+      };
       
-      conv = { id: newId } as any;
+      await db.insert(supportConversations).values(newConv);
+      
+      conv = newConv as any;
+      isFirstMessage = true;
     } else {
       // Update conversation unread count and timestamp
+      const updatedCount = (conv.unreadCount || 0) + 1;
       await db.update(supportConversations)
         .set({ 
-          unreadCount: (conv.unreadCount || 0) + 1,
+          unreadCount: updatedCount,
           lastMessageAt: new Date(),
-          guestName: guestName && conv.guestName === 'Unknown User' ? guestName : conv.guestName, // Update name if we get it
+          updatedAt: new Date(),
+          // If we finally got a real name and previously it was "Unknown User", update it
+          guestName: (guestName && (conv.guestName === 'Unknown User' || !conv.guestName)) ? guestName : conv.guestName,
         })
         .where(eq(supportConversations.id, conv.id));
+      
+      conv.unreadCount = updatedCount;
     }
 
-    // Fetch the previous user message before inserting the new one
+    // Fetch the previous user message before inserting the new one (for context)
     const prevMsg = await db.select().from(supportMessages)
       .where(and(eq(supportMessages.conversationId, conv.id), eq(supportMessages.sender, 'user')))
       .orderBy(desc(supportMessages.createdAt))
@@ -82,10 +115,19 @@ export async function saveIncomingMessage({
       conversationId: conv.id,
       sender: 'user',
       text,
+      messageType,
+      mediaUrl,
       createdAt: new Date(),
     });
 
-    return { success: true, conversationId: conv.id, unreadCount: conv.unreadCount || 1, previousUserText: prevMsg?.text };
+    return { 
+      success: true, 
+      conversationId: conv.id, 
+      unreadCount: conv.unreadCount || 1, 
+      previousUserText: prevMsg?.text,
+      isFirstMessage,
+      humanActive: conv.humanActive 
+    };
   } catch (error) {
     console.error('Error saving incoming message:', error);
     return { success: false };
@@ -103,8 +145,13 @@ export async function saveOutgoingMessage(conversationId: string, text: string, 
       createdAt: new Date(),
     });
 
+    const updateData: any = { lastMessageAt: new Date() };
+    if (sender === 'admin') {
+      updateData.humanActive = true;
+    }
+
     await db.update(supportConversations)
-      .set({ lastMessageAt: new Date() })
+      .set(updateData)
       .where(eq(supportConversations.id, conversationId));
 
     return { success: true };
@@ -114,9 +161,39 @@ export async function saveOutgoingMessage(conversationId: string, text: string, 
   }
 }
 
+export async function resolveConversation(conversationId: string) {
+  try {
+    await assertAdmin();
+    await db.update(supportConversations)
+      .set({ humanActive: false, status: 'resolved', updatedAt: new Date() })
+      .where(eq(supportConversations.id, conversationId));
+    return { success: true };
+  } catch (error) {
+    return { success: false };
+  }
+}
+
+export async function toggleHumanActive(conversationId: string, isActive: boolean) {
+  try {
+    await assertAdmin();
+    await db.update(supportConversations)
+      .set({ humanActive: isActive, updatedAt: new Date() })
+      .where(eq(supportConversations.id, conversationId));
+    return { success: true };
+  } catch (error) {
+    return { success: false };
+  }
+}
+
 export async function getConversations() {
   try {
-    const convs = await db.select().from(supportConversations).orderBy(desc(supportConversations.lastMessageAt));
+    await assertAdmin();
+    // SCALABILITY FIX: Limit to 100 most recent conversations to prevent slow loads.
+    // If you need older conversations, we can implement server-side search/pagination later.
+    const convs = await db.select()
+      .from(supportConversations)
+      .orderBy(desc(supportConversations.lastMessageAt))
+      .limit(100);
     return { success: true, conversations: convs };
   } catch (error) {
     console.error('Error fetching conversations:', error);
@@ -126,6 +203,7 @@ export async function getConversations() {
 
 export async function getMessages(conversationId: string) {
   try {
+    await assertAdmin();
     const msgs = await db.select().from(supportMessages)
       .where(eq(supportMessages.conversationId, conversationId))
       .orderBy(asc(supportMessages.createdAt));
@@ -138,6 +216,7 @@ export async function getMessages(conversationId: string) {
 
 export async function markAsRead(conversationId: string) {
   try {
+    await assertAdmin();
     await db.update(supportConversations)
       .set({ unreadCount: 0 })
       .where(eq(supportConversations.id, conversationId));
@@ -149,6 +228,7 @@ export async function markAsRead(conversationId: string) {
 
 export async function sendAdminReply(conversationId: string, text: string, options?: { buttons?: { id: string, title: string }[] }) {
   try {
+    await assertAdmin();
     const conv = await db.select().from(supportConversations).where(eq(supportConversations.id, conversationId)).limit(1).then(res => res[0]);
     if (!conv) return { success: false, error: 'Conversation not found' };
 

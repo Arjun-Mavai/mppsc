@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
+
 import PwaRegistry from '@/components/PwaRegistry';
 import { Suspense } from 'react';
 import Providers from './Providers';

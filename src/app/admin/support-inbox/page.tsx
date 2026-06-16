@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Search, Check, CheckCheck, MoreVertical, Phone, Globe, ChevronLeft, MessageCircleOff, ChevronDown } from 'lucide-react';
+import { Send, Search, Check, CheckCheck, MoreVertical, Phone, Globe, ChevronLeft, MessageCircleOff, ChevronDown, Bot, Power } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getConversations, getMessages, sendAdminReply, markAsRead } from '@/actions/support-inbox-actions';
+import { getConversations, getMessages, sendAdminReply, markAsRead, resolveConversation, toggleHumanActive } from '@/actions/support-inbox-actions';
 import { toast } from 'sonner';
 
 type Message = {
@@ -12,6 +12,8 @@ type Message = {
   sender: 'bot' | 'user' | 'admin';
   timestamp: string;
   status?: string | null;
+  messageType?: string | null;
+  mediaUrl?: string | null;
 };
 
 type Conversation = {
@@ -22,6 +24,7 @@ type Conversation = {
   unreadCount: number;
   platform: 'whatsapp' | 'telegram';
   language: string;
+  humanActive: boolean;
 };
 
 export default function SupportInbox() {
@@ -67,11 +70,14 @@ export default function SupportInbox() {
 
   // Fetch active conversation messages
   useEffect(() => {
+    let ignore = false;
+
     if (activeId) {
-      setActiveMessages([]); // Immediately clear previous chat's messages to avoid confusion
-      
+      // Fetch active conversation messages
       const fetchMsgs = async () => {
         const res = await getMessages(activeId);
+        if (ignore) return; // Prevent race conditions if activeId changes
+
         if (res.success) {
           // Map DB messages to UI format
           const formatted = res.messages.map((m: any) => ({
@@ -79,6 +85,8 @@ export default function SupportInbox() {
             text: m.text,
             sender: m.sender as 'bot' | 'user' | 'admin',
             status: m.status,
+            messageType: m.messageType,
+            mediaUrl: m.mediaUrl,
             timestamp: new Date(m.createdAt || new Date()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           }));
           setActiveMessages((prev) => {
@@ -94,7 +102,10 @@ export default function SupportInbox() {
       
       fetchMsgs();
       const interval = setInterval(fetchMsgs, 3000); // Poll active chat faster
-      return () => clearInterval(interval);
+      return () => {
+        ignore = true;
+        clearInterval(interval);
+      };
     } else {
       setActiveMessages([]);
     }
@@ -144,10 +155,34 @@ export default function SupportInbox() {
       ]
     });
     
+    // Allow the bot to respond to the feedback by disabling humanActive
+    await resolveConversation(activeId);
+    
     if (!res.success) {
       toast.error('Failed to send feedback request.');
     } else {
       toast.success('Feedback request sent!');
+    }
+  };
+
+  const handleToggleBot = async () => {
+    if (!activeId || !activeConversation) return;
+    const newStatus = !activeConversation.humanActive;
+    
+    // Optimistic UI update
+    setConversations(prev => prev.map(c => 
+      c.id === activeId ? { ...c, humanActive: newStatus } : c
+    ));
+
+    const res = await toggleHumanActive(activeId, newStatus);
+    if (!res.success) {
+      toast.error('Failed to toggle bot status.');
+      // Revert on failure
+      setConversations(prev => prev.map(c => 
+        c.id === activeId ? { ...c, humanActive: !newStatus } : c
+      ));
+    } else {
+      toast.success(newStatus ? 'Bot Paused (Human mode)' : 'Bot Activated');
     }
   };
 
@@ -198,7 +233,11 @@ export default function SupportInbox() {
           ) : filteredConversations.map((chat) => (
             <div
               key={chat.id}
-              onClick={() => setActiveId(chat.id)}
+              onClick={() => {
+                setActiveId(chat.id);
+                setActiveMessages([]);
+              }}
+
               className={cn(
                 "cursor-pointer border-b border-zinc-100 p-4 transition-colors hover:bg-zinc-50",
                 activeId === chat.id ? "bg-indigo-50/50" : ""
@@ -246,8 +285,12 @@ export default function SupportInbox() {
         )}>
           {/* Header */}
           <div className="h-16 flex items-center px-4 bg-[#f0f2f5] border-b border-[#d1d7db] shrink-0 shadow-sm z-10">
-            <button 
-              onClick={() => setActiveId(null)}
+            <button
+              onClick={() => {
+                setActiveId(null);
+                setActiveMessages([]);
+              }}
+
               className="mr-3 md:hidden p-2 -ml-2 text-zinc-600 hover:bg-zinc-200 rounded-full transition-colors"
             >
               <ChevronLeft size={20} />
@@ -261,6 +304,24 @@ export default function SupportInbox() {
                 <Phone size={10} className="shrink-0" /> {activeConversation.guestPhone} • Last active: {new Date(activeConversation.lastMessageAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
               </p>
             </div>
+            
+            {/* Bot Toggle Control */}
+            <button
+              onClick={handleToggleBot}
+              className={cn(
+                "ml-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all border",
+                activeConversation.humanActive 
+                  ? "bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200" 
+                  : "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200"
+              )}
+              title={activeConversation.humanActive ? "Bot is paused. Click to activate bot." : "Bot is active. Click to pause bot."}
+            >
+              {activeConversation.humanActive ? (
+                <><Power size={14} className="text-amber-600" /> Bot Paused</>
+              ) : (
+                <><Bot size={14} className="text-emerald-600" /> Bot Active</>
+              )}
+            </button>
           </div>
 
           {/* Messages */}
@@ -302,7 +363,24 @@ export default function SupportInbox() {
                     </span>
                   )}
                   
-                  <p className="leading-snug whitespace-pre-wrap break-words">{msg.text}</p>
+                  {msg.mediaUrl ? (
+                    <div className="mb-1 rounded-md overflow-hidden bg-zinc-100 border border-zinc-200">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img 
+                        src={`/api/whatsapp/media?id=${msg.mediaUrl}`} 
+                        alt="Attached media" 
+                        className="max-w-full h-auto object-cover max-h-64"
+                        loading="lazy"
+                      />
+                      {msg.text && msg.text !== '[IMAGE]' && (
+                        <p className="p-2 text-xs leading-snug whitespace-pre-wrap break-words border-t border-zinc-200 bg-white">
+                          {msg.text.replace(/^\[IMAGE\]\s*/, '')}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="leading-snug whitespace-pre-wrap break-words">{msg.text}</p>
+                  )}
                   
                   <div className={cn(
                     "flex items-center justify-end gap-1 mt-0.5 -mb-0.5 text-[#667781]"

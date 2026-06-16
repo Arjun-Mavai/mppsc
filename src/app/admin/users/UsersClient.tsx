@@ -21,6 +21,9 @@ import {
   Copy,
   Key,
   Mail,
+  HelpCircle,
+  CreditCard,
+  Info,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { generateManualPasswordLink, testResendEmail } from '@/actions/admin-actions';
@@ -75,6 +78,8 @@ export default function UsersClient() {
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState<TabFilter>('all');
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [showActionHelp, setShowActionHelp] = useState(false);
+  const [showTechGuide, setShowTechGuide] = useState(false);
   const [editForm, setEditForm] = useState({
     name: '',
     email: '',
@@ -93,6 +98,70 @@ export default function UsersClient() {
     reason: '',
     accessMonths: '',
   });
+
+  // Per-user inline grant state (for existing users inside the edit panel)
+  const [inlineGrant, setInlineGrant] = useState<Record<string, { planTier: string; accessMonths: string; saving: boolean }>>({});
+
+  // Manual payment recording state
+  const [showManualPay, setShowManualPay] = useState(false);
+  const [showManualHelp, setShowManualHelp] = useState(false);
+  const [manualPaySaving, setManualPaySaving] = useState(false);
+  const [manualPayForm, setManualPayForm] = useState({
+    userSearch: '',
+    selectedUserId: '',
+    selectedUserName: '',
+    transactionId: '',
+    amountRupees: '',
+    planTier: 'combo' as 'lite' | 'mains' | 'combo',
+    notes: '',
+  });
+
+  const handleManualPay = async () => {
+    if (!manualPayForm.selectedUserId) { toast.error('User select karo pehle'); return; }
+    if (!manualPayForm.transactionId.trim()) { toast.error('Transaction ID / UTR required'); return; }
+    if (!manualPayForm.amountRupees || Number(manualPayForm.amountRupees) <= 0) { toast.error('Valid amount enter karo'); return; }
+    setManualPaySaving(true);
+    try {
+      const res = await fetch('/api/admin/record-manual-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: manualPayForm.selectedUserId,
+          transactionId: manualPayForm.transactionId.trim(),
+          amountRupees: Number(manualPayForm.amountRupees),
+          planTier: manualPayForm.planTier,
+          notes: manualPayForm.notes || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message);
+        setShowManualPay(false);
+        const userId = manualPayForm.selectedUserId;
+        const planTier = manualPayForm.planTier;
+        
+        // Auto-expand and pre-fill grant
+        setExpandedUser(userId);
+        setInlineGrant(prev => ({
+          ...prev,
+          [userId]: { planTier, accessMonths: '6', saving: false }
+        }));
+        
+        setManualPayForm({ userSearch: '', selectedUserId: '', selectedUserName: '', transactionId: '', amountRupees: '', planTier: 'combo', notes: '' });
+        fetchUsers();
+      } else {
+        toast.error(data.error || 'Failed');
+      }
+    } catch { toast.error('Network error'); }
+    finally { setManualPaySaving(false); }
+  };
+
+  const manualPayMatches = manualPayForm.userSearch.length >= 2
+    ? users.filter(u => {
+        const q = manualPayForm.userSearch.toLowerCase();
+        return u.name?.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.phone?.includes(manualPayForm.userSearch);
+      }).slice(0, 6)
+    : [];
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -411,14 +480,24 @@ export default function UsersClient() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-bold md:text-2xl">User Management</h1>
-        <Button
-          size="sm"
-          onClick={() => setShowGrant(!showGrant)}
-          className={`text-xs font-bold ${showGrant ? 'bg-slate-200 text-slate-700 hover:bg-slate-300' : 'bg-purple-600 text-white hover:bg-purple-700'}`}
-        >
-          <Gift className="mr-1 h-3.5 w-3.5" />
-          {showGrant ? 'Close' : 'Grant Plan'}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            onClick={() => { setShowManualPay(!showManualPay); setShowGrant(false); }}
+            className={`text-xs font-bold ${showManualPay ? 'bg-slate-200 text-slate-700 hover:bg-slate-300' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}
+          >
+            <CreditCard className="mr-1 h-3.5 w-3.5" />
+            {showManualPay ? 'Close' : 'Record Payment'}
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => { setShowGrant(!showGrant); setShowManualPay(false); }}
+            className={`text-xs font-bold ${showGrant ? 'bg-slate-200 text-slate-700 hover:bg-slate-300' : 'bg-purple-600 text-white hover:bg-purple-700'}`}
+          >
+            <Gift className="mr-1 h-3.5 w-3.5" />
+            {showGrant ? 'Close' : 'Grant Plan'}
+          </Button>
+        </div>
       </div>
 
       {/* Grant Form */}
@@ -497,6 +576,160 @@ export default function UsersClient() {
         </div>
       )}
 
+      {/* ── Manual Payment Panel ── */}
+      {showManualPay && (
+        <div className="space-y-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+          {/* Panel Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-emerald-700" />
+              <span className="text-sm font-bold text-emerald-800">Record Manual Payment (UPI / NEFT / Cash)</span>
+            </div>
+            <button
+              onClick={() => setShowManualHelp(!showManualHelp)}
+              className="flex items-center gap-1 rounded-md border border-emerald-200 bg-white px-2 py-1 text-[10px] font-semibold text-emerald-700 hover:bg-emerald-100"
+              title="Yeh kya karta hai?"
+            >
+              <HelpCircle className="h-3.5 w-3.5" />
+              {showManualHelp ? 'Help band karo' : 'Kya hoga? Samjho'}
+            </button>
+          </div>
+
+          {/* ── HELP SECTION ── */}
+          {showManualHelp && (
+            <div className="rounded-lg border border-emerald-300 bg-white p-4 text-xs leading-relaxed text-slate-700 space-y-3">
+              <p className="font-bold text-emerald-800 text-[13px]">📘 Ye kya karta hai? Kab use karo?</p>
+
+              <div className="rounded border border-amber-200 bg-amber-50 p-3">
+                <p className="font-bold text-amber-800">⚠️ IMPORTANT — Ye sirf payment record karta hai!</p>
+                <p className="mt-1 text-amber-700">
+                  Is button se user ka <strong>plan/access UPDATE NAHI hoga</strong>. Ye sirf{' '}
+                  <code className="bg-amber-100 px-1 rounded">payments</code> table mein entry daalta hai (audit trail).
+                </p>
+                <p className="mt-1 text-amber-700 font-semibold">
+                  Access dene ke liye → User list → ✏️ Edit → &quot;Grant Access&quot; section use karo.
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="font-semibold text-slate-800">🎯 Use Case — Kab use karo?</p>
+                <p>Jab student ne UPI/NEFT/cash se payment ki ho (Razorpay se bahar), ya Razorpay page band ho gaya ho aur paise cut gaye — to us payment ka record rakhne ke liye. Books/accounting ke liye proof chahiye.</p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="font-semibold text-slate-800">✅ Pura 3-step admin workflow:</p>
+                <ol className="list-decimal pl-4 space-y-1 text-slate-600">
+                  <li><strong>Record Payment (yahan)</strong> → sirf <code className="bg-slate-100 px-1 rounded">payments</code> table mein entry. Audit trail banao.</li>
+                  <li><strong>Grant Access</strong> → User dhundho → ✏️ Edit → &quot;Grant Access&quot; section → Plan + Duration set karo. Tab access milega.</li>
+                  <li><strong>Password</strong> → Agar user ka password set nahi hua → 🔑 Link button → link copy karo → user ko bhejo.</li>
+                </ol>
+              </div>
+
+              <div className="space-y-1">
+                <p className="font-semibold text-slate-800">🗄️ DB mein kya hota hai?</p>
+                <div className="rounded border border-slate-200 bg-slate-50 p-3 space-y-1">
+                  <p className="font-bold text-slate-700">Table: <code className="bg-slate-200 px-1 rounded">payments</code> — sirf yahi touch hota hai</p>
+                  <ul className="list-disc pl-4 text-slate-500 space-y-0.5 mt-1">
+                    <li><code>paymentId</code> = tumhara Transaction/UTR ID</li>
+                    <li><code>orderId</code> = <code>MANUAL-{'{UTR}'}</code></li>
+                    <li><code>status</code> = <strong>captured</strong></li>
+                    <li><code>amount</code> = paise mein (₹ × 100)</li>
+                    <li><code>planTier</code> = jo select kiya (record ke liye)</li>
+                    <li><code>notes</code> = source: admin_manual, adminId, tumhara note</li>
+                  </ul>
+                  <p className="mt-2 font-semibold text-red-500">mppsc_users table = TOUCH NAHI HOTA ❌</p>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <p className="font-semibold text-slate-800">🛡️ Safeguard</p>
+                <p className="text-slate-600">Same Transaction ID dobara dalne par <strong>409 error</strong> aayega — duplicate entry block ho jaayegi.</p>
+              </div>
+            </div>
+          )}
+
+          {/* ── FORM ── */}
+
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {/* User search */}
+            <div className="relative lg:col-span-1">
+              <input
+                type="text"
+                value={manualPayForm.selectedUserId ? `✅ ${manualPayForm.selectedUserName}` : manualPayForm.userSearch}
+                placeholder="User email/phone dhundho *"
+                onChange={(e) => {
+                  if (manualPayForm.selectedUserId) {
+                    // Reset selection if user types again
+                    setManualPayForm(f => ({ ...f, selectedUserId: '', selectedUserName: '', userSearch: e.target.value }));
+                  } else {
+                    setManualPayForm(f => ({ ...f, userSearch: e.target.value }));
+                  }
+                }}
+                className={`h-9 w-full rounded-lg border px-3 text-xs outline-none focus:border-emerald-500 ${manualPayForm.selectedUserId ? 'bg-emerald-50 text-emerald-700 font-semibold' : ''}`}
+              />
+              {/* Dropdown suggestions */}
+              {manualPayMatches.length > 0 && !manualPayForm.selectedUserId && (
+                <div className="absolute top-10 left-0 right-0 z-20 rounded-lg border border-emerald-200 bg-white shadow-lg">
+                  {manualPayMatches.map(u => (
+                    <button
+                      key={u.id}
+                      onClick={() => setManualPayForm(f => ({ ...f, selectedUserId: u.id, selectedUserName: u.name || u.email, userSearch: '' }))}
+                      className="flex w-full flex-col px-3 py-2 text-left text-xs hover:bg-emerald-50 border-b border-slate-100 last:border-0"
+                    >
+                      <span className="font-semibold text-slate-800">{u.name || '—'}</span>
+                      <span className="text-slate-500">{u.email} {u.phone ? `· ${u.phone}` : ''} · <span className="font-medium">{u.planTier || 'free'}</span></span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <input
+              type="text"
+              value={manualPayForm.transactionId}
+              placeholder="Transaction ID / UTR *"
+              onChange={(e) => setManualPayForm(f => ({ ...f, transactionId: e.target.value }))}
+              className="h-9 rounded-lg border px-3 text-xs outline-none focus:border-emerald-500"
+            />
+            <input
+              type="number"
+              min={1}
+              value={manualPayForm.amountRupees}
+              placeholder="Amount in ₹ (e.g. 1499) *"
+              onChange={(e) => setManualPayForm(f => ({ ...f, amountRupees: e.target.value }))}
+              className="h-9 rounded-lg border px-3 text-xs outline-none focus:border-emerald-500"
+            />
+          </div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <select
+              value={manualPayForm.planTier}
+              onChange={(e) => setManualPayForm(f => ({ ...f, planTier: e.target.value as any }))}
+              className="h-9 rounded-lg border bg-white px-3 text-xs outline-none focus:border-emerald-500"
+            >
+              <option value="lite">Pre — Prelims only</option>
+              <option value="mains">Mains only</option>
+              <option value="combo">Combo — Pre + Mains</option>
+            </select>
+            <input
+              type="text"
+              value={manualPayForm.notes}
+              placeholder="Note for yourself (optional)"
+              onChange={(e) => setManualPayForm(f => ({ ...f, notes: e.target.value }))}
+              className="h-9 rounded-lg border px-3 text-xs outline-none focus:border-emerald-500"
+            />
+          </div>
+          <Button
+            size="sm"
+            disabled={manualPaySaving}
+            className="h-8 bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700"
+            onClick={handleManualPay}
+          >
+            <CreditCard className="mr-1 h-3 w-3" />
+            {manualPaySaving ? 'Recording...' : 'Record Payment (Audit Only)'}
+          </Button>
+        </div>
+      )}
+
+
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-9">
@@ -529,6 +762,41 @@ export default function UsersClient() {
           Test Mail Settings (Debug Resend)
         </button>
       </div>
+
+      {/* Actions Explanation Box */}
+      <div className="flex justify-end mb-2">
+        <button
+          onClick={() => setShowActionHelp(!showActionHelp)}
+          className="flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-600 transition-colors hover:bg-indigo-100"
+        >
+          <Info className="h-3.5 w-3.5" />
+          Kaunsa button kya karta hai? (Guide)
+          {showActionHelp ? <ChevronUp className="h-3.5 w-3.5 ml-1" /> : <ChevronDown className="h-3.5 w-3.5 ml-1" />}
+        </button>
+      </div>
+
+      {showActionHelp && (
+        <div className="mb-4 rounded-lg border border-indigo-100 bg-indigo-50/50 p-4 text-sm text-indigo-800 space-y-4 shadow-sm">
+            <div className="bg-white p-3 rounded-md border border-indigo-100">
+              <strong className="flex items-center gap-1.5 text-indigo-900 mb-1"><CreditCard className="w-4 h-4"/> 1. Record Payment (Upar wala Green Button)</strong>
+              <p>Sirf apne hisab kitab (Accounting) ke liye. Agar student ne PhonePe/GPay kiya hai, toh uski transaction ID yahan save karein. <b>Is se student ko app mein koi course access nahi milta.</b> Ye sirf hisab-kitab safe rakhne ke liye hai.</p>
+            </div>
+
+            <div className="bg-white p-3 rounded-md border border-indigo-100">
+              <strong className="flex items-center gap-1.5 text-purple-900 mb-1"><Key className="w-4 h-4 text-purple-600"/> 2. Inline Grant Access (Edit click karne ke baad)</strong>
+              <p>Jab aap kisiko course access dena chahein. &quot;Combo&quot; select karke 12 mahine likhein aur Grant karein. <b>Is se student ka account update ho jayega aur usko course mil jayega.</b> Par haan, payment record yahan se save nahi hogi.</p>
+            </div>
+
+            <div className="bg-white p-3 rounded-md border border-indigo-100">
+              <strong className="flex items-center gap-1.5 text-blue-900 mb-1"><Pencil className="w-4 h-4 text-blue-600"/> 3. Edit (Basic Details & Password)</strong>
+              <p>Agar kisi user ka Password change karna hai, toh &quot;Edit&quot; pe click karein. Naya password type karke save karein. Save karte hi ek message ready ho jayega jise aap direct copy karke student ko WhatsApp kar sakte hain.</p>
+            </div>
+
+            <div className="bg-indigo-100/50 p-3 rounded-md border border-indigo-200 mt-2 text-xs">
+              <strong className="text-indigo-900">💡 Best Process:</strong> Agar student payment bhejta hai toh: Pehle <b>Record Payment</b> mein details dalein ➔ Phir user ko search karke usme <b>Grant Access</b> karein ➔ Phir <b>Edit</b> karke naya password set karke message copy karein aur WhatsApp par bhej dein.
+            </div>
+        </div>
+      )}
 
       {/* Search + Tabs */}
       <div className="flex flex-col gap-2 sm:flex-row">
@@ -992,6 +1260,184 @@ export default function UsersClient() {
                           >
                             <X className="mr-1 h-3 w-3" /> Cancel
                           </Button>
+                        </div>
+
+                        {/* ── 📚 DEEP LEARNING GUIDE: Edit Password & Tables ── */}
+                        <div className="mt-4 flex justify-end">
+                          <button
+                            onClick={() => setShowTechGuide(!showTechGuide)}
+                            className="flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-100 px-3 py-1 text-[10px] font-bold text-indigo-600 transition-colors hover:bg-indigo-100"
+                          >
+                            <Info className="h-3.5 w-3.5" />
+                            Technical Guide: DB Me Kya Hota Hai?
+                            {showTechGuide ? <ChevronUp className="h-3.5 w-3.5 ml-1" /> : <ChevronDown className="h-3.5 w-3.5 ml-1" />}
+                          </button>
+                        </div>
+                        
+                        {showTechGuide && (
+                          <div className="mt-2 rounded-lg border border-slate-200 bg-white p-4 shadow-sm text-[11px] leading-relaxed text-slate-600">
+                            <p className="mb-3">Jab aap upar ka form bharkar <strong>&quot;Save Changes&quot;</strong> par click karte hain, toh database mein ye actions perform hote hain:</p>
+
+                          <div className="space-y-3">
+                            <div className="bg-slate-50 p-2 rounded border border-slate-100">
+                              <strong className="text-slate-800">1. New Password:</strong> 
+                              <ul className="list-disc ml-4 mt-1 space-y-1">
+                                <li><strong>Target Table:</strong> <code className="bg-slate-200 px-1 rounded text-pink-600">mppsc_users</code></li>
+                                <li><strong>Action:</strong> Aap jo naya password daalte hain, system usko <i>bcrypt</i> ya <i>scrypt</i> se encrypt karta hai (Hash banata hai). Normal text format mein kabhi save nahi hota.</li>
+                                <li><strong>Impact:</strong> Jaise hi save hota hai, user turant is naye password se website par login kar payega. Puraana password invalid ho jayega. <strong>Password_hash</strong> field update hoti hai.</li>
+                              </ul>
+                            </div>
+
+                            <div className="bg-slate-50 p-2 rounded border border-slate-100">
+                              <strong className="text-slate-800">2. Plan & Expiry (Access):</strong> 
+                              <ul className="list-disc ml-4 mt-1 space-y-1">
+                                <li><strong>Target Table:</strong> <code className="bg-slate-200 px-1 rounded text-pink-600">mppsc_users</code></li>
+                                <li><strong>Action:</strong> Ye system ka sabse critical hissa hai. <strong>plan_tier</strong> column (&apos;free&apos;, &apos;lite&apos;, &apos;mains&apos;, &apos;combo&apos;) update hota hai aur <strong>access_expires_at</strong> column mein aaj ki date + months (jaise 3 months) ka future timestamp save ho jata hai.</li>
+                                <li><strong>Impact:</strong> Isi <i>plan_tier</i> ke basis par user ko Pre, Mains ya Combo ke videos/PDFs dikhte hain. Agar expiry date paas ho gayi, toh user automatically &apos;free&apos; tier mein switch ho jayega next login par.</li>
+                              </ul>
+                            </div>
+
+                            <div className="bg-slate-50 p-2 rounded border border-slate-100">
+                              <strong className="text-slate-800">3. Activity Logs (Audit Trail):</strong> 
+                              <ul className="list-disc ml-4 mt-1 space-y-1">
+                                <li><strong>Target Table:</strong> <code className="bg-slate-200 px-1 rounded text-pink-600">mppsc_activity_logs</code></li>
+                                <li><strong>Action:</strong> Ek permanent record ban jata hai ki &quot;Admin (Aapne) is User ka password ya plan change kiya hai is exact time par&quot;.</li>
+                                <li><strong>Impact:</strong> Agar kal ko koi dispute hota hai ki &quot;mera plan kisne change kiya?&quot;, toh Activity Log mein admin ki email aur time dono safe rahenge. Isse system secure and accountable banta hai.</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                        )}
+
+                        {/* ── 📋 Message Generator ── */}
+                        {editForm.password && (() => {
+                          const plan = editForm.planTier || user.planTier || 'free';
+                          const planLabel =
+                            plan === 'combo' ? 'Pre + Mains (Combo)'
+                            : plan === 'mains' ? 'Mains'
+                            : plan === 'lite' ? 'Pre (Prelims)'
+                            : 'Free';
+                          const accessLine =
+                            plan === 'combo' ? 'full access to Pre + Mains content and all exclusive features'
+                            : plan === 'mains' ? 'full access to Mains content and all exclusive features'
+                            : plan === 'lite' ? 'full access to Prelims (Pre) content and all exclusive features'
+                            : 'access to the platform';
+                          const msg =
+`Congratulations ${user.name || 'Student'}! 🎉
+Your MPPSC Zenscroll ${planLabel} subscription is now active!
+
+You now have ${accessLine}.
+
+Your Login Details:
+📧 Email: ${user.email}
+🔑 Password: ${editForm.password}
+
+Website: https://mppsc.zenscroll.app/login
+
+Wish you all the best for your preparation! 👍`;
+
+                          return (
+                            <div className="mt-3 rounded-lg border border-sky-200 bg-sky-50/60 p-3">
+                              <div className="mb-2 flex items-center justify-between">
+                                <span className="text-[11px] font-bold text-sky-800 uppercase tracking-wide">
+                                  📋 Copy Message — {planLabel}
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(msg);
+                                    toast.success('Message copied! Paste in WhatsApp/SMS.');
+                                  }}
+                                  className="flex items-center gap-1 rounded-md border border-sky-300 bg-white px-2 py-1 text-[10px] font-bold text-sky-700 hover:bg-sky-100"
+                                >
+                                  <Copy className="h-3 w-3" /> Copy
+                                </button>
+                              </div>
+                              <pre className="whitespace-pre-wrap rounded border border-sky-100 bg-white p-2 text-[10px] leading-relaxed text-slate-700 select-all">
+                                {msg}
+                              </pre>
+                              <p className="mt-1 text-[9px] text-sky-500">Password field mein jo likha hai woh yahan show ho raha hai. Save karne ke baad yeh hide ho jaayega.</p>
+                            </div>
+                          );
+                        })()}
+
+                        {/* ── Inline Grant Access ── */}
+
+                        <div className="mt-3 rounded-lg border border-purple-200 bg-purple-50/60 p-3">
+                          <div className="mb-2 flex items-center gap-1.5">
+                            <Gift className="h-3.5 w-3.5 text-purple-600" />
+                            <span className="text-[11px] font-bold text-purple-800 uppercase tracking-wide">Grant Access (No Payment)</span>
+                          </div>
+                          <div className="flex flex-wrap items-end gap-2">
+                            <div>
+                              <label className="mb-0.5 block text-[10px] font-bold text-purple-500 uppercase">Plan</label>
+                              <select
+                                value={inlineGrant[user.id]?.planTier ?? 'combo'}
+                                onChange={(e) =>
+                                  setInlineGrant((prev) => ({
+                                    ...prev,
+                                    [user.id]: { ...prev[user.id], planTier: e.target.value, accessMonths: prev[user.id]?.accessMonths ?? '', saving: false },
+                                  }))
+                                }
+                                className="h-8 rounded border border-purple-200 bg-white px-2 text-xs outline-none focus:border-purple-500"
+                              >
+                                <option value="lite">Pre (Prelims)</option>
+                                <option value="mains">Mains</option>
+                                <option value="combo">Combo (Pre + Mains)</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="mb-0.5 block text-[10px] font-bold text-purple-500 uppercase">Duration (months)</label>
+                              <input
+                                type="number"
+                                min={1}
+                                max={24}
+                                value={inlineGrant[user.id]?.accessMonths ?? ''}
+                                placeholder="e.g. 6"
+                                onChange={(e) =>
+                                  setInlineGrant((prev) => ({
+                                    ...prev,
+                                    [user.id]: { ...prev[user.id], planTier: prev[user.id]?.planTier ?? 'combo', accessMonths: e.target.value, saving: false },
+                                  }))
+                                }
+                                className="h-8 w-24 rounded border border-purple-200 bg-white px-2 text-xs outline-none focus:border-purple-500"
+                              />
+                            </div>
+                            <Button
+                              size="sm"
+                              disabled={inlineGrant[user.id]?.saving}
+                              className="h-8 bg-purple-600 text-xs font-bold text-white hover:bg-purple-700"
+                              onClick={async () => {
+                                const g = inlineGrant[user.id];
+                                const planTier = g?.planTier ?? 'combo';
+                                const accessMonths = g?.accessMonths ? Number(g.accessMonths) : 6;
+                                setInlineGrant((prev) => ({ ...prev, [user.id]: { ...prev[user.id], planTier, accessMonths: String(accessMonths), saving: true } }));
+                                try {
+                                  const res = await fetch('/api/admin/update-user', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ userId: user.id, planTier, accessMonths, isActive: true, isSubscribed: true }),
+                                  });
+                                  const data = await res.json();
+                                  if (res.ok) {
+                                    toast.success(`Granted ${planTier} for ${accessMonths}m to ${user.name || user.email}`);
+                                    fetchUsers();
+                                  } else {
+                                    toast.error(data.error || 'Grant failed');
+                                  }
+                                } catch {
+                                  toast.error('Network error');
+                                } finally {
+                                  setInlineGrant((prev) => ({ ...prev, [user.id]: { ...prev[user.id], saving: false } }));
+                                }
+                              }}
+                            >
+                              <Gift className="mr-1 h-3 w-3" />
+                              {inlineGrant[user.id]?.saving ? 'Granting...' : 'Grant'}
+                            </Button>
+                          </div>
+                          <p className="mt-1.5 text-[10px] text-purple-500">
+                            Current: <strong>{user.planTier === 'lite' ? 'Pre' : user.planTier || 'Free'}</strong> · Expiry: {user.accessExpiresAt ? new Date(user.accessExpiresAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'None'}
+                          </p>
                         </div>
                       </div>
                     )}

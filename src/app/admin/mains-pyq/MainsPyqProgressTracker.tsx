@@ -31,6 +31,9 @@ type OverviewSummary = {
   targetImported: number;
   targetPrepared: number;
   targetTotal: number;
+  totalQuestions: number;
+  totalDone: number;
+  marksBreakdown: { marks: number; count: number }[];
 };
 
 type OverviewSuccess = {
@@ -107,7 +110,7 @@ export function MainsPyqProgressTracker({ refreshTrigger }: { refreshTrigger?: n
           <div>
             <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider">Mains PYQ Yearly Mission Tracker</h2>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight flex items-center gap-2">
-               Target: 2020-2024 · <span className="text-emerald-600">{summary.targetImported} Papers in DB</span> · <span className="text-violet-600">{summary.targetPrepared} Fully Prepared</span>
+               Target: 2020-2024 · <span className="text-emerald-600">{summary.targetImported} Papers in DB</span> · <span className="text-violet-600">{summary.totalQuestions} Total Questions</span>
             </p>
           </div>
         </div>
@@ -128,6 +131,28 @@ export function MainsPyqProgressTracker({ refreshTrigger }: { refreshTrigger?: n
             className="border-t border-slate-100 bg-slate-50/30 overflow-hidden"
           >
             <div className="p-6 space-y-8">
+              {/* Overall Database Stats Card */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl border border-indigo-100 bg-indigo-50/50">
+                <div className="flex flex-col gap-1 border-r border-indigo-100 last:border-0 pr-4 last:pr-0">
+                  <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Total Stems</span>
+                  <span className="text-xl font-black text-indigo-900">{summary.totalQuestions}</span>
+                </div>
+                <div className="flex flex-col gap-1 border-r border-indigo-100 last:border-0 px-4 last:px-0">
+                  <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Done Answers</span>
+                  <span className="text-xl font-black text-emerald-700">{summary.totalDone}</span>
+                </div>
+                <div className="flex flex-col gap-1 border-r border-indigo-100 last:border-0 px-4 last:px-0 col-span-2 md:col-span-2">
+                  <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Marks Distribution</span>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {summary.marksBreakdown?.map((m) => (
+                      <Badge key={m.marks} variant="outline" className="bg-white border-indigo-200 text-indigo-700 font-bold text-[10px]">
+                        {m.marks} Markers: {m.count}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
               {/* Yearly Progress Cards */}
               <div className="space-y-6">
                 {groupedByYear.map((yearData, idx) => (

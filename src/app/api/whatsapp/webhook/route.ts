@@ -1,3 +1,12 @@
+/**
+ * WHATSAPP CLOUD API WEBHOOK
+ * 
+ * This is the public endpoint that Meta/WhatsApp hits when users send messages
+ * to our business number. It handles incoming text/images, routes them to the DB
+ * for the Admin Support Inbox, and triggers automated bot replies unless a human
+ * admin has taken over the chat (humanActive = true).
+ */
+
 import { NextResponse, after } from 'next/server';
 import { db } from '@/db';
 import { whatsappCampaignLogs, supportMessages } from '@/db/schema';
@@ -150,7 +159,7 @@ export async function POST(req: Request) {
                       .set({ status: newStatus, updatedAt: new Date() })
                       .where(eq(whatsappCampaignLogs.messageId, messageId)),
                     db.update(supportMessages)
-                      .set({ status: statusLower as any })
+                      .set({ status: statusLower as 'sent' | 'delivered' | 'read' | 'failed' })
                       .where(eq(supportMessages.id, messageId))
                   ]);
                 }
@@ -164,6 +173,8 @@ export async function POST(req: Request) {
                 
                 let incomingText = '';
                 let interactiveData = null;
+                let messageType: 'text' | 'image' | 'interactive' = 'text';
+                let mediaUrl = undefined;
 
                 if (messageObj.type === 'text') {
                   incomingText = messageObj.text?.body || '';
@@ -171,10 +182,16 @@ export async function POST(req: Request) {
                   // Extract the ID of the button clicked
                   interactiveData = messageObj.interactive?.button_reply?.id;
                   incomingText = `[Button: ${messageObj.interactive?.button_reply?.title || 'Unknown'}]`;
+                  messageType = 'interactive';
                 } else if (messageObj.type === 'button') {
                   // This is a Quick Reply button clicked from a Template message
                   interactiveData = messageObj.button?.payload;
                   incomingText = `[Template Button: ${messageObj.button?.text || 'Unknown'}]`;
+                  messageType = 'interactive';
+                } else if (messageObj.type === 'image') {
+                  incomingText = `[IMAGE] ${messageObj.image?.caption || ''}`.trim();
+                  messageType = 'image';
+                  mediaUrl = messageObj.image?.id;
                 } else {
                   incomingText = `[Unsupported Message Type: ${messageObj.type}]`;
                 }
@@ -186,8 +203,30 @@ export async function POST(req: Request) {
                     guestPhone: fromNumber,
                     guestName: contactName,
                     text: incomingText,
+                    messageType,
+                    mediaUrl,
                   });
                   const convId = saveRes.conversationId;
+
+                  // --- TELEGRAM ALERT FOR FIRST TIME USER ---
+                  if (saveRes.isFirstMessage) {
+                    const timeOptions: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' };
+                    const formattedTime = new Date().toLocaleString('en-IN', timeOptions);
+                    await sendHumanRequestTelegramNotification(
+                      `🎉 *New User Started Conversation!* 🎉\n\n` +
+                      `👤 *Student:* ${contactName}\n` +
+                      `📞 *Phone:* +${fromNumber}\n` +
+                      `🟢 *Platform:* WhatsApp\n` +
+                      `⏰ *Time:* ${formattedTime}\n\n` +
+                      `_User has just initiated their first ever message on the platform._`
+                    );
+                  }
+
+                  // --- BOT SUPPRESSION (IF HUMAN IS ACTIVE) ---
+                  // If admin took over, don't auto-reply unless it's a feedback button response
+                  if (saveRes.humanActive && !interactiveData?.startsWith('FDBK_')) {
+                    return; // Skip bot processing entirely
+                  }
 
                   // --- BOT AUTO-REPLY LOGIC ---
                   let responseText = '';
