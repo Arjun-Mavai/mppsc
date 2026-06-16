@@ -26,14 +26,20 @@ const updateUserSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   email: z.string().email().max(255).optional(),
   password: z.string().min(6).optional(),
-  planTier: z.enum(['free', 'lite', 'pro']).optional(),
+  planTier: z.enum(['free', 'lite', 'pro', 'mains', 'combo']).optional(),
   isActive: z.boolean().optional(),
   isSubscribed: z.boolean().optional(),
   accessMonths: z.number().min(1).max(24).optional(),
   forceLogout: z.boolean().optional(),
 });
 
-const PLAN_MONTHS: Record<string, number> = { lite: 8, pro: 6 };
+const PLAN_MONTHS: Record<string, number> = { lite: 6, pro: 6, mains: 6, combo: 6 };
+
+function getAccessGrantsForPlan(plan: string) {
+  if (plan === 'combo' || plan === 'pro') return JSON.stringify(['mppsc_pre', 'mppsc_mains']);
+  if (plan === 'mains') return JSON.stringify(['mppsc_mains']);
+  return JSON.stringify(['mppsc_pre']); // lite/free
+}
 
 export async function POST(request: Request) {
   let adminUserId: string | undefined;
@@ -109,6 +115,7 @@ export async function POST(request: Request) {
 
     if (planTier !== undefined && planTier !== targetUser.planTier) {
       updates.planTier = planTier;
+      updates.accessGrants = getAccessGrantsForPlan(planTier);
       updates.isSubscribed = planTier !== 'free';
       changes.push(`plan→${planTier}`);
 

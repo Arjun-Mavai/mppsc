@@ -88,7 +88,7 @@ export default function UsersClient() {
     name: '',
     email: '',
     phone: '',
-    planTier: 'pro' as 'lite' | 'pro',
+    planTier: 'combo' as 'lite' | 'pro' | 'mains' | 'combo',
     password: '',
     reason: '',
     accessMonths: '',
@@ -274,7 +274,7 @@ export default function UsersClient() {
           name: '',
           email: '',
           phone: '',
-          planTier: 'pro',
+          planTier: 'combo',
           password: '',
           reason: '',
           accessMonths: '',
@@ -388,8 +388,9 @@ export default function UsersClient() {
   };
 
   const planBadge = (tier: string | null) => {
-    if (tier === 'pro') return 'bg-gradient-to-r from-amber-500 to-orange-500 text-white';
+    if (tier === 'combo' || tier === 'pro') return 'bg-gradient-to-r from-amber-500 to-orange-500 text-white';
     if (tier === 'lite') return 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white';
+    if (tier === 'mains') return 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white';
     return 'bg-slate-200 text-slate-700';
   };
 
@@ -461,12 +462,13 @@ export default function UsersClient() {
             <select
               value={grantForm.planTier}
               onChange={(e) =>
-                setGrantForm((f) => ({ ...f, planTier: e.target.value as 'lite' | 'pro' }))
+                setGrantForm((f) => ({ ...f, planTier: e.target.value as any }))
               }
               className="h-9 rounded-lg border bg-white px-3 text-xs outline-none focus:border-purple-500"
             >
-              <option value="lite">Lite (8 months)</option>
-              <option value="pro">Pro (6 months)</option>
+              <option value="lite">Pre (6 months)</option>
+              <option value="mains">Mains (6 months)</option>
+              <option value="combo">Combo (6 months)</option>
             </select>
             <input
               type="text"
@@ -723,7 +725,7 @@ export default function UsersClient() {
                             <span
                               className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase ${planBadge(user.planTier)}`}
                             >
-                              {user.planTier || 'free'}
+                              {user.planTier === 'lite' ? 'pre' : user.planTier || 'free'}
                             </span>
                             <span
                               className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${status.cls}`}
@@ -950,8 +952,9 @@ export default function UsersClient() {
                               className="h-8 w-full rounded border bg-white px-2 text-xs outline-none focus:border-indigo-500"
                             >
                               <option value="free">Free</option>
-                              <option value="lite">Lite</option>
-                              <option value="pro">Pro</option>
+                              <option value="lite">Pre</option>
+                              <option value="mains">Mains</option>
+                              <option value="combo">Combo</option>
                             </select>
                           </div>
                           <div>

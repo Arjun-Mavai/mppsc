@@ -16,7 +16,13 @@ import { sendLeadNotification } from '@/lib/telegram';
 // No payment record created — metadata tracks admin grant.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const PLAN_MONTHS: Record<string, number> = { lite: 8, pro: 6 };
+const PLAN_MONTHS: Record<string, number> = { lite: 6, pro: 6, mains: 6, combo: 6 };
+
+function getAccessGrantsForPlan(plan: string) {
+  if (plan === 'combo' || plan === 'pro') return JSON.stringify(['mppsc_pre', 'mppsc_mains']);
+  if (plan === 'mains') return JSON.stringify(['mppsc_mains']);
+  return JSON.stringify(['mppsc_pre']); // lite/free
+}
 
 const grantSchema = z.object({
   email: z.string().email(),
@@ -25,7 +31,7 @@ const grantSchema = z.object({
     .union([z.string().min(10).max(15), z.literal('')])
     .optional()
     .transform((v) => (v === '' ? undefined : v)),
-  planTier: z.enum(['lite', 'pro']),
+  planTier: z.enum(['lite', 'pro', 'mains', 'combo']),
   password: z
     .string()
     .min(8, 'Min 8 characters')
@@ -93,6 +99,7 @@ export async function POST(request: Request) {
           phone: phone?.trim(),
           password: hashedPassword,
           planTier,
+          accessGrants: getAccessGrantsForPlan(planTier),
           isSubscribed: true,
           isActive: true,
           accessExpiresAt,
@@ -159,6 +166,7 @@ export async function POST(request: Request) {
       phone: phone?.trim(),
       password: hashedPassword,
       planTier,
+      accessGrants: getAccessGrantsForPlan(planTier),
       isSubscribed: true,
       isActive: true,
       role: 'guest',
