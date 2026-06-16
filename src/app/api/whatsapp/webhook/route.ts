@@ -374,12 +374,108 @@ export async function POST(req: Request) {
                         { id: 'LANG_HI', title: 'हिंदी' }
                       ];
                     } else {
-                      // If the previous message was a button click (like 'Payment Issue'), 
-                      // this text message is their problem description.
                       if (saveRes.previousUserText?.startsWith('[Button:')) {
                         responseText = `✅ *सन्देश प्राप्त हुआ (Message Received)*\n\nआपकी बात हम तक पहुँच गई है। हमारी टीम जल्द ही आपसे संपर्क करेगी। धन्यवाद!`;
-                      } else {
-                        // For random words like "Thanks", "Ok", or regular conversation: Do nothing.
+                      } 
+                      // 1. Gratitude (Thanks)
+                      else if (['thanks', 'thank you', 'tq', 'ty', 'dhanyawad', 'dhanyabad', 'shukriya'].some(word => textContent.includes(word))) {
+                        responseText = `You're most welcome! 😊 We're always here to help. Let us know if you need anything else.\n(आपका बहुत-बहुत स्वागत है! अगर आपको कुछ और मदद चाहिए तो हमें बताएं।)`;
+                      }
+                      // 2. Acknowledgement (Ok, Okay, Haan)
+                      else if (/^(ok|okay|k|thik|theek|haan|yes|yep|sure|achha)$/.test(textContent)) {
+                        responseText = `Great! 👍 Keep your motivation high. If you need the menu again, just send a 'Hi'. Happy studying!`;
+                      }
+                      // 3. Pricing & Plans
+                      else if (['price', 'pricing', 'fees', 'cost', 'kitne ka', 'plan'].some(word => textContent.includes(word))) {
+                        responseText = `Pricing details & Plans are available here! 🌐\n\n🔗 https://mppsc.zenscroll.app/pricing\n\nIf you need help choosing a plan, just let us know! 👇`;
+                        buttons = [
+                          { id: 'SUPPORT_EN', title: 'Support Desk' },
+                          { id: 'LANG_EN', title: 'Main Menu' }
+                        ];
+                      }
+                      // 4. App Download Queries
+                      else if (['app', 'download', 'play store', 'apk'].some(word => textContent.includes(word))) {
+                        responseText = `📱 *How to Install MPPSC ZenScroll App*\n\n` +
+                          `Our platform is a fast, seamless Web-App. You don't need the Play Store! Just follow these easy steps:\n\n` +
+                          `🤖 *For Android Users (Chrome):*\n` +
+                          `1️⃣ Open 🔗 https://mppsc.zenscroll.app\n` +
+                          `2️⃣ Click the **Three Dots (⋮)** in the top right corner.\n` +
+                          `3️⃣ Tap on **"Add to Home screen"**.\n` +
+                          `4️⃣ Click **"Add"** again. Done! 🎉\n\n` +
+                          `🍎 *For iPhone Users (Safari):*\n` +
+                          `1️⃣ Open 🔗 https://mppsc.zenscroll.app\n` +
+                          `2️⃣ Tap the **Share icon** (square with an up arrow) at the bottom.\n` +
+                          `3️⃣ Scroll down and tap **"Add to Home Screen"** ➕.\n` +
+                          `4️⃣ Tap **"Add"** in the top right. Done! 🎉\n\n` +
+                          `Now you can use ZenScroll exactly like a native app! 🚀`;
+                      }
+                      // 5. Free / Demo Queries
+                      else if (['demo', 'free', 'trial'].some(word => textContent.includes(word))) {
+                        responseText = `We have plenty of Free Resources! 🎁\n\nYou can explore our Syllabus Library, attempt Free Tests, and read our Strategy Blogs without any payment.\n\nLet me show you the menu 👇`;
+                        buttons = [
+                          { id: 'LANG_EN', title: 'English Menu' },
+                          { id: 'LANG_HI', title: 'हिंदी मेनू' }
+                        ];
+                      }
+                      // 6. Call Requests
+                      else if (['call', 'number', 'phone', 'baat karni', 'contact'].some(word => textContent.includes(word))) {
+                        responseText = `Right now, we provide fast and reliable support via WhatsApp chat! 💬\n\nPlease share your exact query here, and I'll personally look into it to assist you.`;
+                      }
+                      // 7. Greetings (Morning/Night)
+                      else if (textContent.includes('morning') || textContent.includes('night') || textContent.includes('evening') || textContent.includes('afternoon')) {
+                        responseText = `Greetings! ☀️ Every day is a new opportunity for your MPPSC prep. How can we assist you today? Send 'Hi' to open the menu.`;
+                      }
+                      // 8. Compliments
+                      else if (['awesome', 'great', 'nice', 'good', 'amazing', 'super', 'best', 'badhiya', 'mast', 'wow'].includes(textContent)) {
+                        responseText = `Thank you for the kind words! 🌟 Your success is our ultimate goal. Keep scrolling, keep learning!`;
+                      }
+                      // 9. Bot Identity
+                      else if (textContent.includes('who are you') || textContent.includes('tum kaun') || textContent.includes('bot')) {
+                        responseText = `I am the automated assistant for MPPSC ZenScroll! 🤖 I'm here to help you navigate our resources instantly and connect you to our human support team if needed.`;
+                      }
+                      // 10. Login / Password Issues
+                      else if (['password', 'login', 'open nahi ho raha', 'khol nahi raha', 'log in', 'bhul gaya'].some(word => textContent.includes(word))) {
+                        responseText = `🔐 *Login & Password Help*\n\nAgar aap apna password bhul gaye hain ya login nahi kar pa rahe hain, to kripya niche click karke support ticket raise karein. Humari team turant aapse sampark karke password reset karne me madad karegi 👇`;
+                        buttons = [
+                          { id: 'ISSUE_LOG_HI', title: 'लॉगिन हेल्प दर्ज करें' },
+                          { id: 'LANG_HI', title: '🔙 मुख्य मेनू' }
+                        ];
+                      }
+                      // 11. Wait / Hold On
+                      else if (['ruko', 'ek minute', 'wait', 'hold', '1 min', 'thodi der'].some(word => textContent.includes(word))) {
+                        responseText = `Sure, take your time! ⏳\nWhenever you are ready to continue, just send a 'Hi' and I'll be right here.`;
+                      }
+                      // 12. Language Switch Request (Hindi)
+                      else if (['hindi', 'hindi me batao', 'hindi please', 'hindi medium'].some(word => textContent.includes(word))) {
+                        responseText = `जी बिल्कुल! हमारी पूरी प्रणाली हिंदी में उपलब्ध है।\n\nकृपया नीचे दिए गए बटन पर क्लिक करके हिंदी मेनू खोलें 👇`;
+                        buttons = [
+                          { id: 'LANG_HI', title: 'हिंदी मेनू (Menu)' }
+                        ];
+                      }
+                      // 13. Discount / Offers / Promo Code
+                      else if (['discount', 'offer', 'kam kardo', 'concession', 'promo', 'coupon'].some(word => textContent.includes(word))) {
+                        responseText = `Humare sabhi plans already bohot affordable (student-friendly) prices par hain! 🎓\n\nAap current plans aur pricing yahan check kar sakte hain:\n🔗 https://mppsc.zenscroll.app/pricing\n\nKya aapko plan select karne me koi aur madad chahiye? 👇`;
+                        buttons = [
+                          { id: 'SUPPORT_HI', title: 'सपोर्ट से बात करें' }
+                        ];
+                      }
+                      // 14. Payment Failed / Amount Deducted
+                      else if (['fail', 'paise kat', 'deduct', 'amount cut', 'kat gaya', 'nahi hua'].some(word => textContent.includes(word))) {
+                        responseText = `💳 *Payment Issue*\n\nDon't worry at all! Humari support team is transaction ko turant system me check karegi aur aapki puri madad karegi.\n\nKripya niche click karke apna issue raise karein, humein thodi detail provide karein aur hum ise jald se jald resolve karenge 👇`;
+                        buttons = [
+                          { id: 'ISSUE_PAY_HI', title: 'पेमेंट इश्यू दर्ज करें' }
+                        ];
+                      }
+                      // 15. Strategy / How to Study
+                      else if (['kaise padhu', 'strategy', 'notes kaise', 'kahan se', 'start karu', 'guidance'].some(word => textContent.includes(word))) {
+                        responseText = `📚 *MPPSC Preparation Strategy*\n\nTaiyari ki sabse pehli seedhi hai 'Syllabus' ko samajhna aur 'PYQs' ko analyze karna.\n\nHumne specially MPPSC ke liye ek detailed Syllabus Library banayi hai. Apna preparation yahan se shuru karein:\n🔗 https://mppsc.zenscroll.app/syllabus`;
+                      }
+                      // 16. Human / Customer Care / Issues
+                      else if (['insaan', 'customer care', 'human', 'agent', 'real person', 'koi hai', 'baat karna', 'issue', 'problem', 'dikkat', 'samasya'].some(word => textContent.includes(word))) {
+                        responseText = `Aap bilkul humari support team se baat kar sakte hain! 👨‍💻\n\nKripya apni problem ya query yahan detail me type karke bhejein. Humari team jald hi (soon) aapse yahan chat par sampark karegi aur aapki madad karegi.`;
+                      }
+                      else {
+                        // For random words that don't match, do nothing to avoid spamming the user.
                         return;
                       }
                     }
