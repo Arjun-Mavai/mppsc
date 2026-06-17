@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { adminGetRecentMainsPyqActivity } from '@/actions/mains-pyq-prepared-actions';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,18 +9,17 @@ import { History, ChevronDown, ChevronUp, Clock, FileJson } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 export function RecentPyqPrepActivity() {
-  const [activities, setActivities] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    async function load() {
+  const { data: activities = [], isLoading: loading } = useQuery({
+    queryKey: ['admin-mains-pyq-recent-activity'],
+    queryFn: async () => {
       const r = await adminGetRecentMainsPyqActivity();
-      if (r.success) setActivities(r.data);
-      setLoading(false);
-    }
-    load();
-  }, []);
+      if (!r.success) throw new Error(r.error || 'Failed to fetch activity');
+      return r.data;
+    },
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
 
   return (
     <Card className="border-amber-100 bg-white shadow-sm overflow-hidden transition-all duration-300 mb-6">
@@ -39,7 +39,7 @@ export function RecentPyqPrepActivity() {
             <p className="text-[10px] font-bold text-amber-600/60 uppercase">Track recent model answer batch saves</p>
           </div>
         </div>
-        {!loading && activities.length > 0 && (
+        {!loading && activities.length > 0 && activities[0].updatedAt && (
           <Badge variant="outline" className="text-[10px] font-black border-amber-200 text-amber-700 bg-amber-100">
             Last: {formatDistanceToNow(new Date(activities[0].updatedAt))} ago
           </Badge>
@@ -68,12 +68,12 @@ export function RecentPyqPrepActivity() {
                       </div>
                       <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {formatDistanceToNow(new Date(a.updatedAt), { addSuffix: true })}
+                        {a.updatedAt ? formatDistanceToNow(new Date(a.updatedAt), { addSuffix: true }) : 'N/A'}
                       </span>
                     </div>
                     <p className="text-xs font-black text-slate-800 truncate">{a.questionEn || a.questionHi}</p>
                     <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter mt-0.5">
-                      Batch saved on {new Date(a.updatedAt).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' })}
+                      Batch saved on {a.updatedAt ? new Date(a.updatedAt).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' }) : 'N/A'}
                     </p>
                   </div>
                 </div>

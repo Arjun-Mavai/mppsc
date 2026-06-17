@@ -91,19 +91,28 @@ export async function sendTelegramBotMessage(rawText: string, opts?: SendTelegra
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    // Bold
-    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-    // Underline
-    .replace(/__(.*?)__/g, '<u>$1</u>')
-    // Italic
-    .replace(/(?<!\w)_(.*?)_(?!\w)/g, '<i>$1</i>')
-    // Strikethrough
-    .replace(/~~(.*?)~~/g, '<s>$1</s>')
+    // Bold (support multi-line)
+    .replace(/\*\*([\s\S]*?)\*\*/g, '<b>$1</b>')
+    // Underline (support multi-line)
+    .replace(/__([\s\S]*?)__/g, '<u>$1</u>')
+    // Italic (support multi-line)
+    .replace(/(?<!\w)_([\s\S]*?)_(?!\w)/g, '<i>$1</i>')
+    // Strikethrough (support multi-line)
+    .replace(/~~([\s\S]*?)~~/g, '<s>$1</s>')
     // Code
-    .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/`([^`]+?)`/g, '<code>$1</code>')
     // Convert Telegram native quotes `> ` to blockquote
     .replace(/^&gt; (.*?)$/gm, '<blockquote>$1</blockquote>')
     .replace(/<\/blockquote>\n<blockquote>/g, '\n'); // Merge adjacent blockquotes
+
+  // Telegram max message length is 4096. 
+  // We strictly block messages over 4000 chars to avoid HTML tag breakage and API rejection.
+  if (htmlText.length > 4000) {
+    return { 
+      success: false, 
+      error: `Message is too long (${htmlText.length} chars). Telegram limit is 4096. Please shorten or split your message.` 
+    };
+  }
 
   // Handle Inline Keyboard
   let inline_keyboard: any[][] = [];
@@ -117,39 +126,88 @@ export async function sendTelegramBotMessage(rawText: string, opts?: SendTelegra
 
   const reply_markup = inline_keyboard.length > 0 ? { inline_keyboard } : undefined;
 
-  // Determine endpoint
-  const endpoint = opts?.photoUrl ? 'sendPhoto' : 'sendMessage';
-  const url = `https://api.telegram.org/bot${token}/${endpoint}`;
-
-  // Build payload
-  const payload: any = {
-    chat_id: chatId,
-    parse_mode: 'HTML',
-    reply_markup,
-  };
-
-  if (opts?.photoUrl) {
-    payload.photo = opts.photoUrl;
-    payload.caption = htmlText;
-  } else {
-    payload.text = htmlText;
-    payload.disable_web_page_preview = true;
-  }
-
   try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+    let finalMessageId;
 
-    const data = await res.json();
-    if (!data.ok) {
-      console.error('Telegram API Error:', data);
-      return { success: false, error: data.description || 'Failed to send message' };
+    if (opts?.photoUrl) {
+      if (htmlText.length > 1000) {
+        // Text is too long for a caption (1024 limit). Send photo first, then text separately.
+        const photoRes = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            chat_id: chatId, 
+            photo: opts.photoUrl 
+          }),
+        });
+        const photoData = await photoRes.json();
+        
+        if (!photoData.ok) {
+          console.error('Telegram API Error (Photo only):', photoData);
+          return { success: false, error: photoData.description || 'Failed to send photo' };
+        }
+
+        // Now send the text as a separate message
+        const textRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: htmlText,
+            parse_mode: 'HTML',
+            disable_web_page_preview: true,
+            reply_markup,
+          }),
+        });
+        const textData = await textRes.json();
+        if (!textData.ok) {
+          console.error('Telegram API Error (Follow-up Text):', textData);
+          return { success: false, error: textData.description || 'Failed to send follow-up text' };
+        }
+        finalMessageId = textData.result.message_id;
+      } else {
+        // Caption is short enough to send with the photo
+        const res = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            photo: opts.photoUrl,
+            caption: htmlText,
+            parse_mode: 'HTML',
+            reply_markup,
+          }),
+        });
+        const data = await res.json();
+        if (!data.ok) {
+          console.error('Telegram API Error (Photo + Caption):', data);
+          return { success: false, error: data.description || 'Failed to send photo with caption' };
+        }
+        finalMessageId = data.result.message_id;
+      }
+    } else {
+      // No photo, just send message
+      const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: htmlText,
+          parse_mode: 'HTML',
+          disable_web_page_preview: true,
+          reply_markup,
+        }),
+      });
+
+      const data = await res.json();
+      if (!data.ok) {
+        console.error('Telegram API Error (Message):', data);
+        return { success: false, error: data.description || 'Failed to send message' };
+      }
+      finalMessageId = data.result.message_id;
     }
 
-    return { success: true, messageId: data.result.message_id };
+    return { success: true, messageId: finalMessageId };
   } catch (error: any) {
     console.error('Failed to send telegram message:', error);
     return { success: false, error: error.message || 'Unknown error occurred' };
@@ -179,15 +237,18 @@ export async function sendTelegramPolls(polls: TelegramPollData[], destination: 
   
   for (const poll of polls) {
     try {
+      const safeOptions = poll.options.slice(0, 10).map(opt => opt.substring(0, 100));
+      const safeCorrectIndex = Math.max(0, Math.min(poll.correctIndex, safeOptions.length - 1));
+
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: chatId,
           question: poll.question.substring(0, 300), // Max 300 chars
-          options: poll.options.map(opt => opt.substring(0, 100)), // Max 100 chars
+          options: safeOptions,
           type: 'quiz',
-          correct_option_id: poll.correctIndex,
+          correct_option_id: safeCorrectIndex,
           explanation: poll.explanation ? poll.explanation.substring(0, 200) : undefined // Max 200 chars
         }),
       });
