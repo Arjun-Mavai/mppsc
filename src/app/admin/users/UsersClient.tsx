@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -71,14 +72,43 @@ interface ActivityLog {
 type TabFilter = 'all' | 'active' | 'expired' | 'inactive' | 'deleted' | 'logs';
 
 export default function UsersClient() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [logs, setLogs] = useState<ActivityLog[]>([]);
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState<TabFilter>('all');
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [showActionHelp, setShowActionHelp] = useState(false);
+
+  const queryClient = useQueryClient();
+
+  const { data: usersData, isLoading: loadingUsers } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: async () => {
+      const res = await fetch('/api/admin/users', { cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || 'Failed to load users');
+        throw new Error(data.error || 'Failed to load users');
+      }
+      return data;
+    },
+    enabled: tab !== 'logs',
+  });
+
+  const { data: logsData, isLoading: loadingLogs } = useQuery({
+    queryKey: ['admin-logs'],
+    queryFn: async () => {
+      const res = await fetch('/api/admin/user-activities', { cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to fetch logs');
+      return data;
+    },
+    enabled: tab === 'logs',
+  });
+
+  const users: User[] = usersData?.users || [];
+  const stats: Stats | null = usersData?.stats || null;
+  const logs: ActivityLog[] = logsData?.logs || [];
+  const loading = tab === 'logs' ? loadingLogs : loadingUsers;
+
   const [showTechGuide, setShowTechGuide] = useState(false);
   const [editForm, setEditForm] = useState({
     name: '',
@@ -105,7 +135,6 @@ export default function UsersClient() {
   // Manual payment recording state
   const [showManualPay, setShowManualPay] = useState(false);
   const [showManualHelp, setShowManualHelp] = useState(false);
-  const [manualPaySaving, setManualPaySaving] = useState(false);
   const [manualPayForm, setManualPayForm] = useState({
     userSearch: '',
     selectedUserId: '',
@@ -116,44 +145,59 @@ export default function UsersClient() {
     notes: '',
   });
 
+  const manualPayMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const res = await fetch('/api/admin/record-manual-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to record payment');
+      return data;
+    },
+    onSuccess: (data, variables) => {
+      toast.success(data.message);
+      setShowManualPay(false);
+      const userId = variables.userId;
+      const planTier = variables.planTier;
+      
+      // Auto-expand and pre-fill grant
+      setExpandedUser(userId);
+      setInlineGrant(prev => ({
+        ...prev,
+        [userId]: { planTier, accessMonths: '6', saving: false }
+      }));
+      
+      setManualPayForm({ 
+        userSearch: '', 
+        selectedUserId: '', 
+        selectedUserName: '', 
+        transactionId: '', 
+        amountRupees: '', 
+        planTier: 'combo', 
+        notes: '' 
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Network error');
+    }
+  });
+
   const handleManualPay = async () => {
     if (!manualPayForm.selectedUserId) { toast.error('User select karo pehle'); return; }
     if (!manualPayForm.transactionId.trim()) { toast.error('Transaction ID / UTR required'); return; }
     if (!manualPayForm.amountRupees || Number(manualPayForm.amountRupees) <= 0) { toast.error('Valid amount enter karo'); return; }
-    setManualPaySaving(true);
-    try {
-      const res = await fetch('/api/admin/record-manual-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: manualPayForm.selectedUserId,
-          transactionId: manualPayForm.transactionId.trim(),
-          amountRupees: Number(manualPayForm.amountRupees),
-          planTier: manualPayForm.planTier,
-          notes: manualPayForm.notes || undefined,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        toast.success(data.message);
-        setShowManualPay(false);
-        const userId = manualPayForm.selectedUserId;
-        const planTier = manualPayForm.planTier;
-        
-        // Auto-expand and pre-fill grant
-        setExpandedUser(userId);
-        setInlineGrant(prev => ({
-          ...prev,
-          [userId]: { planTier, accessMonths: '6', saving: false }
-        }));
-        
-        setManualPayForm({ userSearch: '', selectedUserId: '', selectedUserName: '', transactionId: '', amountRupees: '', planTier: 'combo', notes: '' });
-        fetchUsers();
-      } else {
-        toast.error(data.error || 'Failed');
-      }
-    } catch { toast.error('Network error'); }
-    finally { setManualPaySaving(false); }
+    
+    manualPayMutation.mutate({
+      userId: manualPayForm.selectedUserId,
+      transactionId: manualPayForm.transactionId.trim(),
+      amountRupees: Number(manualPayForm.amountRupees),
+      planTier: manualPayForm.planTier,
+      notes: manualPayForm.notes || undefined,
+    });
   };
 
   const manualPayMatches = manualPayForm.userSearch.length >= 2
@@ -162,37 +206,6 @@ export default function UsersClient() {
         return u.name?.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.phone?.includes(manualPayForm.userSearch);
       }).slice(0, 6)
     : [];
-
-  const fetchUsers = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/admin/users', { cache: 'no-store' });
-      const data = await res.json();
-      if (res.ok) {
-        setUsers(data.users);
-        setStats(data.stats);
-      } else toast.error(data.error || 'Failed to load users');
-    } catch {
-      toast.error('Network error');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchLogs = useCallback(async () => {
-    try {
-      const res = await fetch('/api/admin/user-activities', { cache: 'no-store' });
-      const data = await res.json();
-      if (res.ok) setLogs(data.logs);
-    } catch {
-      console.error('Failed to fetch logs');
-    }
-  }, []);
-
-  useEffect(() => {
-    if (tab === 'logs') fetchLogs();
-    else fetchUsers();
-  }, [fetchUsers, fetchLogs, tab]);
 
   // ── Expand user card for editing ──
   const toggleExpand = (user: User) => {
@@ -253,7 +266,7 @@ export default function UsersClient() {
       if (res.ok) {
         toast.success(data.message);
         setExpandedUser(null);
-        fetchUsers();
+        queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       } else {
         toast.error(data.error);
       }
@@ -276,7 +289,7 @@ export default function UsersClient() {
       const data = await res.json();
       if (res.ok) {
         toast.success(data.message);
-        fetchUsers();
+        queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       } else toast.error(data.error);
     } catch {
       toast.error('Failed');
@@ -294,7 +307,7 @@ export default function UsersClient() {
       const data = await res.json();
       if (res.ok) {
         toast.success(data.message);
-        fetchUsers();
+        queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       } else toast.error(data.error);
     } catch {
       toast.error('Failed');
@@ -313,7 +326,7 @@ export default function UsersClient() {
       const data = await res.json();
       if (res.ok) {
         toast.success('User forcefully logged out from all devices');
-        fetchUsers();
+        queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       } else toast.error(data.error);
     } catch {
       toast.error('Failed to force logout');
@@ -348,7 +361,7 @@ export default function UsersClient() {
           reason: '',
           accessMonths: '',
         });
-        fetchUsers();
+        queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       } else toast.error(data.error);
     } catch {
       toast.error('Failed to grant plan');
@@ -369,7 +382,7 @@ export default function UsersClient() {
       const data = await res.json();
       if (res.ok) {
         toast.success(data.message);
-        fetchUsers();
+        queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       } else {
         toast.error(data.error);
       }
@@ -719,12 +732,12 @@ export default function UsersClient() {
           </div>
           <Button
             size="sm"
-            disabled={manualPaySaving}
+            disabled={manualPayMutation.isPending}
             className="h-8 bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700"
             onClick={handleManualPay}
           >
-            <CreditCard className="mr-1 h-3 w-3" />
-            {manualPaySaving ? 'Recording...' : 'Record Payment (Audit Only)'}
+            {manualPayMutation.isPending ? <RefreshCw className="mr-1 h-3 w-3 animate-spin" /> : <CreditCard className="mr-1 h-3 w-3" />}
+            {manualPayMutation.isPending ? 'Recording...' : 'Record Payment (Audit Only)'}
           </Button>
         </div>
       )}
@@ -825,7 +838,7 @@ export default function UsersClient() {
             </button>
           ))}
           <button
-            onClick={() => (tab === 'logs' ? fetchLogs() : fetchUsers())}
+            onClick={() => (queryClient.invalidateQueries({ queryKey: [tab === 'logs' ? 'admin-logs' : 'admin-users'] }))}
             disabled={loading}
             className="rounded-md border bg-white px-2 py-1.5 text-slate-500 hover:bg-slate-50"
           >
@@ -1420,7 +1433,7 @@ Wish you all the best for your preparation! 👍`;
                                   const data = await res.json();
                                   if (res.ok) {
                                     toast.success(`Granted ${planTier} for ${accessMonths}m to ${user.name || user.email}`);
-                                    fetchUsers();
+                                    queryClient.invalidateQueries({ queryKey: ['admin-users'] });
                                   } else {
                                     toast.error(data.error || 'Grant failed');
                                   }

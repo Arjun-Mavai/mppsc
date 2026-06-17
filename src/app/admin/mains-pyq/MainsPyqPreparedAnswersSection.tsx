@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   adminGetPyqPrepOverview,
   adminGetPyqPaperPrepDetail,
@@ -63,19 +64,9 @@ function emptyWorkspaces(): BatchWorkspace[] {
 }
 
 export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsPyqPaperOption[] }) {
-  const [overview, setOverview] = useState<{
-    totalQuestions: number;
-    questionsWithTwoVariants: number;
-    questionsWithAnyVariant?: number;
-  } | null>(null);
   const [workspaces, setWorkspaces] = useState<BatchWorkspace[]>(emptyWorkspaces);
   const [activeWs, setActiveWs] = useState(0);
-  const [detail, setDetail] = useState<{
-    progress: { total: number; done: number };
-    questions: { id: string; variantCount: number; previewHi: string; previewEn?: string; marks: number; part: string }[];
-  } | null>(null);
   const [loadingType, setLoadingType] = useState<'generate' | 'save' | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
   const [variantPurgeText, setVariantPurgeText] = useState('');
   const [variantPurging, setVariantPurging] = useState(false);
   const [purgeTargetId, setPurgeTargetId] = useState<string>('ALL');
@@ -139,38 +130,41 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
   };
 
   const paperId = workspaces[activeWs]?.paperId ?? '';
-
-  const loadOverview = useCallback(async () => {
-    const r = await adminGetPyqPrepOverview();
-    if (r.success && r.data) setOverview(r.data);
-  }, []);
-
-  const loadDetail = useCallback(async (pid: string) => {
-    if (!pid) return;
-    setDetailLoading(true);
-    const r = await adminGetPyqPaperPrepDetail(pid);
-    setDetailLoading(false);
-    if (r.success && r.data) {
-      setDetail({
-        progress: r.data.progress,
-        questions: r.data.questions.map((q) => ({
-          id: q.id,
-          variantCount: q.variantCount,
-          previewHi: q.previewHi,
-          previewEn: q.previewEn,
-          marks: q.marks,
-          part: q.part,
-        })),
-      });
-    } else {
-      setDetail(null);
-      toast.error((r as { error?: string }).error ?? 'Detail load failed');
+  const { data: overview, refetch: loadOverview } = useQuery({
+    queryKey: ['admin-pyq-prep-overview'],
+    queryFn: async () => {
+      const r = await adminGetPyqPrepOverview();
+      if (!r.success) throw new Error(r.error || 'Failed to load overview');
+      return r.data;
     }
-  }, []);
+  });
 
-  useEffect(() => {
-    loadOverview();
-  }, [loadOverview]);
+  const { data: detailRaw, isLoading: detailLoading, refetch: loadDetailQuery } = useQuery({
+    queryKey: ['admin-pyq-prep-detail', paperId],
+    queryFn: async () => {
+      if (!paperId) return null;
+      const r = await adminGetPyqPaperPrepDetail(paperId);
+      if (!r.success) throw new Error((r as any).error || 'Detail load failed');
+      return r.data;
+    },
+    enabled: !!paperId
+  });
+
+  const detail = detailRaw ? {
+    progress: detailRaw.progress,
+    questions: detailRaw.questions.map((q) => ({
+      id: q.id,
+      variantCount: q.variantCount,
+      previewHi: q.previewHi,
+      previewEn: q.previewEn,
+      marks: q.marks,
+      part: q.part,
+    })),
+  } : null;
+
+  const loadDetail = async (pid: string) => {
+    await loadDetailQuery();
+  };
 
   useEffect(() => {
     if (papers.length === 0) {
@@ -184,10 +178,7 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
     );
   }, [papers]);
 
-  useEffect(() => {
-    if (paperId) loadDetail(paperId);
-    else setDetail(null);
-  }, [paperId, loadDetail]);
+
 
   const pctBoth =
     overview && overview.totalQuestions > 0

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getMainsPyqDetailedOverview } from '@/actions/mains-pyq-actions';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -46,33 +47,23 @@ type OverviewSuccess = {
 type OverviewResponse = OverviewSuccess | { success: false; error: string };
 
 export function MainsPyqProgressTracker({ refreshTrigger }: { refreshTrigger?: number }) {
-  const [data, setData] = useState<OverviewSuccess | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const res: OverviewResponse = await getMainsPyqDetailedOverview();
-    if (res.success) {
-      setData(res);
-      setError(null);
-    } else {
-      setError(res.error || 'Failed to load PYQ progress');
-    }
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    void Promise.resolve().then(load);
-  }, [load, refreshTrigger]);
-
-  useEffect(() => {
-    if (isOpen) void Promise.resolve().then(load);
-  }, [isOpen, load]);
+  const { data, isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['admin-mains-pyq-progress', refreshTrigger],
+    queryFn: async () => {
+      const res = await getMainsPyqDetailedOverview();
+      if (!res.success) {
+        throw new Error(res.error || 'Failed to load PYQ progress');
+      }
+      return res as OverviewSuccess;
+    },
+    // Instead of loading on mount immediately if not needed, we can enable it always 
+    // or keep it fetching as useQuery will cache it.
+  });
 
   if (loading && !data) return null;
-  if (error || !data) return null;
+  if (queryError || !data) return null;
 
   const { summary, data: papers, missing } = data;
 

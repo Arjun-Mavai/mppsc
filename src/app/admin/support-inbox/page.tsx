@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Search, Check, CheckCheck, MoreVertical, Phone, Globe, ChevronLeft, MessageCircleOff, ChevronDown, Bot, Power } from 'lucide-react';
+import { Send, Search, Check, CheckCheck, MoreVertical, Phone, Globe, ChevronLeft, MessageCircleOff, ChevronDown, Bot, Power, X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getConversations, getMessages, sendAdminReply, markAsRead, resolveConversation, toggleHumanActive } from '@/actions/support-inbox-actions';
 import { toast } from 'sonner';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 
 type Message = {
   id: string;
@@ -14,6 +15,7 @@ type Message = {
   status?: string | null;
   messageType?: string | null;
   mediaUrl?: string | null;
+  isOptimistic?: boolean;
 };
 
 type Conversation = {
@@ -28,11 +30,110 @@ type Conversation = {
 };
 
 export default function SupportInbox() {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const queryClient = useQueryClient();
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [activeMessages, setActiveMessages] = useState<Message[]>([]);
   const [replyText, setReplyText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+
+  const { data: conversations = [] } = useQuery({
+    queryKey: ['support-conversations'],
+    queryFn: async () => {
+      const res = await getConversations();
+      return res.success ? (res.conversations as Conversation[]) : [];
+    },
+    refetchInterval: 10000,
+  });
+
+  const { data: activeMessages = [], isLoading: isLoadingMessages } = useQuery({
+    queryKey: ['support-messages', activeId],
+    queryFn: async (): Promise<Message[]> => {
+      if (!activeId) return [];
+      const res = await getMessages(activeId);
+      if (res.success) {
+        const formatted: Message[] = res.messages.map((m: any) => ({
+          id: m.id,
+          text: m.text,
+          sender: m.sender as 'bot' | 'user' | 'admin',
+          status: m.status,
+          messageType: m.messageType,
+          mediaUrl: m.mediaUrl,
+          timestamp: new Date(m.createdAt || new Date()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isOptimistic: false
+        }));
+        
+        markAsRead(activeId).catch(console.error);
+        return formatted;
+      }
+      return [];
+    },
+    refetchInterval: 5000,
+    enabled: !!activeId,
+  });
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async ({ text, opts }: { text: string; opts?: any }) => {
+      const res = await sendAdminReply(activeId!, text, opts);
+      if (!res.success) throw new Error((res as any).error || 'Failed to send message');
+      return res;
+    },
+    onMutate: async ({ text }) => {
+      await queryClient.cancelQueries({ queryKey: ['support-messages', activeId] });
+      const previousMessages = queryClient.getQueryData<Message[]>(['support-messages', activeId]);
+      
+      const newMessage: Message = {
+        id: `opt-${Date.now()}`,
+        text,
+        sender: 'admin',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isOptimistic: true,
+        status: 'sending'
+      };
+
+      queryClient.setQueryData(['support-messages', activeId], (old: Message[] = []) => [...old, newMessage]);
+      return { previousMessages };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousMessages) {
+        queryClient.setQueryData(['support-messages', activeId], context.previousMessages);
+      }
+      toast.error('Failed to send message: ' + err.message);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['support-messages', activeId] });
+      queryClient.invalidateQueries({ queryKey: ['support-conversations'] });
+    },
+  });
+
+  const toggleBotMutation = useMutation({
+    mutationFn: async (newStatus: boolean) => {
+      const res = await toggleHumanActive(activeId!, newStatus);
+      if (!res.success) throw new Error('Failed to toggle bot');
+      return res;
+    },
+    onMutate: async (newStatus) => {
+      await queryClient.cancelQueries({ queryKey: ['support-conversations'] });
+      const previousConversations = queryClient.getQueryData<Conversation[]>(['support-conversations']);
+      
+      queryClient.setQueryData(['support-conversations'], (old: Conversation[] = []) => 
+        old.map(c => c.id === activeId ? { ...c, humanActive: newStatus } : c)
+      );
+      
+      return { previousConversations };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousConversations) {
+        queryClient.setQueryData(['support-conversations'], context.previousConversations);
+      }
+      toast.error('Failed to toggle status: ' + err.message);
+    },
+    onSuccess: (data, newStatus) => {
+      toast.success(newStatus ? 'Bot Paused (Human mode)' : 'Bot Activated');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['support-conversations'] });
+    }
+  });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -54,84 +155,12 @@ export default function SupportInbox() {
     scrollToBottom();
   }, [activeMessages.length, activeId]);
 
-  // Polling to keep inbox live
-  useEffect(() => {
-    const fetchInbox = async () => {
-      const res = await getConversations();
-      if (res.success) {
-        setConversations(res.conversations as any);
-      }
-    };
-    
-    fetchInbox(); // initial
-    const interval = setInterval(fetchInbox, 5000); // Poll every 5 seconds
-    return () => clearInterval(interval);
-  }, []);
-
-  // Fetch active conversation messages
-  useEffect(() => {
-    let ignore = false;
-
-    if (activeId) {
-      // Fetch active conversation messages
-      const fetchMsgs = async () => {
-        const res = await getMessages(activeId);
-        if (ignore) return; // Prevent race conditions if activeId changes
-
-        if (res.success) {
-          // Map DB messages to UI format
-          const formatted = res.messages.map((m: any) => ({
-            id: m.id,
-            text: m.text,
-            sender: m.sender as 'bot' | 'user' | 'admin',
-            status: m.status,
-            messageType: m.messageType,
-            mediaUrl: m.mediaUrl,
-            timestamp: new Date(m.createdAt || new Date()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          }));
-          setActiveMessages((prev) => {
-            // Prevent optimistic UI from disappearing if DB is lagging behind
-            if (formatted.length < prev.length) {
-              return prev;
-            }
-            return formatted;
-          });
-        }
-        await markAsRead(activeId);
-      };
-      
-      fetchMsgs();
-      const interval = setInterval(fetchMsgs, 3000); // Poll active chat faster
-      return () => {
-        ignore = true;
-        clearInterval(interval);
-      };
-    } else {
-      setActiveMessages([]);
-    }
-  }, [activeId]);
-
   const activeConversation = conversations.find(c => c.id === activeId);
 
-  const handleSend = async () => {
+  const handleSend = () => {
     if (!replyText.trim() || !activeId || !activeConversation) return;
-    
-    const textToSend = replyText;
-    setReplyText(''); // Clear instantly for UI speed
-
-    // Optimistically add to UI
-    setActiveMessages(prev => [...prev, {
-      id: Date.now().toString(),
-      text: textToSend,
-      sender: 'admin',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }]);
-
-    // Send via API and Save to DB
-    const res = await sendAdminReply(activeId, textToSend);
-    if (!res.success) {
-      toast.error('Failed to send message via API. Please try again.');
-    }
+    sendMessageMutation.mutate({ text: replyText });
+    setReplyText('');
   };
 
   const handleResolveFeedback = async () => {
@@ -139,51 +168,24 @@ export default function SupportInbox() {
     
     const textToSend = '✅ क्या आपकी समस्या का समाधान हो गया है? (Has your query been resolved?)\n\nआपको हमारा सपोर्ट कैसा लगा? कृपया नीचे दिए गए बटनों में से कोई एक चुनें (How was your experience?):\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*';
     
-    // Optimistically add to UI
-    setActiveMessages(prev => [...prev, {
-      id: Date.now().toString(),
-      text: textToSend + '\n[Buttons: Excellent, Good, Bad]',
-      sender: 'admin',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }]);
-
-    const res = await sendAdminReply(activeId, textToSend, {
-      buttons: [
-        { id: 'FDBK_EXC', title: '🤩 बहुत बढ़िया' },
-        { id: 'FDBK_AVG', title: '👍 ठीक था' },
-        { id: 'FDBK_BAD', title: '😞 बेकार' }
-      ]
+    sendMessageMutation.mutate({ 
+      text: textToSend,
+      opts: {
+        buttons: [
+          { id: 'FDBK_EXC', title: '🤩 बहुत बढ़िया' },
+          { id: 'FDBK_AVG', title: '👍 ठीक था' },
+          { id: 'FDBK_BAD', title: '😞 बेकार' }
+        ]
+      }
     });
     
-    // Allow the bot to respond to the feedback by disabling humanActive
-    await resolveConversation(activeId);
-    
-    if (!res.success) {
-      toast.error('Failed to send feedback request.');
-    } else {
-      toast.success('Feedback request sent!');
-    }
+    // Also resolve conversation in background
+    resolveConversation(activeId).catch(console.error);
   };
 
-  const handleToggleBot = async () => {
+  const handleToggleBot = () => {
     if (!activeId || !activeConversation) return;
-    const newStatus = !activeConversation.humanActive;
-    
-    // Optimistic UI update
-    setConversations(prev => prev.map(c => 
-      c.id === activeId ? { ...c, humanActive: newStatus } : c
-    ));
-
-    const res = await toggleHumanActive(activeId, newStatus);
-    if (!res.success) {
-      toast.error('Failed to toggle bot status.');
-      // Revert on failure
-      setConversations(prev => prev.map(c => 
-        c.id === activeId ? { ...c, humanActive: !newStatus } : c
-      ));
-    } else {
-      toast.success(newStatus ? 'Bot Paused (Human mode)' : 'Bot Activated');
-    }
+    toggleBotMutation.mutate(!activeConversation.humanActive);
   };
 
   const QUICK_REPLIES = [
@@ -235,7 +237,6 @@ export default function SupportInbox() {
               key={chat.id}
               onClick={() => {
                 setActiveId(chat.id);
-                setActiveMessages([]);
               }}
 
               className={cn(
@@ -288,7 +289,6 @@ export default function SupportInbox() {
             <button
               onClick={() => {
                 setActiveId(null);
-                setActiveMessages([]);
               }}
 
               className="mr-3 md:hidden p-2 -ml-2 text-zinc-600 hover:bg-zinc-200 rounded-full transition-colors"
@@ -296,7 +296,7 @@ export default function SupportInbox() {
               <ChevronLeft size={20} />
             </button>
             <div className="h-10 w-10 rounded-full bg-zinc-300 flex items-center justify-center mr-3 shrink-0 overflow-hidden">
-              <span className="text-zinc-600 font-bold text-lg">{activeConversation.guestName.charAt(0).toUpperCase()}</span>
+              <span className="text-zinc-600 font-bold text-lg">{activeConversation.guestName?.charAt(0).toUpperCase() || '?'}</span>
             </div>
             <div className="flex-1 min-w-0">
               <h2 className="font-semibold text-[#111b21] text-sm md:text-base truncate">{activeConversation.guestName}</h2>
@@ -308,15 +308,18 @@ export default function SupportInbox() {
             {/* Bot Toggle Control */}
             <button
               onClick={handleToggleBot}
+              disabled={toggleBotMutation.isPending}
               className={cn(
-                "ml-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all border",
+                "ml-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all border disabled:opacity-50",
                 activeConversation.humanActive 
                   ? "bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200" 
                   : "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200"
               )}
               title={activeConversation.humanActive ? "Bot is paused. Click to activate bot." : "Bot is active. Click to pause bot."}
             >
-              {activeConversation.humanActive ? (
+              {toggleBotMutation.isPending ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : activeConversation.humanActive ? (
                 <><Power size={14} className="text-amber-600" /> Bot Paused</>
               ) : (
                 <><Bot size={14} className="text-emerald-600" /> Bot Active</>
@@ -330,7 +333,7 @@ export default function SupportInbox() {
             onScroll={handleScroll}
             className="flex-1 overflow-y-auto min-h-0 p-4 space-y-3 flex flex-col bg-[#efeae2] bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')] bg-repeat relative"
           >
-            <div className="absolute inset-0 bg-white/40 pointer-events-none"></div> {/* Subtle overlay to make text readable */}
+            <div className="absolute inset-0 bg-white/40 pointer-events-none"></div> 
             
             <div className="text-center my-2 relative z-10">
               <span className="bg-[#ffeecd] text-[#54656f] text-xs px-3 py-1 rounded-lg shadow-sm">
@@ -352,7 +355,8 @@ export default function SupportInbox() {
                     ? "bg-white text-[#111b21] rounded-tl-none" 
                     : msg.sender === 'bot'
                       ? "bg-zinc-800 text-white rounded-tr-none"
-                      : "bg-[#d9fdd3] text-[#111b21] rounded-tr-none"
+                      : "bg-[#d9fdd3] text-[#111b21] rounded-tr-none",
+                  msg.isOptimistic && "opacity-70"
                 )}>
                   {msg.sender !== 'user' && (
                     <span className={cn(
@@ -369,8 +373,9 @@ export default function SupportInbox() {
                       <img 
                         src={`/api/whatsapp/media?id=${msg.mediaUrl}`} 
                         alt="Attached media" 
-                        className="max-w-full h-auto object-cover max-h-64"
+                        className="max-w-full h-auto object-cover max-h-64 cursor-pointer hover:opacity-90 transition-opacity"
                         loading="lazy"
+                        onClick={() => setFullscreenImage(`/api/whatsapp/media?id=${msg.mediaUrl}`)}
                       />
                       {msg.text && msg.text !== '[IMAGE]' && (
                         <p className="p-2 text-xs leading-snug whitespace-pre-wrap break-words border-t border-zinc-200 bg-white">
@@ -386,11 +391,12 @@ export default function SupportInbox() {
                     "flex items-center justify-end gap-1 mt-0.5 -mb-0.5 text-[#667781]"
                   )}>
                     <span className="text-[10px] opacity-80">{msg.timestamp}</span>
-                    {msg.sender !== 'user' && (
+                    {msg.sender !== 'user' && !msg.isOptimistic && (
                       msg.status === 'read' || msg.status === 'READ' ? <CheckCheck size={14} className="text-[#53bdeb]" /> :
                       msg.status === 'delivered' || msg.status === 'DELIVERED' ? <CheckCheck size={14} className="text-[#8696a0]" /> :
                       <Check size={14} className="text-[#8696a0]" />
                     )}
+                    {msg.isOptimistic && <Loader2 size={10} className="animate-spin" />}
                   </div>
                 </div>
               </div>
@@ -398,7 +404,6 @@ export default function SupportInbox() {
             
             <div ref={messagesEndRef} className="h-1 shrink-0" />
             
-            {/* Scroll to Bottom Button */}
             {showScrollBottom && (
               <button
                 onClick={scrollToBottom}
@@ -414,7 +419,8 @@ export default function SupportInbox() {
             <div className="flex overflow-x-auto gap-2 px-4 py-2 scrollbar-hide items-center bg-[#f0f2f5]">
               <button
                 onClick={handleResolveFeedback}
-                className="whitespace-nowrap rounded-full bg-white border border-[#d1d7db] px-3 py-1.5 text-xs font-semibold text-[#54656f] shadow-sm hover:bg-zinc-50 transition-colors flex items-center gap-1 shrink-0"
+                disabled={sendMessageMutation.isPending}
+                className="whitespace-nowrap rounded-full bg-white border border-[#d1d7db] px-3 py-1.5 text-xs font-semibold text-[#54656f] shadow-sm hover:bg-zinc-50 transition-colors flex items-center gap-1 shrink-0 disabled:opacity-50"
               >
                 <CheckCheck size={14} className="text-emerald-500" /> Resolve & Ask Feedback
               </button>
@@ -446,13 +452,13 @@ export default function SupportInbox() {
               />
               <button 
                 onClick={handleSend}
-                disabled={!replyText.trim()}
+                disabled={!replyText.trim() || sendMessageMutation.isPending}
                 className={cn(
                   "flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white shadow-sm transition-colors disabled:opacity-50 disabled:pointer-events-none",
                   replyText.trim() ? "bg-[#00a884] hover:bg-[#008f6f]" : "bg-[#8696a0]"
                 )}
               >
-                <Send size={18} className="ml-0.5" />
+                {sendMessageMutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} className="ml-0.5" />}
               </button>
             </div>
           </div>
@@ -468,6 +474,31 @@ export default function SupportInbox() {
             <p className="text-sm font-medium">Select a chat to start messaging</p>
             <p className="text-xs mt-2 opacity-80">End-to-end encryption is managed by WhatsApp Business API.</p>
           </div>
+        </div>
+      )}
+
+      {/* FULLSCREEN IMAGE MODAL */}
+      {fullscreenImage && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setFullscreenImage(null)}
+        >
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              setFullscreenImage(null);
+            }}
+            className="absolute top-4 right-4 text-white hover:text-zinc-300 z-[110] p-2 bg-black/50 rounded-full"
+          >
+            <X size={24} />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img 
+            src={fullscreenImage} 
+            alt="Fullscreen view" 
+            className="max-w-full max-h-full object-contain cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>

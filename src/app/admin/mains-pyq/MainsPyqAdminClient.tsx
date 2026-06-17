@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { importMainsPyqPaperJson, listMainsPyqPapers } from '@/actions/mains-pyq-actions';
 import { MainsPyqPreparedAnswersSection } from '@/app/admin/mains-pyq/MainsPyqPreparedAnswersSection';
 import { MainsPyqVaultGuideAndManage } from '@/app/admin/mains-pyq/MainsPyqVaultGuideAndManage';
@@ -36,21 +37,24 @@ export type AdminMainsPyqPaperOption = {
 export function MainsPyqAdminClient() {
   const [raw, setRaw] = useState('');
   const [loading, setLoading] = useState(false);
-  const [papers, setPapers] = useState<AdminMainsPyqPaperOption[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const load = useCallback(async () => {
-    const res = await listMainsPyqPapers();
-    if (res.success) {
-      setPapers(res.data ?? []);
-      setRefreshTrigger((prev) => prev + 1);
+  const { data: papers = [], refetch: loadQuery } = useQuery({
+    queryKey: ['admin-mains-pyq-papers'],
+    queryFn: async () => {
+      const res = await listMainsPyqPapers();
+      if (!res.success) {
+        toast.error('Failed to load papers');
+        throw new Error('Failed to load papers');
+      }
+      return res.data ?? [];
     }
-  }, []);
+  });
 
-  useEffect(() => {
-    // Schedule load asynchronously to avoid synchronous setState inside effect
-    void Promise.resolve().then(load);
-  }, [load]);
+  const load = useCallback(async () => {
+    await loadQuery();
+    setRefreshTrigger((prev) => prev + 1);
+  }, [loadQuery]);
 
   const loadSampleJson = async () => {
     try {
