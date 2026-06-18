@@ -14,7 +14,7 @@ const hostnames = [
   'i.pravatar.cc',
   'images.unsplash.com',
   'npnjzfmywierjpxbnehw.supabase.co',
-  // 'example.com',
+  'utfs.io',
 ];
 
 const nextConfig: NextConfig = {

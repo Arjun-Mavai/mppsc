@@ -68,6 +68,12 @@ function SelectContent({
         position={position}
         align={align}
         {...props}
+        onTouchStart={(e) => {
+          props.onTouchStart?.(e);
+          // By moving focus to the Content container on touch start,
+          // we prevent iOS Safari from forcefully jumping back to the focused item when scrolling.
+          e.currentTarget.focus();
+        }}
       >
         <SelectScrollUpButton />
         <SelectPrimitive.Viewport
