@@ -747,7 +747,7 @@ export default function BlogContentRenderer({
             <div className="mt-12 flex items-center justify-between border-t border-slate-100 pt-6">
               <div>
                 <p className="text-xs font-medium text-slate-400">Published by</p>
-                <p className="text-sm font-bold text-slate-800">MPPSC 2026</p>
+                <p className="text-sm font-bold text-slate-800">MPPSC Zenscroll</p>
               </div>
             </div>
           </>

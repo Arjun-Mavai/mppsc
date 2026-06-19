@@ -52,19 +52,40 @@ export function serializeAccessGrants(grants: string[]): string {
 }
 
 /**
- * Legacy: before `access_grants` existed, subscribed lite/pro implied Pre product.
- * If column is empty but user is paid pre → treat as Pre access.
+ * effectiveAccessGrants — single source of truth for what this user has access to.
+ *
+ * Priority:
+ * 1. accessGrants column exists (array) → use it directly
+ * 2. accessGrants column exists (JSON string) → parse it
+ * 3. Legacy fallback: derive from plan_tier
+ *
+ * Legacy plan_tier → grants mapping:
+ *   - 'lite' | 'pro'   → [mppsc_pre]          (Pre-only paid plans)
+ *   - 'combo'          → [mppsc_pre, mppsc_mains] (full combo)
+ *   - 'mains'          → [mppsc_mains]         (Mains-only, NO Pre access)
+ *   - 'free' / null    → []                    (nothing paid)
+ *   - isSubscribed=true with null tier → [mppsc_pre] (assume Pre, safe default)
  */
 export function effectiveAccessGrants(user: UserAccessInfo): string[] {
-  if (Array.isArray(user.accessGrants)) {
-    return dedupeGrants(user.accessGrants.filter((x): x is string => typeof x === 'string'));
+  // Check both accessGrants and access_grants (DB vs client shape)
+  const rawGrants = (user as any).accessGrants ?? (user as any).access_grants ?? null;
+
+  if (Array.isArray(rawGrants)) {
+    return dedupeGrants(rawGrants.filter((x): x is string => typeof x === 'string'));
   }
 
-  const g = parseAccessGrants(user.accessGrants);
+  const g = parseAccessGrants(rawGrants);
   if (g.length > 0) return dedupeGrants(g);
-  const tier = String(user.planTier ?? 'free').toLowerCase();
-  const paidPre = tier === 'lite' || tier === 'pro' || user.isSubscribed;
-  if (paidPre) return [ACCESS_PRE];
+
+  // ── Legacy fallback: no grants column, derive from plan_tier ──
+  const tier = String(user.planTier ?? (user as any).plan_tier ?? 'free').toLowerCase();
+
+  if (tier === 'combo') return [ACCESS_PRE, ACCESS_MAINS];
+  if (tier === 'mains') return [ACCESS_MAINS]; // Mains-only → NO Pre access
+  if (tier === 'lite' || tier === 'pro') return [ACCESS_PRE];
+  // isSubscribed=true but no tier info → safe default: Pre access
+  if (user.isSubscribed) return [ACCESS_PRE];
+
   return [];
 }
 

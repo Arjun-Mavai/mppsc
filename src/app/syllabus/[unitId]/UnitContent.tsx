@@ -135,10 +135,19 @@ export default function UnitContent({
     // Use the original index in rawTopics (not the filtered index) so
     // search filtering doesn't accidentally unlock premium topics.
     const originalIndex = rawTopics.findIndex((t) => t.id === topic.id);
+    // Pass full user context including accessGrants so getUserTier() works correctly
+    const userForAccess = user
+      ? {
+          isSubscribed: !!isSubscribed,
+          planTier: user.planTier,
+          accessGrants: user.accessGrants,
+          role: user.role,
+        }
+      : null;
     return isSyllabusTopicLocked(
       topic,
       originalIndex >= 0 ? originalIndex : _filteredIndex,
-      { isSubscribed: !!isSubscribed, plan_tier: user?.planTier },
+      userForAccess,
       unitId,
       rawTopics.length
     );
