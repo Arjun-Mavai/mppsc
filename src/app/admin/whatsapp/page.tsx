@@ -31,7 +31,7 @@ export default function WhatsAppDashboard() {
   const [senderMode, setSenderMode] = useState<'MAIN' | 'TEST'>('MAIN');
 
   // New Features States
-  const [templateName, setTemplateName] = useState<'mppsc_pyq_promo' | 'zenscroll_alert'>('zenscroll_alert');
+  const [templateName, setTemplateName] = useState<'mppsc_pyq_promo' | 'zenscroll_alert' | 'mppsc_journey_start'>('mppsc_journey_start');
   const [imageUrl, setImageUrl] = useState('https://mppsc.zenscroll.in/marketing/mppsc-alert.png');
   
   // Custom Add State
@@ -282,6 +282,7 @@ export default function WhatsAppDashboard() {
                   >
                     <option value="zenscroll_alert">ZenScroll Alert (Image + Body + Link)</option>
                     <option value="mppsc_pyq_promo">MPPSC PYQ Promo (Text Only)</option>
+                    <option value="mppsc_journey_start">MPPSC Journey Start (Text + Buttons)</option>
                   </select>
                 </div>
 
@@ -312,6 +313,26 @@ export default function WhatsAppDashboard() {
                       <span className="text-zinc-400 text-xs italic">Stop updates: Reply STOP</span>
                       <div className="mt-3 flex items-center justify-center py-2 bg-white border border-zinc-200 rounded text-blue-600 font-medium text-xs">
                         ↗ Visit website
+                      </div>
+                    </>
+                  ) : templateName === 'mppsc_journey_start' ? (
+                    <>
+                      नमस्ते {"{{user.name}}"}! 👋<br/><br/>
+                      MPPSC में सफलता केवल अधिक पढ़ने से नहीं आती।<br/><br/>
+                      पहले यह समझना ज़रूरी है:<br/>
+                      📌 क्या पढ़ना है<br/>
+                      📌 कितना पढ़ना है<br/>
+                      📌 और परीक्षा वास्तव में क्या पूछ रही है<br/><br/>
+                      ZenScroll का उद्देश्य सिलेबस, PYQs और Answer Thinking के बीच संबंध को स्पष्ट करना है।<br/><br/>
+                      📖 Explore Prelims Library<br/>
+                      🏛️ Explore Mains Library<br/><br/>
+                      मुख्य मेनू और अन्य जानकारी के लिए 'Hi' या 'Menu' लिखकर रिप्लाई करें। 👇<br/>
+                      MPPSC ZenScroll | Clarity Before Content<br/>
+                      <div className="mt-3 flex items-center justify-center py-2 bg-white border border-zinc-200 rounded text-blue-600 font-medium text-xs mb-2">
+                        🔗 Prelims Library
+                      </div>
+                      <div className="flex items-center justify-center py-2 bg-white border border-zinc-200 rounded text-blue-600 font-medium text-xs">
+                        🔗 Mains Library
                       </div>
                     </>
                   ) : (
