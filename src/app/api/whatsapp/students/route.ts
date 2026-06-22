@@ -27,12 +27,13 @@ export async function GET() {
       .select({
         guestId: whatsappCampaignLogs.guestId,
         status: whatsappCampaignLogs.status,
+        templateName: whatsappCampaignLogs.templateName,
         createdAt: whatsappCampaignLogs.createdAt,
         updatedAt: whatsappCampaignLogs.updatedAt,
       })
       .from(whatsappCampaignLogs);
 
-    const guestLogMap = new Map<string, { status: string; sentAt: Date | null; updatedAt: Date | null }>();
+    const guestLogMap = new Map<string, { status: string; sentAt: Date | null; updatedAt: Date | null; templateName: string | null }>();
 
     logs.forEach(log => {
       const incoming = log.status || 'SENT';
@@ -42,6 +43,7 @@ export async function GET() {
           status: incoming,
           sentAt: log.createdAt ?? null,
           updatedAt: log.updatedAt ?? null,
+          templateName: log.templateName ?? null,
         });
       }
     });
@@ -53,6 +55,7 @@ export async function GET() {
         campaignStatus: logEntry?.status || 'UNSENT',
         lastSentAt: logEntry?.sentAt?.toISOString() ?? null,
         lastStatusAt: logEntry?.updatedAt?.toISOString() ?? null,
+        lastTemplateName: logEntry?.templateName ?? null,
       };
     });
 

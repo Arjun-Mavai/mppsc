@@ -21,6 +21,7 @@ type Guest = {
   campaignStatus?: string;
   lastSentAt?: string | null;
   lastStatusAt?: string | null;
+  lastTemplateName?: string | null;
 };
 
 type Stats = {
@@ -316,6 +317,19 @@ export default function WhatsAppDashboard() {
       totalCost,
     };
   }, [templateStats]);
+
+  const templateGroupedRecipients = React.useMemo(() => {
+    const groups: Record<string, Guest[]> = {};
+    students.forEach((s) => {
+      if (s.lastTemplateName) {
+        if (!groups[s.lastTemplateName]) {
+          groups[s.lastTemplateName] = [];
+        }
+        groups[s.lastTemplateName].push(s);
+      }
+    });
+    return groups;
+  }, [students]);
 
   return (
     <div className="min-h-screen bg-zinc-50/50 p-6 sm:p-10 text-zinc-950 font-sans">
@@ -891,6 +905,100 @@ export default function WhatsAppDashboard() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Template-wise Audience Breakdown */}
+        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <div className="mb-6">
+            <h2 className="text-base font-semibold text-zinc-950 flex items-center gap-2">
+              <span>📊</span> Template-wise Audience Breakdown & Analytics
+            </h2>
+            <p className="text-sm text-zinc-500 mt-0.5">Click any template below to view the list of students, statuses, and performance insights.</p>
+          </div>
+
+          <div className="space-y-4">
+            {Object.keys(templateGroupedRecipients).length === 0 ? (
+              <p className="text-zinc-500 text-sm py-8 text-center border border-dashed border-zinc-200 rounded-xl bg-zinc-50/50">No template-specific campaign history found yet.</p>
+            ) : (
+              Object.entries(templateGroupedRecipients).map(([tName, recipients]) => {
+                const templateInfo = TEMPLATE_MAP[tName as WhatsAppTemplateName];
+                const label = templateInfo?.label || tName;
+                const category = templateInfo?.category || 'Unknown';
+                
+                const tSent = recipients.filter(r => r.campaignStatus === 'SENT').length;
+                const tDelivered = recipients.filter(r => r.campaignStatus === 'DELIVERED').length;
+                const tRead = recipients.filter(r => r.campaignStatus === 'READ').length;
+                const tFailed = recipients.filter(r => r.campaignStatus === 'FAILED').length;
+                
+                const rate = category === 'Marketing' ? 0.8632 : 0.115;
+                const cost = (tDelivered + tRead) * rate;
+
+                return (
+                  <details key={tName} className="group border border-zinc-200 rounded-lg overflow-hidden [&_summary::-webkit-details-marker]:hidden bg-white">
+                    <summary className="flex items-center justify-between p-4 bg-zinc-50/50 hover:bg-zinc-100/50 cursor-pointer select-none transition-colors">
+                      <div className="flex items-center gap-3">
+                        <span className="text-zinc-400 group-open:rotate-90 transition-transform font-bold">&rarr;</span>
+                        <div>
+                          <div className="font-semibold text-sm text-zinc-900">{label}</div>
+                          <div className="font-mono text-xs text-zinc-400 mt-0.5">{tName}</div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-6">
+                        <div className="hidden md:flex items-center gap-2 text-[11px]">
+                          <span className="bg-zinc-100 px-2 py-0.5 rounded text-zinc-600 font-medium">Sent: {tSent}</span>
+                          <span className="bg-yellow-50 px-2 py-0.5 rounded text-yellow-700 font-bold border border-yellow-100">Pending: {tSent}</span>
+                          <span className="bg-green-50 px-2 py-0.5 rounded text-green-700 font-bold border border-green-100">Delivered: {tDelivered}</span>
+                          <span className="bg-blue-50 px-2 py-0.5 rounded text-blue-700 font-bold border border-blue-100">Read: {tRead}</span>
+                          <span className="bg-red-50 px-2 py-0.5 rounded text-red-700 font-bold border border-red-100">Failed: {tFailed}</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-bold text-zinc-900">₹{cost.toFixed(2)}</div>
+                          <div className="text-[10px] text-zinc-500 font-medium">{category} Rate</div>
+                        </div>
+                      </div>
+                    </summary>
+                    
+                    <div className="border-t border-zinc-200 p-4 bg-white">
+                      <div className="overflow-x-auto max-h-80 overflow-y-auto">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                            <tr className="border-b border-zinc-200 bg-zinc-50 text-zinc-500 uppercase tracking-wider font-semibold text-[10px]">
+                              <th className="py-2.5 px-3">Student Name</th>
+                              <th className="py-2.5 px-3">Phone Number</th>
+                              <th className="py-2.5 px-3">Status</th>
+                              <th className="py-2.5 px-3">Sent At</th>
+                              <th className="py-2.5 px-3">Last Status At</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {recipients.map((r) => (
+                              <tr key={r.id} className="border-b border-zinc-100 hover:bg-zinc-50/50">
+                                <td className="py-2.5 px-3 font-medium text-zinc-900">{r.name}</td>
+                                <td className="py-2.5 px-3 font-mono text-zinc-500">{r.mobile}</td>
+                                <td className="py-2.5 px-3">
+                                  <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+                                    r.campaignStatus === 'READ' ? 'bg-blue-50 text-blue-700 border border-blue-100' :
+                                    r.campaignStatus === 'DELIVERED' ? 'bg-green-50 text-green-700 border border-green-100' :
+                                    r.campaignStatus === 'SENT' ? 'bg-yellow-50 text-yellow-700 border border-yellow-100' :
+                                    'bg-red-50 text-red-700 border border-red-100'
+                                  }`}>
+                                    {r.campaignStatus}
+                                  </span>
+                                </td>
+                                <td className="py-2.5 px-3 text-zinc-500">{r.lastSentAt ? format(new Date(r.lastSentAt), 'dd MMM yyyy, hh:mm a') : '—'}</td>
+                                <td className="py-2.5 px-3 text-zinc-500">{r.lastStatusAt ? format(new Date(r.lastStatusAt), 'dd MMM yyyy, hh:mm a') : '—'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </details>
+                );
+              })
+            )}
           </div>
         </div>
 
