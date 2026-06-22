@@ -31,7 +31,7 @@ export default function WhatsAppDashboard() {
   const [senderMode, setSenderMode] = useState<'MAIN' | 'TEST'>('MAIN');
 
   // New Features States
-  const [templateName, setTemplateName] = useState<'mppsc_pyq_promo' | 'zenscroll_alert' | 'mppsc_journey_start' | 'mppsc_toppers_quote' | 'mppsc_pre_mains_utility'>('mppsc_pre_mains_utility');
+  const [templateName, setTemplateName] = useState<'mppsc_pyq_promo' | 'zenscroll_alert' | 'mppsc_journey_start' | 'mppsc_toppers_quote' | 'mppsc_pre_mains_ut' | 'mppsc_mains_ut_new' | 'hello_world' | 'mppsc_mains_2025'>('mppsc_pre_mains_ut');
   const [imageUrl, setImageUrl] = useState('https://mppsc.zenscroll.in/marketing/mppsc-alert.png');
   
   // Custom Add State
@@ -281,13 +281,16 @@ export default function WhatsAppDashboard() {
                     className="w-full rounded-md border border-zinc-200 py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
                   >
                     <optgroup label="🟢 Utility Templates (Low Cost)">
-                      <option value="mppsc_pre_mains_utility">MPPSC Pre+Mains Update</option>
-                      <option value="mppsc_toppers_quote">MPPSC Toppers Quote</option>
-                      <option value="zenscroll_alert">ZenScroll Alert (Image + Body)</option>
+                      <option value="mppsc_pre_mains_ut">MPPSC Pre+Mains Update (Utility)</option>
+                      <option value="mppsc_mains_ut_new">MPPSC Mains Update (Utility)</option>
+                      <option value="mppsc_pyq_promo">MPPSC PYQ Promo (Utility)</option>
+                      <option value="hello_world">Hello World (Utility)</option>
                     </optgroup>
                     <optgroup label="📢 Marketing Templates">
-                      <option value="mppsc_journey_start">MPPSC Journey Start (Text + Buttons)</option>
-                      <option value="mppsc_pyq_promo">MPPSC PYQ Promo (Text Only)</option>
+                      <option value="mppsc_toppers_quote">MPPSC Toppers Quote (Marketing)</option>
+                      <option value="mppsc_mains_2025">MPPSC Mains 2025 (Marketing)</option>
+                      <option value="mppsc_journey_start">MPPSC Journey Start (Marketing)</option>
+                      <option value="zenscroll_alert">ZenScroll Alert (Marketing)</option>
                     </optgroup>
                   </select>
                 </div>
@@ -341,7 +344,7 @@ export default function WhatsAppDashboard() {
                         🔗 Mains Library
                       </div>
                     </>
-                  ) : templateName === 'mppsc_pre_mains_utility' ? (
+                  ) : templateName === 'mppsc_pre_mains_ut' ? (
                     <>
                       नमस्ते {"{{user.name}}"}! 👋<br/><br/>
                       MPPSC (Prelims और Mains) की तैयारी में सबसे बड़ी चुनौती यह है कि छात्र विशाल सिलेबस के बीच यह समझ नहीं पाते कि वास्तव में क्या पढ़ना है और क्या छोड़ना है।<br/><br/>
@@ -373,6 +376,22 @@ export default function WhatsAppDashboard() {
                       <div className="mt-3 flex items-center justify-center py-2 bg-white border border-zinc-200 rounded text-blue-600 font-medium text-xs mb-2">
                         🔗 Explore Mains Library
                       </div>
+                    </>
+                  ) : templateName === 'mppsc_mains_ut_new' ? (
+                    <>
+                      नमस्ते {"{{user.name}}"}! 👋<br/><br/>
+                      MPPSC Mains की तैयारी में Syllabus और PYQs...<br/><br/>
+                      [Preview for MPPSC Mains Utility Template]
+                    </>
+                  ) : templateName === 'hello_world' ? (
+                    <>
+                      Welcome and congratulations!! This message...<br/><br/>
+                      [Preview for Hello World Template]
+                    </>
+                  ) : templateName === 'mppsc_mains_2025' ? (
+                    <>
+                      नमस्ते {"{{user.name}}"}! 👋 Mains परीक्षा पास आ रही है...<br/><br/>
+                      [Preview for MPPSC Mains 2025 Template]
                     </>
                   ) : (
                     <>
