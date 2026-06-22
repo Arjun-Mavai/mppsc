@@ -760,12 +760,16 @@ export default function WhatsAppDashboard() {
             <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
                <div className="mb-4">
                 <h2 className="text-base font-semibold text-zinc-950">Bulk Import Data</h2>
-                <p className="text-sm text-zinc-500 leading-relaxed">Paste CSV formatted exactly as <strong>Name, Phone</strong>. Once uploaded, they will appear in the directory on the right where you can select them.</p>
+                <div className="text-xs text-zinc-500 space-y-1 mt-1 leading-relaxed">
+                  <p><strong>Option 1 (नाम के साथ):</strong> <code>Name, Phone</code> (जैसे: <code>Arjun, 919876543210</code>)</p>
+                  <p><strong>Option 2 (बिना नाम के - Only Numbers):</strong> <code>Phone</code> (जैसे: <code>919876543210</code>) या <code>, Phone</code></p>
+                  <p className="text-[10px] text-zinc-400 mt-1">💡 बिना नाम वाले कांटेक्ट स्वतः <strong>MPPSC Aspirant</strong> नाम से सेव हो जाएंगे।</p>
+                </div>
               </div>
               <textarea
                 className="w-full rounded-md border border-zinc-200 bg-transparent px-3 py-2 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900"
                 rows={3}
-                placeholder="Arjun, 919876543210&#10;Rahul, 918765432109"
+                placeholder="Arjun, 919876543210&#10;918765432109&#10;, 917654321098"
                 value={csvData}
                 onChange={(e) => setCsvData(e.target.value)}
               ></textarea>
