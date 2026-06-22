@@ -131,29 +131,53 @@ export default function WhatsAppDashboard() {
     setIsLoading(true);
 
     try {
-      const lines = csvData.split('\n').filter((l) => l.trim().length > 0);
-      const parsedStudents = lines.map((line) => {
-        const parts = line.split(',').map((s) => s.trim());
-        let name = '';
-        let phone = '';
+      const lines = csvData.split('\n').map((l) => l.trim()).filter(Boolean);
+      const parsedStudents: Array<{ name: string; phone_number: string }> = [];
+
+      for (const line of lines) {
+        const parts = line.split(',').map((p) => p.trim());
         
-        // If there's only one column, assume it's the phone number
-        if (parts.length === 1) {
-          phone = parts[0];
+        // Check if this line is just a list of comma-separated phone numbers
+        const isOnlyNumbers = parts.every(part => {
+          const clean = part.replace(/\D/g, '');
+          return clean.length >= 7 && /^[+\d\s()-]+$/.test(part);
+        });
+
+        if (isOnlyNumbers && parts.length > 0) {
+          for (const part of parts) {
+            parsedStudents.push({
+              name: 'MPPSC Aspirant',
+              phone_number: part
+            });
+          }
         } else {
-          name = parts[0];
-          phone = parts[1];
+          // Standard Name, Phone or just Phone line
+          if (parts.length === 1) {
+            const value = parts[0];
+            const clean = value.replace(/\D/g, '');
+            if (clean.length >= 7) {
+              parsedStudents.push({
+                name: 'MPPSC Aspirant',
+                phone_number: value
+              });
+            }
+          } else {
+            const phone = parts[parts.length - 1];
+            const name = parts.slice(0, parts.length - 1).join(', ').trim();
+            const cleanPhone = phone.replace(/\D/g, '');
+            if (cleanPhone.length >= 7) {
+              parsedStudents.push({
+                name: name || 'MPPSC Aspirant',
+                phone_number: phone
+              });
+            }
+          }
         }
-        
-        return { 
-          name: name || 'MPPSC Aspirant', 
-          phone_number: phone 
-        };
-      }).filter((s) => s.phone_number);
+      }
 
       if (parsedStudents.length === 0) {
         setIsLoading(false);
-        return toast.error('No valid data found. Format: Name, Phone');
+        return toast.error('No valid phone numbers found. Use formats: Name, Phone OR just Phone numbers.');
       }
 
       const res = await fetch('/api/whatsapp/students', {
