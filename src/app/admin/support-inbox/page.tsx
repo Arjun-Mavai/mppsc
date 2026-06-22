@@ -189,8 +189,8 @@ export default function SupportInbox() {
   };
 
   const QUICK_REPLIES = [
-    { label: '👋 Hi (Hindi)', text: 'नमस्ते! 🙏\n\nMPPSC ZenScroll की सपोर्ट टीम से जुड़ने के लिए धन्यवाद।\n\nमैं आज आपकी क्या सहायता कर सकता हूँ?\n\nRegards,\n*MPPSC ZenScroll Team*' },
-    { label: '👋 Hi (English)', text: 'Hello! 🙏\n\nThank you for reaching out to MPPSC ZenScroll support.\n\nHow can I help you today?\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '👋 Hi (Hindi)', text: 'नमस्ते! 🙏\n\nमैं अर्जुन बात कर रहा हूँ। MPPSC ZenScroll की सपोर्ट टीम से जुड़ने के लिए धन्यवाद।\n\nमैं आज आपकी क्या सहायता कर सकता हूँ?\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*' },
+    { label: '👋 Hi (English)', text: 'Hello! 🙏\n\nThis is Arjun. Thank you for reaching out to MPPSC ZenScroll support.\n\nHow can I help you today?\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*' },
     { label: '💳 Pre Payment', text: '🎯 *Prelims Intelligence Course*\n\nनमस्ते! 🙏\nCourse access ke liye aap apna secure payment yahan se complete kar sakte hain:\n\n🔗 Payment Link: https://mppsc.zenscroll.app/pricing?need=pre\n\n⚡ (Payment complete hone ke baad please yahan ek screenshot bhej dijiye!)\n\nRegards,\n*MPPSC ZenScroll Team*' },
     { label: '💳 Mains Payment', text: '🏛️ *Mains Syllabus Hub*\n\nनमस्ते! 🙏\nCourse access ke liye aap apna secure payment yahan se complete kar sakte hain:\n\n🔗 Payment Link: https://mppsc.zenscroll.app/pricing?need=mains\n\n⚡ (Payment complete hone ke baad please yahan ek screenshot bhej dijiye!)\n\nRegards,\n*MPPSC ZenScroll Team*' },
     { label: '💳 Combo Plan', text: '🏛️ *Combo Plan (Prelims + Mains)*\n\nनमस्ते! 🙏\nPrelims and Mains dono courses ko join karne ke liye secure payment complete karein:\n\n🔗 Pricing Page: https://mppsc.zenscroll.app/pricing\n\n👉 Direct Prelims: https://mppsc.zenscroll.app/pricing?need=pre\n👉 Direct Mains: https://mppsc.zenscroll.app/pricing?need=mains\n\nRegards,\n*MPPSC ZenScroll Team*' },
