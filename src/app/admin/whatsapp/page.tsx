@@ -31,7 +31,7 @@ export default function WhatsAppDashboard() {
   const [senderMode, setSenderMode] = useState<'MAIN' | 'TEST'>('MAIN');
 
   // New Features States
-  const [templateName, setTemplateName] = useState<'mppsc_pyq_promo' | 'zenscroll_alert' | 'mppsc_journey_start' | 'mppsc_toppers_quote' | 'mppsc_pre_mains_utility'>('mppsc_pre_mains_utility');
+  const [templateName, setTemplateName] = useState<'mppsc_pyq_promo' | 'zenscroll_alert' | 'mppsc_journey_start' | 'mppsc_toppers_quote' | 'mppsc_pre_mains_ut'>('mppsc_pre_mains_ut');
   const [imageUrl, setImageUrl] = useState('https://mppsc.zenscroll.in/marketing/mppsc-alert.png');
   
   // Custom Add State
@@ -281,7 +281,7 @@ export default function WhatsAppDashboard() {
                     className="w-full rounded-md border border-zinc-200 py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
                   >
                     <optgroup label="🟢 Utility Templates (Low Cost)">
-                      <option value="mppsc_pre_mains_utility">MPPSC Pre+Mains Update</option>
+                      <option value="mppsc_pre_mains_ut">MPPSC Pre+Mains Update</option>
                       <option value="mppsc_toppers_quote">MPPSC Toppers Quote</option>
                       <option value="zenscroll_alert">ZenScroll Alert (Image + Body)</option>
                     </optgroup>
@@ -341,7 +341,7 @@ export default function WhatsAppDashboard() {
                         🔗 Mains Library
                       </div>
                     </>
-                  ) : templateName === 'mppsc_pre_mains_utility' ? (
+                  ) : templateName === 'mppsc_pre_mains_ut' ? (
                     <>
                       नमस्ते {"{{user.name}}"}! 👋<br/><br/>
                       MPPSC (Prelims और Mains) की तैयारी में सबसे बड़ी चुनौती यह है कि छात्र विशाल सिलेबस के बीच यह समझ नहीं पाते कि वास्तव में क्या पढ़ना है और क्या छोड़ना है।<br/><br/>
