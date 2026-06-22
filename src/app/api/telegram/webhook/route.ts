@@ -225,16 +225,14 @@ export async function POST(req: Request) {
         responseText = isHi
           ? `🎫 *Support Request Received*\n\n` +
             `आपकी क्वेरी (${issueType}) हमारे पास पहुँच गई है।\n` +
-            `मैं व्यक्तिगत रूप से आपकी सहायता करने की कोशिश करूँगा।\n\n` +
-            `👨‍💻 *Arjun*\n` +
-            `MPPSC ZenScroll\n\n` +
+            `हमारी टीम जल्द ही आपकी सहायता करने की कोशिश करेगी।\n\n` +
+            `*MPPSC ZenScroll Team*\n\n` +
             `कृपया अपनी समस्या या प्रश्न नीचे विस्तार से लिखें।\n` +
             `जितनी स्पष्ट जानकारी देंगे, उतनी जल्दी सहायता मिल पाएगी। 👇`
           : `🎫 *Support Request Received*\n\n` +
             `Your query (${issueType}) has reached us.\n` +
-            `I will personally try to assist you.\n\n` +
-            `👨‍💻 *Arjun*\n` +
-            `MPPSC ZenScroll\n\n` +
+            `Our team will try to assist you shortly.\n\n` +
+            `*MPPSC ZenScroll Team*\n\n` +
             `Please write your exact issue or question in detail below.\n` +
             `The clearer the details, the faster we can resolve it! 👇`;
         
