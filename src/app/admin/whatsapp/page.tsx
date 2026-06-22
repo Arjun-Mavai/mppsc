@@ -53,6 +53,7 @@ export default function WhatsAppDashboard() {
   const [isAddingContact, setIsAddingContact] = useState(false);
 
   const [insights, setInsights] = useState<any[]>([]);
+  const [templateStats, setTemplateStats] = useState<any[]>([]);
 
   const fetchData = async () => {
     try {
@@ -61,6 +62,7 @@ export default function WhatsAppDashboard() {
         const data = await res.json();
         setStudents(data.students || []);
         setStats(data.stats || { SENT: 0, DELIVERED: 0, READ: 0, REPLIED: 0 });
+        setTemplateStats(data.templateStats || []);
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
@@ -241,6 +243,80 @@ export default function WhatsAppDashboard() {
     }
   };
 
+  const costSummary = React.useMemo(() => {
+    let marketingDelivered = 0;
+    let marketingSent = 0;
+    let marketingFailed = 0;
+    
+    let utilityDelivered = 0;
+    let utilitySent = 0;
+    let utilityFailed = 0;
+    
+    let unknownDelivered = 0;
+    let unknownSent = 0;
+    let unknownFailed = 0;
+
+    templateStats.forEach((row) => {
+      const name = row.templateName;
+      const status = row.status || 'SENT';
+      const count = Number(row.count) || 0;
+
+      let category = 'Unknown';
+      if (name) {
+        category = TEMPLATE_MAP[name as WhatsAppTemplateName]?.category || 'Unknown';
+      }
+
+      if (category === 'Marketing') {
+        if (status === 'DELIVERED' || status === 'READ') {
+          marketingDelivered += count;
+        } else if (status === 'SENT') {
+          marketingSent += count;
+        } else if (status === 'FAILED') {
+          marketingFailed += count;
+        }
+      } else if (category === 'Utility') {
+        if (status === 'DELIVERED' || status === 'READ') {
+          utilityDelivered += count;
+        } else if (status === 'SENT') {
+          utilitySent += count;
+        } else if (status === 'FAILED') {
+          utilityFailed += count;
+        }
+      } else {
+        // Fallback for historical logs that have no templateName
+        if (status === 'DELIVERED' || status === 'READ') {
+          unknownDelivered += count;
+        } else if (status === 'SENT') {
+          unknownSent += count;
+        } else if (status === 'FAILED') {
+          unknownFailed += count;
+        }
+      }
+    });
+
+    const marketingCost = marketingDelivered * 0.8632;
+    const utilityCost = utilityDelivered * 0.115;
+    const unknownCost = unknownDelivered * 0.115; // default unknown to utility price
+
+    const totalCost = marketingCost + utilityCost + unknownCost;
+
+    return {
+      marketingDelivered,
+      marketingSent,
+      marketingFailed,
+      marketingCost,
+      utilityDelivered,
+      utilitySent,
+      utilityFailed,
+      utilityCost,
+      unknownDelivered,
+      unknownSent,
+      unknownFailed,
+      unknownCost,
+      totalCost,
+    };
+  }, [templateStats]);
+
   return (
     <div className="min-h-screen bg-zinc-50/50 p-6 sm:p-10 text-zinc-950 font-sans">
       <div className="mx-auto max-w-7xl space-y-8">
@@ -285,6 +361,71 @@ export default function WhatsAppDashboard() {
               <p className="mt-4 text-3xl font-semibold tracking-tight text-zinc-900">{stat.value}</p>
             </div>
           ))}
+        </div>
+
+        {/* Cost & Billing Estimates Card */}
+        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-base font-semibold text-zinc-950 flex items-center gap-2">
+                <span>💰</span> Meta Billing & Cost Estimator
+              </h2>
+              <p className="text-sm text-zinc-500 mt-0.5">Approximate charges based on delivered conversation categories (India region with 18% GST included).</p>
+            </div>
+            <div className="bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-2 text-right">
+              <span className="text-xs text-zinc-500 block font-medium">Estimated Total Spent</span>
+              <span className="text-2xl font-bold text-zinc-900">₹{costSummary.totalCost.toFixed(2)}</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Marketing Category */}
+            <div className="p-4 rounded-lg bg-red-50/40 border border-red-100 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-bold uppercase tracking-wider text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">📢 Marketing</span>
+                  <span className="text-xs text-zinc-500">Rate: ~₹0.86 / msg</span>
+                </div>
+                <p className="text-2xl font-bold text-zinc-900 mt-2">₹{costSummary.marketingCost.toFixed(2)}</p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-red-100/60 text-xs text-zinc-600 space-y-1">
+                <div className="flex justify-between"><span>Delivered:</span> <span className="font-semibold text-zinc-900">{costSummary.marketingDelivered}</span></div>
+                <div className="flex justify-between"><span>Pending Sent:</span> <span className="text-zinc-500">{costSummary.marketingSent}</span></div>
+                <div className="flex justify-between"><span>Failed:</span> <span className="text-red-600">{costSummary.marketingFailed}</span></div>
+              </div>
+            </div>
+
+            {/* Utility Category */}
+            <div className="p-4 rounded-lg bg-green-50/40 border border-green-100 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-bold uppercase tracking-wider text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">🟢 Utility</span>
+                  <span className="text-xs text-zinc-500">Rate: ~₹0.115 / msg</span>
+                </div>
+                <p className="text-2xl font-bold text-zinc-900 mt-2">₹{(costSummary.utilityCost + costSummary.unknownCost).toFixed(2)}</p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-green-100/60 text-xs text-zinc-600 space-y-1">
+                <div className="flex justify-between"><span>Delivered:</span> <span className="font-semibold text-zinc-900">{costSummary.utilityDelivered + costSummary.unknownDelivered}</span></div>
+                <div className="flex justify-between"><span>Pending Sent:</span> <span className="text-zinc-500">{costSummary.utilitySent + costSummary.unknownSent}</span></div>
+                <div className="flex justify-between"><span>Failed:</span> <span className="text-red-600">{costSummary.utilityFailed + costSummary.unknownFailed}</span></div>
+              </div>
+            </div>
+
+            {/* Service & Free Window Category */}
+            <div className="p-4 rounded-lg bg-blue-50/40 border border-blue-100 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">💬 Service / Free</span>
+                  <span className="text-xs text-zinc-500">1,000 Free / Month</span>
+                </div>
+                <p className="text-2xl font-bold text-zinc-900 mt-2">₹0.00</p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-blue-100/60 text-xs text-zinc-600 space-y-1">
+                <div className="flex justify-between"><span>Replies Received:</span> <span className="font-semibold text-blue-900 bg-blue-50 px-1.5 py-0.5 rounded">{stats.REPLIED}</span></div>
+                <div className="text-[10px] text-zinc-400 mt-1.5">User-initiated customer support responses are free within Meta's monthly 1K limit.</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">

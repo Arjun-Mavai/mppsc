@@ -142,6 +142,7 @@ export async function POST(req: Request) {
             guestId: guest.id,
             messageId: messageId,
             status: 'SENT',
+            templateName: selectedTemplate,
           });
           sentCount++;
         } else {

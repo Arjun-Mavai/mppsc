@@ -72,7 +72,17 @@ export async function GET() {
       }
     });
 
-    return NextResponse.json({ students: enrichedGuests, stats });
+    // Detailed template status breakdown for billing/cost calculations
+    const templateStats = await db
+      .select({
+        templateName: whatsappCampaignLogs.templateName,
+        status: whatsappCampaignLogs.status,
+        count: sql<number>`count(*)`,
+      })
+      .from(whatsappCampaignLogs)
+      .groupBy(whatsappCampaignLogs.templateName, whatsappCampaignLogs.status);
+
+    return NextResponse.json({ students: enrichedGuests, stats, templateStats });
   } catch (error) {
     logger.error('Error fetching guests and stats', error, { category: 'api' });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
