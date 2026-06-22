@@ -41,6 +41,7 @@ export default function WhatsAppDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [senderMode, setSenderMode] = useState<'MAIN' | 'TEST'>('MAIN');
+  const [openInfoId, setOpenInfoId] = useState<string | null>(null);
 
   // New Features States
   const [templateName, setTemplateName] = useState<WhatsAppTemplateName>(DEFAULT_TEMPLATE);
@@ -575,8 +576,7 @@ export default function WhatsAppDashboard() {
                     </th>
                     <th scope="col" className="px-6 py-3.5 font-medium">Recipient</th>
                     <th scope="col" className="px-6 py-3.5 font-medium">Contact</th>
-                    <th scope="col" className="px-6 py-3.5 font-medium">Status</th>
-                    <th scope="col" className="px-6 py-3.5 font-medium">Last Activity</th>
+                    <th scope="col" className="px-6 py-3.5 font-medium">Status ℹ️</th>
                     <th scope="col" className="px-6 py-3.5 font-medium">Origin</th>
                   </tr>
                 </thead>
@@ -601,54 +601,95 @@ export default function WhatsAppDashboard() {
                         <td className="px-6 py-4 font-mono text-xs">
                           {hasMobile ? student.mobile : 'Unavailable'}
                         </td>
-                        <td className="px-6 py-4">
-                          {(() => {
-                            const s = student.campaignStatus;
-                            if (s === 'READ') return (
-                              <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-700 border border-blue-200">
-                                👁️ READ
-                              </span>
-                            );
-                            if (s === 'DELIVERED') return (
-                              <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-green-700 border border-green-200">
-                                ✓✓ DELIVERED
-                              </span>
-                            );
-                            if (s === 'SENT') return (
-                              <span className="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-yellow-700 border border-yellow-200">
-                                📤 SENT
-                              </span>
-                            );
-                            if (s === 'FAILED') return (
-                              <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-red-700 border border-red-200">
-                                ❌ FAILED
-                              </span>
-                            );
-                            return (
-                              <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-zinc-500 border border-zinc-200">
-                                UNSENT
-                              </span>
-                            );
-                          })()}
-                        </td>
-                        <td className="px-6 py-4">
-                          {student.lastSentAt || student.lastStatusAt ? (
-                            <div className="text-xs text-zinc-600 leading-relaxed">
-                              {student.lastSentAt && (
-                                <div className="flex items-center gap-1">
-                                  <span className="text-zinc-400">📤</span>
-                                  <span>{format(new Date(student.lastSentAt), 'EEE, d MMM · h:mm a')}</span>
+                        <td className="px-6 py-4 relative">
+                          {/* Status badge – click to open info popover */}
+                          <button
+                            onClick={() => setOpenInfoId(openInfoId === student.id ? null : student.id)}
+                            className="text-left focus:outline-none"
+                          >
+                            {(() => {
+                              const s = student.campaignStatus;
+                              if (s === 'READ') return (
+                                <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-700 border border-blue-200 cursor-pointer hover:bg-blue-100">
+                                  👁️ READ
+                                </span>
+                              );
+                              if (s === 'DELIVERED') return (
+                                <span className="inline-flex items-center gap-1 rounded-md bg-green-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-green-700 border border-green-200 cursor-pointer hover:bg-green-100">
+                                  ✓✓ DELIVERED
+                                </span>
+                              );
+                              if (s === 'SENT') return (
+                                <span className="inline-flex items-center gap-1 rounded-md bg-yellow-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-yellow-700 border border-yellow-200 cursor-pointer hover:bg-yellow-100">
+                                  📤 SENT
+                                </span>
+                              );
+                              if (s === 'FAILED') return (
+                                <span className="inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-red-700 border border-red-200 cursor-pointer hover:bg-red-100">
+                                  ❌ FAILED
+                                </span>
+                              );
+                              return (
+                                <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-zinc-500 border border-zinc-200 cursor-pointer hover:bg-zinc-200">
+                                  — UNSENT
+                                </span>
+                              );
+                            })()}
+                          </button>
+
+                          {/* Info Popover */}
+                          {openInfoId === student.id && (
+                            <div className="absolute z-50 left-0 mt-2 w-64 rounded-xl border border-zinc-200 bg-white shadow-xl p-4 text-xs text-zinc-700">
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="font-semibold text-zinc-900 text-sm">{student.name}</span>
+                                <button onClick={() => setOpenInfoId(null)} className="text-zinc-400 hover:text-zinc-700 text-base leading-none">×</button>
+                              </div>
+
+                              {/* Timestamps */}
+                              <div className="space-y-2 mb-4">
+                                <div className="flex items-start gap-2">
+                                  <span className="mt-0.5">📤</span>
+                                  <div>
+                                    <div className="font-medium text-zinc-600">Message Sent</div>
+                                    <div className="text-zinc-500">
+                                      {student.lastSentAt
+                                        ? format(new Date(student.lastSentAt), "EEE, d MMM yyyy \u00b7 h:mm a")
+                                        : '— Not sent yet'}
+                                    </div>
+                                  </div>
                                 </div>
-                              )}
-                              {student.lastStatusAt && student.lastStatusAt !== student.lastSentAt && (
-                                <div className="flex items-center gap-1 mt-0.5">
-                                  <span className="text-zinc-400">🔄</span>
-                                  <span className="text-zinc-500">{format(new Date(student.lastStatusAt), 'EEE, d MMM · h:mm a')}</span>
+                                <div className="flex items-start gap-2">
+                                  <span className="mt-0.5">🔄</span>
+                                  <div>
+                                    <div className="font-medium text-zinc-600">Last Status Update</div>
+                                    <div className="text-zinc-500">
+                                      {student.lastStatusAt
+                                        ? format(new Date(student.lastStatusAt), "EEE, d MMM yyyy \u00b7 h:mm a")
+                                        : '—'}
+                                    </div>
+                                  </div>
                                 </div>
-                              )}
+                              </div>
+
+                              {/* Status legend */}
+                              <div className="border-t border-zinc-100 pt-3">
+                                <div className="font-semibold text-zinc-700 mb-2">Status Guide</div>
+                                <div className="space-y-1.5">
+                                  {[
+                                    { label: 'UNSENT', color: 'bg-zinc-100 text-zinc-500', desc: 'Campaign not sent yet' },
+                                    { label: '📤 SENT', color: 'bg-yellow-50 text-yellow-700', desc: 'Meta accepted message' },
+                                    { label: '✓✓ DELIVERED', color: 'bg-green-50 text-green-700', desc: 'Delivered to phone' },
+                                    { label: '👁️ READ', color: 'bg-blue-50 text-blue-700', desc: 'Opened by student' },
+                                    { label: '❌ FAILED', color: 'bg-red-50 text-red-700', desc: 'Delivery failed' },
+                                  ].map(item => (
+                                    <div key={item.label} className="flex items-center gap-2">
+                                      <span className={`inline-block rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${item.color} border border-zinc-200`}>{item.label}</span>
+                                      <span className="text-zinc-400">{item.desc}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
                             </div>
-                          ) : (
-                            <span className="text-zinc-300 text-xs">—</span>
                           )}
                         </td>
                         <td className="px-6 py-4">
