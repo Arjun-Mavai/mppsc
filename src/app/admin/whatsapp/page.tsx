@@ -4,6 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import Link from 'next/link';
+import {
+  WHATSAPP_TEMPLATES,
+  UTILITY_TEMPLATES,
+  MARKETING_TEMPLATES,
+  DEFAULT_TEMPLATE,
+  TEMPLATE_MAP,
+  type WhatsAppTemplateName,
+} from '@/lib/whatsapp-templates';
 
 type Guest = {
   id: string;
@@ -33,7 +41,7 @@ export default function WhatsAppDashboard() {
   const [senderMode, setSenderMode] = useState<'MAIN' | 'TEST'>('MAIN');
 
   // New Features States
-  const [templateName, setTemplateName] = useState<'mppsc_pyq_promo' | 'zenscroll_alert' | 'mppsc_journey_start' | 'mppsc_toppers_quote' | 'mppsc_pre_mains_ut' | 'mppsc_mains_ut_new' | 'hello_world' | 'mppsc_mains_2025'>('mppsc_pre_mains_ut');
+  const [templateName, setTemplateName] = useState<WhatsAppTemplateName>(DEFAULT_TEMPLATE);
   const [imageUrl, setImageUrl] = useState('https://mppsc.zenscroll.in/marketing/mppsc-alert.png');
   
   // Custom Add State
@@ -204,7 +212,7 @@ export default function WhatsAppDashboard() {
           studentIds: Array.from(selectedIds), 
           senderMode,
           templateName,
-          imageUrl: templateName === 'zenscroll_alert' ? imageUrl : undefined
+          imageUrl: TEMPLATE_MAP[templateName]?.hasImageHeader ? imageUrl : undefined
         }),
       });
 
@@ -286,20 +294,18 @@ export default function WhatsAppDashboard() {
                   <label className="block text-xs font-medium text-zinc-700 mb-1">Select Template</label>
                   <select 
                     value={templateName}
-                    onChange={(e) => setTemplateName(e.target.value as any)}
+                    onChange={(e) => setTemplateName(e.target.value as WhatsAppTemplateName)}
                     className="w-full rounded-md border border-zinc-200 py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
                   >
-                    <optgroup label="🟢 Utility Templates (Low Cost)">
-                      <option value="mppsc_pre_mains_ut">MPPSC Pre+Mains Update (Utility)</option>
-                      <option value="mppsc_mains_ut_new">MPPSC Mains Update (Utility)</option>
-                      <option value="mppsc_pyq_promo">MPPSC PYQ Promo (Utility)</option>
-                      <option value="hello_world">Hello World (Utility)</option>
+                    <optgroup label="🟢 Utility Templates (~₹0.31 / msg)">
+                      {UTILITY_TEMPLATES.map((t) => (
+                        <option key={t.name} value={t.name}>{t.label}</option>
+                      ))}
                     </optgroup>
-                    <optgroup label="📢 Marketing Templates">
-                      <option value="mppsc_toppers_quote">MPPSC Toppers Quote (Marketing)</option>
-                      <option value="mppsc_mains_2025">MPPSC Mains 2025 (Marketing)</option>
-                      <option value="mppsc_journey_start">MPPSC Journey Start (Marketing)</option>
-                      <option value="zenscroll_alert">ZenScroll Alert (Marketing)</option>
+                    <optgroup label="📢 Marketing Templates (~₹0.88 / msg)">
+                      {MARKETING_TEMPLATES.map((t) => (
+                        <option key={t.name} value={t.name}>{t.label}</option>
+                      ))}
                     </optgroup>
                   </select>
                 </div>
