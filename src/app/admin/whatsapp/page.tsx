@@ -167,7 +167,13 @@ export default function WhatsAppDashboard() {
     if (dataStatusFilter === 'UNSENT') {
       matchesDataStatus = s.campaignStatus === 'UNSENT';
     } else if (dataStatusFilter === 'SENT') {
-      matchesDataStatus = s.campaignStatus !== 'UNSENT';
+      matchesDataStatus = s.campaignStatus === 'SENT';
+    } else if (dataStatusFilter === 'DELIVERED') {
+      matchesDataStatus = s.campaignStatus === 'DELIVERED';
+    } else if (dataStatusFilter === 'READ') {
+      matchesDataStatus = s.campaignStatus === 'READ';
+    } else if (dataStatusFilter === 'FAILED') {
+      matchesDataStatus = s.campaignStatus === 'FAILED';
     }
 
     return matchesSearch && matchesSource && matchesDataStatus;
@@ -531,8 +537,11 @@ export default function WhatsAppDashboard() {
                 className="w-full sm:w-44 rounded-md border-2 border-blue-200 bg-blue-50 py-2 px-3 text-sm font-semibold text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="ALL">📋 All Contacts</option>
-                <option value="UNSENT">🆕 Unsent (Fresh)</option>
-                <option value="SENT">✅ Already Sent</option>
+                <option value="UNSENT">🆕 Unsent</option>
+                <option value="SENT">📤 Sent</option>
+                <option value="DELIVERED">✓✓ Delivered</option>
+                <option value="READ">👁️ Read</option>
+                <option value="FAILED">❌ Failed</option>
               </select>
             </div>
 
@@ -590,15 +599,34 @@ export default function WhatsAppDashboard() {
                           {hasMobile ? student.mobile : 'Unavailable'}
                         </td>
                         <td className="px-6 py-4">
-                          {isSent ? (
-                            <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-green-700 border border-green-200">
-                              ✓ {student.campaignStatus}
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-zinc-600 border border-zinc-200">
-                              UNSENT
-                            </span>
-                          )}
+                          {(() => {
+                            const s = student.campaignStatus;
+                            if (s === 'READ') return (
+                              <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-700 border border-blue-200">
+                                👁️ READ
+                              </span>
+                            );
+                            if (s === 'DELIVERED') return (
+                              <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-green-700 border border-green-200">
+                                ✓✓ DELIVERED
+                              </span>
+                            );
+                            if (s === 'SENT') return (
+                              <span className="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-yellow-700 border border-yellow-200">
+                                📤 SENT
+                              </span>
+                            );
+                            if (s === 'FAILED') return (
+                              <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-red-700 border border-red-200">
+                                ❌ FAILED
+                              </span>
+                            );
+                            return (
+                              <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-zinc-500 border border-zinc-200">
+                                UNSENT
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td className="px-6 py-4">
                           <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-zinc-600 border border-zinc-200">

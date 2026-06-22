@@ -13,14 +13,23 @@ export async function GET() {
       .orderBy(desc(guests.createdAt))
       .limit(500);
 
-    // Fetch all logs to know who has been sent messages
-    const logs = await db
-      .select({ guestId: whatsappCampaignLogs.guestId, status: whatsappCampaignLogs.status })
-      .from(whatsappCampaignLogs);
+    // Status priority: READ is best, then DELIVERED, SENT, FAILED
+    // This ensures a guest who has READ the message shows READ, not an older SENT log
+    const STATUS_PRIORITY: Record<string, number> = {
+      READ: 4,
+      DELIVERED: 3,
+      SENT: 2,
+      FAILED: 1,
+    };
 
     const guestStatusMap = new Map<string, string>();
     logs.forEach(log => {
-      guestStatusMap.set(log.guestId, log.status || 'SENT');
+      const incoming = log.status || 'SENT';
+      const existing = guestStatusMap.get(log.guestId);
+      // Keep the status with the highest priority
+      if (!existing || (STATUS_PRIORITY[incoming] ?? 0) > (STATUS_PRIORITY[existing] ?? 0)) {
+        guestStatusMap.set(log.guestId, incoming);
+      }
     });
 
     const enrichedGuests = allGuests.map(g => ({
