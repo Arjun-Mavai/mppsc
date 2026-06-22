@@ -10,6 +10,7 @@ type Guest = {
   name: string;
   mobile: string;
   leadSource?: string;
+  campaignStatus?: string;
 };
 
 type Stats = {
@@ -26,6 +27,7 @@ export default function WhatsAppDashboard() {
   const [csvData, setCsvData] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [sourceFilter, setSourceFilter] = useState<string>('ALL');
+  const [dataStatusFilter, setDataStatusFilter] = useState<string>('UNSENT'); // Default to fresh leads
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [senderMode, setSenderMode] = useState<'MAIN' | 'TEST'>('MAIN');
@@ -153,7 +155,14 @@ export default function WhatsAppDashboard() {
     const sourceLabel = s.leadSource || 'Guest';
     const matchesSource = sourceFilter === 'ALL' || sourceLabel === sourceFilter;
 
-    return matchesSearch && matchesSource;
+    let matchesDataStatus = true;
+    if (dataStatusFilter === 'UNSENT') {
+      matchesDataStatus = s.campaignStatus === 'UNSENT';
+    } else if (dataStatusFilter === 'SENT') {
+      matchesDataStatus = s.campaignStatus !== 'UNSENT';
+    }
+
+    return matchesSearch && matchesSource && matchesDataStatus;
   });
 
   const validFilteredStudents = filteredStudents.filter(s => s.mobile);
@@ -540,14 +549,16 @@ export default function WhatsAppDashboard() {
                     </th>
                     <th scope="col" className="px-6 py-3.5 font-medium">Recipient</th>
                     <th scope="col" className="px-6 py-3.5 font-medium">Contact</th>
+                    <th scope="col" className="px-6 py-3.5 font-medium">Status</th>
                     <th scope="col" className="px-6 py-3.5 font-medium">Origin</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 bg-white">
                   {filteredStudents.map((student) => {
                     const hasMobile = !!student.mobile;
+                    const isSent = student.campaignStatus && student.campaignStatus !== 'UNSENT';
                     return (
-                      <tr key={student.id} className={`transition-colors ${hasMobile ? 'hover:bg-zinc-50' : 'bg-zinc-50/50 opacity-60'}`}>
+                      <tr key={student.id} className={`transition-colors ${hasMobile ? 'hover:bg-zinc-50' : 'bg-zinc-50/50 opacity-60'} ${isSent ? 'bg-zinc-50/30' : ''}`}>
                         <td className="w-4 p-4">
                           <input
                             type="checkbox"
@@ -562,6 +573,17 @@ export default function WhatsAppDashboard() {
                         </td>
                         <td className="px-6 py-4 font-mono text-xs">
                           {hasMobile ? student.mobile : 'Unavailable'}
+                        </td>
+                        <td className="px-6 py-4">
+                          {isSent ? (
+                            <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-green-700 border border-green-200">
+                              ✓ {student.campaignStatus}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-zinc-600 border border-zinc-200">
+                              UNSENT
+                            </span>
+                          )}
                         </td>
                         <td className="px-6 py-4">
                           <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-zinc-600 border border-zinc-200">

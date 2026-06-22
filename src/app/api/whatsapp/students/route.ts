@@ -13,6 +13,21 @@ export async function GET() {
       .orderBy(desc(guests.createdAt))
       .limit(500);
 
+    // Fetch all logs to know who has been sent messages
+    const logs = await db
+      .select({ guestId: whatsappCampaignLogs.guestId, status: whatsappCampaignLogs.status })
+      .from(whatsappCampaignLogs);
+
+    const guestStatusMap = new Map<string, string>();
+    logs.forEach(log => {
+      guestStatusMap.set(log.guestId, log.status || 'SENT');
+    });
+
+    const enrichedGuests = allGuests.map(g => ({
+      ...g,
+      campaignStatus: guestStatusMap.get(g.id) || 'UNSENT'
+    }));
+
     // Fetch stats from new whatsappCampaignLogs table
     const statsQuery = await db
       .select({
@@ -29,7 +44,7 @@ export async function GET() {
       }
     });
 
-    return NextResponse.json({ students: allGuests, stats });
+    return NextResponse.json({ students: enrichedGuests, stats });
   } catch (error) {
     logger.error('Error fetching guests and stats', error, { category: 'api' });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
