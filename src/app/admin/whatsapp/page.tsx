@@ -940,7 +940,16 @@ export default function WhatsAppDashboard() {
                       <div className="flex items-center gap-3">
                         <span className="text-zinc-400 group-open:rotate-90 transition-transform font-bold">&rarr;</span>
                         <div>
-                          <div className="font-semibold text-sm text-zinc-900">{label}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-sm text-zinc-900">{label}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide border ${
+                              category === 'Marketing'
+                                ? 'bg-red-50 text-red-700 border-red-200'
+                                : 'bg-green-50 text-green-700 border-green-200'
+                            }`}>
+                              {category}
+                            </span>
+                          </div>
                           <div className="font-mono text-xs text-zinc-400 mt-0.5">{tName}</div>
                         </div>
                       </div>
