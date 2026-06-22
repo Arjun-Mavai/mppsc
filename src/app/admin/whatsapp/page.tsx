@@ -282,12 +282,12 @@ export default function WhatsAppDashboard() {
                   >
                     <optgroup label="🟢 Utility Templates (Low Cost)">
                       <option value="mppsc_pre_mains_ut">MPPSC Pre+Mains Update</option>
-                      <option value="mppsc_toppers_quote">MPPSC Toppers Quote</option>
-                      <option value="zenscroll_alert">ZenScroll Alert (Image + Body)</option>
+                      <option value="mppsc_pyq_promo">MPPSC PYQ Promo (Text Only)</option>
                     </optgroup>
                     <optgroup label="📢 Marketing Templates">
+                      <option value="mppsc_toppers_quote">MPPSC Toppers Quote</option>
                       <option value="mppsc_journey_start">MPPSC Journey Start (Text + Buttons)</option>
-                      <option value="mppsc_pyq_promo">MPPSC PYQ Promo (Text Only)</option>
+                      <option value="zenscroll_alert">ZenScroll Alert (Image + Body)</option>
                     </optgroup>
                   </select>
                 </div>
