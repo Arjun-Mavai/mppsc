@@ -22,6 +22,7 @@ type Guest = {
   lastSentAt?: string | null;
   lastStatusAt?: string | null;
   lastTemplateName?: string | null;
+  createdAt?: string | null;
 };
 
 type Stats = {
@@ -875,6 +876,7 @@ export default function WhatsAppDashboard() {
                     <th scope="col" className="px-6 py-3.5 font-medium">Status</th>
                     <th scope="col" className="px-6 py-3.5 font-medium">Last Activity</th>
                     <th scope="col" className="px-6 py-3.5 font-medium">Origin</th>
+                    <th scope="col" className="px-6 py-3.5 font-medium">Joined</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 bg-white">
@@ -953,12 +955,15 @@ export default function WhatsAppDashboard() {
                             {student.leadSource || 'Organic'}
                           </span>
                         </td>
+                        <td className="px-6 py-4 text-xs text-zinc-500 whitespace-nowrap">
+                          {student.createdAt ? format(new Date(student.createdAt), 'dd MMM yyyy') : '—'}
+                        </td>
                       </tr>
                     );
                   })}
                   {filteredStudents.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-6 py-16 text-center text-zinc-500 text-sm">
+                      <td colSpan={7} className="px-6 py-16 text-center text-zinc-500 text-sm">
                         No recipients matched your filters.
                       </td>
                     </tr>
