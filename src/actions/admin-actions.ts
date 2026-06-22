@@ -4,7 +4,7 @@ import { db } from '@/db';
 import { tests, questions, contentBlogs, paymentExitReasons, guests } from '@/db/schema';
 import { nanoid } from 'nanoid';
 import { revalidatePath } from 'next/cache';
-import { eq, sql, desc, and, count } from 'drizzle-orm';
+import { eq, sql, desc, and, count, or, isNull, ne } from 'drizzle-orm';
 import { AdminDashboardResponse } from '@/types/admin';
 import { GUEST_LEAD_SOURCE } from '@/lib/lead-source';
 import { logger } from '@/lib/logger';
@@ -346,7 +346,12 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
           leadSource: guests.leadSource,
         })
         .from(guests)
-        .where(eq(guests.examType, 'mppsc'))
+        .where(
+          and(
+            eq(guests.examType, 'mppsc'),
+            or(isNull(guests.leadSource), ne(guests.leadSource, 'whatsapp_import'))
+          )
+        )
         .orderBy(desc(guests.createdAt))
         .limit(DASHBOARD_GUEST_LEAD_LIMIT);
     } catch (guestErr) {

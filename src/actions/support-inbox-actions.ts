@@ -146,9 +146,8 @@ export async function saveOutgoingMessage(conversationId: string, text: string, 
     });
 
     const updateData: any = { lastMessageAt: new Date() };
-    if (sender === 'admin') {
-      updateData.humanActive = true;
-    }
+    // We intentionally removed the auto humanActive toggle here.
+    // The bot will only be paused/activated manually by the admin.
 
     await db.update(supportConversations)
       .set(updateData)

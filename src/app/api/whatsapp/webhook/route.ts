@@ -147,21 +147,22 @@ export async function POST(req: Request) {
                     if (!value) return;
 
               // 1. Handle message status updates (sent, delivered, read)
-              if (value.statuses && value.statuses.length > 0) {
-                const statusObj = value.statuses[0];
-                const messageId = statusObj.id;
-                const newStatus = statusObj.status?.toUpperCase();
+              if (value.statuses && Array.isArray(value.statuses)) {
+                for (const statusObj of value.statuses) {
+                  const messageId = statusObj.id;
+                  const newStatus = statusObj.status?.toUpperCase();
 
-                if (messageId && newStatus) {
-                  const statusLower = newStatus.toLowerCase();
-                  await Promise.allSettled([
-                    db.update(whatsappCampaignLogs)
-                      .set({ status: newStatus, updatedAt: new Date() })
-                      .where(eq(whatsappCampaignLogs.messageId, messageId)),
-                    db.update(supportMessages)
-                      .set({ status: statusLower as 'sent' | 'delivered' | 'read' | 'failed' })
-                      .where(eq(supportMessages.id, messageId))
-                  ]);
+                  if (messageId && newStatus) {
+                    const statusLower = newStatus.toLowerCase();
+                    await Promise.allSettled([
+                      db.update(whatsappCampaignLogs)
+                        .set({ status: newStatus, updatedAt: new Date() })
+                        .where(eq(whatsappCampaignLogs.messageId, messageId)),
+                      db.update(supportMessages)
+                        .set({ status: statusLower as 'sent' | 'delivered' | 'read' | 'failed' })
+                        .where(eq(supportMessages.id, messageId))
+                    ]);
+                  }
                 }
               }
 
@@ -170,7 +171,6 @@ export async function POST(req: Request) {
                 const messageObj = value.messages[0];
                 const fromNumber = messageObj.from;
                 const contactName = value.contacts?.[0]?.profile?.name || 'WhatsApp User';
-                
                 let incomingText = '';
                 let interactiveData = null;
                 let messageType: 'text' | 'image' | 'interactive' = 'text';
@@ -178,6 +178,10 @@ export async function POST(req: Request) {
 
                 if (messageObj.type === 'text') {
                   incomingText = messageObj.text?.body || '';
+                } else if (messageObj.type === 'reaction') {
+                  const emoji = messageObj.reaction?.emoji;
+                  incomingText = emoji ? `[Reacted with ${emoji}]` : `[Removed reaction]`;
+                  messageType = 'text';
                 } else if (messageObj.type === 'interactive') {
                   // Extract the ID of the button clicked
                   interactiveData = messageObj.interactive?.button_reply?.id;
@@ -355,16 +359,14 @@ export async function POST(req: Request) {
                     responseText = isHi
                       ? `🎫 *Support Request Received*\n\n` +
                         `आपकी क्वेरी (${issueType}) हमारे पास पहुँच गई है।\n` +
-                        `मैं व्यक्तिगत रूप से आपकी सहायता करने की कोशिश करूँगा।\n\n` +
-                        `👨‍💻 *Arjun*\n` +
-                        `MPPSC ZenScroll\n\n` +
+                        `हमारी टीम जल्द ही आपकी सहायता करने की कोशिश करेगी।\n\n` +
+                        `*MPPSC ZenScroll Team*\n\n` +
                         `कृपया अपनी समस्या या प्रश्न नीचे विस्तार से लिखें।\n` +
                         `जितनी स्पष्ट जानकारी देंगे, उतनी जल्दी सहायता मिल पाएगी। 👇`
                       : `🎫 *Support Request Received*\n\n` +
                         `Your query (${issueType}) has reached us.\n` +
-                        `I will personally try to assist you.\n\n` +
-                        `👨‍💻 *Arjun*\n` +
-                        `MPPSC ZenScroll\n\n` +
+                        `Our team will try to assist you shortly.\n\n` +
+                        `*MPPSC ZenScroll Team*\n\n` +
                         `Please write your exact issue or question in detail below.\n` +
                         `The clearer the details, the faster we can resolve it! 👇`;
                     

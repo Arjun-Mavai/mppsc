@@ -4,12 +4,25 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import Link from 'next/link';
+import {
+  WHATSAPP_TEMPLATES,
+  UTILITY_TEMPLATES,
+  MARKETING_TEMPLATES,
+  DEFAULT_TEMPLATE,
+  TEMPLATE_MAP,
+  type WhatsAppTemplateName,
+} from '@/lib/whatsapp-templates';
 
 type Guest = {
   id: string;
   name: string;
   mobile: string;
   leadSource?: string;
+  campaignStatus?: string;
+  lastSentAt?: string | null;
+  lastStatusAt?: string | null;
+  lastTemplateName?: string | null;
+  createdAt?: string | null;
 };
 
 type Stats = {
@@ -17,21 +30,26 @@ type Stats = {
   DELIVERED: number;
   READ: number;
   REPLIED: number;
+  FAILED: number;
 };
 
 export default function WhatsAppDashboard() {
-  const [stats, setStats] = useState<Stats>({ SENT: 0, DELIVERED: 0, READ: 0, REPLIED: 0 });
+  const [stats, setStats] = useState<Stats>({ SENT: 0, DELIVERED: 0, READ: 0, REPLIED: 0, FAILED: 0 });
   const [students, setStudents] = useState<Guest[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [csvData, setCsvData] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [sourceFilter, setSourceFilter] = useState<string>('ALL');
+  const [dataStatusFilter, setDataStatusFilter] = useState<string>('UNSENT'); // Default to fresh leads
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [senderMode, setSenderMode] = useState<'MAIN' | 'TEST'>('MAIN');
+  const [showStatusInfo, setShowStatusInfo] = useState(false);
+  const [showCalculationInfo, setShowCalculationInfo] = useState(false);
+  const [showPriceMatrix, setShowPriceMatrix] = useState(false);
 
   // New Features States
-  const [templateName, setTemplateName] = useState<'mppsc_pyq_promo' | 'zenscroll_alert' | 'mppsc_journey_start' | 'mppsc_toppers_quote' | 'mppsc_pre_mains_ut' | 'mppsc_mains_ut_new' | 'hello_world' | 'mppsc_mains_2025'>('mppsc_pre_mains_ut');
+  const [templateName, setTemplateName] = useState<WhatsAppTemplateName>(DEFAULT_TEMPLATE);
   const [imageUrl, setImageUrl] = useState('https://mppsc.zenscroll.in/marketing/mppsc-alert.png');
   
   // Custom Add State
@@ -40,6 +58,8 @@ export default function WhatsAppDashboard() {
   const [isAddingContact, setIsAddingContact] = useState(false);
 
   const [insights, setInsights] = useState<any[]>([]);
+  const [templateStats, setTemplateStats] = useState<any[]>([]);
+  const [receivedCount, setReceivedCount] = useState(0);
 
   const fetchData = async () => {
     try {
@@ -47,7 +67,9 @@ export default function WhatsAppDashboard() {
       if (res.ok) {
         const data = await res.json();
         setStudents(data.students || []);
-        setStats(data.stats || { SENT: 0, DELIVERED: 0, READ: 0, REPLIED: 0 });
+        setStats(data.stats || { SENT: 0, DELIVERED: 0, READ: 0, REPLIED: 0, FAILED: 0 });
+        setTemplateStats(data.templateStats || []);
+        setReceivedCount(data.receivedCount || 0);
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
@@ -84,7 +106,7 @@ export default function WhatsAppDashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          students: [{ name: manualName.trim() || 'Guest', phone_number: manualPhone.trim() }] 
+          students: [{ name: manualName.trim() || 'MPPSC Aspirant', phone_number: manualPhone.trim() }] 
         }),
       });
 
@@ -109,15 +131,53 @@ export default function WhatsAppDashboard() {
     setIsLoading(true);
 
     try {
-      const lines = csvData.split('\n').filter((l) => l.trim().length > 0);
-      const parsedStudents = lines.map((line) => {
-        const [name, phone] = line.split(',').map((s) => s.trim());
-        return { name, phone_number: phone };
-      }).filter((s) => s.name && s.phone_number);
+      const lines = csvData.split('\n').map((l) => l.trim()).filter(Boolean);
+      const parsedStudents: Array<{ name: string; phone_number: string }> = [];
+
+      for (const line of lines) {
+        const parts = line.split(',').map((p) => p.trim());
+        
+        // Check if this line is just a list of comma-separated phone numbers
+        const isOnlyNumbers = parts.every(part => {
+          const clean = part.replace(/\D/g, '');
+          return clean.length >= 7 && /^[+\d\s()-]+$/.test(part);
+        });
+
+        if (isOnlyNumbers && parts.length > 0) {
+          for (const part of parts) {
+            parsedStudents.push({
+              name: 'MPPSC Aspirant',
+              phone_number: part
+            });
+          }
+        } else {
+          // Standard Name, Phone or just Phone line
+          if (parts.length === 1) {
+            const value = parts[0];
+            const clean = value.replace(/\D/g, '');
+            if (clean.length >= 7) {
+              parsedStudents.push({
+                name: 'MPPSC Aspirant',
+                phone_number: value
+              });
+            }
+          } else {
+            const phone = parts[parts.length - 1];
+            const name = parts.slice(0, parts.length - 1).join(', ').trim();
+            const cleanPhone = phone.replace(/\D/g, '');
+            if (cleanPhone.length >= 7) {
+              parsedStudents.push({
+                name: name || 'MPPSC Aspirant',
+                phone_number: phone
+              });
+            }
+          }
+        }
+      }
 
       if (parsedStudents.length === 0) {
         setIsLoading(false);
-        return toast.error('No valid data found. Format: Name, Phone');
+        return toast.error('No valid phone numbers found. Use formats: Name, Phone OR just Phone numbers.');
       }
 
       const res = await fetch('/api/whatsapp/students', {
@@ -153,7 +213,20 @@ export default function WhatsAppDashboard() {
     const sourceLabel = s.leadSource || 'Guest';
     const matchesSource = sourceFilter === 'ALL' || sourceLabel === sourceFilter;
 
-    return matchesSearch && matchesSource;
+    let matchesDataStatus = true;
+    if (dataStatusFilter === 'UNSENT') {
+      matchesDataStatus = s.campaignStatus === 'UNSENT';
+    } else if (dataStatusFilter === 'SENT') {
+      matchesDataStatus = s.campaignStatus === 'SENT';
+    } else if (dataStatusFilter === 'DELIVERED') {
+      matchesDataStatus = s.campaignStatus === 'DELIVERED';
+    } else if (dataStatusFilter === 'READ') {
+      matchesDataStatus = s.campaignStatus === 'READ';
+    } else if (dataStatusFilter === 'FAILED') {
+      matchesDataStatus = s.campaignStatus === 'FAILED';
+    }
+
+    return matchesSearch && matchesSource && matchesDataStatus;
   });
 
   const validFilteredStudents = filteredStudents.filter(s => s.mobile);
@@ -195,7 +268,7 @@ export default function WhatsAppDashboard() {
           studentIds: Array.from(selectedIds), 
           senderMode,
           templateName,
-          imageUrl: templateName === 'zenscroll_alert' ? imageUrl : undefined
+          imageUrl: TEMPLATE_MAP[templateName]?.hasImageHeader ? imageUrl : undefined
         }),
       });
 
@@ -214,6 +287,110 @@ export default function WhatsAppDashboard() {
       setIsSending(false);
     }
   };
+
+  const costSummary = React.useMemo(() => {
+    let marketingDelivered = 0;
+    let marketingSent = 0;
+    let marketingFailed = 0;
+    
+    let utilityDelivered = 0;
+    let utilitySent = 0;
+    let utilityFailed = 0;
+    
+    let unknownDelivered = 0;
+    let unknownSent = 0;
+    let unknownFailed = 0;
+
+    templateStats.forEach((row) => {
+      const name = row.templateName;
+      const status = row.status || 'SENT';
+      const count = Number(row.count) || 0;
+
+      let category = 'Unknown';
+      if (name) {
+        category = TEMPLATE_MAP[name as WhatsAppTemplateName]?.category || 'Unknown';
+      }
+
+      if (category === 'Marketing') {
+        if (status === 'DELIVERED' || status === 'READ') {
+          marketingDelivered += count;
+        } else if (status === 'SENT') {
+          marketingSent += count;
+        } else if (status === 'FAILED') {
+          marketingFailed += count;
+        }
+      } else if (category === 'Utility') {
+        if (status === 'DELIVERED' || status === 'READ') {
+          utilityDelivered += count;
+        } else if (status === 'SENT') {
+          utilitySent += count;
+        } else if (status === 'FAILED') {
+          utilityFailed += count;
+        }
+      } else {
+        // Fallback for historical logs that have no templateName
+        if (status === 'DELIVERED' || status === 'READ') {
+          unknownDelivered += count;
+        } else if (status === 'SENT') {
+          unknownSent += count;
+        } else if (status === 'FAILED') {
+          unknownFailed += count;
+        }
+      }
+    });
+
+    const marketingCost = marketingDelivered * 0.8632;
+    const utilityCost = utilityDelivered * 0.115;
+    const unknownCost = unknownDelivered * 0.115; // default unknown to utility price
+
+    const totalCost = marketingCost + utilityCost + unknownCost;
+
+    return {
+      marketingDelivered,
+      marketingSent,
+      marketingFailed,
+      marketingCost,
+      utilityDelivered,
+      utilitySent,
+      utilityFailed,
+      utilityCost,
+      unknownDelivered,
+      unknownSent,
+      unknownFailed,
+      unknownCost,
+      totalCost,
+    };
+  }, [templateStats]);
+
+  const templateGroupedRecipients = React.useMemo(() => {
+    const groups: Record<string, Guest[]> = {};
+    students.forEach((s) => {
+      if (s.lastTemplateName) {
+        if (!groups[s.lastTemplateName]) {
+          groups[s.lastTemplateName] = [];
+        }
+        groups[s.lastTemplateName].push(s);
+      }
+    });
+    return groups;
+  }, [students]);
+
+  const deliveryMetrics = React.useMemo(() => {
+    const total = stats.SENT + stats.DELIVERED + stats.READ + stats.FAILED;
+    const success = stats.DELIVERED + stats.READ;
+    const failed = stats.FAILED;
+    
+    const successRate = total > 0 ? (success / total) * 100 : 0;
+    const failRate = total > 0 ? (failed / total) * 100 : 0;
+    
+    return {
+      total,
+      success,
+      failed,
+      successRate,
+      failRate
+    };
+  }, [stats]);
 
   return (
     <div className="min-h-screen bg-zinc-50/50 p-6 sm:p-10 text-zinc-950 font-sans">
@@ -247,18 +424,183 @@ export default function WhatsAppDashboard() {
         </div>
 
         {/* Analytics Cards */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {[
-            { label: 'Sent Messages', value: stats.SENT },
-            { label: 'Delivered', value: stats.DELIVERED },
-            { label: 'Read', value: stats.READ },
-            { label: 'Replied / Active', value: stats.REPLIED }
+            { label: 'Sent / Pending', value: stats.SENT, color: 'text-yellow-600' },
+            { label: 'Delivered', value: stats.DELIVERED, color: 'text-green-600' },
+            { label: 'Read / Opened', value: stats.READ, color: 'text-blue-600' },
+            { label: 'Failed Messages', value: stats.FAILED, color: 'text-red-600' },
+            { label: 'Replied / Active', value: stats.REPLIED, color: 'text-emerald-600' }
           ].map((stat, i) => (
             <div key={i} className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm flex flex-col justify-between">
-              <h3 className="text-sm font-medium text-zinc-500">{stat.label}</h3>
-              <p className="mt-4 text-3xl font-semibold tracking-tight text-zinc-900">{stat.value}</p>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{stat.label}</h3>
+              <p className={`mt-4 text-3xl font-bold tracking-tight ${stat.color}`}>{stat.value}</p>
             </div>
           ))}
+        </div>
+
+        {/* Cost & Billing Estimates Card */}
+        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-base font-semibold text-zinc-950 flex items-center gap-2">
+                <span>💰</span> Meta Billing & Cost Estimator
+              </h2>
+              <p className="text-sm text-zinc-500 mt-0.5">Approximate charges based on delivered conversation categories (India region with 18% GST included).</p>
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-1.5 text-right">
+                <span className="text-[9px] text-green-700 block font-bold uppercase tracking-wider">Success Rate</span>
+                <span className="text-base font-bold text-green-800">{deliveryMetrics.successRate.toFixed(1)}%</span>
+              </div>
+              <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-1.5 text-right">
+                <span className="text-[9px] text-red-700 block font-bold uppercase tracking-wider">Failure Rate</span>
+                <span className="text-base font-bold text-red-800">{deliveryMetrics.failRate.toFixed(1)}%</span>
+              </div>
+              <div className="bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-1.5 text-right">
+                <span className="text-[9px] text-zinc-500 block font-bold uppercase tracking-wider">Estimated Total Spent</span>
+                <span className="text-base font-bold text-zinc-950">₹{costSummary.totalCost.toFixed(2)}</span>
+              </div>
+              <button
+                onClick={() => setShowCalculationInfo(true)}
+                className="inline-flex items-center gap-1 px-3 py-2.5 rounded-lg border border-zinc-200 bg-white text-xs font-semibold text-zinc-700 shadow-sm hover:bg-zinc-50 transition-colors"
+              >
+                <span>❓</span> How it Works
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 border border-zinc-200 rounded-xl bg-zinc-50/50 p-4">
+            {/* Box 1: All messages */}
+            <div className="bg-white rounded-lg border border-zinc-200 p-4 flex flex-col justify-between shadow-sm min-h-[220px]">
+              <div>
+                <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
+                  <span className="text-xs font-bold text-zinc-700 uppercase tracking-wider">All messages</span>
+                  <span className="text-purple-600 text-lg">🟣</span>
+                </div>
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Campaign Sent (Logs):</span>
+                    <span className="font-bold text-zinc-900">{stats.SENT + stats.DELIVERED + stats.READ + stats.FAILED}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Messages delivered:</span>
+                    <span className="font-bold text-zinc-900">{stats.DELIVERED + stats.READ}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Messages received:</span>
+                    <span className="font-bold text-zinc-900">{receivedCount}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-[10px] text-zinc-400 mt-4 border-t border-zinc-100/60 pt-2">
+                Total campaign logs & incoming support replies.
+              </div>
+            </div>
+
+            {/* Box 2: Messages delivered */}
+            <div className="bg-white rounded-lg border border-zinc-200 p-4 flex flex-col justify-between shadow-sm min-h-[220px]">
+              <div>
+                <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
+                  <span className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Delivered Breakdown</span>
+                  <span className="text-green-600 text-lg">🟢</span>
+                </div>
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Marketing:</span>
+                    <span className="font-bold text-zinc-900">{costSummary.marketingDelivered}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Utility:</span>
+                    <span className="font-bold text-zinc-900">{costSummary.utilityDelivered + costSummary.unknownDelivered}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Service:</span>
+                    <span className="font-bold text-zinc-900">{stats.REPLIED}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-[10px] text-zinc-400 mt-4 border-t border-zinc-100/60 pt-2">
+                All delivered conversations by category.
+              </div>
+            </div>
+
+            {/* Box 3: Free messages delivered */}
+            <div className="bg-white rounded-lg border border-zinc-200 p-4 flex flex-col justify-between shadow-sm min-h-[220px]">
+              <div>
+                <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
+                  <span className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Free Delivered</span>
+                  <span className="text-blue-500 text-lg">🔵</span>
+                </div>
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Free customer service:</span>
+                    <span className="font-bold text-zinc-900">{stats.REPLIED}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Free entry point:</span>
+                    <span className="font-bold text-zinc-900">0</span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-[10px] text-zinc-400 mt-4 border-t border-zinc-100/60 pt-2">
+                User-initiated support window messages.
+              </div>
+            </div>
+
+            {/* Box 4: Paid messages delivered */}
+            <div className="bg-white rounded-lg border border-zinc-200 p-4 flex flex-col justify-between shadow-sm min-h-[220px]">
+              <div>
+                <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
+                  <span className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Paid Delivered</span>
+                  <span className="text-orange-500 text-lg">🟠</span>
+                </div>
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Marketing:</span>
+                    <span className="font-bold text-zinc-900">{costSummary.marketingDelivered}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Utility:</span>
+                    <span className="font-bold text-zinc-900">{costSummary.utilityDelivered + costSummary.unknownDelivered}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-[10px] text-zinc-400 mt-4 border-t border-zinc-100/60 pt-2">
+                Business-initiated paid conversations.
+              </div>
+            </div>
+
+            {/* Box 5: Approximate total charges */}
+            <div className="bg-zinc-900 rounded-lg p-4 flex flex-col justify-between text-white min-h-[220px] shadow-md border border-zinc-800">
+              <div>
+                <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+                  <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Approx Charges</span>
+                  <span className="text-xs font-bold text-zinc-200">₹{costSummary.totalCost.toFixed(2)}</span>
+                </div>
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-400">Marketing:</span>
+                    <span className="font-bold text-red-300">₹{costSummary.marketingCost.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-400">Utility:</span>
+                    <span className="font-bold text-green-300">₹{(costSummary.utilityCost + costSummary.unknownCost).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-[10px] text-zinc-500 mt-4 border-t border-zinc-800 pt-2 flex items-center justify-between">
+                <span>GST 18% Included</span>
+                <button 
+                  onClick={() => setShowPriceMatrix(true)}
+                  className="text-emerald-400 font-bold hover:underline cursor-pointer flex items-center gap-1 bg-transparent border-0 p-0"
+                >
+                  <span>🧮</span> Price Calculator
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -277,20 +619,18 @@ export default function WhatsAppDashboard() {
                   <label className="block text-xs font-medium text-zinc-700 mb-1">Select Template</label>
                   <select 
                     value={templateName}
-                    onChange={(e) => setTemplateName(e.target.value as any)}
+                    onChange={(e) => setTemplateName(e.target.value as WhatsAppTemplateName)}
                     className="w-full rounded-md border border-zinc-200 py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
                   >
-                    <optgroup label="🟢 Utility Templates (Low Cost)">
-                      <option value="mppsc_pre_mains_ut">MPPSC Pre+Mains Update (Utility)</option>
-                      <option value="mppsc_mains_ut_new">MPPSC Mains Update (Utility)</option>
-                      <option value="mppsc_pyq_promo">MPPSC PYQ Promo (Utility)</option>
-                      <option value="hello_world">Hello World (Utility)</option>
+                    <optgroup label="🟢 Utility Templates (₹0.115 / msg)">
+                      {UTILITY_TEMPLATES.map((t) => (
+                        <option key={t.name} value={t.name}>{t.label} (₹0.115)</option>
+                      ))}
                     </optgroup>
-                    <optgroup label="📢 Marketing Templates">
-                      <option value="mppsc_toppers_quote">MPPSC Toppers Quote (Marketing)</option>
-                      <option value="mppsc_mains_2025">MPPSC Mains 2025 (Marketing)</option>
-                      <option value="mppsc_journey_start">MPPSC Journey Start (Marketing)</option>
-                      <option value="zenscroll_alert">ZenScroll Alert (Marketing)</option>
+                    <optgroup label="📢 Marketing Templates (₹0.863 / msg)">
+                      {MARKETING_TEMPLATES.map((t) => (
+                        <option key={t.name} value={t.name}>{t.label} (₹0.863)</option>
+                      ))}
                     </optgroup>
                   </select>
                 </div>
@@ -444,12 +784,16 @@ export default function WhatsAppDashboard() {
             <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
                <div className="mb-4">
                 <h2 className="text-base font-semibold text-zinc-950">Bulk Import Data</h2>
-                <p className="text-sm text-zinc-500 leading-relaxed">Paste CSV formatted exactly as <strong>Name, Phone</strong>. Once uploaded, they will appear in the directory on the right where you can select them.</p>
+                <div className="text-xs text-zinc-500 space-y-1 mt-1 leading-relaxed">
+                  <p><strong>Option 1 (नाम के साथ):</strong> <code>Name, Phone</code> (जैसे: <code>Arjun, 919876543210</code>)</p>
+                  <p><strong>Option 2 (बिना नाम के - Only Numbers):</strong> <code>Phone</code> (जैसे: <code>919876543210</code>) या <code>, Phone</code></p>
+                  <p className="text-[10px] text-zinc-400 mt-1">💡 बिना नाम वाले कांटेक्ट स्वतः <strong>MPPSC Aspirant</strong> नाम से सेव हो जाएंगे।</p>
+                </div>
               </div>
               <textarea
                 className="w-full rounded-md border border-zinc-200 bg-transparent px-3 py-2 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900"
                 rows={3}
-                placeholder="Arjun, 919876543210&#10;Rahul, 918765432109"
+                placeholder="Arjun, 919876543210&#10;918765432109&#10;, 917654321098"
                 value={csvData}
                 onChange={(e) => setCsvData(e.target.value)}
               ></textarea>
@@ -469,7 +813,12 @@ export default function WhatsAppDashboard() {
           <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm lg:col-span-2 flex flex-col h-[850px]">
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-zinc-950">Recipient Directory</h2>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-lg font-semibold text-zinc-950">Recipient Directory</h2>
+                  <button onClick={() => setShowStatusInfo(true)} className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 transition-colors flex items-center gap-1">
+                    <span>ℹ️</span> Status Guide
+                  </button>
+                </div>
                 <p className="mt-1 text-sm text-zinc-500">
                   <span className="font-medium text-zinc-900">{selectedIds.size}</span> selected out of <span className="font-medium text-zinc-900">{validFilteredStudents.length}</span> total contacts
                 </p>
@@ -503,12 +852,24 @@ export default function WhatsAppDashboard() {
               <select
                 value={sourceFilter}
                 onChange={(e) => setSourceFilter(e.target.value)}
-                className="w-full sm:w-48 rounded-md border border-zinc-200 bg-transparent py-2 px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                className="w-full sm:w-40 rounded-md border border-zinc-200 bg-transparent py-2 px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
               >
                 <option value="ALL">All Origins</option>
                 {uniqueSources.map(source => (
                   <option key={source} value={source}>{source}</option>
                 ))}
+              </select>
+              <select
+                value={dataStatusFilter}
+                onChange={(e) => setDataStatusFilter(e.target.value)}
+                className="w-full sm:w-44 rounded-md border-2 border-blue-200 bg-blue-50 py-2 px-3 text-sm font-semibold text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="ALL">📋 All Contacts</option>
+                <option value="UNSENT">🆕 Unsent</option>
+                <option value="SENT">📤 Sent</option>
+                <option value="DELIVERED">✓✓ Delivered</option>
+                <option value="READ">👁️ Read</option>
+                <option value="FAILED">❌ Failed</option>
               </select>
             </div>
 
@@ -540,14 +901,18 @@ export default function WhatsAppDashboard() {
                     </th>
                     <th scope="col" className="px-6 py-3.5 font-medium">Recipient</th>
                     <th scope="col" className="px-6 py-3.5 font-medium">Contact</th>
+                    <th scope="col" className="px-6 py-3.5 font-medium">Status</th>
+                    <th scope="col" className="px-6 py-3.5 font-medium">Last Activity</th>
                     <th scope="col" className="px-6 py-3.5 font-medium">Origin</th>
+                    <th scope="col" className="px-6 py-3.5 font-medium">Joined</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 bg-white">
                   {filteredStudents.map((student) => {
                     const hasMobile = !!student.mobile;
+                    const isSent = student.campaignStatus && student.campaignStatus !== 'UNSENT';
                     return (
-                      <tr key={student.id} className={`transition-colors ${hasMobile ? 'hover:bg-zinc-50' : 'bg-zinc-50/50 opacity-60'}`}>
+                      <tr key={student.id} className={`transition-colors ${hasMobile ? 'hover:bg-zinc-50' : 'bg-zinc-50/50 opacity-60'} ${isSent ? 'bg-zinc-50/30' : ''}`}>
                         <td className="w-4 p-4">
                           <input
                             type="checkbox"
@@ -564,16 +929,69 @@ export default function WhatsAppDashboard() {
                           {hasMobile ? student.mobile : 'Unavailable'}
                         </td>
                         <td className="px-6 py-4">
+                          {(() => {
+                            const s = student.campaignStatus;
+                            if (s === 'READ') return (
+                              <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-700 border border-blue-200">
+                                👁️ READ
+                              </span>
+                            );
+                            if (s === 'DELIVERED') return (
+                              <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-green-700 border border-green-200">
+                                ✓✓ DELIVERED
+                              </span>
+                            );
+                            if (s === 'SENT') return (
+                              <span className="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-yellow-700 border border-yellow-200">
+                                📤 SENT
+                              </span>
+                            );
+                            if (s === 'FAILED') return (
+                              <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-red-700 border border-red-200">
+                                ❌ FAILED
+                              </span>
+                            );
+                            return (
+                              <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-zinc-500 border border-zinc-200">
+                                UNSENT
+                              </span>
+                            );
+                          })()}
+                        </td>
+                        <td className="px-6 py-4">
+                          {student.lastSentAt || student.lastStatusAt ? (
+                            <div className="text-xs text-zinc-600 leading-relaxed">
+                              {student.lastSentAt && (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-zinc-400">📤</span>
+                                  <span>{format(new Date(student.lastSentAt), 'EEE, d MMM · h:mm a')}</span>
+                                </div>
+                              )}
+                              {student.lastStatusAt && student.lastStatusAt !== student.lastSentAt && (
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  <span className="text-zinc-400">🔄</span>
+                                  <span className="text-zinc-500">{format(new Date(student.lastStatusAt), 'EEE, d MMM · h:mm a')}</span>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-zinc-300 text-xs">—</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
                           <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-zinc-600 border border-zinc-200">
                             {student.leadSource || 'Organic'}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 text-xs text-zinc-500 whitespace-nowrap">
+                          {student.createdAt ? format(new Date(student.createdAt), 'dd MMM yyyy') : '—'}
                         </td>
                       </tr>
                     );
                   })}
                   {filteredStudents.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="px-6 py-16 text-center text-zinc-500 text-sm">
+                      <td colSpan={7} className="px-6 py-16 text-center text-zinc-500 text-sm">
                         No recipients matched your filters.
                       </td>
                     </tr>
@@ -659,7 +1077,359 @@ export default function WhatsAppDashboard() {
           </div>
         </div>
 
+        {/* Template-wise Audience Breakdown */}
+        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-6 border-b border-zinc-100 pb-4">
+            <div>
+              <h2 className="text-base font-semibold text-zinc-950 flex items-center gap-2">
+                <span>📊</span> Template-wise Audience Breakdown & Analytics
+              </h2>
+              <p className="text-sm text-zinc-500 mt-0.5">Click any template below to view the list of students, statuses, and performance insights.</p>
+            </div>
+            <div className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-1.5 text-right">
+              <span className="text-[10px] text-zinc-500 block font-bold uppercase tracking-wider">Total Campaigns Dispatched</span>
+              <span className="text-sm font-bold text-zinc-950">{stats.SENT + stats.DELIVERED + stats.READ + stats.FAILED} Messages</span>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {Object.keys(templateGroupedRecipients).length === 0 ? (
+              <p className="text-zinc-500 text-sm py-8 text-center border border-dashed border-zinc-200 rounded-xl bg-zinc-50/50">No template-specific campaign history found yet.</p>
+            ) : (
+              Object.entries(templateGroupedRecipients).map(([tName, recipients]) => {
+                const templateInfo = TEMPLATE_MAP[tName as WhatsAppTemplateName];
+                const label = templateInfo?.label || tName;
+                const category = templateInfo?.category || 'Unknown';
+                
+                const tSent = recipients.filter(r => r.campaignStatus === 'SENT').length;
+                const tDelivered = recipients.filter(r => r.campaignStatus === 'DELIVERED').length;
+                const tRead = recipients.filter(r => r.campaignStatus === 'READ').length;
+                const tFailed = recipients.filter(r => r.campaignStatus === 'FAILED').length;
+                
+                const rate = category === 'Marketing' ? 0.8632 : 0.115;
+                const cost = (tDelivered + tRead) * rate;
+
+                return (
+                  <details key={tName} className="group border border-zinc-200 rounded-lg overflow-hidden [&_summary::-webkit-details-marker]:hidden bg-white">
+                    <summary className="flex items-center justify-between p-4 bg-zinc-50/50 hover:bg-zinc-100/50 cursor-pointer select-none transition-colors">
+                      <div className="flex items-center gap-3">
+                        <span className="text-zinc-400 group-open:rotate-90 transition-transform font-bold">&rarr;</span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-sm text-zinc-900">{label}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide border ${
+                              category === 'Marketing'
+                                ? 'bg-red-50 text-red-700 border-red-200'
+                                : 'bg-green-50 text-green-700 border-green-200'
+                            }`}>
+                              {category}
+                            </span>
+                          </div>
+                          <div className="font-mono text-xs text-zinc-400 mt-0.5">{tName}</div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-6">
+                        <div className="hidden md:flex items-center gap-2 text-[11px]">
+                          <span className="bg-zinc-100 px-2 py-0.5 rounded text-zinc-700 font-bold border border-zinc-200">Total: {recipients.length}</span>
+                          <span className="bg-yellow-50 px-2 py-0.5 rounded text-yellow-700 font-bold border border-yellow-100">Pending: {tSent}</span>
+                          <span className="bg-green-50 px-2 py-0.5 rounded text-green-700 font-bold border border-green-100">Delivered: {tDelivered}</span>
+                          <span className="bg-blue-50 px-2 py-0.5 rounded text-blue-700 font-bold border border-blue-100">Read: {tRead}</span>
+                          <span className="bg-red-50 px-2 py-0.5 rounded text-red-700 font-bold border border-red-100">Failed: {tFailed}</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-bold text-zinc-900">₹{cost.toFixed(2)}</div>
+                          <div className="text-[10px] text-zinc-500 font-medium">{category} Rate</div>
+                        </div>
+                      </div>
+                    </summary>
+                    
+                    <div className="border-t border-zinc-200 p-4 bg-white">
+                      <div className="overflow-x-auto max-h-80 overflow-y-auto">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                            <tr className="border-b border-zinc-200 bg-zinc-50 text-zinc-500 uppercase tracking-wider font-semibold text-[10px]">
+                              <th className="py-2.5 px-3">Student Name</th>
+                              <th className="py-2.5 px-3">Phone Number</th>
+                              <th className="py-2.5 px-3">Status</th>
+                              <th className="py-2.5 px-3">Sent At</th>
+                              <th className="py-2.5 px-3">Last Status At</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {recipients.map((r) => (
+                              <tr key={r.id} className="border-b border-zinc-100 hover:bg-zinc-50/50">
+                                <td className="py-2.5 px-3 font-medium text-zinc-900">{r.name}</td>
+                                <td className="py-2.5 px-3 font-mono text-zinc-500">{r.mobile}</td>
+                                <td className="py-2.5 px-3">
+                                  <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+                                    r.campaignStatus === 'READ' ? 'bg-blue-50 text-blue-700 border border-blue-100' :
+                                    r.campaignStatus === 'DELIVERED' ? 'bg-green-50 text-green-700 border border-green-100' :
+                                    r.campaignStatus === 'SENT' ? 'bg-yellow-50 text-yellow-700 border border-yellow-100' :
+                                    'bg-red-50 text-red-700 border border-red-100'
+                                  }`}>
+                                    {r.campaignStatus}
+                                  </span>
+                                </td>
+                                <td className="py-2.5 px-3 text-zinc-500">{r.lastSentAt ? format(new Date(r.lastSentAt), 'dd MMM yyyy, hh:mm a') : '—'}</td>
+                                <td className="py-2.5 px-3 text-zinc-500">{r.lastStatusAt ? format(new Date(r.lastStatusAt), 'dd MMM yyyy, hh:mm a') : '—'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </details>
+                );
+              })
+            )}
+          </div>
+        </div>
+
       </div>
+      {showStatusInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm transition-opacity" onClick={() => setShowStatusInfo(false)}>
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4 bg-zinc-50/50">
+              <h3 className="font-semibold text-zinc-900 flex items-center gap-2">
+                <span>ℹ️</span> Campaign Status Guide
+              </h3>
+              <button onClick={() => setShowStatusInfo(false)} className="text-zinc-400 hover:text-zinc-700 p-1 rounded-md hover:bg-zinc-200 transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-5 space-y-5 text-sm text-zinc-700">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 shrink-0"><span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-zinc-500 border border-zinc-200">UNSENT</span></div>
+                <div className="leading-relaxed">Campaign has not yet been sent to this contact. They are fresh leads.</div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 shrink-0"><span className="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-yellow-700 border border-yellow-200">📤 SENT</span></div>
+                <div className="leading-relaxed">Message was accepted by Meta servers, but hasn't reached the user's phone yet (phone off or no internet).</div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 shrink-0"><span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-green-700 border border-green-200">✓✓ DELIVERED</span></div>
+                <div className="leading-relaxed">Message successfully reached the contact's phone (double tick).</div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 shrink-0"><span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-700 border border-blue-200">👁️ READ</span></div>
+                <div className="leading-relaxed">Contact opened and read the message (blue tick). <strong className="text-blue-700">Best leads for follow-up!</strong></div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 shrink-0"><span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-red-700 border border-red-200">❌ FAILED</span></div>
+                <div className="leading-relaxed">Delivery failed. The number might be invalid, not on WhatsApp, or they blocked the business number.</div>
+              </div>
+              
+              <div className="mt-2 pt-4 border-t border-zinc-100 bg-zinc-50/50 -mx-5 px-5 pb-1">
+                <h4 className="font-semibold text-zinc-900 text-xs uppercase tracking-wider mb-2">Timestamp Activity Guide</h4>
+                <div className="text-xs text-zinc-600 space-y-2">
+                  <p className="flex items-center gap-2"><span className="text-zinc-400">📤</span> <strong>Line 1:</strong> Exact date and time the message was dispatched.</p>
+                  <p className="flex items-center gap-2"><span className="text-zinc-400">🔄</span> <strong>Line 2:</strong> Exact time the status changed (Delivered/Read).</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 bg-zinc-50 border-t border-zinc-100 flex justify-end">
+              <button onClick={() => setShowStatusInfo(false)} className="px-5 py-2 bg-zinc-900 text-white text-sm font-medium rounded hover:bg-zinc-800 transition-colors">Understood</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desi Explanation Modal */}
+      {showCalculationInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm transition-opacity" onClick={() => setShowCalculationInfo(false)}>
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4 bg-zinc-50/50">
+              <h3 className="font-semibold text-zinc-900 flex items-center gap-2">
+                <span>⚙️</span> WhatsApp Marketing & Calculations Guide
+              </h3>
+              <button onClick={() => setShowCalculationInfo(false)} className="text-zinc-400 hover:text-zinc-700 p-1 rounded-md hover:bg-zinc-200 transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6 text-sm text-zinc-700 max-h-[70vh] overflow-y-auto leading-relaxed">
+              <div>
+                <h4 className="font-bold text-zinc-950 text-sm mb-2 flex items-center gap-1.5">
+                  <span>🔑</span> 1. पैसा कब और कैसे कटता है? (Meta Billing Rules)
+                </h4>
+                <ul className="list-disc pl-5 space-y-1.5 text-xs">
+                  <li><strong>सिर्फ डिलीवरी पर charge:</strong> Meta पैसा तभी चार्ज करता है जब मेसेज छात्र के फोन पर <span className="text-green-700 font-semibold">Delivered</span> या <span className="text-blue-700 font-semibold">Read</span> हो जाता है। अगर मेसेज <span className="text-red-700 font-semibold">Failed</span> होता है, तो <strong>₹0</strong> कटता है।</li>
+                  <li><strong>24-Hour Conversation Window:</strong> एक छात्र को पहला मेसेज डिलीवर होने पर 24 घंटे की विंडो शुरू हो जाती है। इस 24 घंटे में आप उसे कितने भी मेसेज भेजें, Meta <strong>सिर्फ 1 मेसेज का चार्ज</strong> करता है।</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-zinc-950 text-sm mb-2 flex items-center gap-1.5">
+                  <span>🏷️</span> 2. Rates & Categories (दरें क्या हैं?)
+                </h4>
+                <ul className="list-disc pl-5 space-y-1.5 text-xs">
+                  <li><strong>Marketing Template:</strong> ~₹0.86 प्रति सफल बातचीत (इसमें 18% GST शामिल है)। उदाहरण: <em>Toppers Quote, Promo alerts</em>.</li>
+                  <li><strong>Utility Template:</strong> ~₹0.115 प्रति सफल बातचीत (18% GST शामिल)। उदाहरण: <em>Syllabus Updates, Notifications</em>.</li>
+                  <li><strong>Service / Free:</strong> हर महीने Meta 1,000 मुफ़्त यूजर-इनीशिएटेड (छात्र की तरफ से शुरू हुई) बातचीत देता है।</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-zinc-950 text-sm mb-2 flex items-center gap-1.5">
+                  <span>📂</span> 3. डेटा कहाँ स्टोर होता है? (Database Tables)
+                </h4>
+                <ul className="list-disc pl-5 space-y-2 text-xs">
+                  <li><strong><code>guests</code> टेबल:</strong> इसमें छात्रों की बेसिक प्रोफाइल (Name, Phone Number, Lead Source) सेव होती है।</li>
+                  <li><strong><code>whatsappCampaignLogs</code> टेबल:</strong> इसमें हर भेजे गए मेसेज का रिकॉर्ड होता है:
+                    <ul className="list-circle pl-5 mt-1 space-y-1 text-[11px] text-zinc-500">
+                      <li><code>guestId</code> - किस छात्र को भेजा।</li>
+                      <li><code>messageId</code> - Meta की तरफ से मिली यूनिक ID (wamid)।</li>
+                      <li><code>status</code> - मेसेज का स्टेटस (SENT, DELIVERED, READ, FAILED)। Webhook के जरिए Meta इसे रियल-टाइम में अपडेट करता है।</li>
+                      <li><code>templateName</code> - कौन सा टेम्पलेट भेजा गया था (ताकि मार्केटिंग एनालिटिक्स सटीक रहे)।</li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-zinc-950 text-sm mb-2 flex items-center gap-1.5">
+                  <span>📈</span> 4. Success और Failure Rate का क्या मतलब है?
+                </h4>
+                <ul className="list-disc pl-5 space-y-1.5 text-xs">
+                  <li><strong>Success Rate:</strong> कुल भेजे गए मेसेज में से कितने डिलीवर या पढ़े गए। यह जितना ज्यादा होगा, आपकी रीच उतनी ही अच्छी है।</li>
+                  <li><strong>Failure Rate:</strong> जो नंबर अमान्य हैं, या जिनका व्हाट्सएप बंद है, या जिन्होंने आपके बिजनेस नंबर को ब्लॉक किया है। इसे कम रखने के लिए केवल एक्टिव कॉन्टैक्ट्स पर ही कैंपेन चलाएं।</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-zinc-50 border-t border-zinc-100 flex justify-end">
+              <button onClick={() => setShowCalculationInfo(false)} className="px-5 py-2 bg-zinc-900 text-white text-sm font-medium rounded hover:bg-zinc-800 transition-colors">समझ गया</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Price Matrix / ROI Calculator Modal */}
+      {showPriceMatrix && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm transition-opacity" onClick={() => setShowPriceMatrix(false)}>
+          <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4 bg-zinc-50/50">
+              <h3 className="font-semibold text-zinc-900 flex items-center gap-2">
+                <span>🧮</span> WhatsApp Rate Calculator & Price Matrix
+              </h3>
+              <button onClick={() => setShowPriceMatrix(false)} className="text-zinc-400 hover:text-zinc-700 p-1 rounded-md hover:bg-zinc-200 transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6 text-sm text-zinc-700 max-h-[70vh] overflow-y-auto">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 leading-relaxed">
+                <strong>📝 ध्यान दें (Notes):</strong> ये दरें भारत (India Region) के लिए Meta द्वारा निर्धारित हैं और इनमें <strong>18% GST पहले से शामिल</strong> किया गया है। Meta केवल <em>सफल डिलीवरी (Delivered)</em> पर चार्ज करता है।
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Utility Pricing */}
+                <div className="border border-green-200 rounded-xl overflow-hidden bg-green-50/10">
+                  <div className="bg-green-50 px-4 py-3 border-b border-green-200 flex justify-between items-center">
+                    <span className="font-bold text-green-800 text-xs uppercase tracking-wider">🟢 Utility Template</span>
+                    <span className="text-xs font-bold text-zinc-600">₹0.115 / msg</span>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-zinc-400 block mb-1.5">मेसेज के हिसाब से खर्च (Cost for Messages)</span>
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-zinc-200 text-zinc-400 font-semibold text-[10px]">
+                            <th className="pb-1.5">मेसेज संख्या</th>
+                            <th className="pb-1.5 text-right">कुल खर्च (GST सहित)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-zinc-700 divide-y divide-zinc-100">
+                          <tr><td className="py-1.5">10 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹1.15</td></tr>
+                          <tr><td className="py-1.5">50 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹5.75</td></tr>
+                          <tr><td className="py-1.5">100 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹11.50</td></tr>
+                          <tr><td className="py-1.5">200 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹23.00</td></tr>
+                          <tr><td className="py-1.5">500 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹57.50</td></tr>
+                          <tr><td className="py-1.5">1,000 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹115.00</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-zinc-400 block mb-1.5">रुपये के हिसाब से मेसेज (Messages for Rupees)</span>
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-zinc-200 text-zinc-400 font-semibold text-[10px]">
+                            <th className="pb-1.5">बजट (Rupees)</th>
+                            <th className="pb-1.5 text-right">कितने मेसेज जाएंगे</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-zinc-700 divide-y divide-zinc-100">
+                          <tr><td className="py-1.5">₹1 Budget</td><td className="py-1.5 text-right font-bold text-green-700">~8 messages</td></tr>
+                          <tr><td className="py-1.5">₹5 Budget</td><td className="py-1.5 text-right font-bold text-green-700">~43 messages</td></tr>
+                          <tr><td className="py-1.5">₹10 Budget</td><td className="py-1.5 text-right font-bold text-green-700">~86 messages</td></tr>
+                          <tr><td className="py-1.5">₹100 Budget</td><td className="py-1.5 text-right font-bold text-green-700">~869 messages</td></tr>
+                          <tr><td className="py-1.5">₹200 Budget</td><td className="py-1.5 text-right font-bold text-green-700">~1,739 messages</td></tr>
+                          <tr><td className="py-1.5">₹500 Budget</td><td className="py-1.5 text-right font-bold text-green-700">~4,347 messages</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Marketing Pricing */}
+                <div className="border border-red-200 rounded-xl overflow-hidden bg-red-50/10">
+                  <div className="bg-red-50 px-4 py-3 border-b border-red-200 flex justify-between items-center">
+                    <span className="font-bold text-red-800 text-xs uppercase tracking-wider">📢 Marketing Template</span>
+                    <span className="text-xs font-bold text-zinc-600">₹0.8632 / msg</span>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-zinc-400 block mb-1.5">मेसेज के हिसाब से खर्च (Cost for Messages)</span>
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-zinc-200 text-zinc-400 font-semibold text-[10px]">
+                            <th className="pb-1.5">मेसेज संख्या</th>
+                            <th className="pb-1.5 text-right">कुल खर्च (GST सहित)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-zinc-700 divide-y divide-zinc-100">
+                          <tr><td className="py-1.5">10 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹8.63</td></tr>
+                          <tr><td className="py-1.5">50 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹43.16</td></tr>
+                          <tr><td className="py-1.5">100 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹86.32</td></tr>
+                          <tr><td className="py-1.5">200 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹172.64</td></tr>
+                          <tr><td className="py-1.5">500 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹431.60</td></tr>
+                          <tr><td className="py-1.5">1,000 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹863.20</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-zinc-400 block mb-1.5">रुपये के हिसाब से मेसेज (Messages for Rupees)</span>
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-zinc-200 text-zinc-400 font-semibold text-[10px]">
+                            <th className="pb-1.5">बजट (Rupees)</th>
+                            <th className="pb-1.5 text-right">कितने मेसेज जाएंगे</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-zinc-700 divide-y divide-zinc-100">
+                          <tr><td className="py-1.5">₹1 Budget</td><td className="py-1.5 text-right font-bold text-red-700">~1 message</td></tr>
+                          <tr><td className="py-1.5">₹5 Budget</td><td className="py-1.5 text-right font-bold text-red-700">~5 messages</td></tr>
+                          <tr><td className="py-1.5">₹10 Budget</td><td className="py-1.5 text-right font-bold text-red-700">~11 messages</td></tr>
+                          <tr><td className="py-1.5">₹100 Budget</td><td className="py-1.5 text-right font-bold text-red-700">~115 messages</td></tr>
+                          <tr><td className="py-1.5">₹200 Budget</td><td className="py-1.5 text-right font-bold text-red-700">~231 messages</td></tr>
+                          <tr><td className="py-1.5">₹500 Budget</td><td className="py-1.5 text-right font-bold text-red-700">~579 messages</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-zinc-50 border-t border-zinc-100 flex justify-end">
+              <button onClick={() => setShowPriceMatrix(false)} className="px-5 py-2 bg-zinc-900 text-white text-sm font-medium rounded hover:bg-zinc-800 transition-colors">समझ गया</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

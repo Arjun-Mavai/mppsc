@@ -1254,6 +1254,7 @@ export const whatsappCampaignLogs = sqliteTable('whatsapp_campaign_logs', {
   guestId: text('guest_id').references(() => guests.id, { onDelete: 'cascade' }).notNull(),
   messageId: text('message_id').notNull(),
   status: text('status').default('SENT').notNull(), // SENT, DELIVERED, READ, REPLIED
+  templateName: text('template_name'), // E.g., 'mppsc_pre_mains_ut'
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),  
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),  
 });
