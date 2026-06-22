@@ -512,12 +512,21 @@ export default function WhatsAppDashboard() {
               <select
                 value={sourceFilter}
                 onChange={(e) => setSourceFilter(e.target.value)}
-                className="w-full sm:w-48 rounded-md border border-zinc-200 bg-transparent py-2 px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                className="w-full sm:w-40 rounded-md border border-zinc-200 bg-transparent py-2 px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
               >
                 <option value="ALL">All Origins</option>
                 {uniqueSources.map(source => (
                   <option key={source} value={source}>{source}</option>
                 ))}
+              </select>
+              <select
+                value={dataStatusFilter}
+                onChange={(e) => setDataStatusFilter(e.target.value)}
+                className="w-full sm:w-44 rounded-md border-2 border-blue-200 bg-blue-50 py-2 px-3 text-sm font-semibold text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="ALL">📋 All Contacts</option>
+                <option value="UNSENT">🆕 Unsent (Fresh)</option>
+                <option value="SENT">✅ Already Sent</option>
               </select>
             </div>
 
