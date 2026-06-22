@@ -583,14 +583,14 @@ export default function WhatsAppDashboard() {
                     onChange={(e) => setTemplateName(e.target.value as WhatsAppTemplateName)}
                     className="w-full rounded-md border border-zinc-200 py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
                   >
-                    <optgroup label="🟢 Utility Templates (~₹0.31 / msg)">
+                    <optgroup label="🟢 Utility Templates (₹0.115 / msg)">
                       {UTILITY_TEMPLATES.map((t) => (
-                        <option key={t.name} value={t.name}>{t.label}</option>
+                        <option key={t.name} value={t.name}>{t.label} (₹0.115)</option>
                       ))}
                     </optgroup>
-                    <optgroup label="📢 Marketing Templates (~₹0.88 / msg)">
+                    <optgroup label="📢 Marketing Templates (₹0.863 / msg)">
                       {MARKETING_TEMPLATES.map((t) => (
-                        <option key={t.name} value={t.name}>{t.label}</option>
+                        <option key={t.name} value={t.name}>{t.label} (₹0.863)</option>
                       ))}
                     </optgroup>
                   </select>
