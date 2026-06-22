@@ -68,7 +68,7 @@ export async function GET() {
       .from(whatsappCampaignLogs)
       .groupBy(whatsappCampaignLogs.status);
 
-    const stats = { SENT: 0, DELIVERED: 0, READ: 0, REPLIED: 0 };
+    const stats = { SENT: 0, DELIVERED: 0, READ: 0, REPLIED: 0, FAILED: 0 };
     statsQuery.forEach((row) => {
       if (row.status in stats) {
         stats[row.status as keyof typeof stats] = row.count;

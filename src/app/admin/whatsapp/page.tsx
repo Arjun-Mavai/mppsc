@@ -29,10 +29,11 @@ type Stats = {
   DELIVERED: number;
   READ: number;
   REPLIED: number;
+  FAILED: number;
 };
 
 export default function WhatsAppDashboard() {
-  const [stats, setStats] = useState<Stats>({ SENT: 0, DELIVERED: 0, READ: 0, REPLIED: 0 });
+  const [stats, setStats] = useState<Stats>({ SENT: 0, DELIVERED: 0, READ: 0, REPLIED: 0, FAILED: 0 });
   const [students, setStudents] = useState<Guest[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [csvData, setCsvData] = useState('');
@@ -43,6 +44,7 @@ export default function WhatsAppDashboard() {
   const [isSending, setIsSending] = useState(false);
   const [senderMode, setSenderMode] = useState<'MAIN' | 'TEST'>('MAIN');
   const [showStatusInfo, setShowStatusInfo] = useState(false);
+  const [showCalculationInfo, setShowCalculationInfo] = useState(false);
 
   // New Features States
   const [templateName, setTemplateName] = useState<WhatsAppTemplateName>(DEFAULT_TEMPLATE);
@@ -62,7 +64,7 @@ export default function WhatsAppDashboard() {
       if (res.ok) {
         const data = await res.json();
         setStudents(data.students || []);
-        setStats(data.stats || { SENT: 0, DELIVERED: 0, READ: 0, REPLIED: 0 });
+        setStats(data.stats || { SENT: 0, DELIVERED: 0, READ: 0, REPLIED: 0, FAILED: 0 });
         setTemplateStats(data.templateStats || []);
       }
     } catch (error) {
@@ -331,6 +333,23 @@ export default function WhatsAppDashboard() {
     return groups;
   }, [students]);
 
+  const deliveryMetrics = React.useMemo(() => {
+    const total = stats.SENT + stats.DELIVERED + stats.READ + stats.FAILED;
+    const success = stats.DELIVERED + stats.READ;
+    const failed = stats.FAILED;
+    
+    const successRate = total > 0 ? (success / total) * 100 : 0;
+    const failRate = total > 0 ? (failed / total) * 100 : 0;
+    
+    return {
+      total,
+      success,
+      failed,
+      successRate,
+      failRate
+    };
+  }, [stats]);
+
   return (
     <div className="min-h-screen bg-zinc-50/50 p-6 sm:p-10 text-zinc-950 font-sans">
       <div className="mx-auto max-w-7xl space-y-8">
@@ -363,32 +382,50 @@ export default function WhatsAppDashboard() {
         </div>
 
         {/* Analytics Cards */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {[
-            { label: 'Sent Messages', value: stats.SENT },
-            { label: 'Delivered', value: stats.DELIVERED },
-            { label: 'Read', value: stats.READ },
-            { label: 'Replied / Active', value: stats.REPLIED }
+            { label: 'Sent / Pending', value: stats.SENT, color: 'text-yellow-600' },
+            { label: 'Delivered', value: stats.DELIVERED, color: 'text-green-600' },
+            { label: 'Read / Opened', value: stats.READ, color: 'text-blue-600' },
+            { label: 'Failed Messages', value: stats.FAILED, color: 'text-red-600' },
+            { label: 'Replied / Active', value: stats.REPLIED, color: 'text-emerald-600' }
           ].map((stat, i) => (
             <div key={i} className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm flex flex-col justify-between">
-              <h3 className="text-sm font-medium text-zinc-500">{stat.label}</h3>
-              <p className="mt-4 text-3xl font-semibold tracking-tight text-zinc-900">{stat.value}</p>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{stat.label}</h3>
+              <p className={`mt-4 text-3xl font-bold tracking-tight ${stat.color}`}>{stat.value}</p>
             </div>
           ))}
         </div>
 
         {/* Cost & Billing Estimates Card */}
         <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
             <div>
               <h2 className="text-base font-semibold text-zinc-950 flex items-center gap-2">
                 <span>💰</span> Meta Billing & Cost Estimator
               </h2>
               <p className="text-sm text-zinc-500 mt-0.5">Approximate charges based on delivered conversation categories (India region with 18% GST included).</p>
             </div>
-            <div className="bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-2 text-right">
-              <span className="text-xs text-zinc-500 block font-medium">Estimated Total Spent</span>
-              <span className="text-2xl font-bold text-zinc-900">₹{costSummary.totalCost.toFixed(2)}</span>
+            
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-1.5 text-right">
+                <span className="text-[9px] text-green-700 block font-bold uppercase tracking-wider">Success Rate</span>
+                <span className="text-base font-bold text-green-800">{deliveryMetrics.successRate.toFixed(1)}%</span>
+              </div>
+              <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-1.5 text-right">
+                <span className="text-[9px] text-red-700 block font-bold uppercase tracking-wider">Failure Rate</span>
+                <span className="text-base font-bold text-red-800">{deliveryMetrics.failRate.toFixed(1)}%</span>
+              </div>
+              <div className="bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-1.5 text-right">
+                <span className="text-[9px] text-zinc-500 block font-bold uppercase tracking-wider">Estimated Total Spent</span>
+                <span className="text-base font-bold text-zinc-950">₹{costSummary.totalCost.toFixed(2)}</span>
+              </div>
+              <button
+                onClick={() => setShowCalculationInfo(true)}
+                className="inline-flex items-center gap-1 px-3 py-2.5 rounded-lg border border-zinc-200 bg-white text-xs font-semibold text-zinc-700 shadow-sm hover:bg-zinc-50 transition-colors"
+              >
+                <span>❓</span> How it Works
+              </button>
             </div>
           </div>
 
@@ -1055,6 +1092,76 @@ export default function WhatsAppDashboard() {
             </div>
             <div className="p-4 bg-zinc-50 border-t border-zinc-100 flex justify-end">
               <button onClick={() => setShowStatusInfo(false)} className="px-5 py-2 bg-zinc-900 text-white text-sm font-medium rounded hover:bg-zinc-800 transition-colors">Understood</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desi Explanation Modal */}
+      {showCalculationInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm transition-opacity" onClick={() => setShowCalculationInfo(false)}>
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4 bg-zinc-50/50">
+              <h3 className="font-semibold text-zinc-900 flex items-center gap-2">
+                <span>⚙️</span> WhatsApp Marketing & Calculations Guide
+              </h3>
+              <button onClick={() => setShowCalculationInfo(false)} className="text-zinc-400 hover:text-zinc-700 p-1 rounded-md hover:bg-zinc-200 transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6 text-sm text-zinc-700 max-h-[70vh] overflow-y-auto leading-relaxed">
+              <div>
+                <h4 className="font-bold text-zinc-950 text-sm mb-2 flex items-center gap-1.5">
+                  <span>🔑</span> 1. पैसा कब और कैसे कटता है? (Meta Billing Rules)
+                </h4>
+                <ul className="list-disc pl-5 space-y-1.5 text-xs">
+                  <li><strong>सिर्फ डिलीवरी पर charge:</strong> Meta पैसा तभी चार्ज करता है जब मेसेज छात्र के फोन पर <span className="text-green-700 font-semibold">Delivered</span> या <span className="text-blue-700 font-semibold">Read</span> हो जाता है। अगर मेसेज <span className="text-red-700 font-semibold">Failed</span> होता है, तो <strong>₹0</strong> कटता है।</li>
+                  <li><strong>24-Hour Conversation Window:</strong> एक छात्र को पहला मेसेज डिलीवर होने पर 24 घंटे की विंडो शुरू हो जाती है। इस 24 घंटे में आप उसे कितने भी मेसेज भेजें, Meta <strong>सिर्फ 1 मेसेज का चार्ज</strong> करता है।</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-zinc-950 text-sm mb-2 flex items-center gap-1.5">
+                  <span>🏷️</span> 2. Rates & Categories (दरें क्या हैं?)
+                </h4>
+                <ul className="list-disc pl-5 space-y-1.5 text-xs">
+                  <li><strong>Marketing Template:</strong> ~₹0.86 प्रति सफल बातचीत (इसमें 18% GST शामिल है)। उदाहरण: <em>Toppers Quote, Promo alerts</em>.</li>
+                  <li><strong>Utility Template:</strong> ~₹0.115 प्रति सफल बातचीत (18% GST शामिल)। उदाहरण: <em>Syllabus Updates, Notifications</em>.</li>
+                  <li><strong>Service / Free:</strong> हर महीने Meta 1,000 मुफ़्त यूजर-इनीशिएटेड (छात्र की तरफ से शुरू हुई) बातचीत देता है।</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-zinc-950 text-sm mb-2 flex items-center gap-1.5">
+                  <span>📂</span> 3. डेटा कहाँ स्टोर होता है? (Database Tables)
+                </h4>
+                <ul className="list-disc pl-5 space-y-2 text-xs">
+                  <li><strong><code>guests</code> टेबल:</strong> इसमें छात्रों की बेसिक प्रोफाइल (Name, Phone Number, Lead Source) सेव होती है।</li>
+                  <li><strong><code>whatsappCampaignLogs</code> टेबल:</strong> इसमें हर भेजे गए मेसेज का रिकॉर्ड होता है:
+                    <ul className="list-circle pl-5 mt-1 space-y-1 text-[11px] text-zinc-500">
+                      <li><code>guestId</code> - किस छात्र को भेजा।</li>
+                      <li><code>messageId</code> - Meta की तरफ से मिली यूनिक ID (wamid)।</li>
+                      <li><code>status</code> - मेसेज का स्टेटस (SENT, DELIVERED, READ, FAILED)। Webhook के जरिए Meta इसे रियल-टाइम में अपडेट करता है।</li>
+                      <li><code>templateName</code> - कौन सा टेम्पलेट भेजा गया था (ताकि मार्केटिंग एनालिटिक्स सटीक रहे)।</li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-zinc-950 text-sm mb-2 flex items-center gap-1.5">
+                  <span>📈</span> 4. Success और Failure Rate का क्या मतलब है?
+                </h4>
+                <ul className="list-disc pl-5 space-y-1.5 text-xs">
+                  <li><strong>Success Rate:</strong> कुल भेजे गए मेसेज में से कितने डिलीवर या पढ़े गए। यह जितना ज्यादा होगा, आपकी रीच उतनी ही अच्छी है।</li>
+                  <li><strong>Failure Rate:</strong> जो नंबर अमान्य हैं, या जिनका व्हाट्सएप बंद है, या जिन्होंने आपके बिजनेस नंबर को ब्लॉक किया है। इसे कम रखने के लिए केवल एक्टिव कॉन्टैक्ट्स पर ही कैंपेन चलाएं।</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-zinc-50 border-t border-zinc-100 flex justify-end">
+              <button onClick={() => setShowCalculationInfo(false)} className="px-5 py-2 bg-zinc-900 text-white text-sm font-medium rounded hover:bg-zinc-800 transition-colors">समझ गया</button>
             </div>
           </div>
         </div>
