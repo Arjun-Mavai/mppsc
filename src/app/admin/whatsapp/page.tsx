@@ -1032,11 +1032,17 @@ export default function WhatsAppDashboard() {
 
         {/* Template-wise Audience Breakdown */}
         <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <div className="mb-6">
-            <h2 className="text-base font-semibold text-zinc-950 flex items-center gap-2">
-              <span>📊</span> Template-wise Audience Breakdown & Analytics
-            </h2>
-            <p className="text-sm text-zinc-500 mt-0.5">Click any template below to view the list of students, statuses, and performance insights.</p>
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-6 border-b border-zinc-100 pb-4">
+            <div>
+              <h2 className="text-base font-semibold text-zinc-950 flex items-center gap-2">
+                <span>📊</span> Template-wise Audience Breakdown & Analytics
+              </h2>
+              <p className="text-sm text-zinc-500 mt-0.5">Click any template below to view the list of students, statuses, and performance insights.</p>
+            </div>
+            <div className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-1.5 text-right">
+              <span className="text-[10px] text-zinc-500 block font-bold uppercase tracking-wider">Total Campaigns Dispatched</span>
+              <span className="text-sm font-bold text-zinc-950">{stats.SENT + stats.DELIVERED + stats.READ + stats.FAILED} Messages</span>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -1078,7 +1084,7 @@ export default function WhatsAppDashboard() {
                       
                       <div className="flex items-center gap-6">
                         <div className="hidden md:flex items-center gap-2 text-[11px]">
-                          <span className="bg-zinc-100 px-2 py-0.5 rounded text-zinc-600 font-medium">Sent: {tSent}</span>
+                          <span className="bg-zinc-100 px-2 py-0.5 rounded text-zinc-700 font-bold border border-zinc-200">Total: {recipients.length}</span>
                           <span className="bg-yellow-50 px-2 py-0.5 rounded text-yellow-700 font-bold border border-yellow-100">Pending: {tSent}</span>
                           <span className="bg-green-50 px-2 py-0.5 rounded text-green-700 font-bold border border-green-100">Delivered: {tDelivered}</span>
                           <span className="bg-blue-50 px-2 py-0.5 rounded text-blue-700 font-bold border border-blue-100">Read: {tRead}</span>
