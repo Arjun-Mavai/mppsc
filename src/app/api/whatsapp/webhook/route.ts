@@ -24,6 +24,8 @@ const API_VERSION = 'v21.0';
 
 // Helper to verify WhatsApp Webhook Signature
 async function verifySignature(req: Request) {
+  if (process.env.NODE_ENV === 'development') return true;
+
   const signature = req.headers.get('x-hub-signature-256');
   if (!signature || !WHATSAPP_APP_SECRET) return false;
 
