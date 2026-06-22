@@ -31,7 +31,7 @@ export default function WhatsAppDashboard() {
   const [senderMode, setSenderMode] = useState<'MAIN' | 'TEST'>('MAIN');
 
   // New Features States
-  const [templateName, setTemplateName] = useState<'mppsc_pyq_promo' | 'zenscroll_alert' | 'mppsc_journey_start'>('mppsc_journey_start');
+  const [templateName, setTemplateName] = useState<'mppsc_pyq_promo' | 'zenscroll_alert' | 'mppsc_journey_start' | 'mppsc_toppers_quote' | 'mppsc_pre_mains_utility'>('mppsc_pre_mains_utility');
   const [imageUrl, setImageUrl] = useState('https://mppsc.zenscroll.in/marketing/mppsc-alert.png');
   
   // Custom Add State
@@ -280,9 +280,15 @@ export default function WhatsAppDashboard() {
                     onChange={(e) => setTemplateName(e.target.value as any)}
                     className="w-full rounded-md border border-zinc-200 py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
                   >
-                    <option value="zenscroll_alert">ZenScroll Alert (Image + Body + Link)</option>
-                    <option value="mppsc_pyq_promo">MPPSC PYQ Promo (Text Only)</option>
-                    <option value="mppsc_journey_start">MPPSC Journey Start (Text + Buttons)</option>
+                    <optgroup label="🟢 Utility Templates (Low Cost)">
+                      <option value="mppsc_pre_mains_utility">MPPSC Pre+Mains Update</option>
+                      <option value="mppsc_toppers_quote">MPPSC Toppers Quote</option>
+                      <option value="zenscroll_alert">ZenScroll Alert (Image + Body)</option>
+                    </optgroup>
+                    <optgroup label="📢 Marketing Templates">
+                      <option value="mppsc_journey_start">MPPSC Journey Start (Text + Buttons)</option>
+                      <option value="mppsc_pyq_promo">MPPSC PYQ Promo (Text Only)</option>
+                    </optgroup>
                   </select>
                 </div>
 
@@ -333,6 +339,39 @@ export default function WhatsAppDashboard() {
                       </div>
                       <div className="flex items-center justify-center py-2 bg-white border border-zinc-200 rounded text-blue-600 font-medium text-xs">
                         🔗 Mains Library
+                      </div>
+                    </>
+                  ) : templateName === 'mppsc_pre_mains_utility' ? (
+                    <>
+                      नमस्ते {"{{user.name}}"}! 👋<br/><br/>
+                      MPPSC (Prelims और Mains) की तैयारी में सबसे बड़ी चुनौती यह है कि छात्र विशाल सिलेबस के बीच यह समझ नहीं पाते कि वास्तव में क्या पढ़ना है और क्या छोड़ना है।<br/><br/>
+                      "PYQs और Syllabus वो आईना हैं, जो आपको इस भटकाव से बचाकर MPPSC की असली मांग दिखाते हैं।"<br/><br/>
+                      तैयारी की इसी दुविधा को हल करने के लिए इस मॉड्यूल में:<br/>
+                      📌 Syllabus Decoding: Prelims और Mains के सिलेबस को हर एक टॉपिक (Micro-level) पर डिकोड किया गया है।<br/>
+                      📌 PYQ Deep Analysis: हर टॉपिक को पिछले वर्षों के प्रश्नों (PYQs) के साथ लिंक करके उनका गहरा विश्लेषण किया गया है।<br/><br/>
+                      इसका उद्देश्य सिर्फ यह स्पष्ट करना है कि किस टॉपिक से प्रारंभिक (Prelims) में फैक्ट्स और मुख्य परीक्षा (Mains) में विश्लेषणात्मक प्रश्न कैसे बनते हैं।<br/><br/>
+                      अपनी आवश्यकता के अनुसार डिकोडेड मॉड्यूल चेक करें: 👇<br/>
+                      <div className="mt-3 flex items-center justify-center py-2 bg-white border border-zinc-200 rounded text-blue-600 font-medium text-xs mb-2">
+                        🔗 Explore Prelims Library
+                      </div>
+                      <div className="flex items-center justify-center py-2 bg-white border border-zinc-200 rounded text-blue-600 font-medium text-xs">
+                        🔗 Explore Mains Library
+                      </div>
+                    </>
+                  ) : templateName === 'mppsc_toppers_quote' ? (
+                    <>
+                      नमस्ते {"{{user.name}}"}! 👋<br/><br/>
+                      Mains परीक्षा पास आ रही है और हर Topper का आपको एक ही सुझाव होगा:<br/>
+                      "नोट्स के पीछे मत भागो, Syllabus और PYQs में MPPSC की असली मांग (आईना) देखो।" ✍️<br/><br/>
+                      ZenScroll आपको नोट्स का ढेर नहीं देता। हमारा पूरा फोकस केवल Syllabus Decoding और PYQ Integration पर है। 🎯<br/><br/>
+                      हमारी Mains Library आपको सिखाती है:<br/>
+                      📌 सिलेबस के हर टॉपिक की सटीक समझ (Micro-Syllabus)<br/>
+                      📌 Topics और पिछले वर्षों के प्रश्नों (PYQs) का सीधा कनेक्शन<br/>
+                      📌 परीक्षा के पैटर्न की असल 'Clarity'<br/><br/>
+                      अपनी Mains की तैयारी को स्मार्ट बनाएं। आज ही एक्सप्लोर करें 👇<br/>
+                      MPPSC ZenScroll | Clarity Before Content<br/>
+                      <div className="mt-3 flex items-center justify-center py-2 bg-white border border-zinc-200 rounded text-blue-600 font-medium text-xs mb-2">
+                        🔗 Explore Mains Library
                       </div>
                     </>
                   ) : (
