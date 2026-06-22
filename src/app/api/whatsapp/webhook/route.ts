@@ -171,7 +171,6 @@ export async function POST(req: Request) {
                 const messageObj = value.messages[0];
                 const fromNumber = messageObj.from;
                 const contactName = value.contacts?.[0]?.profile?.name || 'WhatsApp User';
-                
                 let incomingText = '';
                 let interactiveData = null;
                 let messageType: 'text' | 'image' | 'interactive' = 'text';
@@ -179,6 +178,10 @@ export async function POST(req: Request) {
 
                 if (messageObj.type === 'text') {
                   incomingText = messageObj.text?.body || '';
+                } else if (messageObj.type === 'reaction') {
+                  const emoji = messageObj.reaction?.emoji;
+                  incomingText = emoji ? `[Reacted with ${emoji}]` : `[Removed reaction]`;
+                  messageType = 'text';
                 } else if (messageObj.type === 'interactive') {
                   // Extract the ID of the button clicked
                   interactiveData = messageObj.interactive?.button_reply?.id;
