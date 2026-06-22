@@ -22,6 +22,11 @@ export async function GET() {
       FAILED: 1,
     };
 
+    // Fetch all campaign logs to enrich guests with their delivery status
+    const logs = await db
+      .select({ guestId: whatsappCampaignLogs.guestId, status: whatsappCampaignLogs.status })
+      .from(whatsappCampaignLogs);
+
     const guestStatusMap = new Map<string, string>();
     logs.forEach(log => {
       const incoming = log.status || 'SENT';
