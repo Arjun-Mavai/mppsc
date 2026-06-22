@@ -22,25 +22,39 @@ export async function GET() {
       FAILED: 1,
     };
 
-    // Fetch all campaign logs to enrich guests with their delivery status
+    // Fetch all campaign logs with timestamps
     const logs = await db
-      .select({ guestId: whatsappCampaignLogs.guestId, status: whatsappCampaignLogs.status })
+      .select({
+        guestId: whatsappCampaignLogs.guestId,
+        status: whatsappCampaignLogs.status,
+        createdAt: whatsappCampaignLogs.createdAt,
+        updatedAt: whatsappCampaignLogs.updatedAt,
+      })
       .from(whatsappCampaignLogs);
 
-    const guestStatusMap = new Map<string, string>();
+    const guestLogMap = new Map<string, { status: string; sentAt: Date | null; updatedAt: Date | null }>();
+
     logs.forEach(log => {
       const incoming = log.status || 'SENT';
-      const existing = guestStatusMap.get(log.guestId);
-      // Keep the status with the highest priority
-      if (!existing || (STATUS_PRIORITY[incoming] ?? 0) > (STATUS_PRIORITY[existing] ?? 0)) {
-        guestStatusMap.set(log.guestId, incoming);
+      const existing = guestLogMap.get(log.guestId);
+      if (!existing || (STATUS_PRIORITY[incoming] ?? 0) > (STATUS_PRIORITY[existing.status] ?? 0)) {
+        guestLogMap.set(log.guestId, {
+          status: incoming,
+          sentAt: log.createdAt ?? null,
+          updatedAt: log.updatedAt ?? null,
+        });
       }
     });
 
-    const enrichedGuests = allGuests.map(g => ({
-      ...g,
-      campaignStatus: guestStatusMap.get(g.id) || 'UNSENT'
-    }));
+    const enrichedGuests = allGuests.map(g => {
+      const logEntry = guestLogMap.get(g.id);
+      return {
+        ...g,
+        campaignStatus: logEntry?.status || 'UNSENT',
+        lastSentAt: logEntry?.sentAt?.toISOString() ?? null,
+        lastStatusAt: logEntry?.updatedAt?.toISOString() ?? null,
+      };
+    });
 
     // Fetch stats from new whatsappCampaignLogs table
     const statsQuery = await db

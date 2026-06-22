@@ -19,6 +19,8 @@ type Guest = {
   mobile: string;
   leadSource?: string;
   campaignStatus?: string;
+  lastSentAt?: string | null;
+  lastStatusAt?: string | null;
 };
 
 type Stats = {
@@ -574,6 +576,7 @@ export default function WhatsAppDashboard() {
                     <th scope="col" className="px-6 py-3.5 font-medium">Recipient</th>
                     <th scope="col" className="px-6 py-3.5 font-medium">Contact</th>
                     <th scope="col" className="px-6 py-3.5 font-medium">Status</th>
+                    <th scope="col" className="px-6 py-3.5 font-medium">Last Activity</th>
                     <th scope="col" className="px-6 py-3.5 font-medium">Origin</th>
                   </tr>
                 </thead>
@@ -629,6 +632,26 @@ export default function WhatsAppDashboard() {
                           })()}
                         </td>
                         <td className="px-6 py-4">
+                          {student.lastSentAt || student.lastStatusAt ? (
+                            <div className="text-xs text-zinc-600 leading-relaxed">
+                              {student.lastSentAt && (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-zinc-400">📤</span>
+                                  <span>{format(new Date(student.lastSentAt), 'EEE, d MMM · h:mm a')}</span>
+                                </div>
+                              )}
+                              {student.lastStatusAt && student.lastStatusAt !== student.lastSentAt && (
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  <span className="text-zinc-400">🔄</span>
+                                  <span className="text-zinc-500">{format(new Date(student.lastStatusAt), 'EEE, d MMM · h:mm a')}</span>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-zinc-300 text-xs">—</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
                           <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-zinc-600 border border-zinc-200">
                             {student.leadSource || 'Organic'}
                           </span>
@@ -638,7 +661,7 @@ export default function WhatsAppDashboard() {
                   })}
                   {filteredStudents.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="px-6 py-16 text-center text-zinc-500 text-sm">
+                      <td colSpan={6} className="px-6 py-16 text-center text-zinc-500 text-sm">
                         No recipients matched your filters.
                       </td>
                     </tr>
