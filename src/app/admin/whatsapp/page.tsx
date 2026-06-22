@@ -45,6 +45,7 @@ export default function WhatsAppDashboard() {
   const [senderMode, setSenderMode] = useState<'MAIN' | 'TEST'>('MAIN');
   const [showStatusInfo, setShowStatusInfo] = useState(false);
   const [showCalculationInfo, setShowCalculationInfo] = useState(false);
+  const [showPriceMatrix, setShowPriceMatrix] = useState(false);
 
   // New Features States
   const [templateName, setTemplateName] = useState<WhatsAppTemplateName>(DEFAULT_TEMPLATE);
@@ -441,7 +442,7 @@ export default function WhatsAppDashboard() {
                 </div>
                 <div className="mt-4 space-y-3">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-zinc-500 font-medium">Messages sent:</span>
+                    <span className="text-zinc-500 font-medium">Campaign Sent (Logs):</span>
                     <span className="font-bold text-zinc-900">{stats.SENT + stats.DELIVERED + stats.READ + stats.FAILED}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
@@ -552,7 +553,12 @@ export default function WhatsAppDashboard() {
               </div>
               <div className="text-[10px] text-zinc-500 mt-4 border-t border-zinc-800 pt-2 flex items-center justify-between">
                 <span>GST 18% Included</span>
-                <span className="text-emerald-400 font-bold">ROI Estimator</span>
+                <button 
+                  onClick={() => setShowPriceMatrix(true)}
+                  className="text-emerald-400 font-bold hover:underline cursor-pointer flex items-center gap-1 bg-transparent border-0 p-0"
+                >
+                  <span>🧮</span> Price Calculator
+                </button>
               </div>
             </div>
           </div>
@@ -1241,6 +1247,132 @@ export default function WhatsAppDashboard() {
             
             <div className="p-4 bg-zinc-50 border-t border-zinc-100 flex justify-end">
               <button onClick={() => setShowCalculationInfo(false)} className="px-5 py-2 bg-zinc-900 text-white text-sm font-medium rounded hover:bg-zinc-800 transition-colors">समझ गया</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Price Matrix / ROI Calculator Modal */}
+      {showPriceMatrix && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm transition-opacity" onClick={() => setShowPriceMatrix(false)}>
+          <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4 bg-zinc-50/50">
+              <h3 className="font-semibold text-zinc-900 flex items-center gap-2">
+                <span>🧮</span> WhatsApp Rate Calculator & Price Matrix
+              </h3>
+              <button onClick={() => setShowPriceMatrix(false)} className="text-zinc-400 hover:text-zinc-700 p-1 rounded-md hover:bg-zinc-200 transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6 text-sm text-zinc-700 max-h-[70vh] overflow-y-auto">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 leading-relaxed">
+                <strong>📝 ध्यान दें (Notes):</strong> ये दरें भारत (India Region) के लिए Meta द्वारा निर्धारित हैं और इनमें <strong>18% GST पहले से शामिल</strong> किया गया है। Meta केवल <em>सफल डिलीवरी (Delivered)</em> पर चार्ज करता है।
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Utility Pricing */}
+                <div className="border border-green-200 rounded-xl overflow-hidden bg-green-50/10">
+                  <div className="bg-green-50 px-4 py-3 border-b border-green-200 flex justify-between items-center">
+                    <span className="font-bold text-green-800 text-xs uppercase tracking-wider">🟢 Utility Template</span>
+                    <span className="text-xs font-bold text-zinc-600">₹0.115 / msg</span>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-zinc-400 block mb-1.5">मेसेज के हिसाब से खर्च (Cost for Messages)</span>
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-zinc-200 text-zinc-400 font-semibold text-[10px]">
+                            <th className="pb-1.5">मेसेज संख्या</th>
+                            <th className="pb-1.5 text-right">कुल खर्च (GST सहित)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-zinc-700 divide-y divide-zinc-100">
+                          <tr><td className="py-1.5">10 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹1.15</td></tr>
+                          <tr><td className="py-1.5">50 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹5.75</td></tr>
+                          <tr><td className="py-1.5">100 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹11.50</td></tr>
+                          <tr><td className="py-1.5">200 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹23.00</td></tr>
+                          <tr><td className="py-1.5">500 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹57.50</td></tr>
+                          <tr><td className="py-1.5">1,000 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹115.00</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-zinc-400 block mb-1.5">रुपये के हिसाब से मेसेज (Messages for Rupees)</span>
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-zinc-200 text-zinc-400 font-semibold text-[10px]">
+                            <th className="pb-1.5">बजट (Rupees)</th>
+                            <th className="pb-1.5 text-right">कितने मेसेज जाएंगे</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-zinc-700 divide-y divide-zinc-100">
+                          <tr><td className="py-1.5">₹1 Budget</td><td className="py-1.5 text-right font-bold text-green-700">~8 messages</td></tr>
+                          <tr><td className="py-1.5">₹5 Budget</td><td className="py-1.5 text-right font-bold text-green-700">~43 messages</td></tr>
+                          <tr><td className="py-1.5">₹10 Budget</td><td className="py-1.5 text-right font-bold text-green-700">~86 messages</td></tr>
+                          <tr><td className="py-1.5">₹100 Budget</td><td className="py-1.5 text-right font-bold text-green-700">~869 messages</td></tr>
+                          <tr><td className="py-1.5">₹200 Budget</td><td className="py-1.5 text-right font-bold text-green-700">~1,739 messages</td></tr>
+                          <tr><td className="py-1.5">₹500 Budget</td><td className="py-1.5 text-right font-bold text-green-700">~4,347 messages</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Marketing Pricing */}
+                <div className="border border-red-200 rounded-xl overflow-hidden bg-red-50/10">
+                  <div className="bg-red-50 px-4 py-3 border-b border-red-200 flex justify-between items-center">
+                    <span className="font-bold text-red-800 text-xs uppercase tracking-wider">📢 Marketing Template</span>
+                    <span className="text-xs font-bold text-zinc-600">₹0.8632 / msg</span>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-zinc-400 block mb-1.5">मेसेज के हिसाब से खर्च (Cost for Messages)</span>
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-zinc-200 text-zinc-400 font-semibold text-[10px]">
+                            <th className="pb-1.5">मेसेज संख्या</th>
+                            <th className="pb-1.5 text-right">कुल खर्च (GST सहित)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-zinc-700 divide-y divide-zinc-100">
+                          <tr><td className="py-1.5">10 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹8.63</td></tr>
+                          <tr><td className="py-1.5">50 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹43.16</td></tr>
+                          <tr><td className="py-1.5">100 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹86.32</td></tr>
+                          <tr><td className="py-1.5">200 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹172.64</td></tr>
+                          <tr><td className="py-1.5">500 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹431.60</td></tr>
+                          <tr><td className="py-1.5">1,000 messages</td><td className="py-1.5 text-right font-bold text-zinc-900">₹863.20</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-zinc-400 block mb-1.5">रुपये के हिसाब से मेसेज (Messages for Rupees)</span>
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-zinc-200 text-zinc-400 font-semibold text-[10px]">
+                            <th className="pb-1.5">बजट (Rupees)</th>
+                            <th className="pb-1.5 text-right">कितने मेसेज जाएंगे</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-zinc-700 divide-y divide-zinc-100">
+                          <tr><td className="py-1.5">₹1 Budget</td><td className="py-1.5 text-right font-bold text-red-700">~1 message</td></tr>
+                          <tr><td className="py-1.5">₹5 Budget</td><td className="py-1.5 text-right font-bold text-red-700">~5 messages</td></tr>
+                          <tr><td className="py-1.5">₹10 Budget</td><td className="py-1.5 text-right font-bold text-red-700">~11 messages</td></tr>
+                          <tr><td className="py-1.5">₹100 Budget</td><td className="py-1.5 text-right font-bold text-red-700">~115 messages</td></tr>
+                          <tr><td className="py-1.5">₹200 Budget</td><td className="py-1.5 text-right font-bold text-red-700">~231 messages</td></tr>
+                          <tr><td className="py-1.5">₹500 Budget</td><td className="py-1.5 text-right font-bold text-red-700">~579 messages</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-zinc-50 border-t border-zinc-100 flex justify-end">
+              <button onClick={() => setShowPriceMatrix(false)} className="px-5 py-2 bg-zinc-900 text-white text-sm font-medium rounded hover:bg-zinc-800 transition-colors">समझ गया</button>
             </div>
           </div>
         </div>
