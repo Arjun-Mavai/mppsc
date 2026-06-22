@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { guests, whatsappCampaignLogs } from '@/db/schema';
-import { desc, sql } from 'drizzle-orm';
+import { guests, whatsappCampaignLogs, supportMessages } from '@/db/schema';
+import { desc, sql, eq } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 
 export async function GET() {
@@ -85,7 +85,15 @@ export async function GET() {
       .from(whatsappCampaignLogs)
       .groupBy(whatsappCampaignLogs.templateName, whatsappCampaignLogs.status);
 
-    return NextResponse.json({ students: enrichedGuests, stats, templateStats });
+    // Fetch received user messages from support_messages
+    const receivedRes = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(supportMessages)
+      .where(eq(supportMessages.sender, 'user'));
+    
+    const receivedCount = receivedRes[0]?.count || 0;
+
+    return NextResponse.json({ students: enrichedGuests, stats, templateStats, receivedCount });
   } catch (error) {
     logger.error('Error fetching guests and stats', error, { category: 'api' });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

@@ -57,6 +57,7 @@ export default function WhatsAppDashboard() {
 
   const [insights, setInsights] = useState<any[]>([]);
   const [templateStats, setTemplateStats] = useState<any[]>([]);
+  const [receivedCount, setReceivedCount] = useState(0);
 
   const fetchData = async () => {
     try {
@@ -66,6 +67,7 @@ export default function WhatsAppDashboard() {
         setStudents(data.students || []);
         setStats(data.stats || { SENT: 0, DELIVERED: 0, READ: 0, REPLIED: 0, FAILED: 0 });
         setTemplateStats(data.templateStats || []);
+        setReceivedCount(data.receivedCount || 0);
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
@@ -429,51 +431,128 @@ export default function WhatsAppDashboard() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Marketing Category */}
-            <div className="p-4 rounded-lg bg-red-50/40 border border-red-100 flex flex-col justify-between">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 border border-zinc-200 rounded-xl bg-zinc-50/50 p-4">
+            {/* Box 1: All messages */}
+            <div className="bg-white rounded-lg border border-zinc-200 p-4 flex flex-col justify-between shadow-sm min-h-[220px]">
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-bold uppercase tracking-wider text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">📢 Marketing</span>
-                  <span className="text-xs text-zinc-500">Rate: ~₹0.86 / msg</span>
+                <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
+                  <span className="text-xs font-bold text-zinc-700 uppercase tracking-wider">All messages</span>
+                  <span className="text-purple-600 text-lg">🟣</span>
                 </div>
-                <p className="text-2xl font-bold text-zinc-900 mt-2">₹{costSummary.marketingCost.toFixed(2)}</p>
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Messages sent:</span>
+                    <span className="font-bold text-zinc-900">{stats.SENT + stats.DELIVERED + stats.READ + stats.FAILED}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Messages delivered:</span>
+                    <span className="font-bold text-zinc-900">{stats.DELIVERED + stats.READ}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Messages received:</span>
+                    <span className="font-bold text-zinc-900">{receivedCount}</span>
+                  </div>
+                </div>
               </div>
-              <div className="mt-4 pt-3 border-t border-red-100/60 text-xs text-zinc-600 space-y-1">
-                <div className="flex justify-between"><span>Delivered:</span> <span className="font-semibold text-zinc-900">{costSummary.marketingDelivered}</span></div>
-                <div className="flex justify-between"><span>Pending Sent:</span> <span className="text-zinc-500">{costSummary.marketingSent}</span></div>
-                <div className="flex justify-between"><span>Failed:</span> <span className="text-red-600">{costSummary.marketingFailed}</span></div>
+              <div className="text-[10px] text-zinc-400 mt-4 border-t border-zinc-100/60 pt-2">
+                Total campaign logs & incoming support replies.
               </div>
             </div>
 
-            {/* Utility Category */}
-            <div className="p-4 rounded-lg bg-green-50/40 border border-green-100 flex flex-col justify-between">
+            {/* Box 2: Messages delivered */}
+            <div className="bg-white rounded-lg border border-zinc-200 p-4 flex flex-col justify-between shadow-sm min-h-[220px]">
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-bold uppercase tracking-wider text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">🟢 Utility</span>
-                  <span className="text-xs text-zinc-500">Rate: ~₹0.115 / msg</span>
+                <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
+                  <span className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Delivered Breakdown</span>
+                  <span className="text-green-600 text-lg">🟢</span>
                 </div>
-                <p className="text-2xl font-bold text-zinc-900 mt-2">₹{(costSummary.utilityCost + costSummary.unknownCost).toFixed(2)}</p>
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Marketing:</span>
+                    <span className="font-bold text-zinc-900">{costSummary.marketingDelivered}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Utility:</span>
+                    <span className="font-bold text-zinc-900">{costSummary.utilityDelivered + costSummary.unknownDelivered}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Service:</span>
+                    <span className="font-bold text-zinc-900">{stats.REPLIED}</span>
+                  </div>
+                </div>
               </div>
-              <div className="mt-4 pt-3 border-t border-green-100/60 text-xs text-zinc-600 space-y-1">
-                <div className="flex justify-between"><span>Delivered:</span> <span className="font-semibold text-zinc-900">{costSummary.utilityDelivered + costSummary.unknownDelivered}</span></div>
-                <div className="flex justify-between"><span>Pending Sent:</span> <span className="text-zinc-500">{costSummary.utilitySent + costSummary.unknownSent}</span></div>
-                <div className="flex justify-between"><span>Failed:</span> <span className="text-red-600">{costSummary.utilityFailed + costSummary.unknownFailed}</span></div>
+              <div className="text-[10px] text-zinc-400 mt-4 border-t border-zinc-100/60 pt-2">
+                All delivered conversations by category.
               </div>
             </div>
 
-            {/* Service & Free Window Category */}
-            <div className="p-4 rounded-lg bg-blue-50/40 border border-blue-100 flex flex-col justify-between">
+            {/* Box 3: Free messages delivered */}
+            <div className="bg-white rounded-lg border border-zinc-200 p-4 flex flex-col justify-between shadow-sm min-h-[220px]">
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">💬 Service / Free</span>
-                  <span className="text-xs text-zinc-500">1,000 Free / Month</span>
+                <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
+                  <span className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Free Delivered</span>
+                  <span className="text-blue-500 text-lg">🔵</span>
                 </div>
-                <p className="text-2xl font-bold text-zinc-900 mt-2">₹0.00</p>
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Free customer service:</span>
+                    <span className="font-bold text-zinc-900">{stats.REPLIED}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Free entry point:</span>
+                    <span className="font-bold text-zinc-900">0</span>
+                  </div>
+                </div>
               </div>
-              <div className="mt-4 pt-3 border-t border-blue-100/60 text-xs text-zinc-600 space-y-1">
-                <div className="flex justify-between"><span>Replies Received:</span> <span className="font-semibold text-blue-900 bg-blue-50 px-1.5 py-0.5 rounded">{stats.REPLIED}</span></div>
-                <div className="text-[10px] text-zinc-400 mt-1.5">User-initiated customer support responses are free within Meta's monthly 1K limit.</div>
+              <div className="text-[10px] text-zinc-400 mt-4 border-t border-zinc-100/60 pt-2">
+                User-initiated support window messages.
+              </div>
+            </div>
+
+            {/* Box 4: Paid messages delivered */}
+            <div className="bg-white rounded-lg border border-zinc-200 p-4 flex flex-col justify-between shadow-sm min-h-[220px]">
+              <div>
+                <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
+                  <span className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Paid Delivered</span>
+                  <span className="text-orange-500 text-lg">🟠</span>
+                </div>
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Marketing:</span>
+                    <span className="font-bold text-zinc-900">{costSummary.marketingDelivered}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-medium">Utility:</span>
+                    <span className="font-bold text-zinc-900">{costSummary.utilityDelivered + costSummary.unknownDelivered}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-[10px] text-zinc-400 mt-4 border-t border-zinc-100/60 pt-2">
+                Business-initiated paid conversations.
+              </div>
+            </div>
+
+            {/* Box 5: Approximate total charges */}
+            <div className="bg-zinc-900 rounded-lg p-4 flex flex-col justify-between text-white min-h-[220px] shadow-md border border-zinc-800">
+              <div>
+                <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+                  <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Approx Charges</span>
+                  <span className="text-xs font-bold text-zinc-200">₹{costSummary.totalCost.toFixed(2)}</span>
+                </div>
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-400">Marketing:</span>
+                    <span className="font-bold text-red-300">₹{costSummary.marketingCost.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-400">Utility:</span>
+                    <span className="font-bold text-green-300">₹{(costSummary.utilityCost + costSummary.unknownCost).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-[10px] text-zinc-500 mt-4 border-t border-zinc-800 pt-2 flex items-center justify-between">
+                <span>GST 18% Included</span>
+                <span className="text-emerald-400 font-bold">ROI Estimator</span>
               </div>
             </div>
           </div>
