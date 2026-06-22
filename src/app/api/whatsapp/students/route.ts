@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { guests, whatsappCampaignLogs, supportMessages } from '@/db/schema';
-import { desc, sql, eq } from 'drizzle-orm';
+import { desc, sql, eq, inArray } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 
 export async function GET() {
@@ -22,16 +22,29 @@ export async function GET() {
       FAILED: 1,
     };
 
-    // Fetch all campaign logs with timestamps
-    const logs = await db
-      .select({
-        guestId: whatsappCampaignLogs.guestId,
-        status: whatsappCampaignLogs.status,
-        templateName: whatsappCampaignLogs.templateName,
-        createdAt: whatsappCampaignLogs.createdAt,
-        updatedAt: whatsappCampaignLogs.updatedAt,
-      })
-      .from(whatsappCampaignLogs);
+    const guestIds = allGuests.map(g => g.id);
+
+    // Fetch campaign logs only for the retrieved guests
+    let logs: Array<{
+      guestId: string;
+      status: string;
+      templateName: string | null;
+      createdAt: Date | null;
+      updatedAt: Date | null;
+    }> = [];
+
+    if (guestIds.length > 0) {
+      logs = await db
+        .select({
+          guestId: whatsappCampaignLogs.guestId,
+          status: whatsappCampaignLogs.status,
+          templateName: whatsappCampaignLogs.templateName,
+          createdAt: whatsappCampaignLogs.createdAt,
+          updatedAt: whatsappCampaignLogs.updatedAt,
+        })
+        .from(whatsappCampaignLogs)
+        .where(inArray(whatsappCampaignLogs.guestId, guestIds));
+    }
 
     const guestLogMap = new Map<string, { status: string; sentAt: Date | null; updatedAt: Date | null; templateName: string | null }>();
 

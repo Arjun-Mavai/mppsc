@@ -147,21 +147,22 @@ export async function POST(req: Request) {
                     if (!value) return;
 
               // 1. Handle message status updates (sent, delivered, read)
-              if (value.statuses && value.statuses.length > 0) {
-                const statusObj = value.statuses[0];
-                const messageId = statusObj.id;
-                const newStatus = statusObj.status?.toUpperCase();
+              if (value.statuses && Array.isArray(value.statuses)) {
+                for (const statusObj of value.statuses) {
+                  const messageId = statusObj.id;
+                  const newStatus = statusObj.status?.toUpperCase();
 
-                if (messageId && newStatus) {
-                  const statusLower = newStatus.toLowerCase();
-                  await Promise.allSettled([
-                    db.update(whatsappCampaignLogs)
-                      .set({ status: newStatus, updatedAt: new Date() })
-                      .where(eq(whatsappCampaignLogs.messageId, messageId)),
-                    db.update(supportMessages)
-                      .set({ status: statusLower as 'sent' | 'delivered' | 'read' | 'failed' })
-                      .where(eq(supportMessages.id, messageId))
-                  ]);
+                  if (messageId && newStatus) {
+                    const statusLower = newStatus.toLowerCase();
+                    await Promise.allSettled([
+                      db.update(whatsappCampaignLogs)
+                        .set({ status: newStatus, updatedAt: new Date() })
+                        .where(eq(whatsappCampaignLogs.messageId, messageId)),
+                      db.update(supportMessages)
+                        .set({ status: statusLower as 'sent' | 'delivered' | 'read' | 'failed' })
+                        .where(eq(supportMessages.id, messageId))
+                    ]);
+                  }
                 }
               }
 
