@@ -105,7 +105,7 @@ export default function WhatsAppDashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          students: [{ name: manualName.trim() || 'Guest', phone_number: manualPhone.trim() }] 
+          students: [{ name: manualName.trim() || 'MPPSC Aspirant', phone_number: manualPhone.trim() }] 
         }),
       });
 
@@ -132,9 +132,23 @@ export default function WhatsAppDashboard() {
     try {
       const lines = csvData.split('\n').filter((l) => l.trim().length > 0);
       const parsedStudents = lines.map((line) => {
-        const [name, phone] = line.split(',').map((s) => s.trim());
-        return { name, phone_number: phone };
-      }).filter((s) => s.name && s.phone_number);
+        const parts = line.split(',').map((s) => s.trim());
+        let name = '';
+        let phone = '';
+        
+        // If there's only one column, assume it's the phone number
+        if (parts.length === 1) {
+          phone = parts[0];
+        } else {
+          name = parts[0];
+          phone = parts[1];
+        }
+        
+        return { 
+          name: name || 'MPPSC Aspirant', 
+          phone_number: phone 
+        };
+      }).filter((s) => s.phone_number);
 
       if (parsedStudents.length === 0) {
         setIsLoading(false);

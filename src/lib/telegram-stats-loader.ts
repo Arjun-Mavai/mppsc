@@ -1,6 +1,6 @@
 import { db } from '@/db';
 import { guests, testFeedback } from '@/db/schema';
-import { count, avg, eq } from 'drizzle-orm';
+import { count, avg, eq, or, isNull, ne } from 'drizzle-orm';
 
 /**
  * 📊 TELEGRAM STATS LOADER
@@ -13,8 +13,11 @@ import { count, avg, eq } from 'drizzle-orm';
  */
 export async function getTelegramStatsSummary() {
   try {
-    // 1. Total unique guest leads
-    const [leadsCount] = await db.select({ value: count() }).from(guests);
+    // 1. Total unique guest leads (excluding bulk whatsapp imports)
+    const [leadsCount] = await db
+      .select({ value: count() })
+      .from(guests)
+      .where(or(isNull(guests.leadSource), ne(guests.leadSource, 'whatsapp_import')));
     
     // 2. Total feedback count and avg rating
     const [feedbackStats] = await db

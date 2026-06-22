@@ -122,20 +122,21 @@ export async function POST(req: Request) {
 
     let count = 0;
     for (const s of students) {
-      const phone = s.phone_number.replace(/\D/g, '');
-      if (phone && s.name) {
+      const phone = s.phone_number?.replace(/\D/g, '');
+      if (phone) {
+        const finalName = s.name?.trim() || 'MPPSC Aspirant';
         // Upsert into guests table based on mobile
         await db
           .insert(guests)
           .values({
             id: crypto.randomUUID(),
-            name: s.name,
+            name: finalName,
             mobile: phone,
             leadSource: 'whatsapp_import',
           })
           .onConflictDoUpdate({
             target: guests.mobile,
-            set: { name: s.name },
+            set: { name: finalName },
           });
         count++;
       }
