@@ -51,7 +51,13 @@ export default function TelegramGeneratorClient({
   const [linkUrl, setLinkUrl] = useState('');
   const [sendingLink, setSendingLink] = useState(false);
 
-  const [destination, setDestination] = useState<'test' | 'live'>('test');
+  const [destination, setDestination] = useState<'test' | 'live' | 'constable'>('test');
+
+  const getDestinationLabel = (dest: 'test' | 'live' | 'constable') => {
+    if (dest === 'live') return 'MPPSC Live Channel (@MPPSCZenScroll)';
+    if (dest === 'constable') return 'Constable Live Channel (@zenmpconstable)';
+    return 'Test Bot';
+  };
 
   const parseUnitNumber = (unitStr: string) => {
     const match = unitStr.match(/Unit\s*(\d+)/i);
@@ -195,7 +201,7 @@ ${commonFooter}`;
         destination
       });
       if (res.success) {
-        toast.success(`Pushed successfully to ${destination === 'live' ? 'Live Channel' : 'Test Bot'}! 🚀`);
+        toast.success(`Pushed successfully to ${getDestinationLabel(destination)}! 🚀`);
         setPublishContent(''); // clear after success
       } else {
         toast.error(res.error || 'Failed to push to bot');
@@ -270,7 +276,7 @@ Format:
 
       const res = await sendTelegramPolls(data, destination);
       if (res.success) {
-        toast.success(`Successfully sent ${res.sentCount} polls to ${destination === 'live' ? 'Live Channel' : 'Test Bot'}! 🚀`);
+        toast.success(`Successfully sent ${res.sentCount} polls to ${getDestinationLabel(destination)}! 🚀`);
         setPollJson('');
       } else {
         toast.error(res.error || 'Failed to send polls');
@@ -506,10 +512,10 @@ Format:
             </h3>
             <p className="text-xs text-slate-500">Choose where the content will be posted.</p>
           </div>
-          <div className="flex bg-slate-100 p-1 rounded-lg">
+          <div className="flex bg-slate-100 p-1 rounded-lg gap-1 flex-wrap sm:flex-nowrap">
             <button
               onClick={() => setDestination('test')}
-              className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
                 destination === 'test' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
@@ -517,11 +523,19 @@ Format:
             </button>
             <button
               onClick={() => setDestination('live')}
-              className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
                 destination === 'live' ? 'bg-red-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
-              Live Channel
+              MPPSC Live
+            </button>
+            <button
+              onClick={() => setDestination('constable')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
+                destination === 'constable' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Constable Live
             </button>
           </div>
         </div>
@@ -531,7 +545,7 @@ Format:
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-black text-indigo-900 flex items-center gap-2">
-                🚀 Push to {destination === 'live' ? 'Live Channel (@MPPSCZenScroll)' : 'Test Bot'}
+                🚀 Push to {getDestinationLabel(destination)}
                 <Dialog>
                   <DialogTrigger className="p-1 hover:bg-indigo-100 rounded-full transition-colors">
                     <HelpCircle className="h-5 w-5 text-indigo-400" />
@@ -689,7 +703,7 @@ Format:
                 </Dialog>
               </h2>
               <p className="text-sm text-amber-700/80">
-                Send interactive, native Telegram Quizzes directly to {destination === 'live' ? 'Live Channel (@MPPSCZenScroll)' : 'Test Bot'} from AI JSON.
+                Send interactive, native Telegram Quizzes directly to {getDestinationLabel(destination)} from AI JSON.
               </p>
               <div className="mt-2 text-[10px] text-amber-700/70 font-semibold space-y-1">
                 <p>Steps: 1. Select Unit/Topic from the top.</p>
