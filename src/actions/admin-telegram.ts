@@ -72,14 +72,19 @@ export async function getTelegramTopics() {
 export interface SendTelegramMessageOptions {
   photoUrl?: string;
   inlineButtons?: Array<{ text: string; url: string }> | Array<Array<{ text: string; url: string }>>;
-  destination?: 'test' | 'live';
+  destination?: 'test' | 'live' | 'constable';
 }
 
 export async function sendTelegramBotMessage(rawText: string, opts?: SendTelegramMessageOptions) {
   await assertAdmin();
 
   const token = process.env.TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_EVENTS_BOT_TOKEN;
-  const chatId = opts?.destination === 'live' ? '@MPPSCZenScroll' : (process.env.TELEGRAM_EVENTS_CHAT_ID || process.env.TELEGRAM_CHAT_ID);
+  let chatId = (process.env.TELEGRAM_EVENTS_CHAT_ID || process.env.TELEGRAM_CHAT_ID || '');
+  if (opts?.destination === 'live') {
+    chatId = '@MPPSCZenScroll';
+  } else if (opts?.destination === 'constable') {
+    chatId = '@zenmpconstable';
+  }
 
   if (!token || !chatId) {
     return { success: false, error: 'Telegram credentials missing in environment variables.' };
@@ -221,11 +226,16 @@ export interface TelegramPollData {
   explanation?: string;
 }
 
-export async function sendTelegramPolls(polls: TelegramPollData[], destination: 'test' | 'live' = 'test') {
+export async function sendTelegramPolls(polls: TelegramPollData[], destination: 'test' | 'live' | 'constable' = 'test') {
   await assertAdmin();
 
   const token = process.env.TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_EVENTS_BOT_TOKEN;
-  const chatId = destination === 'live' ? '@MPPSCZenScroll' : (process.env.TELEGRAM_EVENTS_CHAT_ID || process.env.TELEGRAM_CHAT_ID);
+  let chatId = (process.env.TELEGRAM_EVENTS_CHAT_ID || process.env.TELEGRAM_CHAT_ID || '');
+  if (destination === 'live') {
+    chatId = '@MPPSCZenScroll';
+  } else if (destination === 'constable') {
+    chatId = '@zenmpconstable';
+  }
 
   if (!token || !chatId) {
     return { success: false, error: 'Telegram credentials missing.' };
