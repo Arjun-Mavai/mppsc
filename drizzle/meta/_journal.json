@@ -239,6 +239,13 @@
       "when": 1781617568679,
       "tag": "0033_secret_luminals",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "6",
+      "when": 1782134257972,
+      "tag": "0034_slow_xorn",
+      "breakpoints": true
     }
   ]
 }

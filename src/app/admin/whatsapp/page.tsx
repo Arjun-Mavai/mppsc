@@ -393,20 +393,20 @@ export default function WhatsAppDashboard() {
   }, [stats]);
 
   return (
-    <div className="min-h-screen bg-zinc-50/50 p-6 sm:p-10 text-zinc-950 font-sans">
-      <div className="mx-auto max-w-7xl space-y-8">
+    <div className="min-h-screen bg-zinc-50/50 p-3 sm:p-6 lg:p-10 text-zinc-950 font-sans">
+      <div className="mx-auto max-w-7xl space-y-6 sm:space-y-8">
         
         {/* Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 pb-4 border-b border-zinc-200">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6 pb-4 border-b border-zinc-200">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">WhatsApp Marketing</h1>
-            <p className="text-sm text-zinc-500 mt-1">Manage bulk campaigns, dynamic templates, and track real-time active leads.</p>
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-zinc-950">WhatsApp Marketing</h1>
+            <p className="text-xs sm:text-sm text-zinc-500 mt-1">Manage bulk campaigns, dynamic templates, and track real-time active leads.</p>
           </div>
           
-          <div className="inline-flex h-10 items-center justify-center rounded-lg bg-zinc-100 p-1 text-zinc-500 shadow-inner">
+          <div className="inline-flex h-10 w-full sm:w-auto items-center justify-center rounded-lg bg-zinc-100 p-1 text-zinc-500 shadow-inner">
             <button
               onClick={() => setSenderMode('MAIN')}
-              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-1.5 text-sm font-medium transition-all ${
+              className={`inline-flex flex-1 sm:flex-none items-center justify-center whitespace-nowrap rounded-md px-4 py-1.5 text-xs sm:text-sm font-medium transition-all ${
                 senderMode === 'MAIN' ? 'bg-white text-zinc-950 shadow-sm ring-1 ring-zinc-200' : 'hover:text-zinc-900'
               }`}
             >
@@ -414,7 +414,7 @@ export default function WhatsAppDashboard() {
             </button>
             <button
               onClick={() => setSenderMode('TEST')}
-              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-1.5 text-sm font-medium transition-all ${
+              className={`inline-flex flex-1 sm:flex-none items-center justify-center whitespace-nowrap rounded-md px-4 py-1.5 text-xs sm:text-sm font-medium transition-all ${
                 senderMode === 'TEST' ? 'bg-white text-zinc-950 shadow-sm ring-1 ring-zinc-200' : 'hover:text-zinc-900'
               }`}
             >
@@ -424,7 +424,7 @@ export default function WhatsAppDashboard() {
         </div>
 
         {/* Analytics Cards */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
           {[
             { label: 'Sent / Pending', value: stats.SENT, color: 'text-yellow-600' },
             { label: 'Delivered', value: stats.DELIVERED, color: 'text-green-600' },
@@ -432,24 +432,24 @@ export default function WhatsAppDashboard() {
             { label: 'Failed Messages', value: stats.FAILED, color: 'text-red-600' },
             { label: 'Replied / Active', value: stats.REPLIED, color: 'text-emerald-600' }
           ].map((stat, i) => (
-            <div key={i} className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm flex flex-col justify-between">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{stat.label}</h3>
-              <p className={`mt-4 text-3xl font-bold tracking-tight ${stat.color}`}>{stat.value}</p>
+            <div key={i} className={`rounded-xl border border-zinc-200 bg-white p-4 sm:p-6 shadow-sm flex flex-col justify-between ${i === 4 ? 'col-span-2 lg:col-span-1' : ''}`}>
+              <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-zinc-500">{stat.label}</h3>
+              <p className={`mt-2 sm:mt-4 text-2xl sm:text-3xl font-bold tracking-tight ${stat.color}`}>{stat.value}</p>
             </div>
           ))}
         </div>
 
         {/* Cost & Billing Estimates Card */}
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+        <div className="rounded-xl border border-zinc-200 bg-white p-4 sm:p-6 shadow-sm">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4 sm:mb-6">
             <div>
-              <h2 className="text-base font-semibold text-zinc-950 flex items-center gap-2">
+              <h2 className="text-sm sm:text-base font-semibold text-zinc-950 flex items-center gap-2">
                 <span>💰</span> Meta Billing & Cost Estimator
               </h2>
-              <p className="text-sm text-zinc-500 mt-0.5">Approximate charges based on delivered conversation categories (India region with 18% GST included).</p>
+              <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">Approximate charges based on delivered conversation categories (India region with 18% GST included).</p>
             </div>
             
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-1.5 text-right">
                 <span className="text-[9px] text-green-700 block font-bold uppercase tracking-wider">Success Rate</span>
                 <span className="text-base font-bold text-green-800">{deliveryMetrics.successRate.toFixed(1)}%</span>
@@ -464,14 +464,14 @@ export default function WhatsAppDashboard() {
               </div>
               <button
                 onClick={() => setShowCalculationInfo(true)}
-                className="inline-flex items-center gap-1 px-3 py-2.5 rounded-lg border border-zinc-200 bg-white text-xs font-semibold text-zinc-700 shadow-sm hover:bg-zinc-50 transition-colors"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1 px-3 py-2.5 rounded-lg border border-zinc-200 bg-white text-xs font-semibold text-zinc-700 shadow-sm hover:bg-zinc-50 transition-colors mt-2 sm:mt-0"
               >
                 <span>❓</span> How it Works
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 border border-zinc-200 rounded-xl bg-zinc-50/50 p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 border border-zinc-200 rounded-xl bg-zinc-50/50 p-3 sm:p-4">
             {/* Box 1: All messages */}
             <div className="bg-white rounded-lg border border-zinc-200 p-4 flex flex-col justify-between shadow-sm min-h-[220px]">
               <div>
@@ -603,12 +603,12 @@ export default function WhatsAppDashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 lg:gap-8 lg:grid-cols-3">
           {/* Left Column: Config & Add Contacts */}
-          <div className="space-y-6 lg:col-span-1">
+          <div className="space-y-4 sm:space-y-6 lg:col-span-1">
             
             {/* Template Configuration */}
-            <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-zinc-200 bg-white p-4 sm:p-6 shadow-sm">
               <div className="mb-4">
                 <h2 className="text-base font-semibold text-zinc-950">Template Config</h2>
                 <p className="text-sm text-zinc-500">Select template to broadcast</p>
@@ -750,7 +750,7 @@ export default function WhatsAppDashboard() {
             </div>
 
             {/* Manual Add Contact */}
-            <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm border-l-4 border-l-blue-500">
+            <div className="rounded-xl border border-zinc-200 bg-white p-4 sm:p-6 shadow-sm border-l-4 border-l-blue-500">
                <div className="mb-4">
                 <h2 className="text-base font-semibold text-zinc-950">Add Custom Contact</h2>
                 <p className="text-sm text-zinc-500 leading-relaxed">Add a single number to the directory below so you can select and send.</p>
@@ -781,7 +781,7 @@ export default function WhatsAppDashboard() {
             </div>
 
             {/* Import Section */}
-            <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-zinc-200 bg-white p-4 sm:p-6 shadow-sm">
                <div className="mb-4">
                 <h2 className="text-base font-semibold text-zinc-950">Bulk Import Data</h2>
                 <div className="text-xs text-zinc-500 space-y-1 mt-1 leading-relaxed">
@@ -810,23 +810,23 @@ export default function WhatsAppDashboard() {
           </div>
 
           {/* Right Column: Student Table */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm lg:col-span-2 flex flex-col h-[850px]">
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="rounded-xl border border-zinc-200 bg-white p-4 sm:p-6 shadow-sm lg:col-span-2 flex flex-col h-[600px] sm:h-[850px]">
+            <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <div className="flex items-center gap-3">
-                  <h2 className="text-lg font-semibold text-zinc-950">Recipient Directory</h2>
-                  <button onClick={() => setShowStatusInfo(true)} className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 transition-colors flex items-center gap-1">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <h2 className="text-base sm:text-lg font-semibold text-zinc-950">Recipient Directory</h2>
+                  <button onClick={() => setShowStatusInfo(true)} className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 transition-colors flex items-center gap-1">
                     <span>ℹ️</span> Status Guide
                   </button>
                 </div>
-                <p className="mt-1 text-sm text-zinc-500">
+                <p className="mt-1 text-xs sm:text-sm text-zinc-500">
                   <span className="font-medium text-zinc-900">{selectedIds.size}</span> selected out of <span className="font-medium text-zinc-900">{validFilteredStudents.length}</span> total contacts
                 </p>
               </div>
               <button
                 onClick={handleSendCampaign}
                 disabled={isSending || selectedIds.size === 0}
-                className="inline-flex items-center justify-center rounded-md bg-zinc-900 px-6 py-2.5 text-sm font-medium text-white shadow transition-colors hover:bg-zinc-800 disabled:opacity-50"
+                className="w-full sm:w-auto inline-flex items-center justify-center rounded-md bg-zinc-900 px-6 py-2.5 text-sm font-medium text-white shadow transition-colors hover:bg-zinc-800 disabled:opacity-50"
               >
                 {isSending ? (
                   <span className="flex items-center gap-2">
@@ -839,38 +839,40 @@ export default function WhatsAppDashboard() {
               </button>
             </div>
 
-            <div className="mb-4 flex flex-col sm:flex-row gap-3">
+            <div className="mb-4 flex flex-col sm:flex-row gap-2 sm:gap-3">
               <div className="relative flex-1">
                 <input
                   type="text"
                   placeholder="Filter by name, phone, or origin..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-md border border-zinc-200 bg-transparent py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  className="w-full rounded-md border border-zinc-200 bg-transparent py-2.5 sm:py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
                 />
               </div>
-              <select
-                value={sourceFilter}
-                onChange={(e) => setSourceFilter(e.target.value)}
-                className="w-full sm:w-40 rounded-md border border-zinc-200 bg-transparent py-2 px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
-              >
-                <option value="ALL">All Origins</option>
-                {uniqueSources.map(source => (
-                  <option key={source} value={source}>{source}</option>
-                ))}
-              </select>
-              <select
-                value={dataStatusFilter}
-                onChange={(e) => setDataStatusFilter(e.target.value)}
-                className="w-full sm:w-44 rounded-md border-2 border-blue-200 bg-blue-50 py-2 px-3 text-sm font-semibold text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="ALL">📋 All Contacts</option>
-                <option value="UNSENT">🆕 Unsent</option>
-                <option value="SENT">📤 Sent</option>
-                <option value="DELIVERED">✓✓ Delivered</option>
-                <option value="READ">👁️ Read</option>
-                <option value="FAILED">❌ Failed</option>
-              </select>
+              <div className="flex gap-2">
+                <select
+                  value={sourceFilter}
+                  onChange={(e) => setSourceFilter(e.target.value)}
+                  className="flex-1 sm:w-40 rounded-md border border-zinc-200 bg-transparent py-2.5 sm:py-2 px-2 sm:px-3 text-xs sm:text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                >
+                  <option value="ALL">All Origins</option>
+                  {uniqueSources.map(source => (
+                    <option key={source} value={source}>{source}</option>
+                  ))}
+                </select>
+                <select
+                  value={dataStatusFilter}
+                  onChange={(e) => setDataStatusFilter(e.target.value)}
+                  className="flex-1 sm:w-44 rounded-md border-2 border-blue-200 bg-blue-50 py-2.5 sm:py-2 px-2 sm:px-3 text-xs sm:text-sm font-semibold text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="ALL">📋 All Contacts</option>
+                  <option value="UNSENT">🆕 Unsent</option>
+                  <option value="SENT">📤 Sent</option>
+                  <option value="DELIVERED">✓✓ Delivered</option>
+                  <option value="READ">👁️ Read</option>
+                  <option value="FAILED">❌ Failed</option>
+                </select>
+              </div>
             </div>
 
             {selectedIds.size > 0 && (
@@ -886,9 +888,23 @@ export default function WhatsAppDashboard() {
               </div>
             )}
 
-            <div className="flex-1 overflow-y-auto rounded-md border border-zinc-200">
-              <table className="w-full text-left text-sm text-zinc-600 relative">
-                <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500 sticky top-0 z-10 border-b border-zinc-200">
+            <div className="flex-1 overflow-y-auto rounded-md border border-zinc-200 bg-zinc-50 sm:bg-transparent">
+              {/* Select All Bar (Mobile only) */}
+              <div className="sm:hidden flex items-center justify-between p-3 bg-white border-b border-zinc-200 sticky top-0 z-20 shadow-sm">
+                <label className="flex items-center gap-2 text-xs font-semibold text-zinc-700">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 disabled:opacity-50 accent-zinc-900"
+                    disabled={validFilteredStudents.length === 0}
+                    checked={validFilteredStudents.length > 0 && selectedIds.size === validFilteredStudents.length}
+                    onChange={toggleSelectAll}
+                  />
+                  Select All
+                </label>
+                <span className="text-xs text-zinc-500">{selectedIds.size} Selected</span>
+              </div>
+              <table className="w-full text-left text-sm text-zinc-600 relative block sm:table">
+                <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500 sticky top-0 z-10 border-b border-zinc-200 hidden sm:table-header-group">
                   <tr>
                     <th scope="col" className="p-4 w-12 font-medium">
                       <input
@@ -907,28 +923,29 @@ export default function WhatsAppDashboard() {
                     <th scope="col" className="px-6 py-3.5 font-medium">Joined</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100 bg-white">
+                <tbody className="divide-y divide-zinc-200 sm:divide-zinc-100 bg-transparent sm:bg-white block sm:table-row-group p-2 sm:p-0 space-y-2 sm:space-y-0">
                   {filteredStudents.map((student) => {
                     const hasMobile = !!student.mobile;
                     const isSent = student.campaignStatus && student.campaignStatus !== 'UNSENT';
                     return (
-                      <tr key={student.id} className={`transition-colors ${hasMobile ? 'hover:bg-zinc-50' : 'bg-zinc-50/50 opacity-60'} ${isSent ? 'bg-zinc-50/30' : ''}`}>
-                        <td className="w-4 p-4">
+                      <tr key={student.id} className={`block sm:table-row bg-white rounded-lg sm:rounded-none border sm:border-0 border-zinc-200 p-4 sm:p-0 relative shadow-sm sm:shadow-none transition-colors ${hasMobile ? 'hover:bg-zinc-50/80 sm:hover:bg-zinc-50' : 'bg-zinc-50/50 sm:bg-zinc-50/50 opacity-70'} ${isSent ? 'bg-blue-50/10 sm:bg-zinc-50/30' : ''}`}>
+                        <td className="block sm:table-cell w-full sm:w-4 p-0 sm:p-4 mb-2 sm:mb-0 absolute sm:relative top-3 right-3 sm:top-auto sm:right-auto z-10">
                           <input
                             type="checkbox"
                             disabled={!hasMobile}
-                            className="h-4 w-4 rounded border-zinc-300 accent-zinc-900"
+                            className="h-5 w-5 sm:h-4 sm:w-4 rounded border-zinc-300 accent-zinc-900 float-right sm:float-none cursor-pointer"
                             checked={selectedIds.has(student.id)}
                             onChange={() => toggleSelect(student.id, hasMobile)}
                           />
                         </td>
-                        <td className="px-6 py-4 font-medium text-zinc-900">
-                          {student.name}
+                        <td className="block sm:table-cell px-0 sm:px-6 py-1 sm:py-4 font-medium text-zinc-900 pr-10 sm:pr-0">
+                          <div className="text-base sm:text-sm font-bold sm:font-medium text-zinc-900 mb-0.5 sm:mb-0">{student.name}</div>
+                          <div className="sm:hidden font-mono text-sm text-zinc-600 mb-2">{hasMobile ? student.mobile : 'Unavailable'}</div>
                         </td>
-                        <td className="px-6 py-4 font-mono text-xs">
+                        <td className="hidden sm:table-cell px-6 py-4 font-mono text-xs">
                           {hasMobile ? student.mobile : 'Unavailable'}
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="block sm:table-cell px-0 sm:px-6 py-1 sm:py-4 mb-2 sm:mb-0">
                           {(() => {
                             const s = student.campaignStatus;
                             if (s === 'READ') return (
@@ -958,40 +975,42 @@ export default function WhatsAppDashboard() {
                             );
                           })()}
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="block sm:table-cell px-0 sm:px-6 py-1 sm:py-4">
                           {student.lastSentAt || student.lastStatusAt ? (
-                            <div className="text-xs text-zinc-600 leading-relaxed">
+                            <div className="text-xs text-zinc-600 leading-relaxed bg-zinc-50 sm:bg-transparent p-2 sm:p-0 rounded border border-zinc-100 sm:border-0">
                               {student.lastSentAt && (
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1.5">
                                   <span className="text-zinc-400">📤</span>
                                   <span>{format(new Date(student.lastSentAt), 'EEE, d MMM · h:mm a')}</span>
                                 </div>
                               )}
                               {student.lastStatusAt && student.lastStatusAt !== student.lastSentAt && (
-                                <div className="flex items-center gap-1 mt-0.5">
+                                <div className="flex items-center gap-1.5 mt-1 sm:mt-0.5">
                                   <span className="text-zinc-400">🔄</span>
                                   <span className="text-zinc-500">{format(new Date(student.lastStatusAt), 'EEE, d MMM · h:mm a')}</span>
                                 </div>
                               )}
                             </div>
                           ) : (
-                            <span className="text-zinc-300 text-xs">—</span>
+                            <span className="text-zinc-300 text-xs sm:inline-block hidden">—</span>
                           )}
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="flex items-center justify-between sm:table-cell px-0 sm:px-6 py-1 sm:py-4 mt-2 sm:mt-0 border-t sm:border-0 border-dashed border-zinc-200 pt-2 sm:pt-4">
+                          <span className="sm:hidden text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Source</span>
                           <span className="inline-flex items-center rounded-md bg-zinc-100 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-zinc-600 border border-zinc-200">
                             {student.leadSource || 'Organic'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-xs text-zinc-500 whitespace-nowrap">
-                          {student.createdAt ? format(new Date(student.createdAt), 'dd MMM yyyy') : '—'}
+                        <td className="flex items-center justify-between sm:table-cell px-0 sm:px-6 py-1 sm:py-4 text-xs text-zinc-500 whitespace-nowrap pb-1 sm:pb-4">
+                          <span className="sm:hidden text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Joined</span>
+                          <span>{student.createdAt ? format(new Date(student.createdAt), 'dd MMM yyyy') : '—'}</span>
                         </td>
                       </tr>
                     );
                   })}
                   {filteredStudents.length === 0 && (
-                    <tr>
-                      <td colSpan={7} className="px-6 py-16 text-center text-zinc-500 text-sm">
+                    <tr className="block sm:table-row">
+                      <td colSpan={7} className="block sm:table-cell px-6 py-16 text-center text-zinc-500 text-sm">
                         No recipients matched your filters.
                       </td>
                     </tr>
@@ -1078,15 +1097,15 @@ export default function WhatsAppDashboard() {
         </div>
 
         {/* Template-wise Audience Breakdown */}
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between flex-wrap gap-2 mb-6 border-b border-zinc-100 pb-4">
+        <div className="rounded-xl border border-zinc-200 bg-white p-4 sm:p-6 shadow-sm">
+          <div className="flex items-center justify-between flex-wrap gap-4 mb-4 sm:mb-6 border-b border-zinc-100 pb-4">
             <div>
-              <h2 className="text-base font-semibold text-zinc-950 flex items-center gap-2">
-                <span>📊</span> Template-wise Audience Breakdown & Analytics
+              <h2 className="text-sm sm:text-base font-semibold text-zinc-950 flex items-center gap-2">
+                <span>📊</span> Template Analytics & Breakdown
               </h2>
-              <p className="text-sm text-zinc-500 mt-0.5">Click any template below to view the list of students, statuses, and performance insights.</p>
+              <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">Click any template below to view the list of students, statuses, and performance insights.</p>
             </div>
-            <div className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-1.5 text-right">
+            <div className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-1.5 text-left sm:text-right w-full sm:w-auto flex flex-row sm:flex-col items-center sm:items-end justify-between">
               <span className="text-[10px] text-zinc-500 block font-bold uppercase tracking-wider">Total Campaigns Dispatched</span>
               <span className="text-sm font-bold text-zinc-950">{stats.SENT + stats.DELIVERED + stats.READ + stats.FAILED} Messages</span>
             </div>
@@ -1111,11 +1130,11 @@ export default function WhatsAppDashboard() {
 
                 return (
                   <details key={tName} className="group border border-zinc-200 rounded-lg overflow-hidden [&_summary::-webkit-details-marker]:hidden bg-white">
-                    <summary className="flex items-center justify-between p-4 bg-zinc-50/50 hover:bg-zinc-100/50 cursor-pointer select-none transition-colors">
-                      <div className="flex items-center gap-3">
-                        <span className="text-zinc-400 group-open:rotate-90 transition-transform font-bold">&rarr;</span>
+                    <summary className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-zinc-50/50 hover:bg-zinc-100/50 cursor-pointer select-none transition-colors gap-3">
+                      <div className="flex items-start sm:items-center gap-3">
+                        <span className="text-zinc-400 group-open:rotate-90 transition-transform font-bold mt-0.5 sm:mt-0">&rarr;</span>
                         <div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <span className="font-semibold text-sm text-zinc-900">{label}</span>
                             <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide border ${
                               category === 'Marketing'
@@ -1125,17 +1144,21 @@ export default function WhatsAppDashboard() {
                               {category}
                             </span>
                           </div>
-                          <div className="font-mono text-xs text-zinc-400 mt-0.5">{tName}</div>
+                          <div className="font-mono text-[10px] sm:text-xs text-zinc-400 mt-1 sm:mt-0.5">{tName}</div>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-6">
-                        <div className="hidden md:flex items-center gap-2 text-[11px]">
+                      <div className="flex items-end sm:items-center justify-between sm:justify-end gap-4 sm:gap-6 pl-6 sm:pl-0">
+                        <div className="hidden lg:flex items-center gap-2 text-[11px]">
                           <span className="bg-zinc-100 px-2 py-0.5 rounded text-zinc-700 font-bold border border-zinc-200">Total: {recipients.length}</span>
                           <span className="bg-yellow-50 px-2 py-0.5 rounded text-yellow-700 font-bold border border-yellow-100">Pending: {tSent}</span>
                           <span className="bg-green-50 px-2 py-0.5 rounded text-green-700 font-bold border border-green-100">Delivered: {tDelivered}</span>
                           <span className="bg-blue-50 px-2 py-0.5 rounded text-blue-700 font-bold border border-blue-100">Read: {tRead}</span>
                           <span className="bg-red-50 px-2 py-0.5 rounded text-red-700 font-bold border border-red-100">Failed: {tFailed}</span>
+                        </div>
+                        <div className="flex lg:hidden items-center gap-2 text-[10px]">
+                            <span className="bg-zinc-100 px-1.5 py-0.5 rounded text-zinc-700 font-bold border border-zinc-200">Total: {recipients.length}</span>
+                            <span className="bg-green-50 px-1.5 py-0.5 rounded text-green-700 font-bold border border-green-100">Succ: {tDelivered + tRead}</span>
                         </div>
                         <div className="text-right">
                           <div className="text-sm font-bold text-zinc-900">₹{cost.toFixed(2)}</div>
@@ -1144,10 +1167,10 @@ export default function WhatsAppDashboard() {
                       </div>
                     </summary>
                     
-                    <div className="border-t border-zinc-200 p-4 bg-white">
+                    <div className="border-t border-zinc-200 p-2 sm:p-4 bg-white">
                       <div className="overflow-x-auto max-h-80 overflow-y-auto">
-                        <table className="w-full text-left text-xs border-collapse">
-                          <thead>
+                        <table className="w-full text-left text-xs border-collapse block sm:table">
+                          <thead className="hidden sm:table-header-group">
                             <tr className="border-b border-zinc-200 bg-zinc-50 text-zinc-500 uppercase tracking-wider font-semibold text-[10px]">
                               <th className="py-2.5 px-3">Student Name</th>
                               <th className="py-2.5 px-3">Phone Number</th>
@@ -1156,12 +1179,15 @@ export default function WhatsAppDashboard() {
                               <th className="py-2.5 px-3">Last Status At</th>
                             </tr>
                           </thead>
-                          <tbody>
+                          <tbody className="block sm:table-row-group divide-y divide-zinc-100">
                             {recipients.map((r) => (
-                              <tr key={r.id} className="border-b border-zinc-100 hover:bg-zinc-50/50">
-                                <td className="py-2.5 px-3 font-medium text-zinc-900">{r.name}</td>
-                                <td className="py-2.5 px-3 font-mono text-zinc-500">{r.mobile}</td>
-                                <td className="py-2.5 px-3">
+                              <tr key={r.id} className="block sm:table-row p-3 sm:p-0 hover:bg-zinc-50/50">
+                                <td className="block sm:table-cell py-1 sm:py-2.5 px-1 sm:px-3 font-medium text-zinc-900 text-sm sm:text-xs">
+                                  {r.name}
+                                  <div className="sm:hidden font-mono text-[11px] text-zinc-500 mt-0.5">{r.mobile}</div>
+                                </td>
+                                <td className="hidden sm:table-cell py-2.5 px-3 font-mono text-zinc-500">{r.mobile}</td>
+                                <td className="block sm:table-cell py-1 sm:py-2.5 px-1 sm:px-3">
                                   <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
                                     r.campaignStatus === 'READ' ? 'bg-blue-50 text-blue-700 border border-blue-100' :
                                     r.campaignStatus === 'DELIVERED' ? 'bg-green-50 text-green-700 border border-green-100' :
@@ -1171,8 +1197,14 @@ export default function WhatsAppDashboard() {
                                     {r.campaignStatus}
                                   </span>
                                 </td>
-                                <td className="py-2.5 px-3 text-zinc-500">{r.lastSentAt ? format(new Date(r.lastSentAt), 'dd MMM yyyy, hh:mm a') : '—'}</td>
-                                <td className="py-2.5 px-3 text-zinc-500">{r.lastStatusAt ? format(new Date(r.lastStatusAt), 'dd MMM yyyy, hh:mm a') : '—'}</td>
+                                <td className="block sm:table-cell py-1 sm:py-2.5 px-1 sm:px-3 text-[11px] sm:text-xs text-zinc-500 flex justify-between sm:table-cell">
+                                   <span className="sm:hidden font-semibold text-zinc-400">Sent:</span>
+                                   <span>{r.lastSentAt ? format(new Date(r.lastSentAt), 'dd MMM yy, hh:mm a') : '—'}</span>
+                                </td>
+                                <td className="block sm:table-cell py-1 sm:py-2.5 px-1 sm:px-3 text-[11px] sm:text-xs text-zinc-500 flex justify-between sm:table-cell">
+                                   <span className="sm:hidden font-semibold text-zinc-400">Status Update:</span>
+                                   <span>{r.lastStatusAt ? format(new Date(r.lastStatusAt), 'dd MMM yy, hh:mm a') : '—'}</span>
+                                </td>
                               </tr>
                             ))}
                           </tbody>
