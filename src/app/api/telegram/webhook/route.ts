@@ -20,15 +20,50 @@ export async function POST(req: Request) {
     // For DB tracking
     let incomingText = '';
     let guestName = 'Telegram User';
+    let callbackData = null;
+    let isCommandOrText = false;
 
-    // 1. Handle Regular Text Messages and Commands
+    // 1. Extract Info First
     if (body.message && body.message.text) {
       chatId = body.message.chat.id;
-      const text = body.message.text.trim().toLowerCase();
       incomingText = body.message.text;
+      isCommandOrText = true;
       if (body.message.from && body.message.from.first_name) {
         guestName = body.message.from.first_name + (body.message.from.last_name ? ' ' + body.message.from.last_name : '');
       }
+    } else if (body.callback_query) {
+      chatId = body.callback_query.message.chat.id;
+      callbackData = body.callback_query.data;
+      incomingText = `[Button Clicked: ${callbackData}]`;
+      if (body.callback_query.from && body.callback_query.from.first_name) {
+        guestName = body.callback_query.from.first_name;
+      }
+    }
+
+    if (!chatId || !incomingText) {
+      return new NextResponse('OK', { status: 200 });
+    }
+
+    // 2. DB: Save Incoming Message
+    let convId = null;
+    let humanActive = false;
+    const res = await saveIncomingMessage({
+      platform: 'telegram',
+      guestPhone: chatId.toString(), // Using chatId as phone equivalent
+      guestName: guestName,
+      text: incomingText,
+    });
+    convId = res.conversationId;
+    humanActive = !!res.humanActive;
+
+    // 3. Bot Suppression (if Human is Active)
+    if (humanActive && !callbackData?.startsWith('FDBK_')) {
+      return new NextResponse('OK', { status: 200 }); // Skip bot processing entirely
+    }
+
+    // 4. Generate Bot Response
+    if (isCommandOrText) {
+      const text = incomingText.trim().toLowerCase();
 
       if (text === '/start' || text === '/help') {
         responseText = `🎉 *Welcome to MPPSC ZenScroll*\n\n` +
@@ -82,13 +117,8 @@ export async function POST(req: Request) {
         };
       }
     } 
-    else if (body.callback_query) {
-      chatId = body.callback_query.message.chat.id;
-      const data = body.callback_query.data;
-      incomingText = `[Button Clicked: ${data}]`;
-      if (body.callback_query.from && body.callback_query.from.first_name) {
-        guestName = body.callback_query.from.first_name;
-      }
+    else if (callbackData) {
+      const data = callbackData;
 
       if (data === 'LANG_EN') {
         responseText = `Great! How can we help you today? 👇\n\n` +
@@ -261,19 +291,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // DB: Save Incoming
-    let convId = null;
-    if (chatId && incomingText) {
-      const res = await saveIncomingMessage({
-        platform: 'telegram',
-        guestPhone: chatId.toString(), // Using chatId as phone equivalent
-        guestName: guestName,
-        text: incomingText,
-      });
-      convId = res.conversationId;
-    }
-
-    // 3. Send Response to Telegram
+    // 5. Send Response to Telegram
     if (chatId && responseText) {
       await fetch(apiUrl, {
         method: 'POST',
