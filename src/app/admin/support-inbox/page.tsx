@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Search, Check, CheckCheck, MoreVertical, Phone, Globe, ChevronLeft, MessageCircleOff, ChevronDown, Bot, Power, X, Loader2 } from 'lucide-react';
+import { Send, Search, Check, CheckCheck, MoreVertical, Phone, Globe, ChevronLeft, MessageCircleOff, ChevronDown, Bot, Power, X, Loader2, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getConversations, getMessages, sendAdminReply, markAsRead, resolveConversation, toggleHumanActive } from '@/actions/support-inbox-actions';
 import { toast } from 'sonner';
@@ -183,6 +183,23 @@ export default function SupportInbox() {
     resolveConversation(activeId).catch(console.error);
   };
 
+  const handleGeneralFeedback = async () => {
+    if (!activeId || !activeConversation) return;
+    
+    const textToSend = 'नमस्ते! 🙏\n\nबातचीत के बाद आपसे फीडबैक लेना चाहते हैं। आपको हमारा सपोर्ट और गाइडेंस कैसा लगा? कृपया नीचे दिए गए बटनों में से कोई एक चुनें:\n\nRegards,\n*MPPSC ZenScroll Team*';
+    
+    sendMessageMutation.mutate({ 
+      text: textToSend,
+      opts: {
+        buttons: [
+          { id: 'FDBK_EXC', title: '🤩 बहुत बढ़िया' },
+          { id: 'FDBK_AVG', title: '👍 ठीक था' },
+          { id: 'FDBK_BAD', title: '😞 बेकार' }
+        ]
+      }
+    });
+  };
+
   const handleToggleBot = () => {
     if (!activeId || !activeConversation) return;
     toggleBotMutation.mutate(!activeConversation.humanActive);
@@ -191,12 +208,15 @@ export default function SupportInbox() {
   const QUICK_REPLIES = [
     { label: '👋 Hi (Hindi)', text: 'नमस्ते! 🙏\n\nमैं अर्जुन बात कर रहा हूँ। MPPSC ZenScroll की सपोर्ट टीम से जुड़ने के लिए धन्यवाद।\n\nमैं आज आपकी क्या सहायता कर सकता हूँ?\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*' },
     { label: '👋 Hi (English)', text: 'Hello! 🙏\n\nThis is Arjun. Thank you for reaching out to MPPSC ZenScroll support.\n\nHow can I help you today?\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*' },
+    { label: '🔗 Pre + Mains Links', text: '🎯 *MPPSC ZenScroll - Active Libraries* 🚀\n\nनमस्ते! 🙏\n\nआप अपनी तैयारी के अनुसार नीचे दिए गए डायरेक्ट लिंक्स से हमारी लाइब्रेरीज को एक्सप्लोर कर सकते हैं:\n\n💻 *Home (Prelims Library):*\n👉 https://mppsc.zenscroll.app\n\n🏛️ *Mains Library (Syllabus & Model Answers):*\n👉 https://mppsc.zenscroll.app/mains\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '💡 Pre Strategy Advice', text: '💡 *MPPSC Prelims - ZenScroll Strategy* 🎯\n\nनमस्ते! 🙏\n\nPrelims की तैयारी को लेकर हमारी एप्रोच बहुत सिंपल है:\n\n1️⃣ *Syllabus की गहरी समझ:* रटने से पहले पूरे सिलेबस (Unit-wise) को माइक्रो-लेवल पर समझें।\n2️⃣ *PYQs का गहरा विश्लेषण:* पिछले साल के प्रश्नों (PYQs) को समझें ताकि पता चले कि आयोग किस तरह के प्रश्न और फैक्ट्स पूछ रहा है।\n3️⃣ *Clarity Before Content:* पहले अपनी समझ मजबूत करें, फिर कंटेंट पढ़ें।\n\nअपनी तैयारी शुरू करने के लिए यहाँ जाएँ:\n🔗 Home / Prelims: https://mppsc.zenscroll.app\n🔗 Free Demo Quiz: https://mppsc.zenscroll.app/free-quiz\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '💡 Mains Strategy Advice', text: '💡 *MPPSC Mains - ZenScroll Strategy* 🏛️\n\nनमस्ते! 🙏\n\nMains परीक्षा (2024 New Syllabus) को क्रैक करने के लिए हमारी थिंकिंग:\n\n1️⃣ *Keyword Level Decoding:* सिलेबस के हर एक टॉपिक पर आपके पास 3, 5, और 11 markers के पॉइंट तैयार होने चाहिए।\n2️⃣ *PYQ Integration:* टॉपिक को पुराने साल के प्रश्नों से लिंक करके पढ़ें ताकि एग्जाम का पैटर्न समझ आए।\n3️⃣ *Answer Thinking (उत्तर सोचने का तरीका):* नोट्स रटने के बजाय सही उत्तर लिखने की एप्रोच सीखें।\n\nमैल्यू-ऐडेड नोट्स और मॉडल उत्तर देखने के लिए यहाँ जाएँ:\n🔗 Mains Library: https://mppsc.zenscroll.app/mains\n\nRegards,\n*MPPSC ZenScroll Team*' },
     { label: '💳 Pre Payment', text: '🎯 *Prelims Intelligence Course*\n\nनमस्ते! 🙏\nCourse access ke liye aap apna secure payment yahan se complete kar sakte hain:\n\n🔗 Payment Link: https://mppsc.zenscroll.app/pricing?need=pre\n\n⚡ (Payment complete hone ke baad please yahan ek screenshot bhej dijiye!)\n\nRegards,\n*MPPSC ZenScroll Team*' },
     { label: '💳 Mains Payment', text: '🏛️ *Mains Syllabus Hub*\n\nनमस्ते! 🙏\nCourse access ke liye aap apna secure payment yahan se complete kar sakte hain:\n\n🔗 Payment Link: https://mppsc.zenscroll.app/pricing?need=mains\n\n⚡ (Payment complete hone ke baad please yahan ek screenshot bhej dijiye!)\n\nRegards,\n*MPPSC ZenScroll Team*' },
     { label: '💳 Combo Plan', text: '🏛️ *Combo Plan (Prelims + Mains)*\n\nनमस्ते! 🙏\nPrelims and Mains dono courses ko join karne ke liye secure payment complete karein:\n\n🔗 Pricing Page: https://mppsc.zenscroll.app/pricing\n\n👉 Direct Prelims: https://mppsc.zenscroll.app/pricing?need=pre\n👉 Direct Mains: https://mppsc.zenscroll.app/pricing?need=mains\n\nRegards,\n*MPPSC ZenScroll Team*' },
     { label: '⚙️ Tech Fixed', text: '🛠️ *Issue Resolved / तकनीकी समस्या हल*\n\nनमस्ते! 🙏\nAapne jo issue report kiya tha, humari technical team ne use successfully resolve kar diya hai.\n\nKripya ek baar website ko refresh karein aur check karein.\n\nRegards,\n*MPPSC ZenScroll Team*' },
     { label: '⏳ Follow up', text: '⏳ *Awaiting Your Reply / प्रतीक्षा*\n\nनमस्ते! 🙏\nHum aapke reply ka wait kar rahe hain. Agar aapko abhi bhi koi doubt ya issue hai, toh please humein batayein.\n\nHum aapki help karne ke liye ready hain!\n\nRegards,\n*MPPSC ZenScroll Team*' },
-    { label: '🔐 Login Issue', text: '🔐 *Login Assistance / लॉगिन सहायता*\n\nनमस्ते! 🙏\nLogin karne me issue aa raha hai?\n\nPlease make sure ki aap exactly usi Google Account (Gmail) se login karein, jisse aapne payment kiya tha. Agar aapko yaad nahi hai toh please yahan apna email id likh kar bhej dein.\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '🔐 Login Issue', text: '🔐 *Login Assistance /ログイン सहायता*\n\nनमस्ते! 🙏\nLogin karne me issue aa raha hai?\n\nPlease make sure ki aap exactly usi Google Account (Gmail) se login karein, jisse aapne payment kiya tha. Agar aapko yaad nahi hai toh please yahan apna email id likh kar bhej dein.\n\nRegards,\n*MPPSC ZenScroll Team*' },
     { label: '🎯 Pre Strategy', text: '🎯 *MPPSC Prelims 2026 - Master Strategy*\n\nनमस्ते! 🙏\nAgar aap MPPSC Prelims ki taiyari ekdum ZERO se start kar rahe hain, toh humne aapke liye ek detailed step-by-step strategy blog banaya hai.\n\nIse dhyaan se padhein:\n🔗 https://mppsc.zenscroll.app/blogs/how-to-crack-mppsc-prelims-2026-strategy?from=category%3Dgeneral\n\nRegards,\n*MPPSC ZenScroll Team*' },
     { label: '🏛️ Mains Strategy', text: '🏛️ *MPPSC Mains - Zero to Selection Strategy*\n\nनमस्ते! 🙏\nMPPSC Mains ke naye syllabus (2024) ko samajhne aur answer writing master karne ke liye humara yeh comprehensive blog zarur padhein.\n\nLink par click karein:\n🔗 https://mppsc.zenscroll.app/blogs/mppsc-mains-master-strategy-2024-zero-to-selection-comprehensive\n\nRegards,\n*MPPSC ZenScroll Team*' },
     { label: '🎁 Free Resources', text: '🎁 *Explore MPPSC ZenScroll Free Resources*\n\nनमस्ते! 🙏\nMPPSC ki taiyari ko directional aur simple banane ke liye humare saare free resources check karein:\n\n🎯 *Prelims Library & Demo:*\n👉 Attempt Free Demo Quiz:\n🔗 https://mppsc.zenscroll.app/free-quiz\n👉 Track Syllabus Unit-wise:\n🔗 https://mppsc.zenscroll.app/syllabus\n\n🏛️ *Mains Library:*\n👉 Explore Syllabus Map & Model Answer Frameworks:\n🔗 https://mppsc.zenscroll.app/mains\n\n📝 *Strategy Blogs & Preparation Tips:*\n🔗 https://mppsc.zenscroll.app/blogs\n\nRegards,\n*MPPSC ZenScroll Team*' },
@@ -426,6 +446,13 @@ export default function SupportInbox() {
                 className="whitespace-nowrap rounded-full bg-white border border-[#d1d7db] px-3 py-1.5 text-xs font-semibold text-[#54656f] shadow-sm hover:bg-zinc-50 transition-colors flex items-center gap-1 shrink-0 disabled:opacity-50"
               >
                 <CheckCheck size={14} className="text-emerald-500" /> Resolve & Ask Feedback
+              </button>
+              <button
+                onClick={handleGeneralFeedback}
+                disabled={sendMessageMutation.isPending}
+                className="whitespace-nowrap rounded-full bg-white border border-[#d1d7db] px-3 py-1.5 text-xs font-semibold text-[#54656f] shadow-sm hover:bg-zinc-50 transition-colors flex items-center gap-1 shrink-0 disabled:opacity-50"
+              >
+                <Heart size={14} className="text-rose-500" /> Ask General Feedback
               </button>
               <div className="w-px h-6 bg-[#d1d7db] mx-1 shrink-0"></div>
               {QUICK_REPLIES.map((qr, idx) => (
