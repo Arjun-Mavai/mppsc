@@ -5,7 +5,7 @@ import { after } from 'next/server';
 import { logger } from '@/lib/logger';
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
-import { sendTelegramNotification, sendLeadNotification, escapeHTML } from '@/lib/telegram';
+import { sendTelegramNotification, sendLeadNotification, sendHumanRequestTelegramNotification, escapeHTML } from '@/lib/telegram';
 
 /**
  * 📧 ADMIN NOTIFICATION SYSTEM
@@ -371,6 +371,25 @@ export async function notifyAdminOnSupportTicket(data: {
         `⏱️ <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST`;
 
       await sendTelegramNotification(telegramMessage);
+
+      // Also send to the Human Request bot for instant admin alert (using Markdown)
+      try {
+        const markdownMessage =
+          `👮 *MPPSC ZEN*\n` +
+          `🎫 *New Support Ticket* 🚨\n\n` +
+          `👤 *Student:* ${name}\n` +
+          `📧 *Email:* \`${email}\`\n` +
+          (phone ? `📞 *Phone:* \`${phone}\`\n` : '') +
+          `${catInfo.emoji} *Category:* ${catInfo.label}\n` +
+          (pagePath ? `🌐 *Source:* \`${pagePath}\`\n` : '') +
+          `💬 *Query Message:*\n` +
+          `${message}\n\n` +
+          `⏱️ *Time:* _${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} IST_`;
+
+        await sendHumanRequestTelegramNotification(markdownMessage);
+      } catch (humanAlertError) {
+        logger.error('Failed to send support ticket to human request bot', humanAlertError);
+      }
 
       logger.info('Admin notified of support ticket via Telegram', {
         category: 'telegram',
