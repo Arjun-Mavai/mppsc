@@ -369,6 +369,8 @@ export const syllabusTopics = sqliteTable(
     // New AI-enriched content (Points, PYQ, Mnemonic) - Separate from official syllabus text
     aiContent: text('ai_content', { mode: 'json' }),
     aiContentEn: text('ai_content_en', { mode: 'json' }),
+    // AI/Manual enrichment for Current Affairs Linkages specific to the topic (isolated field)
+    currentAffairsData: text('current_affairs_data'),
     order: integer('order').notNull(),
     // ── Access Control Flags ──────────────────────────────────────
     // isFree = old flag (backward compat) — same as isFreeAccess
@@ -977,6 +979,8 @@ export const mainsPyqQuestions = sqliteTable(
     /** Deep coaching: patterns, reading list, intro–body–close, sources — Hindi */
     expertInsightsHi: text('expert_insights_hi'),
     expertInsightsEn: text('expert_insights_en'),
+    /** AI/Manual enrichment for Current Affairs Linkages (used for intros/conclusions) - Isolated field */
+    currentAffairsData: text('current_affairs_data'),
     displayOrder: integer('display_order').default(0),
   },
   (t) => [

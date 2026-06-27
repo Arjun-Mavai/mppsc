@@ -9,10 +9,11 @@ import {
   mainsTopics,
   mainsTopicPyqLinks,
 } from '@/db/schema';
-import { eq, and, desc, count, inArray, sql } from 'drizzle-orm';
+import { eq, and, desc, count, inArray, sql, isNull } from 'drizzle-orm';
 import { whereMainsPyqPaperListed } from '@/lib/mains-pyq-visibility';
 import { v4 as uuidv4 } from 'uuid';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag as originalRevalidateTag } from 'next/cache';
+const revalidateTag = originalRevalidateTag as any;
 import { MAINS_PYQ_PURGE_CONFIRMATION_PHRASE } from '@/config/mains-pyq-admin';
 import { stripJsonFence } from '@/lib/mains-pyq-batch-paste';
 import { parseMainsPyqImportJson, stripCiteMarkers, stableQuestionKey } from '@/lib/mains-pyq-import';
@@ -962,3 +963,141 @@ export async function adminGetQuestionStem(questionId: string) {
   }
 }
 
+export async function adminUpsertCurrentAffairsBatch(jsonPayload: string) {
+  try {
+    await assertAdmin();
+    // Strip markdown formatting if AI included it
+    let cleanPayload = jsonPayload.trim();
+    if (cleanPayload.startsWith('```')) {
+      cleanPayload = cleanPayload.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    
+    const payload = JSON.parse(cleanPayload);
+    
+    if (!payload || !Array.isArray(payload.updates)) {
+      return { success: false as const, error: 'Invalid JSON format. Expected an object with an "updates" array.' };
+    }
+
+    let updatedCount = 0;
+    for (const update of payload.updates) {
+      const hasNewKit = update.value_addition_kit_en || update.value_addition_kit_hi || update.current_affairs_data_en || update.current_affairs_data_hi;
+      const hasOldKit = update.value_addition_kit || update.current_affairs_data;
+      
+      if (update.id && (hasNewKit || hasOldKit)) {
+        let payloadToSave: Record<string, unknown> = {};
+        
+        if (hasNewKit) {
+          if (update.value_addition_kit_en) payloadToSave.value_addition_kit_en = update.value_addition_kit_en;
+          if (update.value_addition_kit_hi) payloadToSave.value_addition_kit_hi = update.value_addition_kit_hi;
+          if (update.current_affairs_data_en) payloadToSave.current_affairs_data_en = update.current_affairs_data_en;
+          if (update.current_affairs_data_hi) payloadToSave.current_affairs_data_hi = update.current_affairs_data_hi;
+        } else {
+          payloadToSave = update.value_addition_kit || update.current_affairs_data;
+        }
+
+        await db.update(mainsPyqQuestions)
+          .set({ currentAffairsData: JSON.stringify(payloadToSave) })
+          .where(eq(mainsPyqQuestions.id, update.id));
+        updatedCount++;
+      }
+    }
+
+    revalidatePath('/admin/mains-pyq');
+    revalidatePath('/mains/syllabus/pyq-library');
+    revalidateTag('mains-pyq-paper', 'max');
+    return { success: true as const, updatedCount };
+  } catch (e) {
+    return { success: false as const, error: adminReadableError(e) };
+  }
+}
+
+export async function adminGetCAQuestionsToProcess(examYear: number, paperNumber: number, limit: number = 50, part?: string, includeCompleted: boolean = false) {
+  try {
+    await assertAdmin();
+    // First find the paper
+    const paper = await db.query.mainsPyqPapers.findFirst({
+      where: and(
+        eq(mainsPyqPapers.examYear, examYear),
+        eq(mainsPyqPapers.paperNumber, paperNumber)
+      )
+    });
+
+    if (!paper) {
+      return { success: false as const, error: 'Paper not found for the given year and number.' };
+    }
+
+    const conditions: any[] = [
+      eq(mainsPyqQuestions.paperId, paper.id),
+    ];
+
+    if (!includeCompleted) {
+      conditions.push(isNull(mainsPyqQuestions.currentAffairsData));
+    }
+
+    if (part && part !== 'ALL') {
+      conditions.push(eq(mainsPyqQuestions.part, part));
+    }
+
+    const questions = await db.query.mainsPyqQuestions.findMany({
+      where: and(...conditions),
+      limit,
+      columns: {
+        id: true,
+        marks: true,
+        questionHi: true,
+        questionEn: true,
+      },
+    });
+
+    return { success: true as const, questions };
+  } catch (e) {
+    return { success: false as const, error: adminReadableError(e) };
+  }
+}
+
+export async function adminGetCAStats(examYear: number, paperNumber: number, part: string = 'ALL') {
+  try {
+    await assertAdmin();
+    const paper = await db.query.mainsPyqPapers.findFirst({
+      where: and(
+        eq(mainsPyqPapers.examYear, examYear),
+        eq(mainsPyqPapers.paperNumber, paperNumber)
+      )
+    });
+
+    if (!paper) {
+      return { success: true as const, stats: { total: 0, missing: 0, done: 0 } };
+    }
+
+    const totalConditions = [eq(mainsPyqQuestions.paperId, paper.id)];
+    if (part && part !== 'ALL') {
+      totalConditions.push(eq(mainsPyqQuestions.part, part));
+    }
+
+    const [totalRes] = await db
+      .select({ count: count() })
+      .from(mainsPyqQuestions)
+      .where(and(...totalConditions));
+      
+    const missingConditions = [
+      eq(mainsPyqQuestions.paperId, paper.id),
+      isNull(mainsPyqQuestions.currentAffairsData)
+    ];
+    if (part && part !== 'ALL') {
+      missingConditions.push(eq(mainsPyqQuestions.part, part));
+    }
+
+    const [missingRes] = await db
+      .select({ count: count() })
+      .from(mainsPyqQuestions)
+      .where(and(...missingConditions));
+
+    const total = totalRes?.count || 0;
+    const missing = missingRes?.count || 0;
+    const done = total - missing;
+
+    return { success: true as const, stats: { total, missing, done } };
+  } catch (e) {
+    return { success: false as const, error: adminReadableError(e) };
+  }
+}

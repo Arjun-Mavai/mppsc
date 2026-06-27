@@ -32,7 +32,7 @@
  */
 
 import { db } from '@/db';
-import { mainsPapers, mainsUnits, mainsTopics, mainsContent } from '@/db/schema';
+import { mainsPapers, mainsUnits, mainsTopics, mainsContent, mainsTopicPyqLinks, mainsPyqQuestions, mainsPyqPapers } from '@/db/schema';
 import { eq, and, sql, count, asc, desc } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
@@ -452,12 +452,34 @@ export async function getMainsTopicForPage(topicId: string, paperId: string) {
       row.unit.unitNumber === 1 && 
       isFirstTopic;
 
+    // 🚀 Task 1 & 2: Fetch linked PYQs and their years for unlocked users as well
+    let linkedPyqs: { id: string, year: number, marks: number, questionHi: string, questionEn: string | null }[] = [];
+    try {
+      const pyqRows = await db
+        .select({
+          id: mainsPyqQuestions.id,
+          year: mainsPyqPapers.examYear,
+          marks: mainsPyqQuestions.marks,
+          questionHi: mainsPyqQuestions.questionHi,
+          questionEn: mainsPyqQuestions.questionEn,
+        })
+        .from(mainsTopicPyqLinks)
+        .innerJoin(mainsPyqQuestions, eq(mainsTopicPyqLinks.pyqQuestionId, mainsPyqQuestions.id))
+        .innerJoin(mainsPyqPapers, eq(mainsPyqQuestions.paperId, mainsPyqPapers.id))
+        .where(eq(mainsTopicPyqLinks.topicId, topicId))
+        .orderBy(desc(mainsPyqPapers.examYear));
+        
+      linkedPyqs = pyqRows;
+    } catch (e) {
+      console.error('Failed to fetch linked PYQs for topic', e);
+    }
+
     if (!row.content) {
-      return { success: true as const, data: row, isDemoTopic: !!isGuestDemoTopic };
+      return { success: true as const, data: { ...row, linkedPyqs }, isDemoTopic: !!isGuestDemoTopic };
     }
 
     if (vaultUnlocked || isGuestDemoTopic) {
-      return { success: true as const, data: row, isDemoTopic: !!isGuestDemoTopic };
+      return { success: true as const, data: { ...row, linkedPyqs }, isDemoTopic: !!isGuestDemoTopic };
     }
 
     const conceptHi = (row.content.conceptHi ?? '').trim();
@@ -476,7 +498,7 @@ export async function getMainsTopicForPage(topicId: string, paperId: string) {
       richPayload: null,
     };
 
-    return { success: true as const, data: { ...row, content: masked }, isDemoTopic: false };
+    return { success: true as const, data: { ...row, content: masked, linkedPyqs }, isDemoTopic: false };
   } catch (error) {
     logger.error('getMainsTopicForPage: failed to fetch topic', error, {
       category: 'content',

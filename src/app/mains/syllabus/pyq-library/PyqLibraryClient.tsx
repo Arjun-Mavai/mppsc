@@ -12,6 +12,7 @@ import { PyqDeskControls } from './PyqDeskControls';
 import { PyqLibraryHeader } from './PyqLibraryHeader';
 import { PyqQuestionList, type QRow } from './PyqQuestionList';
 import { PyqLibraryErrorBoundary } from './PyqLibraryErrorBoundary';
+import { PyqNavigationGuide } from '@/components/mains/PyqNavigationGuide';
 import {
   isMainsPyqDemoPaper,
   MAINS_PYQ_DEMO_PAPER_NUMBER,
@@ -355,19 +356,22 @@ export function PyqLibraryClient({
 
       <div className="relative mx-auto max-w-3xl px-1 sm:px-1.5">
         <div className="relative mb-6 flex items-center justify-between gap-4">
-          <Button
-            variant="ghost"
-            className={cn(
-              'h-9 px-3',
-              themeDeep ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
-            )}
-            asChild
-          >
-            <Link href="/mains/syllabus">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {hi ? 'सिलेबस' : 'Syllabus'}
-            </Link>
-          </Button>
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              className={cn(
+                'h-9 px-3',
+                themeDeep ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+              )}
+              asChild
+            >
+              <Link href="/mains/syllabus">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                {hi ? 'सिलेबस' : 'Syllabus'}
+              </Link>
+            </Button>
+            <PyqNavigationGuide themeDeep={themeDeep} triggerType="icon" />
+          </div>
 
           <div className="flex items-center gap-2">
             <button

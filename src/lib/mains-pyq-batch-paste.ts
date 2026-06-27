@@ -6,6 +6,7 @@ export type NormalizedPasteItem = {
   questionId: string;
   /** Present only when JSON included these keys (allows partial update). */
   expertPatch?: { hi?: string | null; en?: string | null };
+  currentAffairsPatch?: string | null;
   variants: NormalizedVariant[];
 };
 
@@ -100,13 +101,31 @@ export function extractPasteItems(root: unknown): NormalizedPasteItem[] | { erro
       }
     }
 
+    const hasNewKit = row.value_addition_kit_en || row.value_addition_kit_hi || row.current_affairs_data_en || row.current_affairs_data_hi;
+    const caDataRaw = row.value_addition_kit ?? row.valueAdditionKit ?? row.current_affairs_data ?? row.currentAffairsData;
+    let currentAffairsPatch: string | null | undefined = undefined;
+    
+    if (hasNewKit) {
+      currentAffairsPatch = JSON.stringify({
+        value_addition_kit_en: row.value_addition_kit_en,
+        value_addition_kit_hi: row.value_addition_kit_hi,
+        current_affairs_data_en: row.current_affairs_data_en,
+        current_affairs_data_hi: row.current_affairs_data_hi
+      });
+    } else if (caDataRaw !== undefined) {
+      currentAffairsPatch = caDataRaw == null ? null : JSON.stringify(caDataRaw);
+    }
+
     const hasAny =
-      variants.length > 0 || (expertPatch !== undefined && Object.keys(expertPatch).length > 0);
+      variants.length > 0 || 
+      (expertPatch !== undefined && Object.keys(expertPatch).length > 0) || 
+      (currentAffairsPatch !== undefined);
     if (!hasAny) continue;
 
     out.push({
       questionId,
       ...(expertPatch ? { expertPatch } : {}),
+      ...(currentAffairsPatch !== undefined ? { currentAffairsPatch } : {}),
       variants,
     });
   }
@@ -147,9 +166,12 @@ function mergePasteItemsByQuestionId(rows: NormalizedPasteItem[]): NormalizedPas
       continue;
     }
     const ep = mergeExperts(prev.expertPatch, row.expertPatch);
+    const cap = row.currentAffairsPatch !== undefined ? row.currentAffairsPatch : prev.currentAffairsPatch;
+
     m.set(row.questionId, {
       questionId: row.questionId,
       ...(ep && (ep.hi !== undefined || ep.en !== undefined) ? { expertPatch: ep } : {}),
+      ...(cap !== undefined ? { currentAffairsPatch: cap } : {}),
       variants: mergeVariants(prev.variants, row.variants),
     });
   }
