@@ -382,7 +382,56 @@ export default function MainsLandingPage() {
           ))}
         </div>
 
-        <div className="mt-16 flex justify-center">
+        {/* 🚀 NEW: Massive PYQ Library Showcase */}
+        <div className="mt-16 w-full">
+          <Link
+            href="/mains/syllabus/pyq-library"
+            className="group relative flex flex-col overflow-hidden rounded-[2.5rem] px-6 py-8 sm:px-10 sm:py-12 shadow-2xl transition-all duration-500 hover:scale-[1.02] bg-gradient-to-br from-sky-950/90 via-slate-900 to-[#060a12] border-2 border-sky-900/50 hover:border-sky-500/50"
+          >
+            {/* Background glowing blobs */}
+            <div className="absolute -top-32 -right-32 h-80 w-80 rounded-full bg-sky-500/15 blur-3xl transition-transform duration-700 group-hover:scale-125" />
+            <div className="absolute -bottom-32 -left-32 h-80 w-80 rounded-full bg-emerald-500/15 blur-3xl transition-transform duration-700 group-hover:scale-125" />
+            
+            <div className="relative z-10 flex flex-col md:flex-row gap-8 md:items-center">
+               <div className="flex-1 space-y-5">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/20 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-widest text-sky-300 w-fit border border-sky-500/30">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    {hi ? 'नया स्मार्ट अनुभव ✨' : 'New Smart Experience ✨'}
+                  </div>
+                  
+                  <h3 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight text-white">
+                    {hi ? 'MPPSC मेंस PYQ लाइब्रेरी' : 'MPPSC Mains PYQ Library'}
+                  </h3>
+                  
+                  <p className="text-sm sm:text-lg font-semibold leading-relaxed max-w-2xl text-sky-200/90">
+                    {hi 
+                      ? 'पूरा सिलेबस और पिछले वर्षों के पेपर्स अब आपकी उंगलियों पर। एक "Bird Eye View" में स्मार्ट फ़िल्टर्स के साथ इमर्सिव रीडिंग का अनुभव लें।' 
+                      : 'The entire syllabus and past papers at your fingertips. Practice with smart filters in a seamless bird\'s eye view.'}
+                  </p>
+
+                  <div className="flex flex-wrap gap-2.5 pt-3">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-800/80 px-4 py-1.5 text-xs font-black uppercase tracking-wider text-slate-300">
+                      🎯 {hi ? 'वर्ष व पेपर' : 'Year & Paper'}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-800/80 px-4 py-1.5 text-xs font-black uppercase tracking-wider text-slate-300">
+                      📑 {hi ? 'खंड व विषय' : 'Parts & Topics'}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-800/80 px-4 py-1.5 text-xs font-black uppercase tracking-wider text-slate-300">
+                      ✍️ {hi ? 'मार्क्स फ़िल्टर' : 'Marks Filter'}
+                    </span>
+                  </div>
+               </div>
+
+               <div className="flex md:justify-end">
+                 <div className="h-16 w-16 sm:h-24 sm:w-24 rounded-full flex items-center justify-center transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12 shadow-[0_0_30px_rgba(14,165,233,0.3)] border-4 bg-sky-500/20 text-sky-400 border-sky-600/50">
+                   <ArrowRight className="h-8 w-8 sm:h-10 sm:w-10" />
+                 </div>
+               </div>
+            </div>
+          </Link>
+        </div>
+
+        <div className="mt-12 flex justify-center">
           <button
             type="button"
             disabled={isPending}

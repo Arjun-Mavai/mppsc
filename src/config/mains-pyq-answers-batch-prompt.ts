@@ -38,10 +38,31 @@ CROSS-PAPER DISCIPLINE (infer from unit / stem — apply what fits; never invent
 const JSON_SAFETY_ADDENDUM = `
 JSON SAFETY ADDENDUM
 - Output one raw JSON object only. No markdown fences, no commentary, no code block markers.
-- Never escape key names. Write "question_id":, not \\\"question_id\\\": or "question_id\\":.
-- Keep exact field names from the schema: schema_version, paper_number, exam_year, items, question_id, marks, expert_insights_hi, expert_insights_en, variants, variant_slot, style_label_hi, style_label_en, answer_hi, answer_en.
+- Never escape key names. Write "question_id":, not \\"question_id\\": or "question_id\\":.
+- Keep exact field names from the schema: schema_version, paper_number, exam_year, items, question_id, marks, expert_insights_hi, expert_insights_en, value_addition_kit_en, value_addition_kit_hi, current_affairs_data_en, current_affairs_data_hi, variants, variant_slot, style_label_hi, style_label_en, answer_hi, answer_en.
 - If a string is getting risky because of quotes, replace inner double quotes with single quotes or shorten the sentence.
 - Do not add extra wrapper keys, notes, or explanatory text outside the schema.`.trim();
+
+const CURRENT_AFFAIRS_RULES = `
+VALUE ADDITION KIT (CRITICAL MPPSC EXTRA MARKS)
+- You must enrich the answer with a highly concentrated "Value Addition Kit" AND an applied "Current Affairs Intro/Conclusion" format.
+- Provide the output in BOTH English and simple, easily understandable Hindi.
+
+★★★ STRICT COMPLETENESS & CONSISTENCY RULE (NEW & MANDATORY) ★★★
+1. NO EMPTY OBJECTS: You MUST populate AT LEAST ONE OR TWO arrays in the \`value_addition_kit\` for EVERY question. 
+   - If it's a static History question, use ASI Excavations, UNESCO sites, Tourism initiatives, or Historiography quotes as your "data".
+   - If it's a static Geography question, use IMD trends, NDMA guidelines, or NITI Aayog indices.
+2. NEVER LEAVE INTRO/CONCLUSION BLANK: The \`intro_hook\` and \`conclusion_way_forward\` MUST ALWAYS BE FILLED. NEVER output an empty string "". 
+   - If you cannot fit a specific kit fact into the intro/conclusion, write a powerful, marks-fetching historical/constitutional/philosophical statement relevant to the topic.
+3. PAIRING IS COMPULSORY: Every question that gets an intro_hook MUST also get a conclusion_way_forward. They work together.
+4. BREVITY: Kit points MUST be under 15 words. Intro/Conclusion under 25 words.
+
+CRITICAL MPPSC SUBJECT-WISE RULES (VALUE ADDITION STRATEGY):
+- PAPER 2 (Polity, Constitution, Health, Education, Sociology): MANDATORY to quote relevant Articles, Fundamental Rights (FR), Fundamental Duties (FD), or DPSP. Link to SDGs (3, 4, 5, 10, 16). Cite SC landmark verdicts, Law Commission, ASER, NFHS-5 data.
+- PAPER 4 (Ethics, Thinkers, Psychology & PubAd): ALWAYS integrate 2nd ARC Reports (e.g., 4th, 12th). Explicitly use Nolan Committee's 7 Principles or Max Weber's traits. Cite real-world cases (Swachh Indore, Operation Ganga). Skip SDGs/Articles here.
+- PAPER 3 (Economy, Science, Tech, Environment): MANDATORY SDGs (7, 8, 9, 13). STRICTLY use MP Economic Survey data, Union Budget highlights, or NITI Aayog Poverty Index. Mention MP Renewable targets, ISRO missions, Kuno Cheetah.
+- PAPER 1 (History & Geography): History: Focus on MP's cultural pride (GI Tags, UNESCO sites, ASI excavations), Tribal Heroes (Tantia Bhil/Bhima Nayak). Professionalism: Use historiography (quote Max Müller, Kautilya). Presentation: flowcharts for timelines. Geography: Quote IMD climate data, MP disaster stats, NITI Aayog Water Index. Presentation: suggest a "10-Second MP Map".
+`.trim();
 
 /**
  * One AI user message: batch of official stems → JSON with 2 variants per stem (HI + EN) + optional expert insights per stem.
@@ -101,6 +122,8 @@ ${MARK_POINT_PRESENTATION(isEssay)}
 
 ${SUBJECT_LENS}
 
+${CURRENT_AFFAIRS_RULES}
+
 ${lensBlocks.join('\n')}
 
 ${JSON_SAFETY_ADDENDUM}
@@ -119,6 +142,30 @@ ${stems}
       "marks": <number>,
       "expert_insights_hi": "<long structured Hindi — see EXPERT INSIGHTS CONTRACT below>",
       "expert_insights_en": ${isPureHindi ? "null" : '"<same strategic depth in independent English — NOT translation>"'},
+      "value_addition_kit_en": {
+        "data_facts_and_evidence": ["1 crisp data point with SOURCE and YEAR (e.g., NITI Aayog 2025)"],
+        "reports_frameworks_and_thinkers": ["1 Committee, Report, Judgement, or Thinker quote"],
+        "anchors_sdgs_and_constitution": ["Exact SDG Number or Constitutional Article"],
+        "mp_specific_examples_and_schemes": ["1 MP-specific scheme, model, or GI tag"],
+        "best_practices_and_case_studies": ["1 real-world implementation case study"]
+      },
+      "value_addition_kit_hi": {
+        "data_facts_and_evidence": ["१ सटीक तथ्य स्रोत और वर्ष के साथ (उदा. आर्थिक सर्वेक्षण २०२५-२६)"],
+        "reports_frameworks_and_thinkers": ["१ समिति, रिपोर्ट या विचारक"],
+        "anchors_sdgs_and_constitution": ["सटीक SDG या संविधान अनुच्छेद"],
+        "mp_specific_examples_and_schemes": ["म.प्र. का विशिष्ट उदाहरण या योजना"],
+        "best_practices_and_case_studies": ["१ वास्तविक केस स्टडी"]
+      },
+      "current_affairs_data_en": {
+        "intro_hook": "A 20-word striking introduction using a fact/article from the kit.",
+        "conclusion_way_forward": "A 20-word forward-looking conclusion using an SDG/Report from the kit.",
+        "keywords": ["tag1", "tag2", "tag3"]
+      },
+      "current_affairs_data_hi": {
+        "intro_hook": "उत्तर की शुरुआत के लिए डेटा, इंडेक्स या अनुच्छेद का उपयोग कैसे करें। (Max 25 words in simple Hindi)",
+        "conclusion_way_forward": "उत्तर के अंत में योजना, रिपोर्ट या SDG का उपयोग कैसे करें। (Max 25 words in simple Hindi)",
+        "keywords": ["टैग1", "टैग2", "टैग3"]
+      },
       "variants": [
         {
           "variant_slot": 1,

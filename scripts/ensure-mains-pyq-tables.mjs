@@ -58,4 +58,7 @@ await tryAlter(`ALTER TABLE mains_content ADD COLUMN rich_payload text`);
 /** Drizzle 0026 — hide papers from public PYQ desk without deleting stems. */
 await tryAlter(`ALTER TABLE mains_pyq_papers ADD COLUMN is_hidden integer DEFAULT 0 NOT NULL`);
 
+/** Add current affairs data column */
+await tryAlter(`ALTER TABLE mains_pyq_questions ADD COLUMN current_affairs_data text`);
+
 console.log('Done: mains PYQ + vault tables ensured');

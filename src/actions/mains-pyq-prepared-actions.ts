@@ -28,6 +28,8 @@ type PyqQuestionWithVariantsRow = {
   id: string;
   part: string;
   unitNumber: number;
+  unitTitleHi?: string | null;
+  unitTitleEn?: string | null;
   marks: number;
   questionType: string;
   questionNumber: string;
@@ -35,6 +37,7 @@ type PyqQuestionWithVariantsRow = {
   questionEn: string | null;
   expertInsightsHi: string | null;
   expertInsightsEn: string | null;
+  currentAffairsData?: Record<string, unknown> | null;
   preparedVariants?: Array<{
     variantSlot: number;
     styleLabel: string | null;
@@ -49,6 +52,8 @@ function mapPyqPaperPublicQuestions(qs: PyqQuestionWithVariantsRow[]) {
     id: q.id,
     part: q.part,
     unitNumber: q.unitNumber,
+    unitTitleHi: q.unitTitleHi ?? null,
+    unitTitleEn: q.unitTitleEn ?? null,
     marks: q.marks,
     questionType: q.questionType,
     questionNumber: q.questionNumber,
@@ -56,6 +61,7 @@ function mapPyqPaperPublicQuestions(qs: PyqQuestionWithVariantsRow[]) {
     questionEn: q.questionEn,
     expertInsightsHi: q.expertInsightsHi,
     expertInsightsEn: q.expertInsightsEn,
+    currentAffairsData: q.currentAffairsData ?? null,
     variants: (q.preparedVariants ?? []).map((v) => ({
       slot: v.variantSlot,
       styleLabel: v.styleLabel,
@@ -93,11 +99,25 @@ const PYQ_VARIANT_COLS_LEGACY = {
   updatedAt: true,
 } as const;
 
+function safeParseJson(data: unknown): Record<string, unknown> | null {
+  if (!data) return null;
+  if (typeof data === 'object') return data as Record<string, unknown>;
+  if (typeof data === 'string') {
+    try {
+      return JSON.parse(data);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
 function normalizeLoadedPyqRows(rows: PyqQuestionWithVariantsRow[]): PyqQuestionWithVariantsRow[] {
   return rows.map((q) => ({
     ...q,
     expertInsightsHi: q.expertInsightsHi ?? null,
     expertInsightsEn: q.expertInsightsEn ?? null,
+    currentAffairsData: safeParseJson(q.currentAffairsData),
     preparedVariants: (q.preparedVariants ?? []).map((v) => ({
       ...v,
       styleLabelHi: v.styleLabelHi ?? null,
@@ -198,6 +218,34 @@ const cachedGetMainsPyqPaperPublic = unstable_cache(
       if (!paper || Boolean(paper.isHidden)) return { success: false as const, error: 'not_found' as const };
 
       const qs = await loadPaperQuestionsWithVariantsRelational(pyqPaperId);
+
+      // 🛡️ HOTFIX: If unit titles are missing (e.g., older PYQ imports), patch them from authoritative syllabus
+      try {
+        const { mainsPapers, mainsUnits } = await import('@/db/schema');
+        const basePaper = await db.query.mainsPapers.findFirst({
+          where: and(eq(mainsPapers.paperNumber, paper.paperNumber), eq(mainsPapers.examType, 'mppsc_mains'))
+        });
+        if (basePaper) {
+          const units = await db.query.mainsUnits.findMany({
+            where: eq(mainsUnits.paperId, basePaper.id)
+          });
+          const unitMap = new Map();
+          for (const u of units) {
+            unitMap.set(`${u.part}-${u.unitNumber}`, u);
+          }
+          for (const q of qs) {
+            if (!q.unitTitleHi || !q.unitTitleEn) {
+              const matched = unitMap.get(`${q.part}-${q.unitNumber}`);
+              if (matched) {
+                q.unitTitleHi = matched.titleHi;
+                q.unitTitleEn = matched.titleEn;
+              }
+            }
+          }
+        }
+      } catch (err) {
+        logger.error('[getMainsPyqPaperPublic] failed to patch unit titles', err as Error);
+      }
 
       return {
         success: true as const,
@@ -537,8 +585,8 @@ export async function adminPastePyqAnswersBatchJson(pyqPaperId: string, rawText:
           continue;
         }
 
-        if (item.expertPatch && (item.expertPatch.hi !== undefined || item.expertPatch.en !== undefined)) {
-          const insightPatch: Partial<typeof mainsPyqQuestions.$inferInsert> = {};
+        const insightPatch: Partial<typeof mainsPyqQuestions.$inferInsert> = {};
+        if (item.expertPatch) {
           if (item.expertPatch.hi !== undefined) {
             insightPatch.expertInsightsHi =
               item.expertPatch.hi != null && item.expertPatch.hi.length > 0 ? item.expertPatch.hi : null;
@@ -547,10 +595,14 @@ export async function adminPastePyqAnswersBatchJson(pyqPaperId: string, rawText:
             insightPatch.expertInsightsEn =
               item.expertPatch.en != null && item.expertPatch.en.length > 0 ? item.expertPatch.en : null;
           }
-          if (Object.keys(insightPatch).length > 0) {
-            await tx.update(mainsPyqQuestions).set(insightPatch).where(eq(mainsPyqQuestions.id, qid));
-            insightQuestionsTouched++;
-          }
+        }
+        if (item.currentAffairsPatch !== undefined) {
+          insightPatch.currentAffairsData = item.currentAffairsPatch;
+        }
+
+        if (Object.keys(insightPatch).length > 0) {
+          await tx.update(mainsPyqQuestions).set(insightPatch).where(eq(mainsPyqQuestions.id, qid));
+          insightQuestionsTouched++;
         }
 
         for (const v of item.variants) {
@@ -603,6 +655,7 @@ export async function getMainsPyqPaperPublic(pyqPaperId: string) {
       questionEn: null,
       expertInsightsHi: null,
       expertInsightsEn: null,
+      currentAffairsData: null,
       variants: [] as typeof q.variants,
       isLocked: true as const,
     }));
@@ -616,6 +669,7 @@ export async function getMainsPyqPaperPublic(pyqPaperId: string) {
       ...q,
       expertInsightsHi: isPreview ? q.expertInsightsHi : null,
       expertInsightsEn: isPreview ? q.expertInsightsEn : null,
+      currentAffairsData: isPreview ? q.currentAffairsData : null,
       variants: isPreview ? q.variants : [],
       isLocked: !isPreview,
     };

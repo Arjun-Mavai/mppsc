@@ -3,6 +3,7 @@
 import { memo, useMemo, useState, useCallback } from 'react';
 import { Lock, Layers, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { PyqAnswerProse } from '@/components/mains/PyqAnswerProse';
@@ -12,6 +13,13 @@ import {
   mainsSyllabusTileSkin,
   mainsSyllabusVariantBadge,
 } from '@/components/mains/mainsSyllabusTileSkin';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { PyqExpertInsightsRenderer } from '@/components/mains/PyqExpertInsightsRenderer';
 import { QuickFeedback } from '@/features/tests/components/QuickFeedback';
 import {
@@ -23,12 +31,15 @@ export type QRow = {
   id: string;
   part: string;
   unitNumber: number;
+  unitTitleHi?: string | null;
+  unitTitleEn?: string | null;
   marks: number;
   questionNumber: string;
   questionHi: string;
   questionEn: string | null;
   expertInsightsHi: string | null;
   expertInsightsEn: string | null;
+  currentAffairsData?: any | null;
   variants: {
     slot: number;
     styleLabel: string | null;
@@ -54,6 +65,12 @@ interface PyqQuestionListProps {
   showGlobalFilters: boolean;
 }
 
+const NEW_CA_TEXT_STYLE = {
+  color: '#0fffff',
+  WebkitTextStroke: '0.5px #082f49',
+  textShadow: '0px 1px 0px #0369a1, 0px 2px 0px #075985, 0px 3px 0px #082f49, 0px 4px 6px rgba(0,0,0,0.8)'
+};
+
 export const PyqQuestionList = memo(function PyqQuestionList({
   questions,
   paperNumber,
@@ -75,6 +92,8 @@ export const PyqQuestionList = memo(function PyqQuestionList({
   const [openIds, setOpenIds] = useState<Record<string, boolean>>({});
   const [insightsOpenIds, setInsightsOpenIds] = useState<Record<string, boolean>>({});
   const [marksFilter, setMarksFilter] = useState<number | 'ALL'>('ALL');
+  const [unitFilter, setUnitFilter] = useState<string | 'ALL'>('ALL');
+  const [showSubjectFilter, setShowSubjectFilter] = useState(false);
 
   // ⚡ Stable callbacks prevent cascading re-renders
   const handleQOpen = useCallback((qId: string, val: boolean) => {
@@ -95,6 +114,28 @@ export const PyqQuestionList = memo(function PyqQuestionList({
     return Array.from(s).sort((a, b) => a - b);
   }, [questions]);
 
+  const availableUnits = useMemo(() => {
+    const map = new Map<string, { id: string; part: string; num: number; titleHi: string; titleEn: string }>();
+    questions.forEach(q => {
+      if (partFilter !== 'ALL' && String(q.part).toUpperCase() !== partFilter) return;
+
+      const id = `${String(q.part).toUpperCase()}-${q.unitNumber}`;
+      if (!map.has(id)) {
+        map.set(id, {
+          id,
+          part: String(q.part).toUpperCase(),
+          num: q.unitNumber,
+          titleHi: q.unitTitleHi || (q.part !== 'NONE' ? `खंड ${q.part} - इकाई ${q.unitNumber}` : `इकाई ${q.unitNumber}`),
+          titleEn: q.unitTitleEn || (q.part !== 'NONE' ? `Part ${q.part} - Unit ${q.unitNumber}` : `Unit ${q.unitNumber}`)
+        });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => {
+      if (a.part !== b.part) return a.part.localeCompare(b.part);
+      return a.num - b.num;
+    });
+  }, [questions, partFilter]);
+
   const filtered = useMemo(() => {
     let list = questions;
     if (partFilter !== 'ALL') {
@@ -103,8 +144,14 @@ export const PyqQuestionList = memo(function PyqQuestionList({
     if (marksFilter !== 'ALL') {
       list = list.filter((q) => q.marks === marksFilter);
     }
+    if (unitFilter !== 'ALL') {
+      const isValid = availableUnits.some(u => u.id === unitFilter);
+      if (isValid) {
+        list = list.filter((q) => `${String(q.part).toUpperCase()}-${q.unitNumber}` === unitFilter);
+      }
+    }
     return list;
-  }, [questions, partFilter, marksFilter]);
+  }, [questions, partFilter, marksFilter, unitFilter, availableUnits]);
 
   const isDemoPaper = isMainsPyqDemoPaper(examYear, paperNumber);
 
@@ -163,8 +210,100 @@ export const PyqQuestionList = memo(function PyqQuestionList({
                 ))}
               </div>
 
+              {/* Toggle Subject Filter Button */}
+              <button
+                type="button"
+                onClick={() => vaultUnlocked ? setShowSubjectFilter(!showSubjectFilter) : toast(hi ? "यह एक प्रीमियम फ़ीचर है। सब्सक्राइब करें 💎" : "Premium feature. Subscribe to unlock 💎", {
+                  style: { background: '#ecfdf5', color: '#064e3b', border: '1px solid #34d399' }
+                })}
+                className={cn(
+                  "flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 rounded-full transition-all active:scale-95 relative",
+                  themeDeep 
+                    ? "bg-slate-800 border-[1.5px] border-slate-700 hover:bg-slate-700" 
+                    : "bg-white border-[1.5px] border-slate-200 shadow-sm hover:bg-slate-50"
+                )}
+                title={hi ? "विषय अनुसार फ़िल्टर" : "Filter by Topic"}
+              >
+                <div className="flex items-center justify-center h-4 w-4 sm:h-[18px] sm:w-[18px] rounded-full border-[2.5px] border-[#FF9933] bg-white relative">
+                   <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-[#138808]"></div>
+                </div>
+                {!vaultUnlocked && (
+                  <div className="absolute -bottom-1 -right-1 bg-gradient-to-br from-emerald-300 to-emerald-600 dark:from-emerald-500 dark:to-emerald-700 rounded-full p-[2px] shadow-[0_2px_4px_rgba(16,185,129,0.4)] ring-[1.5px] ring-white dark:ring-slate-900">
+                    <Lock className="h-[10px] w-[10px] sm:h-3 sm:w-3 text-white dark:text-emerald-50 drop-shadow-sm" />
+                  </div>
+                )}
+              </button>
+
               {/* Separator */}
               <div className="hidden sm:block h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
+
+              {/* Subject / Unit Filter Dropdown */}
+              <AnimatePresence>
+                {showSubjectFilter && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95, filter: 'blur(2px)' }}
+                    animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                    exit={{ opacity: 0, scale: 0.95, filter: 'blur(2px)' }}
+                    transition={{ duration: 0.15 }}
+                    className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 z-[100]"
+                  >
+                    <div className="relative w-full sm:w-64">
+                  <Select value={unitFilter} onValueChange={(val) => setUnitFilter(val)}>
+                    <SelectTrigger
+                      className={cn(
+                        'h-10 w-full rounded-2xl px-4 text-[13px] font-bold shadow-sm ring-offset-0 transition-all focus:ring-0',
+                        themeDeep
+                          ? 'border-slate-700 bg-slate-900 text-slate-200 hover:border-indigo-500/50 hover:bg-slate-800 [&_svg]:text-slate-400'
+                          : 'border-slate-200 bg-white text-slate-700 hover:border-indigo-500/40 hover:bg-slate-50'
+                      )}
+                    >
+                      <SelectValue placeholder={hi ? 'सभी टॉपिक्स' : 'All Topics'} />
+                    </SelectTrigger>
+                    <SelectContent
+                      position="popper"
+                      sideOffset={5}
+                      viewportClassName="max-h-[280px] overflow-y-auto py-1.5 no-scrollbar"
+                      className={cn(
+                        'z-[200] w-[min(100%,var(--radix-select-trigger-width))] min-w-[240px] rounded-2xl shadow-xl',
+                        themeDeep
+                          ? 'border border-slate-700 bg-slate-900 text-slate-100'
+                          : 'border border-slate-200 bg-white text-slate-800'
+                      )}
+                    >
+                      <SelectItem
+                        value="ALL"
+                        className={cn(
+                          'cursor-pointer py-2.5 px-3 text-[13px] font-bold transition-colors rounded-xl mx-1 my-0.5',
+                          themeDeep
+                            ? 'text-slate-300 focus:bg-slate-800 focus:text-white'
+                            : 'text-slate-700 focus:bg-indigo-50 focus:text-indigo-950'
+                        )}
+                      >
+                        {hi ? 'सभी टॉपिक्स (Syllabus topic-wise filter)' : 'All Topics (Syllabus topic-wise filter)'}
+                      </SelectItem>
+                      {availableUnits.map((u) => (
+                        <SelectItem
+                          key={u.id}
+                          value={u.id}
+                          className={cn(
+                            'cursor-pointer py-2.5 px-3 text-[13px] font-semibold transition-colors rounded-xl mx-1 my-0.5',
+                            themeDeep
+                              ? 'text-slate-300 focus:bg-slate-800 focus:text-white'
+                              : 'text-slate-700 focus:bg-indigo-50 focus:text-indigo-950'
+                          )}
+                        >
+                          {hi ? u.titleHi : u.titleEn}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+              {/* Separator */}
+              <div className="hidden sm:block h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1 mt-2 sm:mt-0" />
 
               {/* Marks Filter */}
               <div className="flex flex-wrap gap-2">
@@ -346,7 +485,7 @@ const PyqQuestionRow = memo(({
   }
 
   const insightsText = insightsFor(q);
-  const hasInsights = insightsText.length > 0;
+  const hasInsights = insightsText.length > 0 || (q.currentAffairsData && Object.keys(q.currentAffairsData).length > 0);
 
   return (
     <li
@@ -385,9 +524,22 @@ const PyqQuestionRow = memo(({
               themeDeep ? 'text-slate-400' : 'text-slate-700'
             )}
           >
-            {effectiveHi
-              ? `${examYear > 0 ? `MPPSC PYQ ${examYear} · ` : ''}खंड ${q.part} · इकाई ${q.unitNumber} · प्रश्न ${q.questionNumber}`
-              : `${examYear > 0 ? `MPPSC PYQ ${examYear} · ` : ''}Part ${q.part} · U${q.unitNumber} · ${q.questionNumber}`}
+            {(() => {
+              const wordLimit = (() => {
+                if (q.marks === 2) return effectiveHi ? '20 शब्द' : '20 Words';
+                if (q.marks === 7) return effectiveHi ? '60 शब्द' : '60 Words';
+                if (q.marks === 10) return effectiveHi ? '200 शब्द' : '200 Words';
+                if (q.marks === 3) return effectiveHi ? '10 शब्द' : '10 Words';
+                if (q.marks === 5) return effectiveHi ? '50 शब्द' : '50 Words';
+                if (q.marks === 11) return effectiveHi ? '200 शब्द' : '200 Words';
+                return '';
+              })();
+              const limitStr = wordLimit ? ` · (${wordLimit})` : '';
+              
+              return effectiveHi
+                ? `${examYear > 0 ? `PYQ ${examYear} · ` : ''}खंड ${q.part} · इकाई ${q.unitNumber} · प्रश्न ${q.questionNumber}${limitStr}`
+                : `${examYear > 0 ? `PYQ ${examYear} · ` : ''}Part ${q.part} · U${q.unitNumber} · ${q.questionNumber}${limitStr}`;
+            })()}
           </p>
           <p
             className={cn(
@@ -505,42 +657,51 @@ const PyqQuestionRow = memo(({
                             <Trophy className="h-4.5 w-4.5 shrink-0 text-amber-500" />
                             {effectiveHi ? 'एक्सपर्ट टिप्स' : 'Expert Tips'}
                           </div>
-                          {!insightsOpen && (
-                            <motion.div 
-                               initial={{ opacity: 0, x: 10, scale: 0.9 }}
-                               animate={{ opacity: 1, x: 0, scale: 1 }}
-                               transition={{ duration: 0.6 }}
-                               className="absolute left-[102%] top-[-15px] flex flex-col-reverse items-end pointer-events-none select-none z-30"
-                             >
-                               {/* 🤚 Hand - Tilted sharply up-left, finger tip touches arrow base */}
-                               <div className="text-3xl filter drop-shadow-md rotate-[35deg] mr-[-15px] mb-[-10px] z-10">
-                                 👈
-                               </div>
+                          {!insightsOpen && !!q.currentAffairsData && (
+                            <motion.div
+                              initial={{ opacity: 0, x: 15, y: 10, scale: 0.8 }}
+                              animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+                              transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
+                              className="absolute left-[98%] top-[10px] w-[100px] h-[70px] pointer-events-none select-none z-30 ml-2"
+                            >
+                               {/* 💡 3D Pure CSS Text (No BG) */}
+                              <div 
+                                className="absolute left-[5px] sm:left-[15px] top-[-22px] sm:top-[-28px] whitespace-nowrap text-[12px] sm:text-[14px] font-black uppercase tracking-widest -rotate-6 z-10"
+                                style={NEW_CA_TEXT_STYLE}
+                              >
+                                {effectiveHi ? 'यहाँ क्लिक करें ✨' : 'CLICK HERE ✨'}
+                              </div>
 
-                               {/* 🎨 Curvy Sharp Arrow - Curves from finger tip up to the button */}
-                               <svg width="54" height="54" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg" className="filter drop-shadow-[0_2px_6px_rgba(236,72,153,0.45)]">
-                                 <path 
-                                   d="M45 48C30 40 15 25 6 15" 
-                                   stroke="#ec4899" 
-                                   strokeWidth="4.5" 
-                                   strokeLinecap="round" 
-                                 />
-                                 <path 
-                                   d="M22 15L6 15L10 31" 
-                                   stroke="#ec4899" 
-                                   strokeWidth="4.5" 
-                                   strokeLinecap="round" 
-                                   strokeLinejoin="round" 
-                                 />
-                               </svg>
-                             </motion.div>
-                           )}                        </div>
+                              {/* 🎨 Curvy Pink Onboarding Arrow sweeping UP from below with filled arrow head */}
+                              <svg width="60" height="60" viewBox="0 0 60 60" fill="none" className="filter drop-shadow-[0_3px_5px_rgba(236,72,153,0.5)] w-[50px] sm:w-[60px] absolute left-0 top-0">
+                                <path
+                                  d="M50 50C40 30 25 15 8 15"
+                                  stroke="#ec4899"
+                                  strokeWidth="5"
+                                  strokeLinecap="round"
+                                />
+                                <path
+                                  d="M 5,15 L 20,6 L 16,24 Z"
+                                  fill="#ec4899"
+                                  stroke="#ec4899"
+                                  strokeWidth="2"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+
+                              {/* 🚶‍♂️ Walking Man - Placed at the very bottom tail of the arrow */}
+                              <div className="absolute left-[45px] sm:left-[55px] top-[30px] sm:top-[35px] text-[32px] sm:text-[36px] filter drop-shadow-md">
+                                🚶‍♂️
+                              </div>
+                            </motion.div>
+                          )}                        </div>
                       </div>
                       
                         {insightsOpen && (
                           <div className="w-full">
                                 <PyqExpertInsightsRenderer
                                   insightsText={insightsText}
+                                  currentAffairsData={q.currentAffairsData}
                                   themeDeep={themeDeep}
                                   hi={effectiveHi}
                                 />
