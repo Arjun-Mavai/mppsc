@@ -124,7 +124,7 @@ type TopicRow = {
   titleHi: string;
   titleEn: string;
   status?: string;
-  content?: { id: string; updatedAt?: Date | null } | null;
+  content?: { id: string; updatedAt?: Date | string | null } | null;
 };
 
 type UnitRow = {
@@ -308,15 +308,17 @@ export function MainsAdminClient() {
     }
   };
 
-  const formatContentUpdated = (d?: Date | null) => {
-    if (!d || Number.isNaN(d.getTime())) return null;
+  const formatContentUpdated = (d?: Date | string | null) => {
+    if (!d) return null;
+    const dateObj = typeof d === 'string' ? new Date(d) : d;
+    if (Number.isNaN(dateObj.getTime())) return null;
     try {
       return new Intl.DateTimeFormat('en-IN', {
         dateStyle: 'medium',
         timeStyle: 'short',
-      }).format(d);
+      }).format(dateObj);
     } catch {
-      return d.toISOString().slice(0, 16);
+      return dateObj.toISOString().slice(0, 16);
     }
   };
 
