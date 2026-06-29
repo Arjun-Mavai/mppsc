@@ -4,7 +4,7 @@ import { sendHumanRequestTelegramNotification } from '@/lib/telegram';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { userId, name, email, phone } = body;
+    const { userId, name, email, phone, path } = body;
 
     if (!userId) {
       return Response.json({ error: 'Invalid metrics payload' }, { status: 400 });
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     // Log internally
     logger.warn(`Content Print Attempt Detected`, {
       category: 'system',
-      metadata: { userId, name, email, phone },
+      metadata: { userId, name, email, phone, path },
     });
 
     const formattedTime = new Date().toLocaleString('en-IN', {
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
       `📧 *Email:* \`${email || 'Unknown'}\`\n` +
       `📞 *Phone:* \`${phone || 'Unknown'}\`\n` +
       `🆔 *User ID:* \`${userId}\`\n\n` +
-      `_User triggered print/PDF generation._\n\n` +
+      `_User triggered print/PDF generation on path:_\n\`${path || 'Unknown'}\`\n\n` +
       `⏱️ *Time:* _${formattedTime} IST_`;
 
     await sendHumanRequestTelegramNotification(message);

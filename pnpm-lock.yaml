@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@hookform/resolvers':
-        specifier: ^5.2.2
+        specifier: ^5.4.0
         version: 5.4.0(react-hook-form@7.79.0(react@19.2.6))
       '@libsql/client':
         specifier: ^0.17.2
@@ -24,7 +24,7 @@ importers:
         specifier: ^2.1.16
         version: 2.1.17(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@radix-ui/react-label':
-        specifier: ^2.1.8
+        specifier: ^2.1.9
         version: 2.1.9(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@radix-ui/react-progress':
         specifier: ^1.1.8
@@ -36,7 +36,7 @@ importers:
         specifier: ^2.2.6
         version: 2.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@radix-ui/react-slot':
-        specifier: ^1.2.4
+        specifier: ^1.2.5
         version: 1.2.5(@types/react@19.2.14)(react@19.2.6)
       '@react-email/components':
         specifier: ^1.0.7
@@ -126,7 +126,7 @@ importers:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       radix-ui:
-        specifier: ^1.4.3
+        specifier: ^1.5.0
         version: 1.5.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       razorpay:
         specifier: ^2.9.6
@@ -141,7 +141,7 @@ importers:
         specifier: ^6.1.1
         version: 6.1.2(react@19.2.6)
       react-hook-form:
-        specifier: ^7.71.1
+        specifier: ^7.79.0
         version: 7.79.0(react@19.2.6)
       resend:
         specifier: ^6.9.1
@@ -162,7 +162,7 @@ importers:
         specifier: ^13.0.0
         version: 13.0.2
       zod:
-        specifier: ^4.3.6
+        specifier: ^4.4.3
         version: 4.4.3
       zustand:
         specifier: ^5.0.10
