@@ -44,7 +44,8 @@ export function PrintWatermark() {
           userId: user.id,
           name: user.name,
           email: user.email,
-          phone: user.phone, // Bhai, mobile ki jagah phone proper property use ki hai yaha
+          phone: user.phone,
+          path: window.location.pathname + window.location.search,
         }),
       });
       if (!res.ok) throw new Error('Failed to log');

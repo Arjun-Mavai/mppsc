@@ -30,6 +30,7 @@ import {
   CreditCard,
   BarChart3,
   MessageSquare,
+  Star,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -162,6 +163,12 @@ const ADMIN_ROUTES = [
     label: 'Reset Password',
     icon: KeyRound,
     description: 'Direct password reset',
+  },
+  {
+    href: '/admin/testimonials',
+    label: 'Testimonials',
+    icon: Star,
+    description: 'Manage homepage testimonials',
   },
 ];
 

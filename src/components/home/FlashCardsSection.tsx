@@ -121,7 +121,7 @@ export function FlashCardsSection() {
                 {/* Back */}
                 <div className="absolute inset-0 flex h-full w-full [transform:rotateY(180deg)] flex-col justify-between overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 p-8 text-white [backface-visibility:hidden]">
                   {/* Texture */}
-                  <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] text-white opacity-20"></div>
+                  <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')] opacity-20"></div>
                   <div className="absolute -right-20 -bottom-20 h-60 w-60 rounded-full bg-slate-500 opacity-30 blur-3xl"></div>
 
                   <div className="relative">

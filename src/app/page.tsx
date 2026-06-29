@@ -61,6 +61,8 @@ export default function Home() {
 
       <UpgradePage />
 
+      <Testimonials />
+
       {/* SEO-Rich Content Section (Server Rendered) */}
       <section className="bg-white py-16">
         <div className="mx-auto max-w-4xl px-6">
@@ -146,7 +148,6 @@ export default function Home() {
       </section>
 
       {/* AppInstallGuide moved to UpgradePage */}
-      <Testimonials />
     </main>
   );
 }

@@ -253,6 +253,27 @@
       "when": 1782452144448,
       "tag": "0035_foamy_maximus",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "6",
+      "when": 1782559631841,
+      "tag": "0036_windy_colonel_america",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "6",
+      "when": 1782559832015,
+      "tag": "0037_dashing_jazinda",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "6",
+      "when": 1782726192846,
+      "tag": "0038_lethal_james_howlett",
+      "breakpoints": true
     }
   ]
 }

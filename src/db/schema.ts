@@ -560,6 +560,28 @@ export const freeQuizAttempts = sqliteTable(
   ]
 );
 
+// Testimonials Table
+export const testimonials = sqliteTable(
+  'testimonials',
+  {
+    id: text('id').primaryKey(),
+    name: text('name').notNull(),
+    role: text('role').default('Aspirant'),
+    location: text('location'),
+    comment: text('comment').notNull(),
+    image: text('image'), // optional image path
+    stars: integer('stars').default(5),
+    isActive: integer('is_active', { mode: 'boolean' }).default(true),
+    displayOrder: integer('display_order').default(0),
+    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all', 'mppolice'] }).default('mppsc').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => [
+    index('idx_testimonials_active').on(table.isActive),
+    index('idx_testimonials_order').on(table.displayOrder),
+  ]
+);
+
 // User Feedback Table
 export const feedbacks = sqliteTable(
   'feedbacks',
