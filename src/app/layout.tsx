@@ -13,6 +13,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary';
 import dynamic from 'next/dynamic';
 import { VersionManager } from '@/components/VersionManager';
+import { PrintWatermark } from '@/components/PrintWatermark';
 import Script from 'next/script';
 
 const InstallPrompt = dynamic(() =>
@@ -193,6 +194,7 @@ export default async function RootLayout({
             <AppFooter />
             <GlobalLockModal />
             <ScrollToTop />
+            <PrintWatermark />
           </Providers>
           <Suspense fallback={null}>
             <SupportButton />

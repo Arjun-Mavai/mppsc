@@ -233,6 +233,7 @@ export async function sendAdminReply(conversationId: string, text: string, optio
 
     let apiSuccess = false;
     let metaMessageId: string | undefined = undefined;
+    let errorMessage = 'Failed to send via API';
 
     if (conv.platform === 'telegram') {
       const BOT_TOKEN = process.env.TELEGRAM_CONVERSATION_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
@@ -260,6 +261,14 @@ export async function sendAdminReply(conversationId: string, text: string, optio
         } else {
           const errorText = await res.text();
           logger.error('Telegram Admin Reply API error', new Error(errorText), { category: 'telegram' });
+          try {
+            const errData = JSON.parse(errorText);
+            if (errData.description) {
+              errorMessage = `Telegram Error: ${errData.description}`;
+            }
+          } catch (e) {
+            // ignore parse error
+          }
         }
       }
     } else if (conv.platform === 'whatsapp') {
@@ -304,6 +313,14 @@ export async function sendAdminReply(conversationId: string, text: string, optio
         } else {
           const errorText = await res.text();
           logger.error('WhatsApp Admin Reply API error', new Error(errorText), { category: 'api' });
+          try {
+            const errData = JSON.parse(errorText);
+            if (errData.error?.message) {
+              errorMessage = `WhatsApp Error: ${errData.error.message}`;
+            }
+          } catch (e) {
+            // ignore parse error
+          }
         }
       }
     }
@@ -312,7 +329,7 @@ export async function sendAdminReply(conversationId: string, text: string, optio
       await saveOutgoingMessage(conversationId, text, 'admin', metaMessageId);
       return { success: true };
     } else {
-      return { success: false, error: 'Failed to send via API' };
+      return { success: false, error: errorMessage };
     }
   } catch (error) {
     logger.error('Error sending admin reply', error, { category: 'api' });
