@@ -11,6 +11,14 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 
 const TESTIMONIALS = [
   {
+    name: 'Palak sahu',
+    role: 'Aspirant',
+    location: 'Indore',
+    comment:
+      'Unlike you,no one is providing such quality analysis at such depth. Serious aspirants can definately take its holistic advantage for sure! The best part is you have such robust feedback system which ensured that every relevant suggestions should be heard.',
+    stars: 5,
+  },
+  {
     name: 'Arjun Gurjar',
     role: 'Aspirant',
     location: 'Gwalior',
