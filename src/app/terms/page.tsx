@@ -106,7 +106,7 @@ export default function TermsOfServicePage() {
               &ldquo;as-available&rdquo; basis. While we strive for the highest degree of accuracy,
               we do not guarantee specific exam results or absolute factual error-freedom. To the
               maximum extent permitted by law, our liability is limited to the subscription fee paid
-              by the user in the twelve (12) months preceding the claim.
+              by the user in the six (6) months preceding the claim.
             </p>
           </section>
 

@@ -174,7 +174,7 @@ export function Testimonials() {
                     <Image
                       height={48}
                       width={48}
-                      src={user?.image || '/assets/images/user.png'}
+                      src={user?.image || '/default-avatar.png'}
                       alt={user.name}
                       className="h-full w-full object-cover"
                     />
