@@ -185,6 +185,7 @@ export function PrintWatermark() {
       */}
       <div className="sys-layer-core" aria-hidden="true" role="presentation">
         <div className="ui-frame-bounds">
+          <div className="sys-warn-node" style={{ color: 'rgba(0,0,0,0.2)', fontSize: '2.5rem', marginBottom: '0.5rem' }}>MPPSC ZenScroll</div>
           <div className="metrics-label-uid">{user.name} • {user.email}</div>
           <div className="sys-warn-node">CONFIDENTIAL & PROTECTED</div>
           <div className="sys-sub-node">
