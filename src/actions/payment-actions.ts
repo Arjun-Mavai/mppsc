@@ -20,6 +20,7 @@ import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import { z } from 'zod';
 import { after } from 'next/server';
+import { headers } from 'next/headers';
 import { sendLeadNotification } from '@/lib/telegram';
 import {
   notifyAdminOnVerificationFailure,
@@ -39,6 +40,10 @@ const startPaymentSchema = z.object({
   source: z.string().optional(),
   planType: z.enum(['lite', 'pro', 'upgrade', 'mains', 'combo']),
   examType: z.enum(['upsc', 'mppsc', 'mppolice']).default('mppsc'),
+  consentAccepted: z.boolean().refine((val) => val === true, {
+    message: 'Consent to terms is mandatory to proceed',
+  }),
+  consentVersion: z.string().default('v1.2'),
 });
 
 type StartPaymentInput = z.infer<typeof startPaymentSchema>;
@@ -65,8 +70,24 @@ export async function startPayment(input: StartPaymentInput) {
       };
     }
 
-    const { name, email, phone, source, planType, examType } = validatedInput.data;
+        const { name, email, phone, source, planType, examType, consentAccepted, consentVersion } = validatedInput.data;
     const normalizedEmail = email.toLowerCase().trim();
+
+    // 🌍 Retrieve IP and User Agent for consent audit trail
+    const reqHeaders = await headers();
+    const forwardedFor = reqHeaders.get('x-forwarded-for');
+    const ipAddress = forwardedFor 
+      ? forwardedFor.split(',')[0].trim() 
+      : reqHeaders.get('x-real-ip') || '127.0.0.1';
+    const userAgent = reqHeaders.get('user-agent') || 'unknown';
+
+    const consentInfo = {
+      accepted: consentAccepted,
+      version: consentVersion,
+      ip: ipAddress,
+      userAgent: userAgent,
+      timestamp: new Date().toISOString(),
+    };
 
     // ── PHASE 1: Find existing user by email (case-insensitive)
     const existingUser = await db.query.mppscUsers.findFirst({
@@ -104,18 +125,6 @@ export async function startPayment(input: StartPaymentInput) {
       //
       // 🛡️ SAFE METADATA PARSING
       // ─────────────────────────────────────────────────────────────
-      // DB mein `metadata` column TEXT hai. Par value teen tarah ka ho sakta hai:
-      //
-      //   1. STRING: '{"source":"google"}'  → JSON.parse se object banao
-      //   2. OBJECT: {source:"google"}      → directly use karo (kisi route ne
-      //      bina stringify kiye store kiya hoga)
-      //   3. null/undefined                 → empty object {}
-      //
-      // Purana code: JSON.parse(metadata as string)
-      //   → Case 2 pe CRASH! JSON.parse ko string chahiye, object nahi.
-      //   → Payment start flow break ho jaata tha! 💥
-      //
-      // Fix: typeof check pehle karo, try-catch bhi rakho safety ke liye
       let existingMeta: Record<string, unknown> = {};
       const raw = existingUser.metadata;
       if (raw) {
@@ -144,6 +153,7 @@ export async function startPayment(input: StartPaymentInput) {
             attemptedPlan: planType,
             lastAttemptAt: new Date().toISOString(),
             attemptCount: finalAttemptCount,
+            consent: consentInfo,
           }),
         })
         .where(eq(mppscUsers.id, existingUser.id));
@@ -166,6 +176,7 @@ export async function startPayment(input: StartPaymentInput) {
           attemptedPlan: planType,
           lastAttemptAt: new Date().toISOString(),
           attemptCount: 1,
+          consent: consentInfo,
         }),
         planTier: 'free',
         examType: examType, // Set exam type on registration
@@ -173,13 +184,17 @@ export async function startPayment(input: StartPaymentInput) {
       });
     }
 
-    // 🚀 TELEGRAM LEAD ALERT — Phase 1 complete, user saved
-    // ─────────────────────────────────────────────────────────────
-    // Hum `after()` use kar rahe hain taaki notification background mein jaaye
-    // aur user ko Razorpay order creation mein koi delay na mile.
-    // ─────────────────────────────────────────────────────────────
     after(async () => {
       try {
+        const formattedTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST';
+        const consentDetails = 
+          `\n\n🛡️ <b>Clickwrap Consent Captured:</b>\n` +
+          `• Accepted: ${consentAccepted ? '✅ Yes' : '❌ No'}\n` +
+          `• Version: <code>${consentVersion}</code>\n` +
+          `• IP Address: <code>${ipAddress}</code>\n` +
+          `• Device/UA: <code>${userAgent.slice(0, 100)}${userAgent.length > 100 ? '...' : ''}</code>\n` +
+          `• Time: <code>${formattedTime}</code>`;
+
         await sendLeadNotification({
           type: isReturning ? 'Returning Lead' : 'New Lead',
           name: name.trim(),
@@ -189,7 +204,7 @@ export async function startPayment(input: StartPaymentInput) {
           exam: examType,
           source: source,
           attemptCount: finalAttemptCount,
-          status: 'Checkout Started — Awaiting Payment'
+          status: `Checkout Started — Awaiting Payment${consentDetails}`
         });
       } catch (e) {
         logger.error('Telegram lead notification failed', e, { category: 'telegram' });
@@ -413,7 +428,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
 
     const paidUserBefore = await db.query.mppscUsers.findFirst({
       where: eq(mppscUsers.id, userId!),
-      columns: { accessGrants: true, planTier: true },
+      columns: { accessGrants: true, planTier: true, metadata: true },
     });
 
     const resolved = resolveVerifiedPayment(
@@ -439,6 +454,21 @@ export async function verifyPayment(input: VerifyPaymentInput) {
     const subscribedNow =
       planTier === 'lite' || planTier === 'pro' || resolved.paymentLabel === 'mains' || resolved.paymentLabel === 'combo';
 
+    // Extract consent info from user metadata
+    let consentFromMeta = null;
+    if (paidUserBefore?.metadata) {
+      try {
+        const metaObj = typeof paidUserBefore.metadata === 'string'
+          ? JSON.parse(paidUserBefore.metadata)
+          : paidUserBefore.metadata;
+        if (metaObj && metaObj.consent) {
+          consentFromMeta = metaObj.consent;
+        }
+      } catch (e) {
+        // Safe catch
+      }
+    }
+
     // 💾 Step 6: Atomic Transaction (Payment + User Update)
     await db.transaction(async (tx) => {
       await tx.insert(payments).values({
@@ -451,6 +481,16 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         planTier: resolved.paymentLabel,
         status: 'captured',
         examType,
+        notes: JSON.stringify({
+          planType: order.notes?.planType || resolved.paymentLabel,
+          consent: consentFromMeta || {
+            accepted: true,
+            version: 'v1.2',
+            timestamp: new Date().toISOString(),
+            ip: 'unknown_at_verify',
+            userAgent: 'unknown_at_verify'
+          }
+        }),
       });
 
       await tx
@@ -638,6 +678,13 @@ export async function verifyPayment(input: VerifyPaymentInput) {
               orderId: razorpay_order_id,
               paymentId: razorpay_payment_id,
               examType: paidUser.examType || 'mppsc',
+              consent: consentFromMeta ? {
+                consentAccepted: !!(consentFromMeta.accepted ?? (consentFromMeta as any).consentAccepted ?? false),
+                ipAddress: String(consentFromMeta.ip ?? (consentFromMeta as any).ipAddress ?? 'unknown'),
+                userAgent: String(consentFromMeta.userAgent ?? 'unknown'),
+                version: String(consentFromMeta.version ?? 'unknown'),
+                timestamp: String(consentFromMeta.timestamp ?? ''),
+              } : null,
             }).catch(() => {});
           }
         }

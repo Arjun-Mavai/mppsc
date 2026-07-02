@@ -51,6 +51,7 @@ export default function WhatsAppDashboard() {
   // New Features States
   const [templateName, setTemplateName] = useState<WhatsAppTemplateName>(DEFAULT_TEMPLATE);
   const [imageUrl, setImageUrl] = useState('https://mppsc.zenscroll.in/marketing/mppsc-alert.png');
+  const [supportQuery, setSupportQuery] = useState('Syllabus Tracker Issue');
   
   // Custom Add State
   const [manualName, setManualName] = useState('');
@@ -268,7 +269,8 @@ export default function WhatsAppDashboard() {
           studentIds: Array.from(selectedIds), 
           senderMode,
           templateName,
-          imageUrl: TEMPLATE_MAP[templateName]?.hasImageHeader ? imageUrl : undefined
+          imageUrl: TEMPLATE_MAP[templateName]?.hasImageHeader ? imageUrl : undefined,
+          supportQuery: (templateName === 'zenscroll_support_received' || templateName === 'zenscroll_support_received_hi') ? supportQuery : undefined
         }),
       });
 
@@ -647,6 +649,19 @@ export default function WhatsAppDashboard() {
                     />
                   </div>
                 )}
+
+                {(templateName === 'zenscroll_support_received' || templateName === 'zenscroll_support_received_hi') && (
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-700 mb-1">Support Query (Variable 2)</label>
+                    <input 
+                      type="text"
+                      value={supportQuery}
+                      onChange={(e) => setSupportQuery(e.target.value)}
+                      placeholder="e.g., Syllabus tracker query"
+                      className="w-full rounded-md border border-zinc-200 py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="mt-6 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
@@ -722,6 +737,24 @@ export default function WhatsAppDashboard() {
                       नमस्ते {"{{user.name}}"}! 👋<br/><br/>
                       MPPSC Mains की तैयारी में Syllabus और PYQs...<br/><br/>
                       [Preview for MPPSC Mains Utility Template]
+                    </>
+                  ) : templateName === 'zenscroll_support_received' ? (
+                    <>
+                      Hello {"{{user.name}}"},<br/><br/>
+                      We have successfully received your support query: "{supportQuery || 'Syllabus Tracker Query'}".<br/><br/>
+                      Our team is reviewing it and will get back to you shortly.<br/><br/>
+                      If you want to add more details, ask another question, or chat directly with our team, you can reply directly to this WhatsApp message or connect with us anytime.<br/><br/>
+                      Thank you,<br/>
+                      Team ZenScroll
+                    </>
+                  ) : templateName === 'zenscroll_support_received_hi' ? (
+                    <>
+                      नमस्ते {"{{user.name}}"},<br/><br/>
+                      हमें आपका सपोर्ट प्रश्न प्राप्त हो गया है: "{supportQuery || 'सपोर्ट क्वेरी'}".<br/><br/>
+                      हमारी टीम इसकी समीक्षा कर रही है और जल्द ही आपसे संपर्क करेगी।<br/><br/>
+                      यदि आप कोई अन्य जानकारी जोड़ना चाहते हैं या हमारे सपोर्ट प्रतिनिधि से सीधे बात करना चाहते हैं, तो आप सीधे इस व्हाट्सएप संदेश का उत्तर (reply) दे सकते हैं।<br/><br/>
+                      धन्यवाद,<br/>
+                      टीम ZenScroll
                     </>
                   ) : templateName === 'hello_world' ? (
                     <>

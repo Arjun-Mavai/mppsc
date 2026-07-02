@@ -7,7 +7,7 @@ import { nanoid } from 'nanoid';
 
 export async function POST(req: Request) {
   try {
-    const { studentIds, senderMode, templateName, imageUrl, manualContacts } = await req.json();
+    const { studentIds, senderMode, templateName, imageUrl, manualContacts, supportQuery } = await req.json();
 
     if ((!studentIds || studentIds.length === 0) && (!manualContacts || manualContacts.length === 0)) {
       return NextResponse.json({ error: 'Please provide recipients (selected or manual)' }, { status: 400 });
@@ -89,15 +89,25 @@ export async function POST(req: Request) {
 
       try {
         // Construct template payload dynamically
+        const bodyParameters: any[] = [
+          {
+            type: 'text',
+            text: guest.name || 'Student'
+          }
+        ];
+
+        // Add 2nd parameter for support templates
+        if (selectedTemplate === 'zenscroll_support_received' || selectedTemplate === 'zenscroll_support_received_hi') {
+          bodyParameters.push({
+            type: 'text',
+            text: supportQuery || 'Syllabus Tracker Issue'
+          });
+        }
+
         const components: any[] = [
           {
             type: 'body',
-            parameters: [
-              {
-                type: 'text',
-                text: guest.name || 'Student'
-              }
-            ]
+            parameters: bodyParameters
           }
         ];
 
@@ -120,7 +130,7 @@ export async function POST(req: Request) {
           type: 'template',
           template: {
             name: selectedTemplate,
-            language: { code: 'en' },
+            language: { code: selectedTemplate.endsWith('_hi') ? 'hi' : 'en' },
             components: components
           },
         };

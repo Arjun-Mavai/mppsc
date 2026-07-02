@@ -34,6 +34,13 @@ interface PaymentNotification {
   isUpgrade?: boolean;
   error?: string; // Optional error details for failures
   examType?: string; // Optional exam type (e.g. MPPSC, UPSC)
+  consent?: {
+    consentAccepted: boolean;
+    ipAddress: string;
+    userAgent: string;
+    version: string;
+    timestamp: string;
+  } | null;
 }
 
 interface EmailFailureNotification {
@@ -125,12 +132,26 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
     // 🚀 TELEGRAM NOTIFICATION (MPPSC ZEN Branding)
     after(async () => {
       try {
+        let statusString = `${type === 'new_payment' ? '💰 New Payment Received' : type === 'upgrade' ? '🚀 Plan Upgrade' : '⚠️ Payment Failed'} — Amount: ₹${amountInRupees}${data.error ? ` (Error: ${data.error})` : ''}`;
+        
+        if (data.consent) {
+          const formattedTimestamp = data.consent.timestamp
+            ? new Date(data.consent.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST'
+            : 'N/A';
+          statusString += `\n\n🛡️ <b>Expectation Consent Captured:</b>\n` +
+            `• Accepted: ${data.consent.consentAccepted ? '✅ Yes' : '❌ No'}\n` +
+            `• IP Address: <code>${data.consent.ipAddress}</code>\n` +
+            `• Device/UA: <code>${data.consent.userAgent}</code>\n` +
+            `• Agreement Ver: <code>${data.consent.version}</code>\n` +
+            `• Time: <code>${formattedTimestamp}</code>`;
+        }
+
         await sendLeadNotification({
           type: type === 'new_payment' ? 'Registration' : 'Admin Grant',
           name: userName,
           email: userEmail,
           plan: planTier,
-          status: `${type === 'new_payment' ? '💰 New Payment Received' : type === 'upgrade' ? '🚀 Plan Upgrade' : '⚠️ Payment Failed'} — Amount: ₹${amountInRupees}${data.error ? ` (Error: ${data.error})` : ''}`,
+          status: statusString,
           phone: userPhone || undefined
         });
       } catch (telegramError) {

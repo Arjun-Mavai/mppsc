@@ -25,8 +25,21 @@ import {
   BarChart2, 
   User, 
   ArrowRight,
-  Bookmark
+  Bookmark,
+  Shield,
+  Target,
+  CheckCircle2,
+  Phone,
+  Send
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogHeader,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface DashboardClientProps {
   user: {
@@ -75,9 +88,22 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
   const [activeTab, setActiveTab] = React.useState<'study' | 'analytics'>('study');
   const [quote, setQuote] = React.useState(STUDY_QUOTES[0]);
 
+  // First-Login Expectation Setting & Welcome Tour State
+  const [showWelcomeTour, setShowWelcomeTour] = React.useState(false);
+  const [tourStep, setTourStep] = React.useState(1);
+
   React.useEffect(() => {
     const day = new Date().getDate();
     setQuote(STUDY_QUOTES[day % STUDY_QUOTES.length]);
+
+    if (typeof window !== 'undefined') {
+      const isFreshPayment = sessionStorage.getItem('payment_success_fresh') === 'true';
+      const alreadyTourShown = localStorage.getItem('welcome_tour_completed') === 'true';
+      if (isFreshPayment && !alreadyTourShown) {
+        setShowWelcomeTour(true);
+        sessionStorage.removeItem('payment_success_fresh');
+      }
+    }
   }, []);
 
   const hasPre = hasPreAccess(user);
@@ -401,6 +427,199 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
         )}
 
       </main>
+
+      {/* Premium Welcome & Orientation Tour Modal */}
+      <Dialog open={showWelcomeTour} onOpenChange={(open) => {
+        if (!open) {
+          localStorage.setItem('welcome_tour_completed', 'true');
+          setShowWelcomeTour(false);
+        }
+      }}>
+        <DialogContent className="max-w-md rounded-[2rem] border border-slate-100 bg-white/95 p-6 shadow-2xl backdrop-blur-xl">
+          {tourStep === 1 && (
+            <div className="space-y-4 py-2">
+              <DialogHeader className="text-center pb-2 border-b border-zinc-100">
+                <div className="inline-flex mx-auto items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200 text-xs font-semibold mb-1">
+                  <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+                  <span>{isHindi ? 'स्वागत है!' : 'Welcome to ZenScroll!'}</span>
+                </div>
+                <DialogTitle className="text-xl font-bold text-zinc-950">
+                  {isHindi ? 'आपका प्रीमियम एक्सेस शुरू हो गया है!' : 'Your Premium Access is Active! 🎉'}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-zinc-500">
+                  {isHindi
+                    ? 'कृपया 1 मिनट में समझें कि इस प्लेटफ़ॉर्म का उपयोग कैसे करें:'
+                    : 'Let\'s take 1 minute to understand how to get the maximum value:'}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3.5 text-xs">
+                <div className="flex gap-3 items-start bg-amber-500/10 p-3.5 rounded-xl border border-amber-500/20">
+                  <Shield className="h-5 w-5 text-amber-700 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold text-amber-900">{isHindi ? 'इंटरैक्टिव लर्निंग प्लेटफ़ॉर्म' : 'Expectation Settings Check'}</p>
+                    <p className="mt-1 leading-relaxed text-slate-700 font-medium">
+                      {isHindi 
+                        ? 'ZenScroll पारंपरिक PDF नोट्स लाइब्रेरी नहीं है। यहाँ आप सिलेबस के अनुसार पॉइंट-बाय-पॉइंट अभ्यास, मॉडल आंसर्स और प्रोग्रेस ट्रैकर के साथ तैयारी करेंगे।' 
+                        : 'ZenScroll is a structured learning system, not a static PDF dump. You will interact with topic-wise syllabus nodes, practice PYQs, and see progress charts.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 items-start bg-slate-50 p-3.5 rounded-xl border border-slate-200/60">
+                  <Target className="h-5 w-5 text-slate-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold text-slate-800">{isHindi ? 'तैयारी का सही तरीका' : 'Right Way to Prepare'}</p>
+                    <p className="mt-1 leading-relaxed text-slate-600 font-medium whitespace-pre-line">
+                      {isHindi 
+                        ? '1. सिलेबस हब से शुरुआत करें।\n2. टॉपिक-wise अभ्यास और मॉडल आंसर्स देखें।\n3. अपने व्यक्तिगत ट्रैकर से प्रगति देखें।' 
+                        : '1. Start from the Syllabus Hub.\n2. Navigate through topics to view model answers and practice questions.\n3. Track your subject mastery.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Button
+                onClick={() => setTourStep(2)}
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl shadow-lg transition-transform active:scale-95"
+              >
+                {isHindi ? 'अगला चरण →' : 'Next Step →'}
+              </Button>
+            </div>
+          )}
+
+          {tourStep === 2 && (
+            <div className="space-y-4 py-2">
+              <DialogHeader className="text-center pb-2 border-b border-zinc-100">
+                <div className="inline-flex mx-auto items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200 text-xs font-semibold mb-1">
+                  <Target className="h-3.5 w-3.5" />
+                  <span>{isHindi ? 'महत्वपूर्ण फीचर्स' : 'Key Features'}</span>
+                </div>
+                <DialogTitle className="text-xl font-bold text-zinc-950">
+                  {isHindi ? 'ZenScroll के 3 स्तंभ' : 'The 3 Pillars of ZenScroll'}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-zinc-500">
+                  {isHindi
+                    ? 'इन फीचर्स का उपयोग करके आपकी तैयारी 2x बेहतर होगी:'
+                    : 'Use these features to boost your preparation by 2x:'}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3 text-xs font-medium">
+                <div className="flex items-center gap-3 p-2 bg-indigo-50/50 rounded-lg border border-indigo-100">
+                  <CheckCircle2 className="h-4 w-4 text-indigo-600 shrink-0" />
+                  <div>
+                    <span className="font-bold text-indigo-900">{isHindi ? 'सिलेबस हब:' : 'Syllabus Hub:'}</span>{' '}
+                    <span className="text-slate-600">{isHindi ? 'पूरे सिलेबस की टॉपिक-wise कवरेज।' : 'Topic-wise coverage of the entire syllabus.'}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-2 bg-emerald-50/50 rounded-lg border border-emerald-100">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <div>
+                    <span className="font-bold text-emerald-900">{isHindi ? 'डबल मॉडल उत्तर:' : 'Double Model Answers:'}</span>{' '}
+                    <span className="text-slate-600">{isHindi ? 'दोस्त जैसा उत्तर और अधिकारी स्तर का उत्तर।' : 'Simple learner-friendly answers + advanced officer-level answers.'}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-2 bg-purple-50/50 rounded-lg border border-purple-100">
+                  <CheckCircle2 className="h-4 w-4 text-purple-600 shrink-0" />
+                  <div>
+                    <span className="font-bold text-purple-900">{isHindi ? 'स्मार्ट प्रैक्टिस और ट्रैकर:' : 'Smart Practice & Tracker:'}</span>{' '}
+                    <span className="text-slate-600">{isHindi ? 'अपनी कमियों को पहचानें और सुधारें।' : 'Identify your weak areas and improve target topics.'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setTourStep(1)}
+                  className="w-1/3 border-slate-200 text-slate-700"
+                >
+                  {isHindi ? 'पीछे' : 'Back'}
+                </Button>
+                <Button
+                  onClick={() => setTourStep(3)}
+                  className="w-2/3 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl shadow-lg transition-transform active:scale-95"
+                >
+                  {isHindi ? 'अगला चरण →' : 'Next Step →'}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {tourStep === 3 && (
+            <div className="space-y-4 py-2">
+              <DialogHeader className="text-center pb-2 border-b border-zinc-100">
+                <div className="inline-flex mx-auto items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold mb-1">
+                  <Zap className="h-3.5 w-3.5" />
+                  <span>{isHindi ? 'सपोर्ट और कम्युनिटी' : 'Support & Community'}</span>
+                </div>
+                <DialogTitle className="text-xl font-bold text-zinc-950">
+                  {isHindi ? 'हम हमेशा आपके साथ हैं' : 'We are here to help! 🤝'}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-zinc-500">
+                  {isHindi
+                    ? 'तैयारी के दौरान किसी भी प्रश्न या सहायता के लिए:'
+                    : 'For any questions or guidance during your preparation:'}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3.5 text-xs leading-relaxed text-slate-600">
+                <p className="font-medium text-center">
+                  {isHindi ? (
+                    <>
+                      📢 <strong>सपोर्ट चैनल्स:</strong> हमारी सपोर्ट टीम से जुड़ने के लिए नीचे दिए गए व्हाट्सएप या टेलीग्राम बटनों पर क्लिक करें।
+                    </>
+                  ) : (
+                    <>
+                      📢 <strong>Support Channels:</strong> Connect with our support team instantly via WhatsApp or Telegram below.
+                    </>
+                  )}
+                </p>
+
+                <div className="grid grid-cols-2 gap-3 pb-1">
+                  <Button
+                    asChild
+                    className="w-full bg-green-50 hover:bg-green-100 border border-green-200 text-green-800 font-bold py-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <a href="https://wa.me/917489388350?text=Hi,%20I%20need%20help%20with%20the%20MPPSC%20App." target="_blank" rel="noopener noreferrer">
+                      <Phone className="h-4 w-4 text-green-600" />
+                      <span>WhatsApp</span>
+                    </a>
+                  </Button>
+                  <Button
+                    asChild
+                    className="w-full bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-800 font-bold py-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <a href="https://t.me/mppsc_conversation_bot?start=dashboard" target="_blank" rel="noopener noreferrer">
+                      <Send className="h-4 w-4 text-sky-600" />
+                      <span>Telegram</span>
+                    </a>
+                  </Button>
+                </div>
+
+                <div className="rounded-xl border border-dashed border-slate-200 p-3 text-center bg-slate-50 text-slate-500 font-bold">
+                  {isHindi ? 'सपोर्ट टाइम: सुबह 10:00 से शाम 7:00 बजे' : 'Support Hours: 10:00 AM to 7:00 PM'}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Button
+                  onClick={() => {
+                    localStorage.setItem('welcome_tour_completed', 'true');
+                    setShowWelcomeTour(false);
+                  }}
+                  className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl transition-transform active:scale-95"
+                >
+                  {isHindi ? 'डैशबोर्ड पर जाएं' : 'Go to Dashboard'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -16,6 +16,8 @@ export type WhatsAppTemplateName =
   | 'mppsc_mains_ut_new'   // Mains Only – Syllabus & PYQ (Utility)
   | 'mppsc_pyq_promo'      // PYQ Promo – Text only (Utility)
   | 'hello_world'          // Meta default test template (Utility)
+  | 'zenscroll_support_received' // Guest Support Acknowledgment (Utility, English)
+  | 'zenscroll_support_received_hi' // Guest Support Acknowledgment (Utility, Hindi)
   // ─── Marketing Templates ─────────────────────────────────────────
   | 'mppsc_toppers_quote'  // Toppers Quote – Mains focus (Marketing)
   | 'mppsc_mains_2025'     // Mains 2025 – General promo (Marketing)
@@ -55,6 +57,16 @@ export const WHATSAPP_TEMPLATES: WhatsAppTemplate[] = [
   {
     name: 'hello_world',
     label: 'Hello World (Test)',
+    category: 'Utility',
+  },
+  {
+    name: 'zenscroll_support_received',
+    label: 'Support Ticket Received (EN)',
+    category: 'Utility',
+  },
+  {
+    name: 'zenscroll_support_received_hi',
+    label: 'Support Ticket Received (HI)',
     category: 'Utility',
   },
 

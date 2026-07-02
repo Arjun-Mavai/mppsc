@@ -273,6 +273,26 @@ function PricingPageInner({ testimonialsNode }: { testimonialsNode: React.ReactN
     }
   }, [isProUser, needsMainsUpsell, user, router]);
 
+  useEffect(() => {
+    const need = searchParams.get('need');
+    if (need === 'mains') {
+      setMppscSegment('mains');
+    } else if (need === 'pre') {
+      setMppscSegment('pre');
+    } else if (need === 'combo') {
+      setMppscSegment('combo');
+    }
+    
+    if (window.location.hash === '#plans' || need) {
+      setTimeout(() => {
+        const el = document.getElementById('plans');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+    }
+  }, [searchParams]);
+
   const handleSegmentChange = useCallback((key: MppscPricingSegmentKey) => {
     setMppscSegment(key);
     setShowAllMainsCards(false);
@@ -491,7 +511,7 @@ function PricingPageInner({ testimonialsNode }: { testimonialsNode: React.ReactN
           </div>
 
           {/* ── Pricing: single card + Pre / Mains / Combo toggle ───── */}
-          <div className="mx-auto w-full max-w-lg space-y-6">
+          <div id="plans" className="mx-auto w-full max-w-lg space-y-6">
             <div
               role="tablist"
               aria-label={hi ? 'प्लान टॉगल' : 'Plan toggle'}

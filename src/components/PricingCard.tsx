@@ -428,6 +428,25 @@ export function PricingCard({
               </Button>
             </motion.div>
           )}
+
+          {/* Product Clarity / Target Customer Disclaimer */}
+          <div className="mt-4 text-center px-2">
+            <p className="text-[11px] font-semibold leading-normal text-slate-500">
+              {hi ? (
+                <>
+                  💡 <strong>सर्वश्रेष्ठ:</strong> उन छात्रों के लिए जो व्यवस्थित तैयारी चाहते हैं।
+                  <br />
+                  ❌ <strong>उपयुक्त नहीं:</strong> उन छात्रों के लिए जो केवल PDF नोट्स या बुक्स की तलाश में हैं।
+                </>
+              ) : (
+                <>
+                  💡 <strong>Best for:</strong> Students who want structured preparation.
+                  <br />
+                  ❌ <strong>Not suitable for:</strong> Students looking only for PDF notes.
+                </>
+              )}
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

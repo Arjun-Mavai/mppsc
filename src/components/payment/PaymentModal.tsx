@@ -10,10 +10,12 @@ import {
   DialogTitle,
   DialogDescription,
   DialogHeader,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -78,6 +80,23 @@ export function PaymentModal({
   const { user, setUser } = useSettingsStore();
   const [isLoading, setIsLoading] = useState(false);
 
+  // Expectation-first payment flow state variables
+  const [step, setStep] = useState<'clarity' | 'form'>('form');
+  const [consentChecked, setConsentChecked] = useState(false);
+  const { language } = useSettingsStore();
+  const hi = language === 'hi';
+
+  const [termsOpen, setTermsOpen] = useState(false);
+  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
+
+  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLDivElement;
+    const isAtBottom = Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) < 15;
+    if (isAtBottom && !hasScrolledToBottom) {
+      setHasScrolledToBottom(true);
+    }
+  };
+
   // Bhai, ye phases users ko batate h ki abhi background me kya chal raha h.
   // Transparancy = Trust. 🤝
   const [loadingPhase, setLoadingPhase] = useState<
@@ -100,6 +119,16 @@ export function PaymentModal({
       timeoutsRef.current.forEach((t) => clearTimeout(t));
     };
   }, []);
+
+  // Reset step and consentChecked on modal open
+  useEffect(() => {
+    if (open) {
+      setStep('form');
+      setConsentChecked(false);
+      setTermsOpen(false);
+      setHasScrolledToBottom(false);
+    }
+  }, [open]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -227,6 +256,8 @@ export function PaymentModal({
         ...values,
         planType,
         examType: 'mppsc',
+        consentAccepted: consentChecked,
+        consentVersion: 'v1.2',
       });
 
       // Server-side block: existing lite/pro must be same logged-in user
@@ -484,14 +515,18 @@ export function PaymentModal({
             </div>
           </div>
         ) : (
-          // ── Form State ──
+          // ── Form State with Checkbox Terms ──
           <>
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold">Upgrade to Premium</DialogTitle>
-              <DialogDescription className="text-zinc-500">
+              <div className="flex items-center justify-between">
+                <DialogTitle className="text-2xl font-bold">
+                  {hi ? 'प्रीमियम अनलॉक करें' : 'Upgrade to Premium'}
+                </DialogTitle>
+              </div>
+              <DialogDescription className="text-zinc-500 text-xs">
                 {isUserReady
-                  ? 'Confirm your details to proceed.'
-                  : 'Enter your details to proceed with the payment.'}
+                  ? (hi ? 'भुगतान आगे बढ़ाने के लिए विवरण की पुष्टि करें।' : 'Confirm your details to proceed.')
+                  : (hi ? 'भुगतान आगे बढ़ाने के लिए अपना विवरण दर्ज करें।' : 'Enter your details to proceed with the payment.')}
               </DialogDescription>
             </DialogHeader>
 
@@ -508,10 +543,51 @@ export function PaymentModal({
                     <p className="text-xs text-zinc-500">{user?.phone ?? (user as any)?.phone}</p>
                   </div>
                 </div>
+
+                {/* Checkbox and Terms for Logged in Users */}
+                <div className="flex items-start gap-2 bg-amber-50/20 border border-amber-100/60 rounded-xl p-3 my-2">
+                  <input
+                    type="checkbox"
+                    id="consent-check-logged"
+                    checked={consentChecked}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setTermsOpen(true);
+                      } else {
+                        setConsentChecked(false);
+                      }
+                    }}
+                    className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-zinc-300 text-black focus:ring-black cursor-pointer"
+                  />
+                  <label htmlFor="consent-check-logged" className="text-[11px] font-medium text-zinc-500 leading-normal select-none cursor-pointer">
+                    {hi ? (
+                      <>
+                        मैं नियम व शर्तें, गोपनीयता नीति (Privacy Policy) और रिफंड पॉलिसी से सहमत हूँ{' '}
+                        <span 
+                          className="font-bold text-amber-800 underline hover:text-amber-900 cursor-pointer whitespace-nowrap" 
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTermsOpen(true); }}
+                        >
+                          (विवरण पढ़ें)
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        I agree to the Terms & Conditions, Privacy Policy, and Refund Policy{' '}
+                        <span 
+                          className="font-bold text-amber-800 underline hover:text-amber-900 cursor-pointer whitespace-nowrap" 
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTermsOpen(true); }}
+                        >
+                          (Read Details)
+                        </span>
+                      </>
+                    )}
+                  </label>
+                </div>
+
                 <Button
                   onClick={() => onSubmit(form.getValues())}
-                  className="mt-4 w-full bg-black py-3 font-bold text-white hover:bg-zinc-800 h-auto whitespace-normal break-words leading-tight"
-                  disabled={isLoading}
+                  className="mt-4 w-full bg-black py-3 font-bold text-white hover:bg-zinc-800 h-auto whitespace-normal break-words leading-tight disabled:opacity-50"
+                  disabled={isLoading || !consentChecked}
                 >
                   {`Pay — ${planName}`}
                 </Button>
@@ -525,7 +601,6 @@ export function PaymentModal({
                     id="name"
                     placeholder="John Doe"
                     {...form.register('name')}
-                    // Disable if logged in
                     disabled={!!user?.name}
                     className="border-zinc-300 bg-white focus:ring-black disabled:bg-zinc-100 disabled:text-zinc-500"
                   />
@@ -564,7 +639,6 @@ export function PaymentModal({
                   )}
                 </div>
 
-                {/* Source dropdown not needed for upgrade/logged-in users usually, but keeping it optional */}
                 {!user && (
                   <div className="space-y-2">
                     <Label htmlFor="source">How did you hear about us? (Optional)</Label>
@@ -583,15 +657,134 @@ export function PaymentModal({
                   </div>
                 )}
 
+                {/* Checkbox and Terms for Guest Users */}
+                <div className="flex items-start gap-2 bg-amber-50/20 border border-amber-100/60 rounded-xl p-3 my-2">
+                  <input
+                    type="checkbox"
+                    id="consent-check-guest"
+                    checked={consentChecked}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setTermsOpen(true);
+                      } else {
+                        setConsentChecked(false);
+                      }
+                    }}
+                    className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-zinc-300 text-black focus:ring-black cursor-pointer"
+                  />
+                  <label htmlFor="consent-check-guest" className="text-[11px] font-medium text-zinc-500 leading-normal select-none cursor-pointer">
+                    {hi ? (
+                      <>
+                        मैं नियम व शर्तें, गोपनीयता नीति (Privacy Policy) और रिफंड पॉलिसी से सहमत हूँ{' '}
+                        <span 
+                          className="font-bold text-amber-800 underline hover:text-amber-900 cursor-pointer whitespace-nowrap" 
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTermsOpen(true); }}
+                        >
+                          (विवरण पढ़ें)
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        I agree to the Terms & Conditions, Privacy Policy, and Refund Policy{' '}
+                        <span 
+                          className="font-bold text-amber-800 underline hover:text-amber-900 cursor-pointer whitespace-nowrap" 
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTermsOpen(true); }}
+                        >
+                          (Read Details)
+                        </span>
+                      </>
+                    )}
+                  </label>
+                </div>
+
                 <Button
                   type="submit"
-                  className="mt-4 w-full bg-black py-3 font-bold text-white hover:bg-zinc-800 h-auto whitespace-normal break-words leading-tight"
-                  disabled={isLoading}
+                  className="mt-4 w-full bg-black py-3 font-bold text-white hover:bg-zinc-800 h-auto whitespace-normal break-words leading-tight disabled:opacity-50"
+                  disabled={isLoading || !consentChecked}
                 >
                   {`Pay — ${planName}`}
                 </Button>
               </form>
             )}
+
+            {/* Programmatic scroll-to-accept terms dialog */}
+            <Dialog open={termsOpen} onOpenChange={(val) => {
+              setTermsOpen(val);
+              if (val) setHasScrolledToBottom(false);
+            }}>
+              <DialogContent className="max-w-md rounded-[2rem] border border-slate-100 bg-white/95 p-6 shadow-2xl backdrop-blur-xl">
+                <DialogHeader>
+                  <DialogTitle className="text-lg font-bold text-zinc-950">
+                    {hi ? 'नियम एवं शर्तें (Terms & Conditions)' : 'Terms & Conditions'}
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-zinc-500">
+                    {hi ? 'कृपया आगे बढ़ने से पहले नियम व शर्तों को नीचे तक स्क्रॉल करके स्वीकार करें:' : 'Please scroll to the bottom of the terms to accept & proceed:'}
+                  </DialogDescription>
+                </DialogHeader>
+                <ScrollArea className="h-[280px] pr-3 my-2 border border-zinc-150 rounded-xl p-3 bg-white" onScrollCapture={handleScroll}>
+                  <div className="space-y-4 text-[11px] leading-relaxed text-zinc-600 font-medium">
+                    <div>
+                      <h4 className="font-bold text-zinc-800 text-xs mb-1">1. {hi ? 'प्लेटफ़ॉर्म की प्रकृति (Product Nature)' : 'Nature of Product'}</h4>
+                      <p>{hi ? 'यह केवल एक इंटरैक्टिव ऑनलाइन लर्निंग प्लेटफ़ॉर्म है। इसमें किसी भी तरह की डाउनलोडेबल पीडीएफ नोट्स, बुक्स या फिजिकल कॉपियां नहीं दी जाएंगी।' : 'This platform provides interactive syllabus maps, practice dashboards, and model answers. It is NOT a downloadable PDF notes library or book service.'}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-zinc-800 text-xs mb-1">2. {hi ? 'व्यक्तिगत उपयोग लाइसेंस (Personal Use License)' : 'Personal Use Only'}</h4>
+                      <p>{hi ? 'यह लाइसेंस केवल एक व्यक्तिगत छात्र के उपयोग के लिए है। एक से अधिक डिवाइस पर अकाउंट साझा करने या सामग्री कॉपी/डाउनलोड करने का प्रयास करने पर बिना किसी रिफंड के अकाउंट तुरंत ब्लॉक कर दिया जाएगा।' : 'Access is granted solely for a single individual student. Account sharing, scraping, copying content, or multi-device login abuse will result in immediate termination of access without refund.'}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-zinc-800 text-xs mb-1">3. {hi ? 'कोई रिफंड नीति नहीं (No Refunds)' : 'Refund Policy'}</h4>
+                      <p>{hi ? 'चूंकि डिजिटल एक्सेस तुरंत प्रदान की जाती है, इसलिए किसी भी परिस्थिति में रिफंड उपलब्ध नहीं है।' : 'Because digital access is granted instantly, refunds are strictly not available under any circumstances.'}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-zinc-800 text-xs mb-1">4. {hi ? 'अस्वीकरण (Disclaimer)' : 'General Disclaimer'}</h4>
+                      <p>{hi ? 'हम सर्वश्रेष्ठ मॉडल उत्तर और अभ्यास सामग्री प्रदान करते हैं, लेकिन परीक्षा में निश्चित चयन या अंकों की कोई कानूनी गारंटी नहीं देते हैं।' : 'ZenScroll provides high-quality prep assistance but does not guarantee success or selection in the MPPSC examinations.'}</p>
+                    </div>
+                    <div className="pt-2 border-t border-zinc-150">
+                      <h4 className="font-bold text-zinc-800 text-xs mb-1">5. {hi ? 'महत्वपूर्ण विवरण (Important Product Information)' : 'Important Product Information'}</h4>
+                      <p className="mb-2 font-semibold text-emerald-700">
+                        ✅ {hi ? 'उत्पाद में शामिल सामग्री (What is included):' : 'What is included:'}
+                      </p>
+                      <ul className="list-disc list-inside space-y-0.5 pl-1 mb-2">
+                        <li>{hi ? 'सिलेबस डिकोडिंग और स्मार्ट ट्रैकर' : 'Syllabus Decoding & Smart Tracker'}</li>
+                        <li>{hi ? 'टॉपिक-wise PYQs और उत्तर' : 'Topic-wise PYQs & Model Answers'}</li>
+                        <li>{hi ? 'टॉप-क्वालिटी टॉपर उत्तर' : 'Topper-Style Answers'}</li>
+                        <li>{hi ? 'इंटेलीजेंट प्रैक्टिस टेस्ट' : 'Interactive Practice Questions'}</li>
+                        <li>{hi ? 'वैल्यू एडिशन और प्रोग्रेस ट्रैकिंग' : 'Value Addition & Progress Insights'}</li>
+                      </ul>
+                      <p className="mb-2 font-semibold text-red-700">
+                        ❌ {hi ? 'उत्पाद में शामिल नहीं है (What is NOT included):' : 'What is NOT included:'}
+                      </p>
+                      <ul className="list-disc list-inside space-y-0.5 pl-1 mb-2">
+                        <li>{hi ? 'हैंडरिटन पीडीएफ नोट्स' : 'Handwritten PDF Notes'}</li>
+                        <li>{hi ? 'डाउनलोड करने वाली बुक्स' : 'Downloadable Books'}</li>
+                        <li>{hi ? 'टेलीग्राम पीडीएफ डंप' : 'Telegram PDF Dump'}</li>
+                        <li>{hi ? 'फिजिकल प्रिंटेड बुक्स' : 'Physical Printed Books'}</li>
+                        <li>{hi ? 'कोचिंग क्लासरूम' : 'Coaching Classes'}</li>
+                      </ul>
+                      <p className="mt-2 text-zinc-500 leading-normal">
+                        💡 <strong>{hi ? 'डिजिटल उत्पाद व नो-रिफंड:' : 'Digital Product & No-Refund Policy:'}</strong> {hi ? 'यह 100% ऑनलाइन प्लेटफॉर्म है। कोई पीडीएफ डाउनलोड या फिजिकल बुक नहीं भेजी जाएगी। डिजिटल एक्सेस तुरंत मिलने के कारण कोई भी रिफंड संभव नहीं होगा।' : 'This is a 100% online platform. No PDFs or physical books will be shipped. Due to instant digital provisioning, refunds are strictly not available.'}
+                      </p>
+                    </div>
+                  </div>
+                </ScrollArea>
+                <DialogHeader className="sr-only">
+                  <DialogTitle>Terms and Conditions</DialogTitle>
+                </DialogHeader>
+                <DialogFooter className="mt-2">
+                  <Button 
+                    disabled={!hasScrolledToBottom} 
+                    onClick={() => {
+                      setConsentChecked(true);
+                      setTermsOpen(false);
+                    }}
+                    type="button"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl disabled:opacity-50"
+                  >
+                    {hi ? 'मैं सहमत हूँ (I Agree)' : 'I Agree & Accept'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </>
         )}
       </DialogContent>
