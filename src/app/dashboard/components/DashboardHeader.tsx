@@ -47,6 +47,12 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
           </div>
         </div>
 
+        {/* Reinforced Product Nature Badge */}
+        <div className="hidden md:flex items-center gap-2 rounded-full bg-amber-500/10 px-4 py-1 text-[11px] font-black tracking-wide text-amber-800 border border-amber-500/20 shadow-sm">
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+          <span>{isHindi ? 'इंटरैक्टिव लर्निंग प्लेटफॉर्म (नोट्स PDF लाइब्रेरी नहीं)' : 'Interactive Learning Platform (Not a PDF Library)'}</span>
+        </div>
+
         <div className="flex items-center gap-4">
           <button 
             onClick={() => router.push('/profile')}

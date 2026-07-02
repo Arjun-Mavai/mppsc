@@ -13,6 +13,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { type PricingData, LITE_FEATURES, PRO_FEATURES, PRICING_DEFAULTS } from '@/config/pricing';
 import { PricingCard } from '@/components/PricingCard';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { getPricingData } from '@/actions/pricing-actions';
 
@@ -24,6 +25,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
   const { language, user } = useSettingsStore();
   const hi = language === 'hi';
   const isLiteUser = user?.planTier === 'lite';
+  const router = useRouter();
 
   // 🔒 Dynamic pricing — Server Action + React Query (no API visible!)
   const { data: pricingData, isLoading } = useQuery({
@@ -87,11 +89,35 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
           </span>
         </h2>
 
-        <p className="mx-auto mb-8 max-w-md text-lg leading-relaxed text-slate-500">
+        <p className="mx-auto mb-6 max-w-md text-lg leading-relaxed text-slate-500">
           {hi
             ? `प्रो प्लान पर अपग्रेड करें और अनलिमिटेड क्विज़, टेस्ट और स्मार्ट एनालिसिस अनलॉक करें। केवल ₹${p.upgradePrice} में।`
             : `Upgrade to Pro and unlock Unlimited Quizzes, Tests, and Smart Analytics. Just pay the difference.`}
         </p>
+
+        {/* Plan Toggles inside Lock Modal */}
+        <div className="mb-6 w-full max-w-xs flex gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+          <button
+            type="button"
+            className="flex-1 rounded-lg py-2 text-center text-[10px] font-black uppercase tracking-wider bg-slate-900 text-white shadow-sm transition-all"
+          >
+            {hi ? 'प्री' : 'Pre'}
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push('/pricing?need=mains#plans')}
+            className="flex-1 rounded-lg py-2 text-center text-[10px] font-black uppercase tracking-wider text-slate-500 hover:text-slate-800 transition-all"
+          >
+            {hi ? 'मेन्स' : 'Mains'}
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push('/pricing?need=combo#plans')}
+            className="flex-1 rounded-lg py-2 text-center text-[10px] font-black uppercase tracking-wider text-slate-500 hover:text-slate-800 transition-all"
+          >
+            {hi ? 'कॉम्बो' : 'Combo'}
+          </button>
+        </div>
 
         <div className="group relative w-full max-w-md">
           <PricingCard
@@ -121,6 +147,30 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
       <p className="mx-auto mb-6 max-w-lg px-4 text-sm font-medium text-slate-500 md:text-lg">
         {hi ? 'सिलेबस की सही दिशा पहचानें और परीक्षा के वास्तविक स्वरूप को समझें।' : 'Identify the correct path of the syllabus and grasp the real form of the exam.'}
       </p>
+
+      {/* Plan Toggles inside Lock Modal */}
+      <div className="mb-6 w-full max-w-xs flex gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+        <button
+          type="button"
+          className="flex-1 rounded-lg py-2 text-center text-[10px] font-black uppercase tracking-wider bg-slate-900 text-white shadow-sm transition-all"
+        >
+          {hi ? 'प्री' : 'Pre'}
+        </button>
+        <button
+          type="button"
+          onClick={() => router.push('/pricing?need=mains#plans')}
+          className="flex-1 rounded-lg py-2 text-center text-[10px] font-black uppercase tracking-wider text-slate-500 hover:text-slate-800 transition-all"
+        >
+          {hi ? 'मेन्स' : 'Mains'}
+        </button>
+        <button
+          type="button"
+          onClick={() => router.push('/pricing?need=combo#plans')}
+          className="flex-1 rounded-lg py-2 text-center text-[10px] font-black uppercase tracking-wider text-slate-500 hover:text-slate-800 transition-all"
+        >
+          {hi ? 'कॉम्बो' : 'Combo'}
+        </button>
+      </div>
 
       {/* FOMO — first 100 students with joined count badge */}
       <div className="mb-8 flex justify-center">

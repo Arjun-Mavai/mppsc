@@ -221,6 +221,26 @@ function ThankYouContent() {
               </div>
             )}
 
+            {/* Reinforce Product Understanding / Expectation Setting */}
+            <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 text-slate-800">
+              <p className="mb-1 text-xs font-bold text-amber-900">
+                {hi ? '📌 कृपया याद रखें (Important Recall)' : '📌 Please Remember'}
+              </p>
+              <p className="text-xs leading-relaxed text-slate-700 font-medium">
+                {hi ? (
+                  <>
+                    यह प्लेटफ़ॉर्म <strong>स्मार्ट लर्निंग, PYQs, अभ्यास और वैल्यू एडिशन</strong> पर केंद्रित है।
+                    यह पारंपरिक <strong>PDF नोट्स या किताबों की लाइब्रेरी नहीं है</strong>।
+                  </>
+                ) : (
+                  <>
+                    This platform focuses on <strong>Smart Learning, PYQs, Practice, and Value Addition</strong>.
+                    It is <strong>NOT a PDF notes/printed book library</strong>.
+                  </>
+                )}
+              </p>
+            </div>
+
             <div className={`rounded-xl border p-4 ${planBg}`}>
               <p className="mb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
                 {hi ? 'आपको क्या मिला' : 'What you unlocked'}

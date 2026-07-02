@@ -12,6 +12,7 @@ import { PRICING_DEFAULTS, type PlanFeatureWithIcon } from '@/config/pricing';
 import { PricingCard } from '@/components/PricingCard';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { getPricingData } from '@/actions/pricing-actions';
 import { DEFAULT_MPPSC_PRODUCT_COPY } from '@/config/mppsc-product-copy';
 
@@ -22,6 +23,7 @@ interface MainsPremiumMarketingProps {
 export function MainsPremiumMarketing({ onClose }: MainsPremiumMarketingProps) {
   const { language } = useSettingsStore();
   const hi = language === 'hi';
+  const router = useRouter();
 
   const { data: pricingData, isLoading } = useQuery({
     queryKey: ['pricing', 'mppsc'],
@@ -68,6 +70,30 @@ export function MainsPremiumMarketing({ onClose }: MainsPremiumMarketingProps) {
           </>
         )}
       </h2>
+
+      {/* Plan Toggles inside Lock Modal */}
+      <div className="mb-6 w-full max-w-xs flex gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+        <button
+          type="button"
+          onClick={() => router.push('/pricing?need=pre#plans')}
+          className="flex-1 rounded-lg py-2 text-center text-[10px] font-black uppercase tracking-wider text-slate-500 hover:text-slate-800 transition-all"
+        >
+          {hi ? 'प्री' : 'Pre'}
+        </button>
+        <button
+          type="button"
+          className="flex-1 rounded-lg py-2 text-center text-[10px] font-black uppercase tracking-wider bg-slate-900 text-white shadow-sm transition-all"
+        >
+          {hi ? 'मेन्स' : 'Mains'}
+        </button>
+        <button
+          type="button"
+          onClick={() => router.push('/pricing?need=combo#plans')}
+          className="flex-1 rounded-lg py-2 text-center text-[10px] font-black uppercase tracking-wider text-slate-500 hover:text-slate-800 transition-all"
+        >
+          {hi ? 'कॉम्बो' : 'Combo'}
+        </button>
+      </div>
 {/* <p className="mx-auto mb-8 max-w-lg px-2 text-sm font-medium text-slate-600 md:text-base">
         {hi
           ? 'सिलेबस के प्रत्येक टॉपिक की गहरी समझ (Syllabus Grasp) के लिए पिछले वर्षों के प्रश्नों (PYQs) के हिंदी व इंग्लिश (English & Hindi) में तैयार 2 अलग-अलग स्टाइल के सटीक मॉडल उत्तर।'
