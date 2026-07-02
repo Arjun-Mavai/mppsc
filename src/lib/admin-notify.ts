@@ -135,10 +135,15 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
         let statusString = `${type === 'new_payment' ? '💰 New Payment Received' : type === 'upgrade' ? '🚀 Plan Upgrade' : '⚠️ Payment Failed'} — Amount: ₹${amountInRupees}${data.error ? ` (Error: ${data.error})` : ''}`;
         
         if (data.consent) {
+          const formattedTimestamp = data.consent.timestamp
+            ? new Date(data.consent.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST'
+            : 'N/A';
           statusString += `\n\n🛡️ <b>Expectation Consent Captured:</b>\n` +
             `• Accepted: ${data.consent.consentAccepted ? '✅ Yes' : '❌ No'}\n` +
             `• IP Address: <code>${data.consent.ipAddress}</code>\n` +
-            `• Agreement Ver: <code>${data.consent.version}</code>`;
+            `• Device/UA: <code>${data.consent.userAgent}</code>\n` +
+            `• Agreement Ver: <code>${data.consent.version}</code>\n` +
+            `• Time: <code>${formattedTimestamp}</code>`;
         }
 
         await sendLeadNotification({

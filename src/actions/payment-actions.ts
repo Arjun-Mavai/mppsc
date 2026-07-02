@@ -40,7 +40,9 @@ const startPaymentSchema = z.object({
   source: z.string().optional(),
   planType: z.enum(['lite', 'pro', 'upgrade', 'mains', 'combo']),
   examType: z.enum(['upsc', 'mppsc', 'mppolice']).default('mppsc'),
-  consentAccepted: z.boolean().default(true),
+  consentAccepted: z.boolean().refine((val) => val === true, {
+    message: 'Consent to terms is mandatory to proceed',
+  }),
   consentVersion: z.string().default('v1.2'),
 });
 
@@ -73,7 +75,10 @@ export async function startPayment(input: StartPaymentInput) {
 
     // 🌍 Retrieve IP and User Agent for consent audit trail
     const reqHeaders = await headers();
-    const ipAddress = reqHeaders.get('x-forwarded-for') || reqHeaders.get('x-real-ip') || '127.0.0.1';
+    const forwardedFor = reqHeaders.get('x-forwarded-for');
+    const ipAddress = forwardedFor 
+      ? forwardedFor.split(',')[0].trim() 
+      : reqHeaders.get('x-real-ip') || '127.0.0.1';
     const userAgent = reqHeaders.get('user-agent') || 'unknown';
 
     const consentInfo = {
@@ -674,11 +679,11 @@ export async function verifyPayment(input: VerifyPaymentInput) {
               paymentId: razorpay_payment_id,
               examType: paidUser.examType || 'mppsc',
               consent: consentFromMeta ? {
-                consentAccepted: !!(consentFromMeta.accepted || (consentFromMeta as any).consentAccepted),
-                ipAddress: String(consentFromMeta.ip || (consentFromMeta as any).ipAddress || 'unknown'),
-                userAgent: String(consentFromMeta.userAgent || 'unknown'),
-                version: String(consentFromMeta.version || 'unknown'),
-                timestamp: String(consentFromMeta.timestamp || ''),
+                consentAccepted: !!(consentFromMeta.accepted ?? (consentFromMeta as any).consentAccepted ?? false),
+                ipAddress: String(consentFromMeta.ip ?? (consentFromMeta as any).ipAddress ?? 'unknown'),
+                userAgent: String(consentFromMeta.userAgent ?? 'unknown'),
+                version: String(consentFromMeta.version ?? 'unknown'),
+                timestamp: String(consentFromMeta.timestamp ?? ''),
               } : null,
             }).catch(() => {});
           }

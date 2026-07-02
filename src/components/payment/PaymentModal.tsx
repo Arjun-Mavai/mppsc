@@ -11,7 +11,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogFooter,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -89,7 +88,6 @@ export function PaymentModal({
 
   const [termsOpen, setTermsOpen] = useState(false);
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const target = event.target as HTMLDivElement;
@@ -258,7 +256,7 @@ export function PaymentModal({
         ...values,
         planType,
         examType: 'mppsc',
-        consentAccepted: true,
+        consentAccepted: consentChecked,
         consentVersion: 'v1.2',
       });
 
@@ -552,7 +550,13 @@ export function PaymentModal({
                     type="checkbox"
                     id="consent-check-logged"
                     checked={consentChecked}
-                    onChange={(e) => setConsentChecked(e.target.checked)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setTermsOpen(true);
+                      } else {
+                        setConsentChecked(false);
+                      }
+                    }}
                     className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-zinc-300 text-black focus:ring-black cursor-pointer"
                   />
                   <label htmlFor="consent-check-logged" className="text-[11px] font-medium text-zinc-500 leading-normal select-none cursor-pointer">
@@ -659,7 +663,13 @@ export function PaymentModal({
                     type="checkbox"
                     id="consent-check-guest"
                     checked={consentChecked}
-                    onChange={(e) => setConsentChecked(e.target.checked)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setTermsOpen(true);
+                      } else {
+                        setConsentChecked(false);
+                      }
+                    }}
                     className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-zinc-300 text-black focus:ring-black cursor-pointer"
                   />
                   <label htmlFor="consent-check-guest" className="text-[11px] font-medium text-zinc-500 leading-normal select-none cursor-pointer">
@@ -711,7 +721,7 @@ export function PaymentModal({
                     {hi ? 'कृपया आगे बढ़ने से पहले नियम व शर्तों को नीचे तक स्क्रॉल करके स्वीकार करें:' : 'Please scroll to the bottom of the terms to accept & proceed:'}
                   </DialogDescription>
                 </DialogHeader>
-                <ScrollArea className="h-[280px] pr-3 my-2 border border-zinc-150 rounded-xl p-3 bg-white" onScrollCapture={handleScroll} ref={scrollAreaRef}>
+                <ScrollArea className="h-[280px] pr-3 my-2 border border-zinc-150 rounded-xl p-3 bg-white" onScrollCapture={handleScroll}>
                   <div className="space-y-4 text-[11px] leading-relaxed text-zinc-600 font-medium">
                     <div>
                       <h4 className="font-bold text-zinc-800 text-xs mb-1">1. {hi ? 'प्लेटफ़ॉर्म की प्रकृति (Product Nature)' : 'Nature of Product'}</h4>

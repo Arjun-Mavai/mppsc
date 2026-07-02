@@ -470,7 +470,7 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                   <Target className="h-5 w-5 text-slate-600 shrink-0 mt-0.5" />
                   <div>
                     <p className="font-bold text-slate-800">{isHindi ? 'तैयारी का सही तरीका' : 'Right Way to Prepare'}</p>
-                    <p className="mt-1 leading-relaxed text-slate-600 font-medium">
+                    <p className="mt-1 leading-relaxed text-slate-600 font-medium whitespace-pre-line">
                       {isHindi 
                         ? '1. सिलेबस हब से शुरुआत करें।\n2. टॉपिक-wise अभ्यास और मॉडल आंसर्स देखें।\n3. अपने व्यक्तिगत ट्रैकर से प्रगति देखें।' 
                         : '1. Start from the Syllabus Hub.\n2. Navigate through topics to view model answers and practice questions.\n3. Track your subject mastery.'}
