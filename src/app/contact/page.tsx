@@ -1,6 +1,6 @@
 'use client';
 
-import { Mail, MapPin, Phone } from 'lucide-react';
+import { Mail, Phone, Send } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ContactForm } from '@/components/ContactForm';
 
@@ -63,32 +63,46 @@ export default function ContactPage() {
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
-                      <Phone size={18} />
-                    </div>
+                    <button
+                      onClick={() => {
+                        const waNumber = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP_NUMBER || '917489388350';
+                        window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent('Hi, I need help with the MPPSC App. My query is:')}`, '_blank');
+                      }}
+                      className="group flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-50 text-green-600 transition-colors hover:bg-green-100"
+                    >
+                      <Phone size={18} className="transition-transform group-hover:scale-110" />
+                    </button>
                     <div>
-                      <p className="font-bold text-slate-900">
-                        {language === 'hi' ? 'फ़ोन' : 'Phone'}
+                      <p className="font-bold text-slate-900 cursor-pointer hover:text-green-600 transition-colors" onClick={() => {
+                        const waNumber = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP_NUMBER || '917489388350';
+                        window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent('Hi, I need help with the MPPSC App. My query is:')}`, '_blank');
+                      }}>
+                        WhatsApp
                       </p>
-                      <p className="text-sm text-slate-500">+91 8766451748</p>
+                      <p className="text-sm text-slate-500">Fastest response for queries</p>
                     </div>
                   </div>
 
-                  {/* <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
-                      <MapPin size={18} />
-                    </div>
+                  <div className="flex items-start gap-4">
+                    <button
+                      onClick={() => {
+                        const botUsername = process.env.NEXT_PUBLIC_SUPPORT_TELEGRAM_BOT_USERNAME || 'mppsc_conversation_bot';
+                        window.open(`https://t.me/${botUsername}?start=general`, '_blank');
+                      }}
+                      className="group flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-50 text-sky-600 transition-colors hover:bg-sky-100"
+                    >
+                      <Send size={18} className="transition-transform group-hover:scale-110" />
+                    </button>
                     <div>
-                      <p className="font-bold text-slate-900">
-                        {language === 'hi' ? 'पता' : 'Address'}
+                      <p className="font-bold text-slate-900 cursor-pointer hover:text-sky-600 transition-colors" onClick={() => {
+                        const botUsername = process.env.NEXT_PUBLIC_SUPPORT_TELEGRAM_BOT_USERNAME || 'mppsc_conversation_bot';
+                        window.open(`https://t.me/${botUsername}?start=general`, '_blank');
+                      }}>
+                        Telegram
                       </p>
-                      <p className="text-sm text-slate-500">
-                        House No. 29, Arjun Singh Gurjar<br />
-                        Ankaleshwar Avenue, Sirol, Morar<br />
-                        Gwalior, Madhya Pradesh 474006
-                      </p>
+                      <p className="text-sm text-slate-500">Dedicated bot support</p>
                     </div>
-                  </div> */}
+                  </div>
                 </div>
               </div>
             </motion.div>
