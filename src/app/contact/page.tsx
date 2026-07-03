@@ -74,7 +74,7 @@ export default function ContactPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-4">
+                  {/* <div className="flex items-start gap-4">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
                       <MapPin size={18} />
                     </div>
@@ -88,7 +88,7 @@ export default function ContactPage() {
                         Gwalior, Madhya Pradesh 474006
                       </p>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </motion.div>
