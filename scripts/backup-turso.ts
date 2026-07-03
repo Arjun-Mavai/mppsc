@@ -15,6 +15,11 @@ async function backupTurso() {
     process.exit(1);
   }
 
+  if (process.env.CONFIRM_PROD_BACKUP !== 'true') {
+    console.error('❌ Refusing to download remote DB backup. Set CONFIRM_PROD_BACKUP=true to proceed.');
+    process.exit(1);
+  }
+
   const backupDir = path.resolve('backups');
   if (!fs.existsSync(backupDir)) {
     fs.mkdirSync(backupDir, { recursive: true });
@@ -47,6 +52,7 @@ async function backupTurso() {
     console.log(`   • Size:  ${sizeInMb} MB`);
   } catch (error) {
     console.error('❌ Failed to create remote backup:', error);
+    process.exitCode = 1;
     // Cleanup incomplete files on failure
     if (fs.existsSync(backupPath)) fs.unlinkSync(backupPath);
     if (fs.existsSync(`${backupPath}-info`)) fs.unlinkSync(`${backupPath}-info`);

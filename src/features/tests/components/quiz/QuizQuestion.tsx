@@ -74,7 +74,7 @@ export function QuizQuestion({
             <span>{t.question} {questionIndex + 1}/{totalQuestions}</span>
             <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black tracking-tight text-slate-500 shadow-sm transition-all">
               <Clock className="h-2.5 w-2.5 text-indigo-500" />
-              {formatTime(currentTimeSpent)}
+              <span>{formatTime(currentTimeSpent)}</span>
             </span>
           </div>
           {/* 🏷️ YEAR / SUBJECT TAG + MARKING */}

@@ -2,12 +2,12 @@ import { config as loadEnv } from 'dotenv';
 loadEnv({ path: '.env' });
 loadEnv({ path: '.env.local', override: true });
 
-import { db } from '../src/db';
-import { payments, mppscUsers } from '../src/db/schema';
-import { desc, eq } from 'drizzle-orm';
-
 async function run() {
   console.log("🔍 Fetching last 5 payments & their clickwrap consent audits...\n");
+
+  const { db } = await import('../src/db');
+  const { payments, mppscUsers } = await import('../src/db/schema');
+  const { desc, eq } = await import('drizzle-orm');
 
   const results = await db
     .select({
@@ -45,7 +45,7 @@ async function run() {
         if (notesObj && notesObj.consent) {
           consentFromPayment = notesObj.consent;
         }
-      } catch (e) {}
+      } catch {}
     }
 
     if (consentFromPayment) {

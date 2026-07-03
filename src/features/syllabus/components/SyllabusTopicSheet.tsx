@@ -214,7 +214,7 @@ export function SyllabusTopicSheet({
         <div className="flex flex-col">
           <h3 className="text-lg font-black tracking-tight text-slate-900 uppercase flex items-center gap-2 leading-none">
             {emoji && <span>{emoji}</span>}
-            {title}
+            <span>{title}</span>
           </h3>
           {description && <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{description}</p>}
         </div>
@@ -260,13 +260,13 @@ export function SyllabusTopicSheet({
                 "font-display text-2xl font-black tracking-tight text-slate-900 sm:text-3xl leading-tight",
                 isHindi ? "font-[family-name:var(--font-pyq-dev)]" : ""
               )}>
-                {topic.front}
+                <span>{topic.front}</span>
               </h2>
 
               {/* About description - always visible under the title */}
               {topic.back && (
                 <div className="mt-3 border-l-4 border-slate-300 pl-4 text-slate-500 text-sm font-medium leading-relaxed italic dark:border-slate-800 dark:text-slate-400">
-                  {topic.back}
+                  <span>{topic.back}</span>
                 </div>
               )}
             </div>
@@ -417,7 +417,7 @@ export function SyllabusTopicSheet({
                           "relative z-10 text-2xl font-black tracking-tight text-amber-950 sm:text-3xl leading-snug",
                           isHindi ? "font-[family-name:var(--font-pyq-dev)]" : ""
                         )}>
-                          {topic.mnemonic}
+                          <span>{topic.mnemonic}</span>
                         </p>
                       </div>
                     </section>
@@ -460,7 +460,7 @@ export function SyllabusTopicSheet({
                                     "text-base font-bold leading-relaxed",
                                     isHindi ? "font-[family-name:var(--font-pyq-dev)] text-slate-900" : "text-slate-800"
                                   )}>
-                                    {parsed.question}
+                                    <span>{parsed.question}</span>
                                   </p>
 
                                   {parsed.answer && (
@@ -549,7 +549,7 @@ export function SyllabusTopicSheet({
                                                   "text-[16px] font-extrabold leading-relaxed text-slate-900",
                                                   isHindi ? "font-[family-name:var(--font-pyq-dev)]" : ""
                                                 )}>
-                                                  {parsed.answer}
+                                                  <span>{parsed.answer}</span>
                                                 </p>
                                               </div>
                                             </div>

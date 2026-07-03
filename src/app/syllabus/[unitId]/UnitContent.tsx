@@ -275,10 +275,10 @@ export default function UnitContent({
             </button>
             <div className="flex flex-col">
               <span className="mb-1 text-[10px] leading-none font-black tracking-[0.2em] text-slate-400 uppercase">
-                {language === 'hi' ? 'यूनिट' : 'Unit'} {unitId.replace('unit_', '')}
+                <span>{language === 'hi' ? 'यूनिट' : 'Unit'}</span> <span>{unitId.replace('unit_', '')}</span>
               </span>
               <h1 className="max-w-[180px] truncate text-lg leading-tight font-black text-slate-900 sm:max-w-md md:text-xl">
-                {currentTitle}
+                <span>{currentTitle}</span>
               </h1>
             </div>
           </div>
@@ -353,7 +353,7 @@ export default function UnitContent({
                 <div className="relative">
                   <span className="relative inline-flex items-center rounded-full bg-slate-900 px-5 py-1.5 text-[11px] font-black tracking-widest text-white uppercase shadow-md">
                     <Sparkles className="mr-2 h-3.5 w-3.5 text-amber-400 fill-amber-400/20 animate-pulse" />
-                    {currentTopics.length} {language === 'hi' ? 'टॉपिक्स' : 'Topics'}
+                    <span>{currentTopics.length}</span> <span>{language === 'hi' ? 'टॉपिक्स' : 'Topics'}</span>
                   </span>
                 </div>
                 <div className="flex w-full items-center justify-center">
@@ -366,6 +366,7 @@ export default function UnitContent({
 
         {viewMode === 'grid' ? (
           <motion.div
+            key="view-grid"
             variants={container}
             initial="hidden"
             animate="show"
@@ -417,7 +418,7 @@ export default function UnitContent({
             )}
           </motion.div>
         ) : viewMode === 'list' ? (
-          <div className="mx-auto mb-12 max-w-4xl space-y-4">
+          <div key="view-list" className="mx-auto mb-12 max-w-4xl space-y-4">
             {currentTopics.slice(0, visibleCount).map((topic, idx) => {
               const locked = isTopicLocked(topic, idx);
               const showFreeBadge = !locked && !isSubscribed && !user && topic.isFree;
@@ -447,29 +448,29 @@ export default function UnitContent({
                   ></div>
                   <div className="relative z-10 flex-1">
                     <h3 className="mb-2 text-2xl font-black tracking-tight text-slate-900 uppercase transition-colors group-hover:text-slate-700">
-                      {topic.front}
+                      <span>{topic.front}</span>
                     </h3>
                     <p className="mb-4 line-clamp-2 text-base leading-relaxed font-medium text-slate-500 italic">
-                      "{topic.back}"
+                      <span>"{topic.back}"</span>
                     </p>
 
                     <div className="flex flex-wrap items-center gap-3">
                       {topic.introduction && (
                         <span className="inline-flex items-center rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-[10px] font-black tracking-widest text-indigo-600 uppercase">
-                          <Sparkles className="mr-2 h-3.5 w-3.5 fill-indigo-600/20" /> View Details
+                          <Sparkles className="mr-2 h-3.5 w-3.5 fill-indigo-600/20" /> <span>View Details</span>
                         </span>
                       )}
                       {locked ? (
                         <span className="inline-flex items-center rounded-lg border border-amber-100 bg-amber-50 px-3 py-1.5 text-[10px] font-black tracking-widest text-amber-600 uppercase">
-                          <Lock className="mr-2 h-3.5 w-3.5" /> PREMIUM LOCKED
+                          <Lock className="mr-2 h-3.5 w-3.5" /> <span>PREMIUM LOCKED</span>
                         </span>
                       ) : showFreeBadge ? (
                         <span className="inline-flex items-center rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-[10px] font-black tracking-widest text-emerald-600 uppercase">
-                          <Sparkles className="mr-2 h-3.5 w-3.5" /> FREE
+                          <Sparkles className="mr-2 h-3.5 w-3.5" /> <span>FREE</span>
                         </span>
                       ) : null}
                       <span className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5 text-[10px] font-black tracking-widest text-slate-400 uppercase transition-colors group-hover:border-slate-200 group-hover:bg-slate-100">
-                        Click for Deep Dive
+                        <span>Click for Deep Dive</span>
                       </span>
                     </div>
                   </div>
@@ -490,7 +491,7 @@ export default function UnitContent({
           </div>
         ) : (
           /* REVISION MODE: Single Swipeable Card */
-          <div className="mx-auto mb-12 max-w-2xl">
+          <div key="view-revision" className="mx-auto mb-12 max-w-2xl">
             {currentTopics.length > 0 ? (
               <div className="space-y-10">
                 <div className="mb-2 flex items-center justify-between">

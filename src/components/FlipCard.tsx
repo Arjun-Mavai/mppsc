@@ -154,7 +154,7 @@ const FlipCard: React.FC<FlipCardProps> = ({
 
             {isLocked && (
               <div className="inline-flex items-center rounded-lg border border-pink-200 bg-gradient-to-r from-red-100 via-pink-100 to-amber-100 px-3 py-1.5 text-xs font-black tracking-widest text-amber-600 uppercase">
-                <Lock className="mr-2 h-3.5 w-3.5 animate-pulse" /> Premium
+                <Lock className="mr-2 h-3.5 w-3.5 animate-pulse" /> <span>Premium</span>
               </div>
             )}
           </div>
@@ -165,7 +165,7 @@ const FlipCard: React.FC<FlipCardProps> = ({
                 size={14}
                 className="transition-transform duration-700 group-hover:rotate-180"
               />
-              {labels.tapToFlip}
+              <span>{labels.tapToFlip}</span>
             </span>
           </div>
         </div>
@@ -182,7 +182,7 @@ const FlipCard: React.FC<FlipCardProps> = ({
           <div className="relative z-10 shrink-0 space-y-2">
             <div className="flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-indigo-400 uppercase">
               <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-slate-700" />
-              {labels.topicAnalysis}
+              <span>{labels.topicAnalysis}</span>
             </div>
             <h4 className="line-clamp-1 text-2xl leading-snug font-bold tracking-tight text-white">
               {backTitle || title}

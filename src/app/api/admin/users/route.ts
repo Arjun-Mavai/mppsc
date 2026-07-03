@@ -108,20 +108,25 @@ export async function GET(req: Request) {
     const paymentsWithConsent = await db
       .select({
         userId: payments.userId,
-        notes: payments.notes
+        notes: payments.notes,
+        createdAt: payments.createdAt,
       })
       .from(payments)
-      .where(sql`notes IS NOT NULL`);
+      .where(sql`notes IS NOT NULL AND status = 'captured' AND exam_type = ${examTypeFilter}`);
 
-    const consentMap = new Map<string, any>();
+    const consentMap = new Map<string, { consent: any, createdAt: number }>();
     for (const p of paymentsWithConsent) {
       if (!p.userId || !p.notes) continue;
       try {
         const notesObj = typeof p.notes === 'string' ? JSON.parse(p.notes) : p.notes;
         if (notesObj && notesObj.consent) {
-          consentMap.set(p.userId, notesObj.consent);
+          const pTime = p.createdAt ? new Date(p.createdAt).getTime() : 0;
+          const existing = consentMap.get(p.userId);
+          if (!existing || pTime > existing.createdAt) {
+            consentMap.set(p.userId, { consent: notesObj.consent, createdAt: pTime });
+          }
         }
-      } catch (e) {}
+      } catch {}
     }
 
     const mappedUsers = allUsers.map((user) => {
@@ -136,7 +141,7 @@ export async function GET(req: Request) {
         userMeta = {};
       }
 
-      const mergedConsent = userMeta.consent || consentMap.get(user.id);
+      const mergedConsent = userMeta.consent || consentMap.get(user.id)?.consent;
       if (mergedConsent) {
         userMeta = {
           ...userMeta,

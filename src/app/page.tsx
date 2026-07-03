@@ -10,7 +10,6 @@ const Testimonials = dynamic(() =>
 
 export default function Home() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mppsc.zenscroll.app';
-
   const faqSchema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
