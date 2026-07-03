@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { logger } from '@/lib/logger';
-import { RotateCcw, Home, CloudLightning, ArrowDown, BookOpen, PenTool, LifeBuoy } from 'lucide-react';
+import { RotateCcw, Home, CloudLightning, BookOpen, PenTool, LifeBuoy } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
@@ -12,6 +12,12 @@ interface AppErrorProps {
   reset: () => void;
   unstable_retry?: () => void;
 }
+
+const NEW_CA_TEXT_STYLE = {
+  color: '#0fffff',
+  WebkitTextStroke: '0.5px #082f49',
+  textShadow: '0px 1px 0px #0369a1, 0px 2px 0px #075985, 0px 3px 0px #082f49, 0px 4px 6px rgba(0,0,0,0.8)'
+};
 
 export default function Error({ error, reset, unstable_retry }: AppErrorProps) {
   const errorWithDigest = error;
@@ -29,12 +35,12 @@ export default function Error({ error, reset, unstable_retry }: AppErrorProps) {
   };
 
   return (
-    <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-[#F5F5F7] p-4 font-sans selection:bg-slate-200 sm:p-6">
+    <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-[#F5F5F7] p-4 font-sans selection:bg-slate-200 sm:p-6 overflow-hidden">
       <motion.div 
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
-        className="relative z-10 w-full max-w-[28rem] overflow-hidden rounded-[2rem] border border-white/50 bg-white/80 p-6 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl sm:p-10"
+        className="relative z-10 w-full max-w-[28rem] rounded-[2rem] border border-white/50 bg-white/80 p-6 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl sm:p-10"
       >
         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 shadow-sm sm:h-20 sm:w-20 sm:rounded-[1.5rem]">
           <CloudLightning className="h-8 w-8 text-slate-700 animate-[pulse_2s_ease-in-out_infinite] sm:h-10 sm:w-10" />
@@ -48,44 +54,66 @@ export default function Error({ error, reset, unstable_retry }: AppErrorProps) {
           Our systems encountered a temporary hiccup.
         </p>
 
-        {/* Motivational Quote - Brand Consistency */}
-        <div className="mx-auto mb-8 max-w-xs rounded-2xl border border-slate-100 bg-slate-50/80 p-4 italic text-slate-500 shadow-inner">
-          <p className="text-sm font-medium leading-relaxed">
+        {/* Motivational Quote - Bilingual & Brand Consistency */}
+        <div className="mx-auto mb-8 max-w-sm rounded-2xl border border-slate-100 bg-slate-50/80 p-5 italic text-slate-600 shadow-inner">
+          <p className="text-sm font-semibold leading-relaxed mb-2">
             "Every setback is a setup for a stronger comeback. Let's get back to your preparation!"
+          </p>
+          <p className="text-[13px] font-bold text-slate-500 leading-relaxed font-[family-name:var(--font-pyq-dev)]">
+            (हर असफलता एक शानदार वापसी की तैयारी है। चलिए फिर से शुरुआत करते हैं!)
           </p>
         </div>
 
         {errorWithDigest.digest && (
-          <div className="mx-auto mb-6 max-w-fit rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5">
+          <div className="mx-auto mb-10 max-w-fit rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5">
             <p className="font-mono text-[9px] uppercase tracking-widest text-slate-400">
               ID: {errorWithDigest.digest}
             </p>
           </div>
         )}
 
-        {/* Pointer Arrow */}
-        <div className="mb-4 flex flex-col items-center justify-center text-slate-400 animate-bounce">
-          <span className="mb-1 text-[10px] font-black uppercase tracking-widest text-slate-500">
-            Click here to refresh
-          </span>
-          <ArrowDown className="h-4 w-4" />
-        </div>
+        {/* Buttons with Pointer Arrow attached to Refresh */}
+        <div className="flex flex-col gap-3 sm:flex-row relative">
+          
+          <div className="relative w-full flex-1">
+            {/* The Curvy Arrow Pointer */}
+            <motion.div
+              initial={{ opacity: 0, x: 15, y: 10, scale: 0.8 }}
+              animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+              transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
+              className="absolute right-[-20px] top-[-60px] w-[100px] h-[70px] pointer-events-none select-none z-30"
+            >
+              <div 
+                className="absolute left-[5px] top-[-10px] whitespace-nowrap text-[12px] font-black uppercase tracking-widest -rotate-6 z-10"
+                style={NEW_CA_TEXT_STYLE}
+              >
+                CLICK HERE ✨
+              </div>
+              <svg width="60" height="60" viewBox="0 0 60 60" fill="none" className="filter drop-shadow-[0_3px_5px_rgba(236,72,153,0.5)] w-[50px] absolute left-0 top-0">
+                <path d="M50 50C40 30 25 15 8 15" stroke="#ec4899" strokeWidth="5" strokeLinecap="round" />
+                <path d="M 5,15 L 20,6 L 16,24 Z" fill="#ec4899" stroke="#ec4899" strokeWidth="2" strokeLinejoin="round" />
+              </svg>
+              <div className="absolute left-[45px] top-[30px] text-[32px] filter drop-shadow-md">
+                🚶‍♂️
+              </div>
+            </motion.div>
 
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button
-            onClick={handleRetry}
-            className="flex h-12 w-full flex-1 items-center justify-center gap-2 rounded-xl bg-slate-900 text-sm font-bold text-white transition-all hover:bg-black hover:shadow-[0_8px_20px_rgba(0,0,0,0.12)] active:scale-95"
-          >
-            <RotateCcw className="h-4 w-4" />
-            Refresh & Resume
-          </Button>
+            <Button
+              onClick={handleRetry}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 text-sm font-black tracking-wide text-white transition-all hover:bg-black hover:shadow-[0_8px_25px_rgba(0,0,0,0.15)] active:scale-[0.98]"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Refresh & Resume
+            </Button>
+          </div>
+
           <Button
             variant="outline"
             asChild
-            className="flex h-12 w-full flex-1 items-center justify-center gap-2 rounded-xl border-slate-200 bg-white text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 active:scale-95"
+            className="flex h-12 w-full flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-white text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98]"
           >
             <Link href="/">
-              <Home className="h-4 w-4" />
+              <Home className="h-4 w-4 text-slate-500" />
               Go Home
             </Link>
           </Button>
@@ -100,7 +128,7 @@ export default function Error({ error, reset, unstable_retry }: AppErrorProps) {
           <div className="h-px flex-1 bg-slate-100" />
         </div>
         
-        {/* Self-Service Options (Reduced Support Load & 85% Retention) */}
+        {/* Self-Service Options */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Link
             href="/syllabus"
