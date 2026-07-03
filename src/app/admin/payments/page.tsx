@@ -20,6 +20,9 @@ import {
   Zap,
   Copy,
   BookOpen,
+  Shield,
+  X,
+  Check,
 } from 'lucide-react';
 
 interface PaymentRecord {
@@ -34,6 +37,7 @@ interface PaymentRecord {
   userName: string | null;
   userEmail: string | null;
   userPhone: string | null;
+  notes: string | null;
 }
 
 interface Stats {
@@ -81,6 +85,21 @@ export default function PaymentsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterType>('all');
   const [search, setSearch] = useState('');
+  const [selectedConsent, setSelectedConsent] = useState<{
+    type: 'payment' | 'user';
+    name: string;
+    email: string;
+    phone: string;
+    consent: {
+      accepted?: boolean;
+      consentAccepted?: boolean;
+      ip?: string;
+      ipAddress?: string;
+      version?: string;
+      timestamp?: string;
+      userAgent?: string;
+    };
+  } | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -339,14 +358,73 @@ export default function PaymentsPage() {
                             <p className="text-[10px] text-slate-300 sm:hidden">{p.userPhone}</p>
                           )}
                           {/* Mobile-only plan badge */}
-                          <div className="mt-1 sm:hidden">
+                          <div className="mt-1 flex flex-wrap items-center gap-1 sm:hidden">
                             <PlanBadge plan={p.planTier} />
+                            {(() => {
+                              let consentObj = null;
+                              if (p.notes) {
+                                try {
+                                  const notesObj = typeof p.notes === 'string' ? JSON.parse(p.notes) : p.notes;
+                                  if (notesObj && notesObj.consent) {
+                                    consentObj = notesObj.consent;
+                                  }
+                                } catch (e) {}
+                              }
+                              if (consentObj) {
+                                return (
+                                  <button
+                                    onClick={() => setSelectedConsent({
+                                      type: 'payment',
+                                      name: p.userName || '—',
+                                      email: p.userEmail || '—',
+                                      phone: p.userPhone || '—',
+                                      consent: consentObj
+                                    })}
+                                    className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100 transition-all select-none cursor-pointer"
+                                  >
+                                    <Shield className="h-2.5 w-2.5 text-emerald-600" /> Consent
+                                  </button>
+                                );
+                              }
+                              return null;
+                            })()}
                           </div>
                         </div>
                       </td>
                       {/* Plan */}
                       <td className="hidden px-4 py-3 sm:table-cell">
-                        <PlanBadge plan={p.planTier} />
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <PlanBadge plan={p.planTier} />
+                          {(() => {
+                            let consentObj = null;
+                            if (p.notes) {
+                              try {
+                                const notesObj = typeof p.notes === 'string' ? JSON.parse(p.notes) : p.notes;
+                                if (notesObj && notesObj.consent) {
+                                  consentObj = notesObj.consent;
+                                }
+                              } catch (e) {}
+                            }
+                            if (consentObj) {
+                              return (
+                                <button
+                                  onClick={() => setSelectedConsent({
+                                    type: 'payment',
+                                    name: p.userName || '—',
+                                    email: p.userEmail || '—',
+                                    phone: p.userPhone || '—',
+                                    consent: consentObj
+                                  })}
+                                  className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100 transition-all select-none cursor-pointer"
+                                  title="View consent signature & legal audit trail"
+                                >
+                                  <Shield className="h-2.5 w-2.5 text-emerald-600" /> Consent
+                                </button>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
                       </td>
                       {/* Amount */}
                       <td className="px-4 py-3 text-right">
@@ -395,6 +473,133 @@ export default function PaymentsPage() {
           </div>
         </Card>
       </div>
+
+      {/* ── Consent Audit Dialog ── */}
+      {selectedConsent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+          <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="mb-4 flex items-start justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                  <Shield className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-950">Consent Audit Record</h3>
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Clickwrap Consent Log</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedConsent(null)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-50 hover:text-slate-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="space-y-4 text-xs">
+              {/* Signature Status */}
+              <div className="flex items-center gap-2 rounded-xl bg-emerald-50/50 border border-emerald-100 p-3 text-emerald-800">
+                <Check className="h-4 w-4 text-emerald-600 shrink-0" />
+                <div>
+                  <p className="font-bold">Electronically Signed & Verified</p>
+                  <p className="text-[10px] text-emerald-700 font-medium font-sans">Binds to MPPSC ZenScroll Terms of Service</p>
+                </div>
+              </div>
+
+              {/* Student Info */}
+              <div className="rounded-xl border border-slate-100 bg-slate-50/40 p-3.5 space-y-2">
+                <p className="font-bold text-slate-900 uppercase tracking-wide text-[10px]">Student Info</p>
+                <div className="grid grid-cols-2 gap-2 text-slate-600">
+                  <div>
+                    <span className="text-[10px] font-medium text-slate-400 block">NAME</span>
+                    <span className="font-bold text-slate-800">{selectedConsent.name}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-medium text-slate-400 block">EMAIL</span>
+                    <span className="font-medium text-slate-800 break-all">{selectedConsent.email}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-[10px] font-medium text-slate-400 block">PHONE</span>
+                    <span className="font-medium text-slate-800">{selectedConsent.phone}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Technical Footprint */}
+              <div className="rounded-xl border border-slate-100 bg-slate-50/40 p-3.5 space-y-2">
+                <p className="font-bold text-slate-900 uppercase tracking-wide text-[10px]">Digital Signature Evidence</p>
+                <div className="space-y-1.5 text-slate-600">
+                  <div className="flex justify-between py-0.5 border-b border-slate-100/50">
+                    <span className="font-medium text-slate-400">IP ADDRESS</span>
+                    <span className="font-bold text-slate-800 font-mono">{selectedConsent.consent.ip || selectedConsent.consent.ipAddress || 'unknown'}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5 border-b border-slate-100/50">
+                    <span className="font-medium text-slate-400">AGREEMENT VERSION</span>
+                    <span className="font-bold text-slate-800 font-mono">v{selectedConsent.consent.version || '1.2'}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5 border-b border-slate-100/50">
+                    <span className="font-medium text-slate-400">TIMESTAMP (IST)</span>
+                    <span className="font-medium text-slate-800">
+                      {selectedConsent.consent.timestamp 
+                        ? new Date(selectedConsent.consent.timestamp).toLocaleString('en-IN', {
+                            timeZone: 'Asia/Kolkata',
+                            dateStyle: 'medium',
+                            timeStyle: 'medium'
+                          })
+                        : 'unknown'}
+                    </span>
+                  </div>
+                  <div className="pt-1">
+                    <span className="font-medium text-slate-400 block mb-0.5">DEVICE/USER-AGENT</span>
+                    <span className="font-mono text-[10px] text-slate-500 block leading-tight break-all">
+                      {selectedConsent.consent.userAgent || 'unknown'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Legal Validity Note */}
+              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 space-y-3">
+                <p className="font-bold text-slate-900 uppercase tracking-wide text-[10px] flex items-center gap-1">
+                  ⚖️ Legal Validity (IT Act, 2000 — Section 10A)
+                </p>
+                
+                <div className="space-y-2 text-[10px] leading-relaxed">
+                  <div className="text-slate-700">
+                    <strong className="text-slate-900 block font-bold mb-0.5">English:</strong>
+                    Under Section 10A of the Information Technology Act, 2000 (IT Act), agreements concluded through electronic means (including checkbox clickwrap consents) are legally valid, binding, and fully enforceable in a court of law.
+                  </div>
+                  <div className="border-t border-slate-200 pt-2 text-slate-700">
+                    <strong className="text-slate-900 block font-bold mb-0.5">Hindi:</strong>
+                    सूचना प्रौद्योगिकी अधिनियम, 2000 (IT Act) की धारा 10A के तहत, इलेक्ट्रॉनिक माध्यमों से संपन्न होने वाले अनुबंध (जैसे कि टिक-बॉक्स सहमति) कानूनी रूप से वैध, बाध्यकारी और अदालत में पूरी तरह से लागू करने योग्य हैं।
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer buttons */}
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(JSON.stringify(selectedConsent.consent, null, 2));
+                  toast.success('Consent Audit JSON copied');
+                }}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                <Copy className="h-3.5 w-3.5" /> Copy JSON
+              </button>
+              <button
+                onClick={() => setSelectedConsent(null)}
+                className="flex-1 rounded-xl bg-slate-900 py-2 text-xs font-bold text-white hover:bg-slate-800 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

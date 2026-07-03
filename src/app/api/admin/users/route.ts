@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { mppscUsers } from '@/db/schema';
+import { mppscUsers, payments } from '@/db/schema';
 import { cookies } from 'next/headers';
 import { sql, eq } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
@@ -104,8 +104,54 @@ export async function GET(req: Request) {
       if (user.previousUserId) stats.migrations++;
     }
 
+    // 🛡️ BACKFILL/RESOLVE MISSING USER CONSENT FROM PAYMENTS HISTORY
+    const paymentsWithConsent = await db
+      .select({
+        userId: payments.userId,
+        notes: payments.notes
+      })
+      .from(payments)
+      .where(sql`notes IS NOT NULL`);
+
+    const consentMap = new Map<string, any>();
+    for (const p of paymentsWithConsent) {
+      if (!p.userId || !p.notes) continue;
+      try {
+        const notesObj = typeof p.notes === 'string' ? JSON.parse(p.notes) : p.notes;
+        if (notesObj && notesObj.consent) {
+          consentMap.set(p.userId, notesObj.consent);
+        }
+      } catch (e) {}
+    }
+
+    const mappedUsers = allUsers.map((user) => {
+      let userMeta: any = user.metadata;
+      if (typeof userMeta === 'string') {
+        try {
+          userMeta = JSON.parse(userMeta);
+        } catch {
+          userMeta = {};
+        }
+      } else if (!userMeta || typeof userMeta !== 'object') {
+        userMeta = {};
+      }
+
+      const mergedConsent = userMeta.consent || consentMap.get(user.id);
+      if (mergedConsent) {
+        userMeta = {
+          ...userMeta,
+          consent: mergedConsent
+        };
+      }
+
+      return {
+        ...user,
+        metadata: userMeta
+      };
+    });
+
     return NextResponse.json(
-      { users: allUsers, stats },
+      { users: mappedUsers, stats },
       {
         headers: { 'Cache-Control': 'no-store' },
       }
