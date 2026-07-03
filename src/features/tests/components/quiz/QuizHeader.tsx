@@ -152,7 +152,7 @@ export function QuizHeader({
           )}
         >
           <Clock className="h-4 w-4 text-slate-400" />
-          {formatTime(timeLeft)}
+          <span>{formatTime(timeLeft)}</span>
         </div>
 
         {/* Focus Mode Indicator - subtle pink dot */}

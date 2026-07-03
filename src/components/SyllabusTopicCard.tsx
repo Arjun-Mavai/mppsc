@@ -113,9 +113,9 @@ export const SyllabusTopicCard: React.FC<SyllabusTopicCardProps> = ({
           <div className="flex items-center gap-2 rounded-full border border-white bg-white/80 px-3 py-1.5 shadow-sm backdrop-blur-sm">
             <Search className={cn('h-3.5 w-3.5', style.icon)} />
             <span className="text-[10px] font-black tracking-wider text-slate-800 uppercase">
-              {variant === 'unit'
+              <span>{variant === 'unit'
                 ? `${labels.unit} ${id.toString().replace('unit_', '')}`
-                : labels.search}
+                : labels.search}</span>
             </span>
           </div>
         ) : (
@@ -158,31 +158,31 @@ export const SyllabusTopicCard: React.FC<SyllabusTopicCardProps> = ({
       {/* Bottom Content: Title & Badges */}
       <div className="relative z-10 space-y-3">
         <h3 className="line-clamp-2 text-xl leading-[1.2] font-black text-slate-900 transition-colors group-hover:text-slate-800">
-          {title}
+          <span>{title}</span>
         </h3>
 
         <div className="flex flex-wrap items-center gap-2">
           {hasAiContent && (
             <div className="inline-flex items-center rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[9px] font-black tracking-widest text-indigo-600 uppercase shadow-sm">
-              <Sparkles className="mr-1.5 h-3 w-3 fill-indigo-600/20" /> View Details
+              <Sparkles className="mr-1.5 h-3 w-3 fill-indigo-600/20" /> <span>View Details</span>
             </div>
           )}
           {isLocked ? (
             <div className="inline-flex items-center rounded-lg border border-white bg-white/60 px-2.5 py-1 text-[9px] font-black tracking-widest text-amber-600 uppercase shadow-sm">
-              <Lock className="mr-1.5 h-3 w-3" /> Premium
+              <Lock className="mr-1.5 h-3 w-3" /> <span>Premium</span>
             </div>
           ) : isFree ? (
             <div className="inline-flex items-center rounded-lg border border-white bg-white px-2.5 py-1 text-[9px] font-black tracking-widest text-emerald-600 uppercase shadow-sm">
-              <Sparkles className="mr-1.5 h-3 w-3" /> Free
+              <Sparkles className="mr-1.5 h-3 w-3" /> <span>Free</span>
             </div>
           ) : subtitle ? (
             <div className="inline-flex items-center text-[9px] font-black tracking-widest text-slate-400 uppercase">
               <div className="mr-2 h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-              {subtitle}
+              <span>{subtitle}</span>
             </div>
           ) : (
             <div className="inline-flex items-center text-[9px] font-black tracking-widest text-slate-400 uppercase">
-              Ready for deep dive
+              <span>Ready for deep dive</span>
             </div>
           )}
         </div>
