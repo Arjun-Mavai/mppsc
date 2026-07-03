@@ -448,16 +448,16 @@ export default function UnitContent({
                   ></div>
                   <div className="relative z-10 flex-1">
                     <h3 className="mb-2 text-2xl font-black tracking-tight text-slate-900 uppercase transition-colors group-hover:text-slate-700">
-                      {topic.front}
+                      <span>{topic.front}</span>
                     </h3>
                     <p className="mb-4 line-clamp-2 text-base leading-relaxed font-medium text-slate-500 italic">
-                      "{topic.back}"
+                      <span>"{topic.back}"</span>
                     </p>
 
                     <div className="flex flex-wrap items-center gap-3">
                       {topic.introduction && (
                         <span className="inline-flex items-center rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-[10px] font-black tracking-widest text-indigo-600 uppercase">
-                          <Sparkles className="mr-2 h-3.5 w-3.5 fill-indigo-600/20" /> View Details
+                          <Sparkles className="mr-2 h-3.5 w-3.5 fill-indigo-600/20" /> <span>View Details</span>
                         </span>
                       )}
                       {locked ? (
