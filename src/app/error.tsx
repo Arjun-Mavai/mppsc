@@ -80,7 +80,7 @@ export default function Error({ error, reset, unstable_retry }: AppErrorProps) {
                 CLICK HERE ✨
               </div>
               <svg width="60" height="60" viewBox="0 0 60 60" fill="none" className="filter drop-shadow-[0_3px_5px_rgba(236,72,153,0.5)] w-[50px] absolute left-0 top-0">
-                <path d="M45 45 C 55 15, 25 0, 8 15" stroke="#ec4899" strokeWidth="4.5" strokeLinecap="round" />
+                <path d="M50 50C40 30 25 15 8 15" stroke="#ec4899" strokeWidth="5" strokeLinecap="round" />
                 <path d="M 5,15 L 20,6 L 16,24 Z" fill="#ec4899" stroke="#ec4899" strokeWidth="2" strokeLinejoin="round" />
               </svg>
               <div className="absolute left-[40px] top-[24px] text-[32px] filter drop-shadow-md">

@@ -1056,7 +1056,7 @@ export default function UsersClient() {
                                   if (metaObj && metaObj.consent) {
                                     consentObj = metaObj.consent;
                                   }
-                                } catch (e) {}
+                                } catch {}
                               }
                               if (consentObj) {
                                 return (
@@ -1522,7 +1522,7 @@ Wish you all the best for your preparation! 👍`;
                   <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Clickwrap Consent Log</p>
                 </div>
               </div>
-              <button
+              <button type="button" aria-label="Close consent audit dialog"
                 onClick={() => setSelectedConsent(null)}
                 className="rounded-lg p-1 text-slate-400 hover:bg-slate-50 hover:text-slate-600"
               >
@@ -1536,7 +1536,7 @@ Wish you all the best for your preparation! 👍`;
               <div className="flex items-center gap-2 rounded-xl bg-emerald-50/50 border border-emerald-100 p-3 text-emerald-800">
                 <Check className="h-4 w-4 text-emerald-600 shrink-0" />
                 <div>
-                  <p className="font-bold">Electronically Signed & Verified</p>
+                  <p className="font-bold">{selectedConsent.consent.accepted || selectedConsent.consent.consentAccepted ? 'Electronically Signed & Verified' : 'Consent Not Accepted'}</p>
                   <p className="text-[10px] text-emerald-700 font-medium">Binds to MPPSC ZenScroll Terms of Service</p>
                 </div>
               </div>

@@ -108,20 +108,22 @@ export async function GET(req: Request) {
     const paymentsWithConsent = await db
       .select({
         userId: payments.userId,
-        notes: payments.notes
+        notes: payments.notes,
       })
       .from(payments)
-      .where(sql`notes IS NOT NULL`);
+      .where(sql`notes IS NOT NULL AND status = 'captured' AND exam_type = ${examTypeFilter}`)
+      .orderBy(sql`created_at DESC`);
 
     const consentMap = new Map<string, any>();
     for (const p of paymentsWithConsent) {
       if (!p.userId || !p.notes) continue;
+      if (consentMap.has(p.userId)) continue; // keep latest (query ordered DESC)
       try {
         const notesObj = typeof p.notes === 'string' ? JSON.parse(p.notes) : p.notes;
         if (notesObj && notesObj.consent) {
           consentMap.set(p.userId, notesObj.consent);
         }
-      } catch (e) {}
+      } catch {}
     }
 
     const mappedUsers = allUsers.map((user) => {
