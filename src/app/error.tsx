@@ -20,8 +20,6 @@ const NEW_CA_TEXT_STYLE = {
 };
 
 export default function Error({ error, reset, unstable_retry }: AppErrorProps) {
-  const errorWithDigest = error;
-
   useEffect(() => {
     logger.error('App Error:', error);
   }, [error]);
@@ -55,22 +53,14 @@ export default function Error({ error, reset, unstable_retry }: AppErrorProps) {
         </p>
 
         {/* Motivational Quote - Bilingual & Brand Consistency */}
-        <div className="mx-auto mb-8 max-w-sm rounded-2xl border border-slate-100 bg-slate-50/80 p-5 italic text-slate-600 shadow-inner">
-          <p className="text-sm font-semibold leading-relaxed mb-2">
-            "Every setback is a setup for a stronger comeback. Let's get back to your preparation!"
+        <div className="mx-auto mb-10 max-w-sm rounded-2xl border border-slate-100 bg-slate-50/80 p-5 italic text-slate-600 shadow-inner">
+          <p className="text-[15px] font-bold leading-relaxed mb-2 text-slate-700">
+            "A smooth sea never made a skilled sailor. Keep pushing forward!"
           </p>
-          <p className="text-[13px] font-bold text-slate-500 leading-relaxed font-[family-name:var(--font-pyq-dev)]">
-            (हर असफलता एक शानदार वापसी की तैयारी है। चलिए फिर से शुरुआत करते हैं!)
+          <p className="text-[13.5px] font-bold text-slate-500 leading-relaxed font-[family-name:var(--font-pyq-dev)]">
+            (शांत समुद्र कभी कुशल नाविक नहीं बनाता। अपनी तैयारी को बिना रुके आगे बढ़ाएं!)
           </p>
         </div>
-
-        {errorWithDigest.digest && (
-          <div className="mx-auto mb-10 max-w-fit rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5">
-            <p className="font-mono text-[9px] uppercase tracking-widest text-slate-400">
-              ID: {errorWithDigest.digest}
-            </p>
-          </div>
-        )}
 
         {/* Buttons with Pointer Arrow attached to Refresh */}
         <div className="flex flex-col gap-3 sm:flex-row relative">
@@ -90,10 +80,10 @@ export default function Error({ error, reset, unstable_retry }: AppErrorProps) {
                 CLICK HERE ✨
               </div>
               <svg width="60" height="60" viewBox="0 0 60 60" fill="none" className="filter drop-shadow-[0_3px_5px_rgba(236,72,153,0.5)] w-[50px] absolute left-0 top-0">
-                <path d="M50 50C40 30 25 15 8 15" stroke="#ec4899" strokeWidth="5" strokeLinecap="round" />
+                <path d="M45 45 C 55 15, 25 0, 8 15" stroke="#ec4899" strokeWidth="4.5" strokeLinecap="round" />
                 <path d="M 5,15 L 20,6 L 16,24 Z" fill="#ec4899" stroke="#ec4899" strokeWidth="2" strokeLinejoin="round" />
               </svg>
-              <div className="absolute left-[45px] top-[30px] text-[32px] filter drop-shadow-md">
+              <div className="absolute left-[40px] top-[24px] text-[32px] filter drop-shadow-md">
                 🚶‍♂️
               </div>
             </motion.div>
