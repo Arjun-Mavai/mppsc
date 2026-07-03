@@ -49,7 +49,7 @@ export default function Error({ error, reset, unstable_retry }: AppErrorProps) {
         </h1>
         
         <p className="mb-6 text-sm font-semibold text-slate-600 sm:text-base">
-          Our systems encountered a temporary hiccup.
+          Please refresh the page to continue.
         </p>
 
         {/* Motivational Quote - Bilingual & Brand Consistency */}
