@@ -38,7 +38,7 @@ export function AppFooter() {
             House No. 29, Arjun Singh Gurjar, Ankaleshwar Avenue,<br />
             Sirol, Morar, Gwalior, Madhya Pradesh 474006
           </p> */}
-          <p className="mt-3 text-xs text-slate-400">© 2026 Mindful MPPSC. All rights reserved.</p>
+          <p className="mt-3 text-xs text-slate-400">© Mindful MPPSC. All rights reserved.</p>
           <p className="mt-1 text-[10px] font-medium text-slate-300">Made with ❤️ for MP</p>
         </div>
 
