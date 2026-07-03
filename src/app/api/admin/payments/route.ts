@@ -52,6 +52,7 @@ export async function GET(req: Request) {
         userName: mppscUsers.name,
         userEmail: mppscUsers.email,
         userPhone: mppscUsers.phone,
+        notes: payments.notes,
       })
       .from(payments)
       .leftJoin(mppscUsers, eq(payments.userId, mppscUsers.id))
