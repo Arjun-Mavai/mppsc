@@ -52,15 +52,25 @@ export default function ContactPage() {
                 <h3 className="text-xl font-bold text-slate-900">{t.contactInfo}</h3>
 
                 <div className="space-y-4">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
-                      <Mail size={18} />
+                  <button
+                    onClick={() => {
+                      window.location.href = `mailto:${contactEmail}`;
+                    }}
+                    className="group relative flex w-full items-center justify-between overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-50 to-violet-50 p-4 border border-indigo-100 shadow-sm transition-all hover:scale-[1.02] hover:shadow-md hover:border-indigo-300 active:scale-[0.98]"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#4f46e5] text-white shadow-sm transition-transform group-hover:scale-110">
+                        <Mail size={20} strokeWidth={2.5} />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-black text-indigo-950 text-[17px] tracking-tight">{t.email}</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-700/80 mt-0.5">Detailed inquiries</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-bold text-slate-900">{t.email}</p>
-                      <p className="text-sm text-slate-500">{contactEmail}</p>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-200/50 text-indigo-700 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-[-4px]">
+                      <span className="font-bold text-lg leading-none">→</span>
                     </div>
-                  </div>
+                  </button>
 
                   <button
                     onClick={() => {
