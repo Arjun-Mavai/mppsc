@@ -95,7 +95,7 @@ export default function FeedbackPage() {
         <div className="mb-10 space-y-2 text-center">
           <h1 className="font-display text-3xl font-bold text-slate-900">We Value Your Feedback</h1>
           <p className="text-slate-500">
-            Help us make MPPSC 2026 the best preparation platform for you.
+            Help us make Mindful MPPSC the best preparation platform for you.
           </p>
         </div>
 
