@@ -10,7 +10,7 @@ const Testimonials = dynamic(() =>
 
 export default function Home() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mppsc.zenscroll.app';
-
+ throw new Error("Testing the new premium error page!"); // 👈 बस यह लाइन जोड़ दें
   const faqSchema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
