@@ -49,7 +49,7 @@ export default function Error({ error, reset, unstable_retry }: AppErrorProps) {
         </h1>
         
         <p className="mb-6 text-sm font-semibold text-slate-600 sm:text-base">
-          Please refresh the page to continue.
+          Please try again to continue.
         </p>
 
         {/* Motivational Quote - Bilingual & Brand Consistency */}
@@ -93,7 +93,7 @@ export default function Error({ error, reset, unstable_retry }: AppErrorProps) {
               className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 text-sm font-black tracking-wide text-white transition-all hover:bg-black hover:shadow-[0_8px_25px_rgba(0,0,0,0.15)] active:scale-[0.98]"
             >
               <RotateCcw className="h-4 w-4" />
-              Refresh & Resume
+              Try again
             </Button>
           </div>
 
