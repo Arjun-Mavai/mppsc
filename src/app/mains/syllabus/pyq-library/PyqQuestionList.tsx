@@ -1,7 +1,7 @@
 'use client';
 
 import { memo, useMemo, useState, useCallback } from 'react';
-import { Lock, Layers, Trophy } from 'lucide-react';
+import { Lock, Layers, Trophy, LayoutGrid } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -40,6 +40,7 @@ export type QRow = {
   expertInsightsHi: string | null;
   expertInsightsEn: string | null;
   currentAffairsData?: any | null;
+  isLocked?: boolean;
   variants: {
     slot: number;
     styleLabel: string | null;
@@ -94,6 +95,7 @@ export const PyqQuestionList = memo(function PyqQuestionList({
   const [marksFilter, setMarksFilter] = useState<number | 'ALL'>('ALL');
   const [unitFilter, setUnitFilter] = useState<string | 'ALL'>('ALL');
   const [showSubjectFilter, setShowSubjectFilter] = useState(false);
+  const [showUnitDropdown, setShowUnitDropdown] = useState(false);
 
   // ⚡ Stable callbacks prevent cascading re-renders
   const handleQOpen = useCallback((qId: string, val: boolean) => {
@@ -217,7 +219,7 @@ export const PyqQuestionList = memo(function PyqQuestionList({
                   style: { background: '#ecfdf5', color: '#064e3b', border: '1px solid #34d399' }
                 })}
                 className={cn(
-                  "flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 rounded-full transition-all active:scale-95 relative",
+                  "flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 rounded-full transition-all active:scale-95 relative shrink-0",
                   themeDeep 
                     ? "bg-slate-800 border-[1.5px] border-slate-700 hover:bg-slate-700" 
                     : "bg-white border-[1.5px] border-slate-200 shadow-sm hover:bg-slate-50"
@@ -234,7 +236,98 @@ export const PyqQuestionList = memo(function PyqQuestionList({
                 )}
               </button>
 
-              {/* Separator */}
+              {/* Toggle Unit Dropdown Button */}
+              <button
+                type="button"
+                onClick={() => vaultUnlocked ? setShowUnitDropdown(!showUnitDropdown) : toast(hi ? "यह एक प्रीमियम फ़ीचर है। सब्सक्राइब करें 💎" : "Premium feature. Subscribe to unlock 💎", {
+                  style: { background: '#ecfdf5', color: '#064e3b', border: '1px solid #34d399' }
+                })}
+                className={cn(
+                  "flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 rounded-full transition-all active:scale-95 relative shrink-0",
+                  themeDeep 
+                    ? "bg-slate-800 border-[1.5px] border-slate-700 hover:bg-slate-700" 
+                    : "bg-white border-[1.5px] border-slate-200 shadow-sm hover:bg-slate-50"
+                )}
+                title={hi ? "इकाई अनुसार फ़िल्टर" : "Filter by Unit"}
+              >
+                <LayoutGrid className={cn("h-4 w-4 sm:h-[18px] sm:w-[18px]", themeDeep ? "text-indigo-400" : "text-indigo-500")} />
+                {!vaultUnlocked && (
+                  <div className="absolute -bottom-1 -right-1 bg-gradient-to-br from-emerald-300 to-emerald-600 dark:from-emerald-500 dark:to-emerald-700 rounded-full p-[2px] shadow-[0_2px_4px_rgba(16,185,129,0.4)] ring-[1.5px] ring-white dark:ring-slate-900">
+                    <Lock className="h-[10px] w-[10px] sm:h-3 sm:w-3 text-white dark:text-emerald-50 drop-shadow-sm" />
+                  </div>
+                )}
+              </button>
+
+              <AnimatePresence>
+                {showUnitDropdown && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95, filter: 'blur(2px)' }}
+                    animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                    exit={{ opacity: 0, scale: 0.95, filter: 'blur(2px)' }}
+                    transition={{ duration: 0.15 }}
+                    className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 z-[100]"
+                  >
+                    <div className="relative w-full sm:w-48">
+                  <Select value={unitFilter} onValueChange={(val) => setUnitFilter(val)}>
+                    <SelectTrigger
+                      className={cn(
+                        'h-10 w-full rounded-2xl px-4 text-[13px] font-bold shadow-sm ring-offset-0 transition-all focus:ring-0',
+                        themeDeep
+                          ? 'border-slate-700 bg-slate-900 text-slate-200 hover:border-indigo-500/50 hover:bg-slate-800 [&_svg]:text-slate-400'
+                          : 'border-slate-200 bg-white text-slate-700 hover:border-indigo-500/40 hover:bg-slate-50'
+                      )}
+                    >
+                      <SelectValue placeholder={hi ? 'सभी इकाइयाँ' : 'All Units'} />
+                    </SelectTrigger>
+                    <SelectContent
+                      position="popper"
+                      sideOffset={5}
+                      viewportClassName="max-h-[280px] overflow-y-auto py-1.5 no-scrollbar"
+                      className={cn(
+                        'z-[200] w-[min(100%,var(--radix-select-trigger-width))] min-w-[200px] rounded-2xl shadow-xl',
+                        themeDeep
+                          ? 'border border-slate-700 bg-slate-900 text-slate-100'
+                          : 'border border-slate-200 bg-white text-slate-800'
+                      )}
+                    >
+                      <SelectItem
+                        value="ALL"
+                        className={cn(
+                          'cursor-pointer py-2.5 px-3 text-[13px] font-bold transition-colors rounded-xl mx-1 my-0.5',
+                          themeDeep
+                            ? 'text-slate-300 focus:bg-slate-800 focus:text-white'
+                            : 'text-slate-700 focus:bg-indigo-50 focus:text-indigo-950'
+                        )}
+                      >
+                        {hi ? 'सभी इकाइयाँ' : 'All Units'}
+                      </SelectItem>
+                      {availableUnits.map((u) => {
+                        const unitLabel = u.part !== 'NONE' 
+                          ? (hi ? `खंड ${u.part} : इकाई ${u.num}` : `Part ${u.part} : Unit ${u.num}`)
+                          : (hi ? `इकाई ${u.num}` : `Unit ${u.num}`);
+                        return (
+                          <SelectItem
+                            key={u.id}
+                            value={u.id}
+                            className={cn(
+                              'cursor-pointer py-2.5 px-3 text-[13px] font-semibold transition-colors rounded-xl mx-1 my-0.5',
+                              themeDeep
+                                ? 'text-slate-300 focus:bg-slate-800 focus:text-white'
+                                : 'text-slate-700 focus:bg-indigo-50 focus:text-indigo-950'
+                            )}
+                          >
+                            {unitLabel}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Separator */}
               <div className="hidden sm:block h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
 
               {/* Subject / Unit Filter Dropdown */}
@@ -363,6 +456,7 @@ export const PyqQuestionList = memo(function PyqQuestionList({
             setInsightsOpen={(val) => handleInsightOpen(q.id, val)}
             examYear={examYear}
             paperNumber={paperNumber}
+            vaultUnlocked={vaultUnlocked}
           />
         ))}
       </ul>
@@ -446,6 +540,7 @@ const PyqQuestionRow = memo(({
   setInsightsOpen,
   examYear,
   paperNumber,
+  vaultUnlocked,
 }: {
   q: QRow;
   qi: number;
@@ -458,6 +553,7 @@ const PyqQuestionRow = memo(({
   setInsightsOpen: (val: boolean) => void;
   examYear: number;
   paperNumber: number;
+  vaultUnlocked: boolean;
 }) => {
   
   const hue = MAIN_SYLLABUS_CARD_HUES[qi % 4];
@@ -488,7 +584,7 @@ const PyqQuestionRow = memo(({
   }
 
   const insightsText = insightsFor(q);
-  const hasInsights = insightsText.length > 0 || (q.currentAffairsData && Object.keys(q.currentAffairsData).length > 0);
+  const hasInsights = q.isLocked || insightsText.length > 0 || (q.currentAffairsData && Object.keys(q.currentAffairsData).length > 0);
 
   return (
     <li
@@ -643,6 +739,35 @@ const PyqQuestionRow = memo(({
                           <div
                             role="button"
                             onClick={() => {
+                              // LOGIC: Expert Tips khulega NAHI agar:
+                              // 1. Question officially locked hai (q.isLocked)
+                              // YA 2. User free/guest hai aur ye 2-marker nahi hai (like 5, 7, 11)
+                              const blockExpertTips = q.isLocked || (!vaultUnlocked && q.marks !== 2);
+
+                              if (blockExpertTips) {
+                                // Context-aware toast message
+                                const msgHi = q.isLocked 
+                                  ? "यह एक प्रीमियम फ़ीचर है। सब्सक्राइब करें 💎" 
+                                  : "यह बड़े प्रश्नों के लिए एक प्रीमियम फ़ीचर है। सब्सक्राइब करें 💎";
+                                  
+                                const msgEn = q.isLocked
+                                  ? "Premium feature. Subscribe to unlock 💎"
+                                  : "Premium feature for long answers. Subscribe to unlock 💎";
+
+                                toast(effectiveHi ? msgHi : msgEn, {
+                                  style: { background: '#ecfdf5', color: '#064e3b', border: '1px solid #34d399' }
+                                });
+                                return;
+                              }
+                              
+                              // Agar free user 2-marker click karta hai toh usko demo toast dikhao aur open karne do
+                              if (!vaultUnlocked && !insightsOpen) {
+                                toast(effectiveHi ? "प्रीमियम फ़ीचर का मुफ़्त डेमो 💎" : "Free preview of a premium feature 💎", {
+                                  style: { background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0' },
+                                  duration: 2000
+                                });
+                              }
+                              
                               const scrollY = window.scrollY;
                               setInsightsOpen(!insightsOpen);
                               requestAnimationFrame(() => {
@@ -660,7 +785,14 @@ const PyqQuestionRow = memo(({
                             <Trophy className="h-4.5 w-4.5 shrink-0 text-amber-500" />
                             {effectiveHi ? 'एक्सपर्ट टिप्स' : 'Expert Tips'}
                           </div>
-                          {!insightsOpen && !!q.currentAffairsData && (
+                          
+                          {!vaultUnlocked && (
+                            <div className="absolute -bottom-1.5 -right-1.5 bg-gradient-to-br from-emerald-400 to-emerald-600 dark:from-emerald-500 dark:to-emerald-700 rounded-full p-[3px] shadow-[0_2px_4px_rgba(16,185,129,0.5)] ring-[1.5px] ring-slate-900 z-10">
+                              <Lock className="h-3 w-3 text-white dark:text-emerald-50 drop-shadow-sm" />
+                            </div>
+                          )}
+
+                          {!insightsOpen && !q.isLocked && !!q.currentAffairsData && (
                             <motion.div
                               initial={{ opacity: 0, x: 15, y: 10, scale: 0.8 }}
                               animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}

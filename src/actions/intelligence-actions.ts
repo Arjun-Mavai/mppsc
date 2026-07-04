@@ -113,7 +113,7 @@ export async function submitIntelligenceFeedback(data: IntelligenceFeedbackData)
                        source || 'Generic Page';
 
     await sendTelegramNotification(
-      `${isPro ? '💎' : '🧠'} <b>Solution Interaction</b>\n` +
+      `${isPro ? '💎' : '🧠'} <b>MPPSC Zen - Solution Interaction</b>\n` +
       `━━━━━━━━━━━━━━━━\n` +
       `<b>Action:</b> ${reactionLabel}\n` +
       `<b>Source:</b> <code>${sourceLabel}</code>\n` +

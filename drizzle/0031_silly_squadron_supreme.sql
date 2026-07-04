@@ -1,0 +1,1 @@
+-- empty migration as it was missing

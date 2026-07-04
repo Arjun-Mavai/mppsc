@@ -1,5 +1,8 @@
 import { getTelemetryEnabled } from './system-settings';
 import { escapeHTML } from './telegram';
+import { db } from '@/db';
+import { mainsTopics, mainsPapers } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
 export interface TelemetryEvent {
   type: 'page_view' | 'page_dwell' | 'action';
@@ -67,9 +70,45 @@ function formatDuration(seconds: number): string {
 }
 
 /**
+ * Attempts to resolve a path containing UUIDs (like /mains/syllabus/[paperId]/[topicId])
+ * into a human-readable title.
+ */
+async function resolvePathTitle(path: string): Promise<string | null> {
+  try {
+    if (!path.includes('/mains/syllabus/')) return null;
+    
+    // Extract IDs from path, e.g., /mains/syllabus/[paperId]/[topicId]
+    const parts = path.split('?')[0].split('/').filter(Boolean); 
+    
+    if (parts.length >= 3 && parts[0] === 'mains' && parts[1] === 'syllabus') {
+      const paperId = parts[2];
+      const topicId = parts[3]; 
+
+      if (topicId) {
+        // Handle standalone pyq routes safely
+        if (topicId === 'pyq-library') return 'Mains PYQ Library';
+        
+        const topic = await db.query.mainsTopics.findFirst({
+          where: eq(mainsTopics.id, topicId)
+        });
+        if (topic) return `Topic: ${topic.titleEn || topic.titleHi}`;
+      }
+      
+      const paper = await db.query.mainsPapers.findFirst({
+        where: eq(mainsPapers.id, paperId)
+      });
+      if (paper) return `Paper ${paper.paperNumber}: ${paper.titleEn || paper.titleHi}`;
+    }
+  } catch (e) {
+    // Ignore DB errors so telemetry doesn't crash
+  }
+  return null;
+}
+
+/**
  * Formats a single telemetry event into standard beautiful HTML for Telegram
  */
-function formatTelemetryMessage(event: TelemetryEvent): string {
+async function formatTelemetryMessage(event: TelemetryEvent): Promise<string> {
   // Identify payment funnel
   const isPaymentPath = 
     event.path.startsWith('/pricing') || 
@@ -144,10 +183,11 @@ function formatTelemetryMessage(event: TelemetryEvent): string {
     
     // Highlight if payment landing (very high intent)
     const landingBadge = isPaymentPath ? '\n🚀 <b>HIGH PURCHASE INTENT!</b> Landed on checkout funnel.' : '';
+    const resolvedPath = await resolvePathTitle(event.path);
     
     body = 
       `${title}\n` +
-      `👀 <b>Page Visited:</b> <code>${escapeHTML(event.path)}</code>${landingBadge}\n\n` +
+      `👀 <b>User landed on:</b> ${resolvedPath ? `<b>${escapeHTML(resolvedPath)}</b> (<code>${escapeHTML(event.path)}</code>)` : `<code>${escapeHTML(event.path)}</code>`}${landingBadge}\n\n` +
       `${userDisplay}\n` +
       `${connectionDisplay}\n` +
       networkInfo +
@@ -160,11 +200,15 @@ function formatTelemetryMessage(event: TelemetryEvent): string {
     const stayTime = event.duration ? formatDuration(event.duration) : '0s';
     const totalSessionTime = event.sessionDuration ? formatDuration(event.sessionDuration) : null;
     
+    const resolvedPath = await resolvePathTitle(event.path);
+    const resolvedPrevPath = event.previousPath ? await resolvePathTitle(event.previousPath) : null;
+    
     body = 
       `${title}\n` +
-      `⏱️ <b>Time on Page:</b> <b>${stayTime}</b> (<code>${escapeHTML(event.path)}</code>)\n` +
-      (totalSessionTime ? `🕒 <b>Total Tab Session:</b> <b>${totalSessionTime}</b> (Open to Close/Switch)\n` : '') +
-      (event.previousPath ? `➡️ <b>Navigated to:</b> <code>${escapeHTML(event.previousPath)}</code>\n\n` : '\n') +
+      `👁️ <b>User stayed on this page for:</b> <b>${stayTime}</b>\n` +
+      `📄 <b>Page:</b> ${resolvedPath ? `<b>${escapeHTML(resolvedPath)}</b> (<code>${escapeHTML(event.path)}</code>)` : `<code>${escapeHTML(event.path)}</code>`}\n` +
+      (totalSessionTime ? `🕒 <b>Total time on website before leaving:</b> <b>${totalSessionTime}</b>\n` : '') +
+      (event.previousPath ? `➡️ <b>Next, they clicked to:</b> ${resolvedPrevPath ? `<b>${escapeHTML(resolvedPrevPath)}</b> (<code>${escapeHTML(event.previousPath)}</code>)` : `<code>${escapeHTML(event.previousPath)}</code>`}\n\n` : '\n') +
       `${userDisplay}\n` +
       `${connectionDisplay}\n` +
       networkInfo +
@@ -172,10 +216,11 @@ function formatTelemetryMessage(event: TelemetryEvent): string {
       `${tags} #DwellTime`;
   } else {
     // Action / Custom Clicks
+    const resolvedPath = await resolvePathTitle(event.path);
     body = 
       `${title}\n` +
-      `🎯 <b>User Interaction:</b> <code>${escapeHTML(event.actionDetails || 'Clicked element')}</code>\n` +
-      `📍 <b>Active Page:</b> <code>${escapeHTML(event.path)}</code>\n\n` +
+      `🎯 <b>User clicked:</b> <code>${escapeHTML(event.actionDetails || 'Clicked element')}</code>\n` +
+      `📍 <b>While viewing:</b> ${resolvedPath ? `<b>${escapeHTML(resolvedPath)}</b> (<code>${escapeHTML(event.path)}</code>)` : `<code>${escapeHTML(event.path)}</code>`}\n\n` +
       `${userDisplay}\n` +
       `${connectionDisplay}\n` +
       networkInfo +
@@ -227,7 +272,7 @@ export async function sendTelemetryEvent(event: TelemetryEvent) {
       return;
     }
 
-    const message = formatTelemetryMessage(event);
+    const message = await formatTelemetryMessage(event);
 
     const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
     const response = await fetch(url, {

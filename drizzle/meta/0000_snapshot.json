@@ -10,8 +10,7 @@
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
-          "notNull": true,
+          "primaryKey": true,          "notNull": true,
           "autoincrement": false
         },
         "attempt_id": {

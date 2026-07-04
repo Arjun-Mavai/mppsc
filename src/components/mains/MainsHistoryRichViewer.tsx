@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { MainsMobileSyllabusDrawer } from '@/components/mains/MainsMobileSyllabusDrawer';
 import { MainsKeyTermsFlash } from '@/components/mains/MainsKeyTermsFlash';
 import { QuickFeedback } from '@/features/tests/components/QuickFeedback';
+import { formatUnitInfoForFeedback } from '@/lib/mains-syllabus-unit-label';
 
 function parseBoldInline(text: string) {
   const parts = text.split(/(\*\*.+?\*\*)/g);
@@ -235,7 +236,7 @@ export function MainsHistoryRichViewer({
   uiLang,
   standalonePage = false,
 }: {
-  topic: { id: string; titleHi: string; titleEn: string; unitId: string; paperId?: string; paperNumber?: number };
+  topic: { id: string; titleHi: string; titleEn: string; unitId: string; paperId?: string; paperNumber?: number; unitPart?: string; unitNumber?: number; };
   payload: Record<string, unknown>;
   uiLang: 'hi' | 'en';
   standalonePage?: boolean;
@@ -299,11 +300,18 @@ export function MainsHistoryRichViewer({
         <div className={cn('flex items-center justify-between gap-2 px-3 py-2 sm:px-4 w-full min-h-14', standalonePage ? 'px-3' : '')}>
           <div className="flex items-center gap-2 min-w-0 pr-1">
             {topic.paperId && (
-              <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl shrink-0" asChild>
-                <Link href={`/mains/syllabus/${topic.paperId}`}>
-                  <ArrowLeft className="h-5 w-5" />
-                </Link>
-              </Button>
+              <>
+                <Button variant="ghost" size="sm" className="lg:hidden h-9 w-9 p-0 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl shrink-0" asChild>
+                  <Link href={`/mains/syllabus/${topic.paperId}`}>
+                    <ArrowLeft className="h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button variant="ghost" size="sm" className="hidden lg:flex h-9 w-9 p-0 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl shrink-0" asChild>
+                  <Link href="/mains/syllabus">
+                    <ArrowLeft className="h-5 w-5" />
+                  </Link>
+                </Button>
+              </>
             )}
             <button
               type="button"
@@ -755,7 +763,7 @@ export function MainsHistoryRichViewer({
               questionId={topic.id}
               questionText={hi ? topic.titleHi : topic.titleEn}
               source="mains_syllabus_topic"
-              unitInfo={`Paper ${topic.paperNumber || '?'} | Unit: ${topic.unitId}`}
+              unitInfo={formatUnitInfoForFeedback(topic)}
             />
           </div>
         </div>

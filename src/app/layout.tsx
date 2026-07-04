@@ -45,11 +45,11 @@ export const viewport: Viewport = {
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://mppsc.zenscroll.app';
 export const metadata: Metadata = {
   title: {
-    default: 'MPPSC ZenScroll | Preparation becomes easier when direction is clear',
+    default: 'MPPSC 2026-2027 Preparation | Prelims Solution & Mains Notes - ZenScroll',
     template: '%s | MPPSC ZenScroll',
   },
   description:
-    "MPPSC की तैयारी में सबसे बड़ी चुनौती सामग्री (Content) की कमी नहीं होती। चुनौती होती है: क्या पढ़ना है, कितना पढ़ना है और परीक्षा वास्तव में क्या पूछ रही है। Join ZenScroll for pure conceptual clarity.",
+    "Master your MPPSC 2026 & 2027 preparation with ZenScroll. Get the most authentic MPPSC Prelims Solutions, solved PYQs, bilingual notes, and exact syllabus decoding. Join for pure conceptual clarity.",
   keywords: [
     'MPPSC',
     'MPPSC 2026',

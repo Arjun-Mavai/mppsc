@@ -68,6 +68,8 @@ async function MainsTopicData({ paperId, topicId }: { paperId: string, topicId: 
             unitId: unit.id,
             paperId,
             paperNumber: paper.paperNumber,
+            unitPart: unit.part || undefined,
+            unitNumber: unit.unitNumber,
           }}
           content={
             content
