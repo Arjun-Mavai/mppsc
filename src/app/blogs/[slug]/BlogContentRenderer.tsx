@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Fragment } from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Calendar, ArrowLeft, Lock, Crown } from 'lucide-react';
@@ -15,6 +15,30 @@ import { useRouter, useSearchParams } from 'next/navigation';
 function formatText(text: string, highlightClassName: string = 'text-slate-900'): React.ReactNode {
   if (typeof text !== 'string') return String(text || '');
   if (!text) return text;
+
+  // Process markdown links [text](url) first
+  const linkPattern = /(\[[^\]]+\]\([^)]+\))/g;
+  const parts = text.split(linkPattern);
+  
+  if (parts.length > 1) {
+    return parts.map((part, i) => {
+      const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+      if (linkMatch) {
+        return (
+          <Link
+            key={i}
+            href={linkMatch[2]}
+            className="text-emerald-600 hover:text-emerald-700 hover:underline font-semibold transition-colors"
+            target={linkMatch[2].startsWith('http') ? '_blank' : undefined}
+            rel={linkMatch[2].startsWith('http') ? 'noopener noreferrer' : undefined}
+          >
+            {formatText(linkMatch[1], 'text-emerald-600')}
+          </Link>
+        );
+      }
+      return <Fragment key={i}>{formatText(part, highlightClassName)}</Fragment>;
+    });
+  }
 
   // Process markdown bold (**text**) into actual bold, then quoted text
   // Split by **bold** markers first
@@ -603,7 +627,7 @@ export default function BlogContentRenderer({
             </span>
             <span className="flex items-center gap-1.5">
               <Calendar size={14} />
-              {new Date(blog.createdAt).toLocaleDateString(undefined, {
+              {new Date(blog.createdAt).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',

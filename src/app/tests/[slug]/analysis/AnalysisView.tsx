@@ -58,7 +58,7 @@ export default function AnalysisView({ result }: AnalysisViewProps) {
             <div>
               <h1 className="leading-tight font-bold text-slate-900">Test Analysis</h1>
               <div className="text-xs font-medium text-slate-500">
-                {new Date(result.startTime).toLocaleDateString()} • {details.length} Questions
+                {new Date(result.startTime).toLocaleDateString('en-IN')} • {details.length} Questions
               </div>
             </div>
           </div>

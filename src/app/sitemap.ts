@@ -67,9 +67,41 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.4,
     },
+    {
+      url: `${baseUrl}/paper-solution`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9, // High priority for "MPPSC 2026 prelims paper solved"
+    },
+    {
+      url: `${baseUrl}/mains`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9, // "MPPSC Mains"
+    },
+    {
+      url: `${baseUrl}/mains/syllabus`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.85, // "MPPSC Mains Syllabus"
+    },
+    {
+      url: `${baseUrl}/mains/syllabus/pyq-library`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.85, // "MPPSC Mains PYQ Library"
+    },
   ];
 
   try {
+    // Mains Syllabus Paper pages - "MPPSC Mains Paper 1/2/3/4/5/6"
+    const mainsPaperPages: MetadataRoute.Sitemap = Array.from({ length: 6 }, (_, i) => ({
+      url: `${baseUrl}/mains/syllabus/${i + 1}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    }));
+
     // Syllabus unit pages - "MPPSC unit 1/2/3..." search ke liye
     // Ye public pages h - koi bhi dekh sakta h (login ke bina bhi)
     const syllabusPages: MetadataRoute.Sitemap = Array.from({ length: 17 }, (_, i) => ({
@@ -124,7 +156,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       },
     ];
 
-    const allPages = [...staticPages, ...syllabusPages, ...blogPages, ...quizPages];
+    const allPages = [...staticPages, ...mainsPaperPages, ...syllabusPages, ...blogPages, ...quizPages];
 
     return allPages;
   } catch (error) {

@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const blog = await getBlogBySlug(slug);
   if (!blog) return { title: 'Not Found' };
 
-  const title = `${blog.title} | MPPSC 2026`;
+  const title = `${blog.title} | ZenScroll MPPSC`;
   const description =
     blog.description || 'MPPSC Study Material, Test Series, and Analytics - Mindful MPPSC';
   const url = `/blogs/${slug}`;
@@ -48,10 +48,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description,
     keywords: [
       'MPPSC',
+      'MPPSC 2027',
       'MPPSC 2026',
       'MPPSC Test Series',
       'Best Test Series',
-      'MPPSC Notification',
+      'MPPSC Notification 2027',
       'MP',
       'Madhya Pradesh',
       blog.category,

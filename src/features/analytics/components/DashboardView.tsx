@@ -201,7 +201,7 @@ export function DashboardView({ data, userName }: DashboardViewProps) {
                               </div>
                               <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-500">
                                 <Clock size={12} />
-                                {new Date(activity.createdAt).toLocaleDateString(undefined, {
+                                {new Date(activity.createdAt).toLocaleDateString('en-IN', {
                                   month: 'short',
                                   day: 'numeric',
                                 })}

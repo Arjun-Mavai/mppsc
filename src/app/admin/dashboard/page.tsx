@@ -318,7 +318,7 @@ export default function AdminDashboardPage() {
                               {t.type}
                             </Badge>
                             <span className="text-[9px] text-slate-400">
-                              {new Date(t.updatedAt).toLocaleDateString()}
+                              {new Date(t.updatedAt).toLocaleDateString('en-IN')}
                             </span>
                           </div>
                         </div>

@@ -273,7 +273,7 @@ function TestHistoryRow({
           )}
           <span className="flex items-center gap-1">
             <Clock size={10} className="text-slate-300" />
-            {new Date(activity.createdAt).toLocaleDateString(undefined, {
+            {new Date(activity.createdAt).toLocaleDateString('en-IN', {
               month: 'short',
               day: 'numeric',
             })}
