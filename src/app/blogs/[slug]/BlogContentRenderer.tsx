@@ -18,10 +18,10 @@ function formatText(text: string, highlightClassName: string = 'text-slate-900')
 
   // Process markdown links [text](url) first
   const linkPattern = /(\[[^\]]+\]\([^)]+\))/g;
-  const parts = text.split(linkPattern);
+  const linkParts = text.split(linkPattern);
   
-  if (parts.length > 1) {
-    return parts.map((part, i) => {
+  if (linkParts.length > 1) {
+    return linkParts.map((part, i) => {
       const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
       if (linkMatch) {
         return (
