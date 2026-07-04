@@ -235,7 +235,7 @@ export function MainsHistoryRichViewer({
   uiLang,
   standalonePage = false,
 }: {
-  topic: { id: string; titleHi: string; titleEn: string; unitId: string; paperId?: string; paperNumber?: number };
+  topic: { id: string; titleHi: string; titleEn: string; unitId: string; paperId?: string; paperNumber?: number; unitPart?: string; unitNumber?: number; };
   payload: Record<string, unknown>;
   uiLang: 'hi' | 'en';
   standalonePage?: boolean;
@@ -755,7 +755,7 @@ export function MainsHistoryRichViewer({
               questionId={topic.id}
               questionText={hi ? topic.titleHi : topic.titleEn}
               source="mains_syllabus_topic"
-              unitInfo={`Paper ${topic.paperNumber || '?'} | Unit: ${topic.unitId}`}
+              unitInfo={`Paper ${topic.paperNumber || '?'} | Part ${topic.unitPart || '?'} | Unit ${topic.unitNumber || '?'}`}
             />
           </div>
         </div>

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SyllabusLockMainsModal } from '@/features/mains/components/SyllabusLockMainsModal';
 
-type Topic = { id: string; titleHi: string; titleEn: string; unitId: string; paperId?: string; paperNumber?: number };
+type Topic = { id: string; titleHi: string; titleEn: string; unitId: string; paperId?: string; paperNumber?: number; unitPart?: string; unitNumber?: number; };
 
 type ContentShape = {
   conceptHi: string;

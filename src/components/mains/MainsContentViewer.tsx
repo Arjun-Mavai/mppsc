@@ -27,6 +27,8 @@ interface ContentProps {
     unitId: string;
     paperId?: string;
     paperNumber?: number;
+    unitPart?: string;
+    unitNumber?: number;
   };
   content: {
     conceptHi: string;
@@ -432,7 +434,7 @@ export function MainsContentViewer({ topic, content, language, onMarkDone, isDon
           questionId={topic.id}
           questionText={hi ? topic.titleHi : topic.titleEn}
           source="mains_syllabus_topic"
-          unitInfo={`Paper ${topic.paperNumber || '?'} | Unit: ${topic.unitId}`}
+          unitInfo={`Paper ${topic.paperNumber || '?'} | Part ${topic.unitPart || '?'} | Unit ${topic.unitNumber || '?'}`}
         />
       </div>
     </div>
