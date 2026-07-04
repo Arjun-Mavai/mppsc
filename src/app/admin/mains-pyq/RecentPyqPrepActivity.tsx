@@ -73,7 +73,7 @@ export function RecentPyqPrepActivity() {
                     </div>
                     <p className="text-xs font-black text-slate-800 truncate">{a.questionEn || a.questionHi}</p>
                     <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter mt-0.5">
-                      Batch saved on {a.updatedAt ? new Date(a.updatedAt).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' }) : 'N/A'}
+                      Batch saved on {a.updatedAt ? new Date(a.updatedAt).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) : 'N/A'}
                     </p>
                   </div>
                 </div>

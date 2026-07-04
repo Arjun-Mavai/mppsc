@@ -168,7 +168,7 @@ function ActivityItem({
             )}
             <span className="flex items-center gap-1 text-[11px] font-bold tracking-tighter text-slate-400 uppercase">
               <Clock size={10} strokeWidth={3} />
-              {new Date(activity.createdAt).toLocaleDateString(undefined, {
+              {new Date(activity.createdAt).toLocaleDateString('en-IN', {
                 month: 'short',
                 day: 'numeric',
               })}

@@ -73,7 +73,7 @@ export function RecentMainsSyllabusActivity() {
                     </div>
                     <p className="text-xs font-black text-slate-800 truncate">{a.topicTitleEn || a.topicTitleHi}</p>
                     <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter mt-0.5">
-                      Updated on {new Date(a.updatedAt).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' })}
+                      Updated on {new Date(a.updatedAt).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
                     </p>
                   </div>
                 </div>

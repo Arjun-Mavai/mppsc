@@ -205,7 +205,7 @@ export function MainsPyqPreparedAnswersSection({ papers }: { papers: AdminMainsP
   }, []);
 
   const timeStr = currentTime?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) ?? '';
-  const dateStr = currentTime?.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) ?? '';
+  const dateStr = currentTime?.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) ?? '';
 
   return (
     <div className="space-y-6">

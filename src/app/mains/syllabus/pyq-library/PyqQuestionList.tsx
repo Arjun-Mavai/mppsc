@@ -362,6 +362,7 @@ export const PyqQuestionList = memo(function PyqQuestionList({
             insightsOpen={!!insightsOpenIds[q.id]}
             setInsightsOpen={(val) => handleInsightOpen(q.id, val)}
             examYear={examYear}
+            paperNumber={paperNumber}
           />
         ))}
       </ul>
@@ -444,6 +445,7 @@ const PyqQuestionRow = memo(({
   insightsOpen,
   setInsightsOpen,
   examYear,
+  paperNumber,
 }: {
   q: QRow;
   qi: number;
@@ -455,6 +457,7 @@ const PyqQuestionRow = memo(({
   insightsOpen: boolean;
   setInsightsOpen: (val: boolean) => void;
   examYear: number;
+  paperNumber: number;
 }) => {
   
   const hue = MAIN_SYLLABUS_CARD_HUES[qi % 4];
@@ -716,6 +719,7 @@ const PyqQuestionRow = memo(({
                       questionText={stemFor(q)}
                       source="mains_pyq"
                       className="mt-0"
+                      unitInfo={`PYQ ${examYear} | Paper ${paperNumber} | Part ${q.part} | Unit ${q.unitNumber} | Q: ${q.questionNumber}`}
                     />
                   </div>
                 </div>

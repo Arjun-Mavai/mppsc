@@ -551,11 +551,7 @@ export function PaymentModal({
                     id="consent-check-logged"
                     checked={consentChecked}
                     onChange={(e) => {
-                      if (e.target.checked) {
-                        setTermsOpen(true);
-                      } else {
-                        setConsentChecked(false);
-                      }
+                      setConsentChecked(e.target.checked);
                     }}
                     className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-zinc-300 text-black focus:ring-black cursor-pointer"
                   />
@@ -664,11 +660,7 @@ export function PaymentModal({
                     id="consent-check-guest"
                     checked={consentChecked}
                     onChange={(e) => {
-                      if (e.target.checked) {
-                        setTermsOpen(true);
-                      } else {
-                        setConsentChecked(false);
-                      }
+                      setConsentChecked(e.target.checked);
                     }}
                     className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-zinc-300 text-black focus:ring-black cursor-pointer"
                   />

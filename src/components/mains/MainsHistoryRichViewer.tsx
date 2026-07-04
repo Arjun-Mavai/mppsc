@@ -755,6 +755,7 @@ export function MainsHistoryRichViewer({
               questionId={topic.id}
               questionText={hi ? topic.titleHi : topic.titleEn}
               source="mains_syllabus_topic"
+              unitInfo={`Paper ${topic.paperNumber || '?'} | Unit: ${topic.unitId}`}
             />
           </div>
         </div>
