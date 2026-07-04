@@ -11,18 +11,18 @@ const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://mppsc.zenscroll.app
 const pagePath = '/open/2026-mppsc-prelims';
 
 export const metadata: Metadata = {
-  title: '2026 MPPSC Prelims — Full paper with explanations (free)',
+  title: 'MPPSC 2026 Prelims Paper Solution & Answer Key | Free',
   description:
-    'MPPSC 2026 Prelims previous year paper: full question set with Hindi & English explanations. Unlock once with your contact — no login.',
+    'Detailed MPPSC 2026 Prelims Solution with bilingual explanations (Hindi & English). Practice the full previous year paper and check the exact answer key free.',
   alternates: { canonical: `${baseUrl}${pagePath}` },
   openGraph: {
-    title: '2026 MPPSC Prelims — free paper + explanations | Mindful MPPSC',
+    title: 'MPPSC 2026 Prelims Solution & Answer Key | Mindful MPPSC',
     description:
-      'Practice the full 2026 Prelims paper with instant bilingual explanations. Share with fellow aspirants.',
+      'Practice the full MPPSC 2026 Prelims paper with instant bilingual explanations and answer key. Share with fellow aspirants.',
     url: `${baseUrl}${pagePath}`,
     siteName: 'Mindful MPPSC',
     type: 'website',
-    images: [{ url: '/og-hero.png', width: 1200, height: 630, alt: 'Mindful MPPSC' }],
+    images: [{ url: '/og-hero.png', width: 1200, height: 630, alt: 'Mindful MPPSC 2026 Prelims Solution' }],
   },
 };
 
