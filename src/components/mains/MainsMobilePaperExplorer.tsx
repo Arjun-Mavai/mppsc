@@ -74,6 +74,10 @@ export function MainsMobilePaperExplorer({
         if (res.success && res.data) {
           const row = res.data;
           const c = row.content;
+          
+          // Find unit to get part and number
+          const matchedUnit = units.find(u => u.id === unitId);
+          
           setCache((prev) => ({
             ...prev,
             [topic.id]: {
@@ -84,6 +88,8 @@ export function MainsMobilePaperExplorer({
                 unitId,
                 paperId,
                 paperNumber,
+                unitPart: matchedUnit?.part || row.unit?.part || undefined,
+                unitNumber: matchedUnit?.unitNumber || row.unit?.unitNumber || undefined,
               },
               content: c
                 ? {

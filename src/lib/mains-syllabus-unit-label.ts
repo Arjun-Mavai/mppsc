@@ -31,3 +31,26 @@ export function mainsUnitSubtitle(
   const p = part === 'NONE' ? '' : ` · Part ${part}`;
   return `Paper ${paperNumber}${p} · Unit ${unitNumber}`;
 }
+
+/** Formats a consistent unit info string for telemetry/feedback logging. */
+export function formatUnitInfoForFeedback(topic: { 
+  paperNumber?: number | null; 
+  unitPart?: string | null; 
+  unitNumber?: number | string | null;
+  unitId?: string | null;
+}): string {
+  // If we have proper unit numbering
+  if (topic.paperNumber && topic.unitNumber) {
+    if (topic.unitPart && topic.unitPart !== 'NONE') {
+      return `Paper ${topic.paperNumber} | Part ${topic.unitPart} | Unit ${topic.unitNumber}`;
+    }
+    return `Paper ${topic.paperNumber} | Unit ${topic.unitNumber}`;
+  }
+  
+  // Fallback if missing unit details but we have ID
+  if (topic.unitId) {
+    return `Unit ID: ${topic.unitId}`;
+  }
+  
+  return 'Unknown Unit';
+}
