@@ -445,6 +445,7 @@ const PyqQuestionRow = memo(({
   insightsOpen,
   setInsightsOpen,
   examYear,
+  paperNumber,
 }: {
   q: QRow;
   qi: number;
