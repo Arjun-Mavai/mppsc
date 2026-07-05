@@ -785,11 +785,13 @@ function LauncherLink({ href, icon, title, description, color }: LauncherLinkPro
         {icon}
       </div>
       <div className="flex-1">
-        <div className="flex items-center justify-between">
-          <span className="text-[13px] font-black text-slate-900 leading-none">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[13px] font-black text-slate-900 leading-tight">
             {title}
           </span>
-          <ArrowRight size={14} className={cn("text-slate-300 group-hover/item:translate-x-1 transition-all", arrowColorMap[color])} />
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100/80 text-slate-400 transition-all border border-transparent group-hover/item:bg-white group-hover/item:shadow-sm group-hover/item:border-slate-200/60">
+            <ArrowRight size={14} className={cn("transition-transform group-hover/item:translate-x-[2px]", arrowColorMap[color])} />
+          </div>
         </div>
         <p className="mt-1.5 text-[11px] font-medium text-slate-500 leading-snug group-hover/item:text-slate-600">
           {description}
