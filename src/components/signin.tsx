@@ -78,9 +78,7 @@ export default function LoginPage() {
 
         // Wait a bit for store to sync then redirect
         setTimeout(() => {
-          if (storeUser && shouldRedirectPreSyllabusToMains(storeUser as any)) {
-            window.location.href = '/mains/syllabus';
-          } else {
+          if (storeUser) {
             window.location.href = '/dashboard';
           }
         }, 600);

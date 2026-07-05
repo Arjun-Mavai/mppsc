@@ -30,7 +30,9 @@ import {
   Target,
   CheckCircle2,
   Phone,
-  Send
+  Send,
+  PlayCircle,
+  HelpCircle
 } from 'lucide-react';
 import {
   Dialog,
@@ -40,6 +42,7 @@ import {
   DialogHeader,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { PyqNavigationGuide } from '@/components/mains/PyqNavigationGuide';
 
 interface DashboardClientProps {
   user: {
@@ -109,6 +112,7 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
   const hasPre = hasPreAccess(user);
   const hasMains = hasMainsAccess(user);
   const isCombo = hasPre && hasMains;
+  const isMainsOnly = hasMains && !hasPre;
   
   // Rules for showing lock screens (lock if they don't have that specific product access)
   const showPreLock = !hasPre;
@@ -218,8 +222,9 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
         </div>
 
         {/* PREMIUM SEGMENTED TABS */}
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex rounded-full bg-white p-1 shadow-sm border border-slate-200/60">
+        {!isMainsOnly && (
+          <div className="flex justify-center mb-8">
+            <div className="inline-flex rounded-full bg-white p-1 shadow-sm border border-slate-200/60">
             <button
               onClick={() => setActiveTab('study')}
               className={cn(
@@ -247,13 +252,15 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
             </button>
           </div>
         </div>
+        )}
 
         {/* TAB 1: STUDY HUB (LAUNCHPAD PORTAL) */}
-        {activeTab === 'study' && (
+        {(activeTab === 'study' || isMainsOnly) && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className={cn("grid gap-8", isMainsOnly ? "grid-cols-1 max-w-2xl mx-auto" : "grid-cols-1 md:grid-cols-2")}>
               
               {/* 1. PRELIMS PREP HUB */}
+              {!isMainsOnly && (
               <LauncherCard
                 title={isHindi ? 'प्रिलिम्स विजय पथ' : 'Prelims Victory Path'}
                 subtitle={isHindi ? 'तैयारी का आधार' : 'The Foundation'}
@@ -287,36 +294,72 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                   color="emerald"
                 />
               </LauncherCard>
+              )}
 
-              {/* 2. MAINS PREP HUB */}
-              <LauncherCard
-                title={isHindi ? 'मेंस राइटिंग स्टूडियो' : 'Mains Writing Studio'}
-                subtitle={isHindi ? 'लिखने की कला' : 'Master Writing'}
-                icon={<Crown className="h-6 w-6" />}
-                color="emerald"
-                showLock={showMainsLock}
-                lockTitle={isHindi ? 'मुख्य परीक्षा प्रीमियम' : 'Mains Premium'}
-                lockDesc={isHindi ? 'डबल-स्टाइल MODEL उत्तर और मेंस PYQ LIBRARY खोलें।' : 'Unlock expert double-style model answers mapped to your syllabus.'}
-                onUnlock={() => router.push('/mains/syllabus')}
-                unlockText={isHindi ? 'मेंस अनलॉक करें' : 'Unlock Mains'}
-              >
-                <LauncherLink
-                  href="/mains/syllabus"
-                  icon={<Crown size={18} />}
-                  title={isHindi ? 'सिलेबस की गहरी समझ एवं PYQ एकीकरण' : 'Syllabus Deep Understanding & PYQ Integration'}
-                  description={isHindi ? 'सिलेबस के हर टॉपिक को गहराई से समझें, पिछले वर्षों के प्रश्नों (PYQ) के साथ।' : 'Master syllabus topics in depth, perfectly integrated with previous year questions.'}
-                  color="purple"
-                />
-                <LauncherLink
-                  href="/mains/syllabus/pyq-library"
-                  icon={<Library size={18} />}
-                  title={isHindi ? 'मेंस PYQ इनसाइट लाइब्रेरी' : 'Mains PYQ Insight Library'}
-                  description={isHindi ? 'पिछले प्रश्नों में छिपी परीक्षा की सोच और प्रवृत्ति को समझें।' : 'Discover the patterns and expectations hidden within previous year questions.'}
-                  color="amber"
-                />
-              </LauncherCard>
+              {/* 2. MAINS PREP HUB & GUIDE */}
+              <div className="flex flex-col gap-5">
+                <LauncherCard
+                  title={isHindi ? 'मेंस राइटिंग स्टूडियो' : 'Mains Writing Studio'}
+                  subtitle={isHindi ? 'लिखने की कला' : 'Master Writing'}
+                  icon={<Crown className="h-6 w-6" />}
+                  color="emerald"
+                  showLock={showMainsLock}
+                  lockTitle={isHindi ? 'मुख्य परीक्षा प्रीमियम' : 'Mains Premium'}
+                  lockDesc={isHindi ? 'डबल-स्टाइल MODEL उत्तर और मेंस PYQ LIBRARY खोलें।' : 'Unlock expert double-style model answers mapped to your syllabus.'}
+                  onUnlock={() => router.push('/mains/syllabus')}
+                  unlockText={isHindi ? 'मेंस अनलॉक करें' : 'Unlock Mains'}
+                >
+                  <LauncherLink
+                    href="/mains/syllabus"
+                    icon={<Crown size={18} />}
+                    title={isHindi ? 'सिलेबस की गहरी समझ एवं PYQ एकीकरण' : 'Syllabus Deep Understanding & PYQ Integration'}
+                    description={isHindi ? 'सिलेबस के हर टॉपिक को गहराई से समझें, पिछले वर्षों के प्रश्नों (PYQ) के साथ।' : 'Master syllabus topics in depth, perfectly integrated with previous year questions.'}
+                    color="purple"
+                  />
+                  <LauncherLink
+                    href="/mains/syllabus/pyq-library"
+                    icon={<Library size={18} />}
+                    title={isHindi ? 'मेंस PYQ इनसाइट लाइब्रेरी' : 'Mains PYQ Insight Library'}
+                    description={isHindi ? 'पिछले प्रश्नों में छिपी परीक्षा की सोच और प्रवृत्ति को समझें।' : 'Discover the patterns and expectations hidden within previous year questions.'}
+                    color="amber"
+                  />
+                </LauncherCard>
+                
+                {/* How to Use App Guide Section */}
+                <div className="flex flex-col gap-3 rounded-[2rem] border border-slate-200/60 bg-gradient-to-br from-slate-50 to-slate-100/50 p-5 shadow-sm mt-2">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-100/80 text-amber-600 shadow-sm border border-amber-200/50">
+                      <HelpCircle size={20} />
+                    </div>
+                    <div>
+                      <h4 className="text-[13px] font-black text-slate-800">
+                        {isHindi ? 'मेंस PYQ लाइब्रेरी: स्मार्ट फ़िल्टर्स गाइड' : 'Mains PYQ Library: Smart Filters Guide'}
+                      </h4>
+                      <p className="mt-1.5 text-[11.5px] font-medium leading-relaxed text-slate-500">
+                        {isHindi 
+                          ? 'जानें कि PYQ लाइब्रेरी में पिछले वर्षों के पेपर्स कैसे खोलें, प्रश्नों को मार्क्स (2m, 7m, 10m) के अनुसार कैसे छाँटें और नेविगेशन का सटीक उपयोग कैसे करें।' 
+                          : 'Learn how to easily open previous year papers in the PYQ library, filter questions by marks (2m, 7m, 10m), and master the navigation.'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <PyqNavigationGuide 
+                    themeDeep={false} 
+                    triggerType="custom" 
+                    customTrigger={
+                      <button
+                        className="group mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3.5 text-xs font-black text-slate-700 shadow-sm border border-slate-200/60 transition-all hover:bg-slate-50 hover:text-slate-900 hover:shadow active:scale-[0.98]"
+                      >
+                        <PlayCircle size={18} className="text-amber-500 transition-transform group-hover:scale-110" />
+                        <span>{isHindi ? 'स्टेप-बाय-स्टेप गाइड देखें' : 'View Step-by-Step Guide'}</span>
+                      </button>
+                    } 
+                  />
+                </div>
+              </div>
 
               {/* 3. PYQ INTELLIGENCE ENGINE */}
+              {!isMainsOnly && (
               <LauncherCard
                 title={isHindi ? 'PYQ इंटेलिजेंस इंजन' : 'PYQ Intelligence Engine'}
                 subtitle={isHindi ? 'डेटा की शक्ति' : 'Power of Data'}
@@ -343,8 +386,10 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                   color="blue"
                 />
               </LauncherCard>
+              )}
 
               {/* 4. STRATEGIES & RECORD KEEPER */}
+              {!isMainsOnly && (
               <LauncherCard
                 title={isHindi ? 'रणनीति और इतिहास' : 'Strategy & History'}
                 subtitle={isHindi ? 'सफलता का रोडमैप' : 'Success Roadmap'}
@@ -366,6 +411,7 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                   color="amber"
                 />
               </LauncherCard>
+              )}
 
             </div>
           </div>
@@ -739,11 +785,13 @@ function LauncherLink({ href, icon, title, description, color }: LauncherLinkPro
         {icon}
       </div>
       <div className="flex-1">
-        <div className="flex items-center justify-between">
-          <span className="text-[13px] font-black text-slate-900 leading-none">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[13px] font-black text-slate-900 leading-tight">
             {title}
           </span>
-          <ArrowRight size={14} className={cn("text-slate-300 group-hover/item:translate-x-1 transition-all", arrowColorMap[color])} />
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100/80 text-slate-400 transition-all border border-transparent group-hover/item:bg-white group-hover/item:shadow-sm group-hover/item:border-slate-200/60">
+            <ArrowRight size={14} className={cn("transition-transform group-hover/item:translate-x-[2px]", arrowColorMap[color])} />
+          </div>
         </div>
         <p className="mt-1.5 text-[11px] font-medium text-slate-500 leading-snug group-hover/item:text-slate-600">
           {description}

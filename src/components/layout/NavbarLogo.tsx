@@ -19,7 +19,7 @@ export const NavbarLogo = memo(function NavbarLogo({ user }: NavbarLogoProps) {
     if (v.showPrePortalNav) {
       router.push('/dashboard');
     } else if (v.showMainsNav) {
-      router.push('/mains/syllabus');
+      router.push('/dashboard');
     } else {
       router.push('/dashboard');
     }

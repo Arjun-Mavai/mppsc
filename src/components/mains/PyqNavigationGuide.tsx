@@ -78,7 +78,7 @@ const STEPS = [
   }
 ];
 
-export function PyqNavigationGuide({ themeDeep, triggerType = 'banner' }: { themeDeep: boolean, triggerType?: 'banner' | 'icon' }) {
+export function PyqNavigationGuide({ themeDeep, triggerType = 'banner', customTrigger }: { themeDeep: boolean, triggerType?: 'banner' | 'icon' | 'custom', customTrigger?: React.ReactNode }) {
   const { language } = useSettingsStore();
   const hi = language === 'hi';
   const [activeStep, setActiveStep] = useState(0);
@@ -106,7 +106,9 @@ export function PyqNavigationGuide({ themeDeep, triggerType = 'banner' }: { them
     <div className={cn("w-full", triggerType === 'banner' ? "flex justify-center mb-6" : "")}>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          {triggerType === 'banner' ? (
+          {triggerType === 'custom' && customTrigger ? (
+            customTrigger
+          ) : triggerType === 'banner' ? (
             <button
               className={cn(
                 "group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full border px-5 py-2.5 text-[12px] font-bold tracking-wide transition-all hover:scale-[1.02] active:scale-95 shadow-sm w-full sm:w-auto",
@@ -169,6 +171,9 @@ export function PyqNavigationGuide({ themeDeep, triggerType = 'banner' }: { them
               <DialogTitle className="text-xl md:text-2xl font-black tracking-tight mb-2 text-center">
                 {hi ? 'नेविगेशन कैसे उपयोग करें? 🚀' : 'How to use navigation 🚀'}
               </DialogTitle>
+              <div className={cn("text-[10px] md:text-xs font-bold text-center mb-3 px-4 py-1.5 rounded-full inline-block border", themeDeep ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-amber-50 text-amber-600 border-amber-200")}>
+                💡 {hi ? 'टिप: फ़िल्टर खोलने के लिए आइकन पर क्लिक करें, बंद करने के लिए उसी आइकन पर दोबारा क्लिक करें।' : 'Tip: Click an icon to open its filter, click the same icon again to close it.'}
+              </div>
               <DialogDescription className="sr-only">Guide on how to use filters</DialogDescription>
               
               {/* Horizontal Icons */}
