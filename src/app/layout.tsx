@@ -11,6 +11,7 @@ import { GlobalLockModal } from '@/components/GlobalLockModal';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { Toaster } from '@/components/ui/sonner';
 import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary';
+import { PWARouteTracker } from '@/components/PWARouteTracker';
 import dynamic from 'next/dynamic';
 import { VersionManager } from '@/components/VersionManager';
 import { PrintWatermark } from '@/components/PrintWatermark';
@@ -194,6 +195,7 @@ export default async function RootLayout({
           <Providers>
             <Suspense fallback={null}>
               <TelemetryTracker />
+              <PWARouteTracker />
             </Suspense>
             <Suspense fallback={null}>
               <AppNavbar user={navbarUser} />
