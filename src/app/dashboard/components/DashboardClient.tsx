@@ -333,12 +333,12 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                     </div>
                     <div>
                       <h4 className="text-[13px] font-black text-slate-800">
-                        {isHindi ? 'स्मार्ट फ़िल्टर्स और नेविगेशन का उपयोग कैसे करें?' : 'How to Use Smart Filters & Navigation?'}
+                        {isHindi ? 'मेंस PYQ लाइब्रेरी: स्मार्ट फ़िल्टर्स गाइड' : 'Mains PYQ Library: Smart Filters Guide'}
                       </h4>
-                      <p className="mt-1.5 text-[11px] font-bold leading-relaxed text-slate-500">
+                      <p className="mt-1.5 text-[11.5px] font-medium leading-relaxed text-slate-500">
                         {isHindi 
-                          ? 'जानें कि पिछले वर्षों के पेपर्स कैसे खोलें, प्रश्नों को मार्क्स (2m, 7m, 10m) के अनुसार कैसे फ़िल्टर करें और ऐप का पूरा फायदा कैसे उठाएं।' 
-                          : 'Learn how to open papers year-wise, filter questions by marks (2m, 7m, 10m), and maximize the app features.'}
+                          ? 'जानें कि PYQ लाइब्रेरी में पिछले वर्षों के पेपर्स कैसे खोलें, प्रश्नों को मार्क्स (2m, 7m, 10m) के अनुसार कैसे छाँटें और नेविगेशन का सटीक उपयोग कैसे करें।' 
+                          : 'Learn how to easily open previous year papers in the PYQ library, filter questions by marks (2m, 7m, 10m), and master the navigation.'}
                       </p>
                     </div>
                   </div>
