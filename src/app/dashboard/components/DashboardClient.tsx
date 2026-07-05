@@ -31,7 +31,8 @@ import {
   CheckCircle2,
   Phone,
   Send,
-  PlayCircle
+  PlayCircle,
+  HelpCircle
 } from 'lucide-react';
 import {
   Dialog,
@@ -324,21 +325,37 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                   />
                 </LauncherCard>
                 
-                {/* How to Use App Guide Modal Trigger */}
-                <PyqNavigationGuide 
-                  themeDeep={false} 
-                  triggerType="custom" 
-                  customTrigger={
-                    <button
-                      className="group flex w-full items-center justify-center gap-3 rounded-3xl border border-indigo-100 bg-indigo-50/60 p-4.5 py-4 text-[13px] font-bold text-indigo-800 shadow-sm transition-all hover:bg-indigo-100/60 hover:shadow active:scale-[0.98]"
-                    >
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm transition-transform group-hover:scale-110">
-                        <PlayCircle size={18} className="text-indigo-600" />
-                      </div>
-                      <span>{isHindi ? 'नेविगेशन गाइड कैसे इस्तेमाल करें?' : 'How to use Navigation Guide?'}</span>
-                    </button>
-                  } 
-                />
+                {/* How to Use App Guide Section */}
+                <div className="flex flex-col gap-3 rounded-[2rem] border border-slate-200/60 bg-gradient-to-br from-slate-50 to-slate-100/50 p-5 shadow-sm mt-2">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-100/80 text-amber-600 shadow-sm border border-amber-200/50">
+                      <HelpCircle size={20} />
+                    </div>
+                    <div>
+                      <h4 className="text-[13px] font-black text-slate-800">
+                        {isHindi ? 'स्मार्ट फ़िल्टर्स और नेविगेशन का उपयोग कैसे करें?' : 'How to Use Smart Filters & Navigation?'}
+                      </h4>
+                      <p className="mt-1.5 text-[11px] font-bold leading-relaxed text-slate-500">
+                        {isHindi 
+                          ? 'जानें कि पिछले वर्षों के पेपर्स कैसे खोलें, प्रश्नों को मार्क्स (2m, 7m, 10m) के अनुसार कैसे फ़िल्टर करें और ऐप का पूरा फायदा कैसे उठाएं।' 
+                          : 'Learn how to open papers year-wise, filter questions by marks (2m, 7m, 10m), and maximize the app features.'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <PyqNavigationGuide 
+                    themeDeep={false} 
+                    triggerType="custom" 
+                    customTrigger={
+                      <button
+                        className="group mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3.5 text-xs font-black text-slate-700 shadow-sm border border-slate-200/60 transition-all hover:bg-slate-50 hover:text-slate-900 hover:shadow active:scale-[0.98]"
+                      >
+                        <PlayCircle size={18} className="text-amber-500 transition-transform group-hover:scale-110" />
+                        <span>{isHindi ? 'स्टेप-बाय-स्टेप गाइड देखें' : 'View Step-by-Step Guide'}</span>
+                      </button>
+                    } 
+                  />
+                </div>
               </div>
 
               {/* 3. PYQ INTELLIGENCE ENGINE */}
