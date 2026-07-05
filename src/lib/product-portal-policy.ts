@@ -44,7 +44,7 @@ export function getProductPortalNavVisibility(
   const hasMains = grants.includes(ACCESS_MAINS);
 
   return {
-    showPrePortalNav: hasPre,
+    showPrePortalNav: hasPre || (!hasPre && !hasMains), // True for Pre, Combo, Free. False for Mains-only
     showMainsNav: hasMains,
     showPyqAnalysisAccordion: isSubscribed(user) && hasPre,
   };

@@ -109,6 +109,7 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
   const hasPre = hasPreAccess(user);
   const hasMains = hasMainsAccess(user);
   const isCombo = hasPre && hasMains;
+  const isMainsOnly = hasMains && !hasPre;
   
   // Rules for showing lock screens (lock if they don't have that specific product access)
   const showPreLock = !hasPre;
@@ -218,8 +219,9 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
         </div>
 
         {/* PREMIUM SEGMENTED TABS */}
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex rounded-full bg-white p-1 shadow-sm border border-slate-200/60">
+        {!isMainsOnly && (
+          <div className="flex justify-center mb-8">
+            <div className="inline-flex rounded-full bg-white p-1 shadow-sm border border-slate-200/60">
             <button
               onClick={() => setActiveTab('study')}
               className={cn(
@@ -247,13 +249,15 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
             </button>
           </div>
         </div>
+        )}
 
         {/* TAB 1: STUDY HUB (LAUNCHPAD PORTAL) */}
-        {activeTab === 'study' && (
+        {(activeTab === 'study' || isMainsOnly) && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className={cn("grid gap-8", isMainsOnly ? "grid-cols-1 max-w-2xl mx-auto" : "grid-cols-1 md:grid-cols-2")}>
               
               {/* 1. PRELIMS PREP HUB */}
+              {!isMainsOnly && (
               <LauncherCard
                 title={isHindi ? 'प्रिलिम्स विजय पथ' : 'Prelims Victory Path'}
                 subtitle={isHindi ? 'तैयारी का आधार' : 'The Foundation'}
@@ -287,6 +291,7 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                   color="emerald"
                 />
               </LauncherCard>
+              )}
 
               {/* 2. MAINS PREP HUB */}
               <LauncherCard
@@ -317,6 +322,7 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
               </LauncherCard>
 
               {/* 3. PYQ INTELLIGENCE ENGINE */}
+              {!isMainsOnly && (
               <LauncherCard
                 title={isHindi ? 'PYQ इंटेलिजेंस इंजन' : 'PYQ Intelligence Engine'}
                 subtitle={isHindi ? 'डेटा की शक्ति' : 'Power of Data'}
@@ -343,8 +349,10 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                   color="blue"
                 />
               </LauncherCard>
+              )}
 
               {/* 4. STRATEGIES & RECORD KEEPER */}
+              {!isMainsOnly && (
               <LauncherCard
                 title={isHindi ? 'रणनीति और इतिहास' : 'Strategy & History'}
                 subtitle={isHindi ? 'सफलता का रोडमैप' : 'Success Roadmap'}
@@ -366,6 +374,7 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                   color="amber"
                 />
               </LauncherCard>
+              )}
 
             </div>
           </div>

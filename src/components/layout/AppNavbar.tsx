@@ -194,7 +194,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
         return portalNav.showMainsNav;
       }
       if (item.name === 'Dashboard') {
-        return portalNav.showPrePortalNav;
+        return true; // Always show dashboard
       }
       const preRoutes = ['Syllabus', 'Test Series', 'Free Daily Quiz', 'Test History', 'Blogs'];
       if (preRoutes.includes(item.name)) {
@@ -221,6 +221,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
 
     if (hasMainsAccessVal && !hasPreAccessVal) {
       return [
+        { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, color: 'text-slate-700' },
         { name: language === 'hi' ? 'मुख्य पाठ्यक्रम' : 'Mains Syllabus', href: '/mains', icon: Crown, color: 'text-emerald-500' },
         { name: language === 'hi' ? 'मेंस PYQ लाइब्रेरी' : 'Mains PYQ Library', href: '/mains/syllabus/pyq-library', icon: Library, color: 'text-violet-600' },
         { name: 'About Us', href: '/mains', icon: Info, color: 'text-slate-500' },
