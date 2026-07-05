@@ -216,22 +216,6 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                 </p>
               </div>
             </div>
-
-            {/* Right Side: How to Use App Button */}
-            <div className="flex-shrink-0 self-start md:self-center">
-              <button
-                onClick={() => {
-                  setTourStep(1);
-                  setShowWelcomeTour(true);
-                }}
-                className="group flex items-center gap-2.5 rounded-2xl bg-white/5 px-5 py-3.5 text-xs font-bold tracking-wide text-white shadow-xl backdrop-blur-md transition-all hover:bg-white/10 active:scale-95 border border-white/10 hover:border-white/20"
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/20 text-indigo-300 transition-colors group-hover:bg-indigo-500/40 group-hover:text-indigo-200">
-                  <PlayCircle size={18} className="fill-indigo-500/20" />
-                </div>
-                <span>{isHindi ? 'ऐप कैसे इस्तेमाल करें?' : 'How to Use App?'}</span>
-              </button>
-            </div>
           </div>
         </div>
 
@@ -310,33 +294,49 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
               </LauncherCard>
               )}
 
-              {/* 2. MAINS PREP HUB */}
-              <LauncherCard
-                title={isHindi ? 'मेंस राइटिंग स्टूडियो' : 'Mains Writing Studio'}
-                subtitle={isHindi ? 'लिखने की कला' : 'Master Writing'}
-                icon={<Crown className="h-6 w-6" />}
-                color="emerald"
-                showLock={showMainsLock}
-                lockTitle={isHindi ? 'मुख्य परीक्षा प्रीमियम' : 'Mains Premium'}
-                lockDesc={isHindi ? 'डबल-स्टाइल MODEL उत्तर और मेंस PYQ LIBRARY खोलें।' : 'Unlock expert double-style model answers mapped to your syllabus.'}
-                onUnlock={() => router.push('/mains/syllabus')}
-                unlockText={isHindi ? 'मेंस अनलॉक करें' : 'Unlock Mains'}
-              >
-                <LauncherLink
-                  href="/mains/syllabus"
-                  icon={<Crown size={18} />}
-                  title={isHindi ? 'सिलेबस की गहरी समझ एवं PYQ एकीकरण' : 'Syllabus Deep Understanding & PYQ Integration'}
-                  description={isHindi ? 'सिलेबस के हर टॉपिक को गहराई से समझें, पिछले वर्षों के प्रश्नों (PYQ) के साथ।' : 'Master syllabus topics in depth, perfectly integrated with previous year questions.'}
-                  color="purple"
-                />
-                <LauncherLink
-                  href="/mains/syllabus/pyq-library"
-                  icon={<Library size={18} />}
-                  title={isHindi ? 'मेंस PYQ इनसाइट लाइब्रेरी' : 'Mains PYQ Insight Library'}
-                  description={isHindi ? 'पिछले प्रश्नों में छिपी परीक्षा की सोच और प्रवृत्ति को समझें।' : 'Discover the patterns and expectations hidden within previous year questions.'}
-                  color="amber"
-                />
-              </LauncherCard>
+              {/* 2. MAINS PREP HUB & GUIDE */}
+              <div className="flex flex-col gap-5">
+                <LauncherCard
+                  title={isHindi ? 'मेंस राइटिंग स्टूडियो' : 'Mains Writing Studio'}
+                  subtitle={isHindi ? 'लिखने की कला' : 'Master Writing'}
+                  icon={<Crown className="h-6 w-6" />}
+                  color="emerald"
+                  showLock={showMainsLock}
+                  lockTitle={isHindi ? 'मुख्य परीक्षा प्रीमियम' : 'Mains Premium'}
+                  lockDesc={isHindi ? 'डबल-स्टाइल MODEL उत्तर और मेंस PYQ LIBRARY खोलें।' : 'Unlock expert double-style model answers mapped to your syllabus.'}
+                  onUnlock={() => router.push('/mains/syllabus')}
+                  unlockText={isHindi ? 'मेंस अनलॉक करें' : 'Unlock Mains'}
+                >
+                  <LauncherLink
+                    href="/mains/syllabus"
+                    icon={<Crown size={18} />}
+                    title={isHindi ? 'सिलेबस की गहरी समझ एवं PYQ एकीकरण' : 'Syllabus Deep Understanding & PYQ Integration'}
+                    description={isHindi ? 'सिलेबस के हर टॉपिक को गहराई से समझें, पिछले वर्षों के प्रश्नों (PYQ) के साथ।' : 'Master syllabus topics in depth, perfectly integrated with previous year questions.'}
+                    color="purple"
+                  />
+                  <LauncherLink
+                    href="/mains/syllabus/pyq-library"
+                    icon={<Library size={18} />}
+                    title={isHindi ? 'मेंस PYQ इनसाइट लाइब्रेरी' : 'Mains PYQ Insight Library'}
+                    description={isHindi ? 'पिछले प्रश्नों में छिपी परीक्षा की सोच और प्रवृत्ति को समझें।' : 'Discover the patterns and expectations hidden within previous year questions.'}
+                    color="amber"
+                  />
+                </LauncherCard>
+                
+                {/* How to Use App Button */}
+                <button
+                  onClick={() => {
+                    setTourStep(1);
+                    setShowWelcomeTour(true);
+                  }}
+                  className="group flex w-full items-center justify-center gap-3 rounded-3xl border border-indigo-100 bg-indigo-50/60 p-4.5 py-4 text-[13px] font-bold text-indigo-800 shadow-sm transition-all hover:bg-indigo-100/60 hover:shadow active:scale-[0.98]"
+                >
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm transition-transform group-hover:scale-110">
+                    <PlayCircle size={18} className="text-indigo-600" />
+                  </div>
+                  <span>{isHindi ? 'ऐप कैसे इस्तेमाल करें? (गाइड देखें)' : 'How to use the App? (View Guide)'}</span>
+                </button>
+              </div>
 
               {/* 3. PYQ INTELLIGENCE ENGINE */}
               {!isMainsOnly && (
