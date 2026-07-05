@@ -222,7 +222,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     if (hasMainsAccessVal && !hasPreAccessVal) {
       return [
         { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, color: 'text-slate-700' },
-        { name: language === 'hi' ? 'मुख्य पाठ्यक्रम' : 'Mains Syllabus', href: '/mains', icon: Crown, color: 'text-emerald-500' },
+        { name: language === 'hi' ? 'मुख्य पाठ्यक्रम' : 'Mains Syllabus', href: '/mains/syllabus', icon: Crown, color: 'text-emerald-500' },
         { name: language === 'hi' ? 'मेंस PYQ लाइब्रेरी' : 'Mains PYQ Library', href: '/mains/syllabus/pyq-library', icon: Library, color: 'text-violet-600' },
         { name: 'About Us', href: '/mains', icon: Info, color: 'text-slate-500' },
       ];
@@ -236,7 +236,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
         { name: 'Free Daily Quiz', href: '/free-quiz', icon: Zap, color: 'text-orange-500' },
         { name: 'Blogs', href: '/blogs', icon: BookOpen, color: 'text-sky-600' },
         { name: 'Test History', href: '/syllabus/test-history', icon: History, color: 'text-violet-600' },
-        { name: language === 'hi' ? 'मुख्य पाठ्यक्रम' : 'Mains Syllabus', href: '/mains', icon: Crown, color: 'text-emerald-500' },
+        { name: language === 'hi' ? 'मुख्य पाठ्यक्रम' : 'Mains Syllabus', href: '/mains/syllabus', icon: Crown, color: 'text-emerald-500' },
         { name: language === 'hi' ? 'मेंस PYQ लाइब्रेरी' : 'Mains PYQ Library', href: '/mains/syllabus/pyq-library', icon: Library, color: 'text-violet-600' },
         { name: 'About Us', href: '/', icon: Info, color: 'text-slate-500' },
       ];
