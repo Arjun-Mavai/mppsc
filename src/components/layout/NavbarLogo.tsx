@@ -15,14 +15,9 @@ export const NavbarLogo = memo(function NavbarLogo({ user }: NavbarLogoProps) {
       router.push('/');
       return;
     }
-    const v = getProductPortalNavVisibility(user);
-    if (v.showPrePortalNav) {
-      router.push('/dashboard');
-    } else if (v.showMainsNav) {
-      router.push('/mains/syllabus');
-    } else {
-      router.push('/dashboard');
-    }
+    // Unconditionally route all logged-in users to dashboard
+    // since we now have dedicated dashboard views for all user states (Pre, Combo, Mains, Free).
+    router.push('/dashboard');
   }, [router, user]);
 
   return (
