@@ -30,7 +30,8 @@ import {
   Target,
   CheckCircle2,
   Phone,
-  Send
+  Send,
+  PlayCircle
 } from 'lucide-react';
 import {
   Dialog,
@@ -214,6 +215,22 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                   {isHindi ? quote.hi : quote.en}
                 </p>
               </div>
+            </div>
+
+            {/* Right Side: How to Use App Button */}
+            <div className="flex-shrink-0 self-start md:self-center">
+              <button
+                onClick={() => {
+                  setTourStep(1);
+                  setShowWelcomeTour(true);
+                }}
+                className="group flex items-center gap-2.5 rounded-2xl bg-white/5 px-5 py-3.5 text-xs font-bold tracking-wide text-white shadow-xl backdrop-blur-md transition-all hover:bg-white/10 active:scale-95 border border-white/10 hover:border-white/20"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/20 text-indigo-300 transition-colors group-hover:bg-indigo-500/40 group-hover:text-indigo-200">
+                  <PlayCircle size={18} className="fill-indigo-500/20" />
+                </div>
+                <span>{isHindi ? 'ऐप कैसे इस्तेमाल करें?' : 'How to Use App?'}</span>
+              </button>
             </div>
           </div>
         </div>
