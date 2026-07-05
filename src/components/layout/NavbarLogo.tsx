@@ -1,6 +1,5 @@
 import { memo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { getProductPortalNavVisibility } from '@/lib/product-portal-policy';
 
 interface NavbarLogoProps {
   user: any;
@@ -15,8 +14,8 @@ export const NavbarLogo = memo(function NavbarLogo({ user }: NavbarLogoProps) {
       router.push('/');
       return;
     }
-    // Unconditionally route all logged-in users to dashboard
-    // since we now have dedicated dashboard views for all user states (Pre, Combo, Mains, Free).
+    
+    // Always route logged-in users to the unified dashboard
     router.push('/dashboard');
   }, [router, user]);
 
