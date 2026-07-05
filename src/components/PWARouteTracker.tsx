@@ -9,43 +9,33 @@ const EXPIRY_HOURS = 4; // Auto-resume expires after 4 hours of inactivity
 export function PWARouteTracker() {
   const pathname = usePathname();
   const router = useRouter();
-  const hasChecked = useRef(false);
+  const hasResumed = useRef(false);
 
-  // 1. On Initial Mount / Dashboard Visit: Auto-Resume logic
   useEffect(() => {
-    // Only attempt auto-resume once per browser session mount
-    if (hasChecked.current) return;
-    hasChecked.current = true;
+    // 1. Guard for Server-Side Rendering (SSR) safety
+    if (typeof window === 'undefined' || !pathname) return;
 
-    try {
-      // PWA standard behavior drops users at the start_url (usually /dashboard).
-      // We only intervene if they specifically landed here.
-      if (pathname !== '/dashboard') return;
+    // 2. AUTO-RESUME LOGIC (Only runs when landing on Dashboard)
+    if (pathname === '/dashboard' && !hasResumed.current) {
+      hasResumed.current = true;
+      try {
+        const savedData = localStorage.getItem(TRACKING_KEY);
+        if (savedData) {
+          const { path, timestamp } = JSON.parse(savedData);
+          const hoursSinceSaved = (Date.now() - timestamp) / 3600000;
 
-      const savedData = localStorage.getItem(TRACKING_KEY);
-      if (!savedData) return;
-
-      const { path, timestamp } = JSON.parse(savedData);
-      const now = Date.now();
-      const hoursSinceSaved = (now - timestamp) / (1000 * 60 * 60);
-
-      // If the saved path is valid, not the dashboard, and not expired
-      if (path && path !== '/dashboard' && hoursSinceSaved < EXPIRY_HOURS) {
-        // Clear it immediately to prevent infinite redirect loops
-        localStorage.removeItem(TRACKING_KEY);
-        // Replace the route silently and instantly (avoids adding dashboard to history stack)
-        router.replace(path);
+          if (path && path !== '/dashboard' && hoursSinceSaved < EXPIRY_HOURS) {
+            localStorage.removeItem(TRACKING_KEY);
+            router.replace(path);
+            return; // Exit early, we are navigating away
+          }
+        }
+      } catch (e) {
+        console.error('[PWA Tracker] Resume error:', e);
       }
-    } catch (error) {
-      console.error('[PWA Tracker] Resume error:', error);
     }
-  }, [pathname, router]);
 
-  // 2. On Route Change: Save the current context
-  useEffect(() => {
-    if (!pathname) return;
-
-    // We do NOT want to auto-resume to marketing, auth, or the dashboard itself.
+    // 3. TRACKING LOGIC (Runs on other route changes)
     const isExcluded = 
       pathname === '/' || 
       pathname === '/dashboard' || 
@@ -56,22 +46,18 @@ export function PWARouteTracker() {
 
     if (!isExcluded) {
       try {
-        const data = {
-          path: pathname, // e.g. /mains/syllabus/pyq-library
+        localStorage.setItem(TRACKING_KEY, JSON.stringify({
+          path: pathname,
           timestamp: Date.now()
-        };
-        localStorage.setItem(TRACKING_KEY, JSON.stringify(data));
+        }));
       } catch (e) {
-        // Silently ignore quota errors
+        // Silently ignore quota limits
       }
-    } else {
-      // If the user intentionally navigated back to the dashboard, 
-      // clear the tracker so we don't accidentally auto-resume them later.
-      if (pathname === '/dashboard') {
-        localStorage.removeItem(TRACKING_KEY);
-      }
+    } else if (pathname === '/dashboard') {
+      // Clear tracker if user intentionally returns to dashboard
+      localStorage.removeItem(TRACKING_KEY);
     }
-  }, [pathname]);
+  }, [pathname, router]);
 
   // This component renders absolutely nothing. 
   // Purely a client-side headless tracker.
