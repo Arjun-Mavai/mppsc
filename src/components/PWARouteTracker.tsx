@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { useSettingsStore } from '@/store/useSettingsStore';
 import { run } from 'node:test';
 
 const TRACKING_KEY = 'mppsc_pwa_last_route'; // Apun ka khufiya bahi-khata jisme last location likha jayega
@@ -60,7 +61,7 @@ export function PWARouteTracker() {
           const hoursSinceSaved = (Date.now() - timestamp) / 3600000; // Kitne ghante pehle ki baat hai?
 
           // Agar location solid hai, aur 8 ghante ke andar ki baat hai, toh chal bidu wahi chalte hai!
-          if (path && path !== '/dashboard' && hoursSinceSaved < EXPIRY_HOURS) {
+          if (path && path !== '/dashboard' && path !== '/' && hoursSinceSaved < EXPIRY_HOURS) {
             localStorage.removeItem(TRACKING_KEY); // Purani entry hata de, varna aage loop me ghumte rahenge
             router.replace(path); // Bina history me kachra kiye (replace), turant wahi teleport kar de
             return; // Yaha se nikal le jaldi
@@ -68,6 +69,14 @@ export function PWARouteTracker() {
         }
       } catch (e) {
         // Kuch locha hua toh chup rehne ka, console me lafda nahi karne ka
+      }
+      
+      // FALLBACK: Agar user logged-in hai, aur uske paas koi saved route nahi hai, 
+      // toh usko marketing page (/) pe mat chhod, usko dashboard bhej de.
+      const isLogged = useSettingsStore.getState().user !== null;
+      if (pathname === '/' && isLogged) {
+        router.replace('/dashboard');
+        return;
       }
     }
 
@@ -142,61 +151,149 @@ export function PWARouteTracker() {
 // यह वो "Enterprise Level" फीलिंग है जो Instagram Lite, Twitter PWA या Pinterest अपने यूज़र्स को देते हैं। अब आपका ऐप भी तकनीकी रूप से उसी वर्ल्ड-क्लास लीग में आ गया है! 🚀
 
 
-## dry run
-Viewed PWARouteTracker.tsx:78-109
+// ## dry run
+// Viewed PWARouteTracker.tsx:78-109
 
-भाई, मैं समझ गया आपका कन्फ्यूजन कहाँ है! जब तक कोड को **"Dry Run" (यानी यूज़र बनकर एक-एक स्टेप चलाना)** न किया जाए, तब तक ये चीज़ें दिमाग में नहीं बैठतीं।
+// भाई, मैं समझ गया आपका कन्फ्यूजन कहाँ है! जब तक कोड को **"Dry Run" (यानी यूज़र बनकर एक-एक स्टेप चलाना)** न किया जाए, तब तक ये चीज़ें दिमाग में नहीं बैठतीं।
 
-चलो, मैं आपको एकदम प्रॉपर यूज़र जर्नी (User Journey) के साथ समझाता हूँ कि **"पर्ची (Record)" कैसे बनती है, कैसे फटती है, और बग (Bug) क्या था।**
+// चलो, मैं आपको एकदम प्रॉपर यूज़र जर्नी (User Journey) के साथ समझाता हूँ कि **"पर्ची (Record)" कैसे बनती है, कैसे फटती है, और बग (Bug) क्या था।**
 
----
+// ---
 
-### सिनेरियो 1: सही कोड का काम (जब `/dashboard` क्लियर लिस्ट में है)
+// ### सिनेरियो 1: सही कोड का काम (जब `/dashboard` क्लियर लिस्ट में है)
 
-**Step 1:** यूज़र ने सुबह 10 बजे ऐप खोली। वो सीधे `/dashboard` पर आया।
-- *कोड क्या करेगा:* कुछ नहीं। पर्ची खाली है।
+// **Step 1:** यूज़र ने सुबह 10 बजे ऐप खोली। वो सीधे `/dashboard` पर आया।
+// - *कोड क्या करेगा:* कुछ नहीं। पर्ची खाली है।
 
-**Step 2:** यूज़र ने "Mains PYQ" वाले बटन पर क्लिक किया और वो **`/mains/syllabus/pyq`** पेज पर चला गया। 
-- *कोड (Line 86) क्या करेगा:* यह पेज एक्सक्लूड (Exclude) लिस्ट में नहीं है। बाउन्सर तुरंत `localStorage` में पर्ची लिख देगा: 
-  👉 **पर्ची:** `{ path: "/mains/syllabus/pyq", time: 10:00 AM }`
+// **Step 2:** यूज़र ने "Mains PYQ" वाले बटन पर क्लिक किया और वो **`/mains/syllabus/pyq`** पेज पर चला गया। 
+// - *कोड (Line 86) क्या करेगा:* यह पेज एक्सक्लूड (Exclude) लिस्ट में नहीं है। बाउन्सर तुरंत `localStorage` में पर्ची लिख देगा: 
+//   👉 **पर्ची:** `{ path: "/mains/syllabus/pyq", time: 10:00 AM }`
 
-**Step 3:** यूज़र ने 15 मिनट पढ़ाई की। अब उसका मन भर गया। उसने ऐप का "Home" (Back) बटन दबाया और वो **खुद वापस `/dashboard` पर आ गया।**
-- *कोड (Line 93) क्या करेगा:* क्योंकि हमने `else if (pathname === '/dashboard')` लिखा हुआ है, बाउन्सर देखेगा कि "अरे, भाई तो वापस हॉल (Dashboard) में आ गया!" 
-- बाउन्सर तुरंत `removeItem` चलाकर **पर्ची फाड़ देगा।**
-  👉 **पर्ची का स्टेटस:** एकदम खाली (Empty)।
+// **Step 3:** यूज़र ने 15 मिनट पढ़ाई की। अब उसका मन भर गया। उसने ऐप का "Home" (Back) बटन दबाया और वो **खुद वापस `/dashboard` पर आ गया।**
+// - *कोड (Line 93) क्या करेगा:* क्योंकि हमने `else if (pathname === '/dashboard')` लिखा हुआ है, बाउन्सर देखेगा कि "अरे, भाई तो वापस हॉल (Dashboard) में आ गया!" 
+// - बाउन्सर तुरंत `removeItem` चलाकर **पर्ची फाड़ देगा।**
+//   👉 **पर्ची का स्टेटस:** एकदम खाली (Empty)।
 
-**Step 4:** यूज़र ने ऐप क्लोज़ कर दी (Recent से हटा दी)।
+// **Step 4:** यूज़र ने ऐप क्लोज़ कर दी (Recent से हटा दी)।
 
-**Step 5:** 2 घंटे बाद (दोपहर 12 बजे) यूज़र ने दोबारा ऐप खोली। 
-- OS ने उसे `/dashboard` पर उतारा। 
-- *कोड (Line 53 - Auto Resume) क्या करेगा:* वो सबसे पहले `localStorage` (पर्ची) चेक करेगा। 
-- क्योंकि Step 3 में पर्ची फट चुकी थी, उसे कुछ नहीं मिलेगा! 
-- **रिजल्ट:** यूज़र शांति से `/dashboard` पर ही रहेगा। एकदम परफेक्ट UX! 🏆
+// **Step 5:** 2 घंटे बाद (दोपहर 12 बजे) यूज़र ने दोबारा ऐप खोली। 
+// - OS ने उसे `/dashboard` पर उतारा। 
+// - *कोड (Line 53 - Auto Resume) क्या करेगा:* वो सबसे पहले `localStorage` (पर्ची) चेक करेगा। 
+// - क्योंकि Step 3 में पर्ची फट चुकी थी, उसे कुछ नहीं मिलेगा! 
+// - **रिजल्ट:** यूज़र शांति से `/dashboard` पर ही रहेगा। एकदम परफेक्ट UX! 🏆
 
----
+// ---
 
-### सिनेरियो 2: बग वाला कोड (अगर आप `removeItem` से `/dashboard` हटा देते)
+// ### सिनेरियो 2: बग वाला कोड (अगर आप `removeItem` से `/dashboard` हटा देते)
 
-Step 1 और Step 2 बिल्कुल सेम रहेंगे। 
-👉 **पर्ची बन गई:** `{ path: "/mains/syllabus/pyq", time: 10:00 AM }`
+// Step 1 और Step 2 बिल्कुल सेम रहेंगे। 
+// 👉 **पर्ची बन गई:** `{ path: "/mains/syllabus/pyq", time: 10:00 AM }`
 
-**Step 3:** यूज़र खुद वापस **`/dashboard`** पर आ गया। 
-- *बग वाला कोड क्या करेगा:* क्योंकि आपने क्लियर लिस्ट से `/dashboard` हटा दिया था, लाइन 93 चलेगी ही नहीं!
-- `removeItem` नहीं चलेगा। 
-  👉 **पर्ची का स्टेटस:** अभी भी ज़िंदा है! पर्ची पर `/mains/syllabus/pyq` लिखा है।
+// **Step 3:** यूज़र खुद वापस **`/dashboard`** पर आ गया। 
+// - *बग वाला कोड क्या करेगा:* क्योंकि आपने क्लियर लिस्ट से `/dashboard` हटा दिया था, लाइन 93 चलेगी ही नहीं!
+// - `removeItem` नहीं चलेगा। 
+//   👉 **पर्ची का स्टेटस:** अभी भी ज़िंदा है! पर्ची पर `/mains/syllabus/pyq` लिखा है।
 
-**Step 4:** यूज़र ने ऐप क्लोज़ कर दी।
+// **Step 4:** यूज़र ने ऐप क्लोज़ कर दी।
 
-**Step 5 (द एक्सीडेंट 🚨):** 2 घंटे बाद यूज़र ने दोबारा ऐप खोली। 
-- OS ने उसे `/dashboard` पर उतारा। 
-- *कोड (Auto Resume) क्या करेगा:* वो तुरंत पर्ची चेक करेगा। 
-- बाउन्सर को पर्ची में **`/mains/syllabus/pyq`** लिखा हुआ मिल जाएगा! 
-- बाउन्सर बिना सोचे-समझे यूज़र की गर्दन पकड़ेगा और उसे ज़बरदस्ती `/mains/syllabus/pyq` में टेलीपोर्ट (`router.replace`) कर देगा!
-- **यूज़र का रिएक्शन:** *"अबे यार! मैं तो 10 बजे ही पढ़ाई खत्म करके खुद Dashboard पर आ गया था। अब मैंने ऐप खोली है तो मुझे Dashboard दिखना चाहिए था ना, वापस PYQ में क्यों फेंक दिया मुझे?!"*
+// **Step 5 (द एक्सीडेंट 🚨):** 2 घंटे बाद यूज़र ने दोबारा ऐप खोली। 
+// - OS ने उसे `/dashboard` पर उतारा। 
+// - *कोड (Auto Resume) क्या करेगा:* वो तुरंत पर्ची चेक करेगा। 
+// - बाउन्सर को पर्ची में **`/mains/syllabus/pyq`** लिखा हुआ मिल जाएगा! 
+// - बाउन्सर बिना सोचे-समझे यूज़र की गर्दन पकड़ेगा और उसे ज़बरदस्ती `/mains/syllabus/pyq` में टेलीपोर्ट (`router.replace`) कर देगा!
+// - **यूज़र का रिएक्शन:** *"अबे यार! मैं तो 10 बजे ही पढ़ाई खत्म करके खुद Dashboard पर आ गया था। अब मैंने ऐप खोली है तो मुझे Dashboard दिखना चाहिए था ना, वापस PYQ में क्यों फेंक दिया मुझे?!"*
 
-### सारांश (Summary)
-अगर हम `/dashboard` पर आने पर पर्ची नहीं फाड़ेंगे, तो बाउन्सर हमेशा यह मानता रहेगा कि यूज़र अभी भी कमरे में ही है। 
+// ### सारांश (Summary)
+// अगर हम `/dashboard` पर आने पर पर्ची नहीं फाड़ेंगे, तो बाउन्सर हमेशा यह मानता रहेगा कि यूज़र अभी भी कमरे में ही है। 
 
-इसीलिए **Line 93 पर `/dashboard` को रखना सबसे क्रिटिकल है**, ताकि जब यूज़र खुद बाहर आ जाए, तो हम उसका पुराना ट्रैक रिकॉर्ड डिलीट कर दें और उसे अगली बार कोई फालतू टेलीपोर्टेशन न झेलनी पड़े! 
+// इसीलिए **Line 93 पर `/dashboard` को रखना सबसे क्रिटिकल है**, ताकि जब यूज़र खुद बाहर आ जाए, तो हम उसका पुराना ट्रैक रिकॉर्ड डिलीट कर दें और उसे अगली बार कोई फालतू टेलीपोर्टेशन न झेलनी पड़े! 
 
-अब आया एकदम प्रॉपर फील? 😎
+// अब आया एकदम प्रॉपर फील? 😎
+
+
+
+
+// ## best explanation of this code 
+
+// Viewed PWARouteTracker.tsx:35-65
+
+// चलिए भाई, अब मैं आपको पूरे कोड का **Line-by-Line "X-Ray"** करके दिखाता हूँ। हम देखेंगे कि जब एक **Logged-in (प्रीमियम/फ्री)** यूज़र और एक **Non-logged-in (बाहरी)** यूज़र ऐप खोलते हैं, तो यह बाउन्सर (कोड) उनके साथ कैसा बर्ताव करता है।
+
+// ---
+
+// ### Step 1: द गार्ड (Line 50)
+// ```tsx
+// if (typeof window === 'undefined' || !pathname) return;
+// ```
+// - **दोनों के लिए:** यह लाइन चेक करती है कि कोड ब्राउज़र में चल रहा है या सर्वर पर। अगर सर्वर (Next.js SSR) पर है, तो चुपचाप वापस लौट जाओ। सारा खेल सिर्फ ब्राउज़र में होगा।
+
+// ---
+
+// ### Step 2: फ्रेश लॉन्च की चेकिंग (Line 55)
+// ```tsx
+// if ((pathname === '/' || pathname === '/dashboard') && !hasResumed.current) {
+//   hasResumed.current = true; // एक बार चेक कर लिया, अब शांत हो जा
+// ```
+// - **दोनों के लिए:** जब ऐप पहली बार खुलती है (`hasResumed` false है), और यूज़र होमपेज (`/`) या डैशबोर्ड (`/dashboard`) पर लैंड करता है, तो बाउन्सर एक्टिव हो जाता है। 
+
+// ---
+
+// ### Step 3: पुरानी पर्ची ढूँढना (Line 58 - 68)
+// ```tsx
+// const savedData = localStorage.getItem(TRACKING_KEY);
+// if (savedData) {
+//    // ... time check and expiry check ...
+//    if (path && path !== '/dashboard' && path !== '/' && hoursSinceSaved < EXPIRY_HOURS) {
+//       localStorage.removeItem(TRACKING_KEY); 
+//       router.replace(path); // 🚀 Teleport
+//       return; 
+//    }
+// }
+// ```
+// - **Logged-in User:** अगर यह यूज़र कल रात `/mains/syllabus/pyq` पढ़ रहा था (पर्ची मौजूद है), तो बाउन्सर उसे तुरंत उसी पेज पर "टेलीपोर्ट" (`router.replace`) कर देगा। 
+// - **Non-logged-in User:** मान लो कोई बिना लॉगिन वाला यूज़र किसी फ्री पेज (जैसे `/mains/free-demo`) पर था। अगर उसके पास पर्ची है, तो उसे भी वहाँ भेज दिया जाएगा। 
+// *(नोट: अगर कोई बिना लॉगिन वाला यूज़र चालाकी से किसी प्रीमियम URL की पर्ची सेव करके बैठा है, तो हमारा बाउन्सर तो उसे भेज देगा, लेकिन आपका **Middleware/Server** उसे तुरंत लात मारकर वापस `/signin` पर फेंक देगा। तो सिक्यूरिटी 100% टाइट है!)*
+
+// ---
+
+// ### Step 4: द मास्टरस्ट्रोक (Fallback Logic - Line 76 - 80)
+// ```tsx
+// const isLogged = useSettingsStore.getState().user !== null;
+// if (pathname === '/' && isLogged) {
+//   router.replace('/dashboard');
+//   return;
+// }
+// ```
+// *यह लाइन तब चलती है जब यूज़र के पास **कोई पुरानी पर्ची नहीं होती** (या एक्सपायर हो गई होती है)।*
+
+// - **Logged-in User:** OS ने उसे `/` (Marketing Page) पर उतारा। बाउन्सर ने देखा कि इसके पास पर्ची नहीं है, लेकिन अरे! यह तो अपना **Logged-in** भाई है! इसे बाहर मार्केटिंग पेज पर क्यों खड़ा रखा है? तुरंत इसे `/dashboard` के अंदर भेजो! (`router.replace('/dashboard')`)। 
+// - **Non-logged-in User:** OS ने उसे `/` पर उतारा। बाउन्सर ने देखा: पर्ची नहीं है, और यह **लॉग-इन भी नहीं है** (Guest है)। बाउन्सर बोलेगा: *"जा भाई, तू आराम से बाहर खड़े होकर मार्केटिंग पेज (Testimonials, Features) पढ़।"* (कोई Redirect नहीं होगा, वो `/` पर ही रहेगा)।
+
+// ---
+
+// ### Step 5: नई पर्ची बनाना (Tracking Logic - Line 85 - 92)
+// ```tsx
+// const isExcluded = pathname === '/' || pathname === '/dashboard' || pathname.startsWith('/signin') ...
+
+// if (!isExcluded) {
+//   localStorage.setItem(TRACKING_KEY, { path: pathname, timestamp: Date.now() });
+// }
+// ```
+// - **दोनों के लिए:** अब यूज़र ऐप के अंदर घूम रहा है। अगर वो `/` (Home), `/dashboard`, या `/signin` जैसे पब्लिक/मेन पेजेस पर है, तो बाउन्सर इग्नोर मारता है। 
+// - लेकिन जैसे ही वो किसी **काम के पेज** (जैसे PYQ या Test) में घुसता है, बाउन्सर तुरंत उसकी नई लोकेशन डायरी (`localStorage`) में लिख लेता है।
+
+// ---
+
+// ### Step 6: पर्ची फाड़ना (Clean Up - Line 94 - 97)
+// ```tsx
+// else if (pathname === '/' || pathname === '/dashboard') {
+//   localStorage.removeItem(TRACKING_KEY);
+// }
+// ```
+// - **Logged-in User:** अगर वो पढ़ाई खत्म करके खुद **Dashboard** पर वापस आ जाता है, तो बाउन्सर पर्ची फाड़ देता है ताकि अगली बार ऐप खुलने पर फालतू टेलीपोर्टेशन न हो। 
+// - **Non-logged-in User:** अगर वो भी वापस **Home (`/`)** पर आ जाता है, तो उसकी पर्ची भी फट जाती है। 
+
+// ---
+
+// **खत्म!**
+// यह है इस पूरे कोड की जादुई कहानी। अब चाहे कोई फ्री यूज़र हो या आपका प्रीमियम स्टूडेंट, यह कोड उन दोनों को बिल्कुल सटीक, स्मार्ट और एक "नेचुरल ऐप" वाला एक्सपीरिएंस देगा। कोई डाउट बचा है भाई? 🎯
