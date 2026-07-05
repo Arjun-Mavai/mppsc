@@ -41,6 +41,7 @@ import {
   DialogHeader,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { PyqNavigationGuide } from '@/components/mains/PyqNavigationGuide';
 
 interface DashboardClientProps {
   user: {
@@ -323,19 +324,21 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                   />
                 </LauncherCard>
                 
-                {/* How to Use App Button */}
-                <button
-                  onClick={() => {
-                    setTourStep(1);
-                    setShowWelcomeTour(true);
-                  }}
-                  className="group flex w-full items-center justify-center gap-3 rounded-3xl border border-indigo-100 bg-indigo-50/60 p-4.5 py-4 text-[13px] font-bold text-indigo-800 shadow-sm transition-all hover:bg-indigo-100/60 hover:shadow active:scale-[0.98]"
-                >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm transition-transform group-hover:scale-110">
-                    <PlayCircle size={18} className="text-indigo-600" />
-                  </div>
-                  <span>{isHindi ? 'ऐप कैसे इस्तेमाल करें? (गाइड देखें)' : 'How to use the App? (View Guide)'}</span>
-                </button>
+                {/* How to Use App Guide Modal Trigger */}
+                <PyqNavigationGuide 
+                  themeDeep={false} 
+                  triggerType="custom" 
+                  customTrigger={
+                    <button
+                      className="group flex w-full items-center justify-center gap-3 rounded-3xl border border-indigo-100 bg-indigo-50/60 p-4.5 py-4 text-[13px] font-bold text-indigo-800 shadow-sm transition-all hover:bg-indigo-100/60 hover:shadow active:scale-[0.98]"
+                    >
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm transition-transform group-hover:scale-110">
+                        <PlayCircle size={18} className="text-indigo-600" />
+                      </div>
+                      <span>{isHindi ? 'नेविगेशन गाइड कैसे इस्तेमाल करें?' : 'How to use Navigation Guide?'}</span>
+                    </button>
+                  } 
+                />
               </div>
 
               {/* 3. PYQ INTELLIGENCE ENGINE */}
