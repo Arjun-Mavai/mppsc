@@ -23,6 +23,10 @@ import {
   Shield,
   X,
   Check,
+  Receipt,
+  PiggyBank,
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 
 interface PaymentRecord {
@@ -43,6 +47,8 @@ interface PaymentRecord {
 interface Stats {
   total: number;
   totalRevenue: number;
+  totalPlatformFee: number;
+  totalSettlement: number;
   liteCount: number;
   proCount: number;
   mainsCount: number;
@@ -57,6 +63,7 @@ interface Stats {
   weekRevenue: number;
   month: number;
   monthRevenue: number;
+  monthPlatformFee: number;
 }
 
 interface DailyData {
@@ -188,6 +195,65 @@ export default function PaymentsPage() {
           <PlanCard title="Mains" count={stats.mainsCount} revenue={stats.mainsRevenue} total={stats.total} color="emerald" icon={<BookOpen className="h-5 w-5 text-emerald-600" />} />
           <PlanCard title="Combo (PRO+)" count={stats.comboCount} revenue={stats.comboRevenue} total={stats.total} color="violet" icon={<Crown className="h-5 w-5 text-violet-600" />} />
           <PlanCard title="Lite (Legacy)" count={stats.liteCount} revenue={stats.liteRevenue} total={stats.total} color="blue" icon={<Zap className="h-5 w-5 text-blue-600" />} />
+        </div>
+
+        {/* ── Razorpay Financial Insights ── */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-slate-800">Razorpay Financial Insights</h2>
+              <p className="text-[11px] text-slate-500">Estimated deductions and settlements (Base Fee 2% + 18% GST)</p>
+            </div>
+            <div className="hidden sm:block">
+              <Badge className="bg-slate-900 font-bold hover:bg-slate-800 text-white rounded-lg px-3 py-1">
+                Standard TDR: 2.36%
+              </Badge>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <MetricCard
+              label="Est. Platform Fees (All Time)"
+              value={`-${formatRupees(stats.totalPlatformFee || 0)}`}
+              sub="Deducted by Razorpay"
+              icon={<Receipt className="h-4 w-4" />}
+              color="rose"
+            />
+            <MetricCard
+              label="Net Settled (All Time)"
+              value={formatRupees(stats.totalSettlement || 0)}
+              sub="Amount received in bank"
+              icon={<PiggyBank className="h-4 w-4" />}
+              color="emerald"
+            />
+            <MetricCard
+              label="Fees (Last 30 Days)"
+              value={`-${formatRupees(stats.monthPlatformFee || 0)}`}
+              sub="Platform fees this month"
+              icon={<AlertTriangle className="h-4 w-4" />}
+              color="amber"
+            />
+          </div>
+
+          {/* Educational Banner */}
+          <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 shrink-0 rounded-full bg-blue-100 p-1 text-blue-600">
+                <Info className="h-4 w-4" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-blue-900">How Razorpay Credits Work</h4>
+                <p className="text-xs leading-relaxed text-blue-800/80">
+                  Razorpay standard fee is <strong>2% + 18% GST (Total 2.36%)</strong> per transaction. 
+                  If you received a coupon for <strong>"₹5,000 Amount Credits"</strong>, it means the first ₹5,000 worth of <em>total sales</em> will be free of the 2% fee. 
+                  It does <strong>not</strong> mean you have ₹5,000 in fee discounts. If your "Amount Credits" balance on the Razorpay dashboard shows ₹9.00, it means your free quota has been fully exhausted (only ₹9 worth of free volume left) and standard TDR charges are now applying to all new payments.
+                </p>
+                <div className="pt-2 text-[10px] font-semibold text-blue-700">
+                  Formula: Amount × 2% = Fee → Fee × 18% = GST → Final Deduction = Fee + GST.
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* ── Daily Chart (last 30 days) ── */}
@@ -624,6 +690,7 @@ function MetricCard({
     blue: 'bg-blue-50 text-blue-600',
     violet: 'bg-violet-50 text-violet-600',
     amber: 'bg-amber-50 text-amber-600',
+    rose: 'bg-rose-50 text-rose-600',
   };
   return (
     <Card className="border-slate-100 shadow-sm">
