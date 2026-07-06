@@ -197,62 +197,100 @@ export default function PaymentsPage() {
           <PlanCard title="Lite (Legacy)" count={stats.liteCount} revenue={stats.liteRevenue} total={stats.total} color="blue" icon={<Zap className="h-5 w-5 text-blue-600" />} />
         </div>
 
-        {/* ── Razorpay Financial Insights ── */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
+        {/* ── Razorpay Credit & Fee Tracker ── */}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h2 className="text-lg font-bold text-slate-800">Razorpay Financial Insights</h2>
-              <p className="text-[11px] text-slate-500">Estimated deductions and settlements (Base Fee 2% + 18% GST)</p>
+              <h2 className="text-lg font-bold text-slate-900">Razorpay Credit & Fee Tracker</h2>
+              <p className="text-[11px] text-slate-500">Live monitoring of your free transaction quota and active TDR deductions.</p>
             </div>
-            <div className="hidden sm:block">
-              <Badge className="bg-slate-900 font-bold hover:bg-slate-800 text-white rounded-lg px-3 py-1">
-                Standard TDR: 2.36%
-              </Badge>
-            </div>
+            <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 border border-rose-200 font-bold px-3 py-1 rounded-lg w-fit">
+              Quota Exhausted — 2.36% Fee Active
+            </Badge>
           </div>
           
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <MetricCard
-              label="Est. Platform Fees (All Time)"
-              value={`-${formatRupees(stats.totalPlatformFee || 0)}`}
-              sub="Deducted by Razorpay"
-              icon={<Receipt className="h-4 w-4" />}
-              color="rose"
-            />
-            <MetricCard
-              label="Net Settled (All Time)"
-              value={formatRupees(stats.totalSettlement || 0)}
-              sub="Amount received in bank"
-              icon={<PiggyBank className="h-4 w-4" />}
-              color="emerald"
-            />
-            <MetricCard
-              label="Fees (Last 30 Days)"
-              value={`-${formatRupees(stats.monthPlatformFee || 0)}`}
-              sub="Platform fees this month"
-              icon={<AlertTriangle className="h-4 w-4" />}
-              color="amber"
-            />
-          </div>
-
-          {/* Educational Banner */}
-          <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4">
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5 shrink-0 rounded-full bg-blue-100 p-1 text-blue-600">
-                <Info className="h-4 w-4" />
-              </div>
-              <div className="space-y-1">
-                <h4 className="text-sm font-bold text-blue-900">How Razorpay Credits Work</h4>
-                <p className="text-xs leading-relaxed text-blue-800/80">
-                  Razorpay standard fee is <strong>2% + 18% GST (Total 2.36%)</strong> per transaction. 
-                  If you received a coupon for <strong>"₹5,000 Amount Credits"</strong>, it means the first ₹5,000 worth of <em>total sales</em> will be free of the 2% fee. 
-                  It does <strong>not</strong> mean you have ₹5,000 in fee discounts. If your "Amount Credits" balance on the Razorpay dashboard shows ₹9.00, it means your free quota has been fully exhausted (only ₹9 worth of free volume left) and standard TDR charges are now applying to all new payments.
-                </p>
-                <div className="pt-2 text-[10px] font-semibold text-blue-700">
-                  Formula: Amount × 2% = Fee → Fee × 18% = GST → Final Deduction = Fee + GST.
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            {/* Quota Status Card */}
+            <Card className="border-slate-200 shadow-sm bg-white overflow-hidden">
+              <div className="bg-slate-50/80 p-3 border-b border-slate-100 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <div className="bg-blue-100 text-blue-600 p-1.5 rounded-lg"><Receipt className="h-4 w-4" /></div>
+                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">Amount Credits</span>
                 </div>
+                <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-[10px]">Expiring/Exhausted</Badge>
               </div>
-            </div>
+              <CardContent className="p-4 space-y-3">
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="font-semibold text-slate-600">Balance Left</span>
+                    <span className="font-black text-rose-600">₹9.00</span>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-2.5">
+                    <div className="bg-rose-500 h-2.5 rounded-full" style={{ width: '1%' }}></div>
+                  </div>
+                  <div className="flex justify-between text-[10px] text-slate-400 mt-1 font-medium">
+                    <span>Used: ₹4,991.00</span>
+                    <span>Total Quota: ₹5,000.00</span>
+                  </div>
+                </div>
+                <div className="pt-2 border-t border-slate-100 flex justify-between text-[11px]">
+                  <span className="text-slate-500">New Quota Starts:</span>
+                  <span className="font-bold text-emerald-600">12 Jul 2026</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Live Fee Breakdown Card */}
+            <Card className="border-rose-100 shadow-sm bg-rose-50/30">
+              <div className="bg-rose-100/50 p-3 border-b border-rose-100 flex items-center gap-2">
+                <div className="bg-rose-200 text-rose-700 p-1.5 rounded-lg"><AlertTriangle className="h-4 w-4" /></div>
+                <span className="text-xs font-bold text-rose-900 uppercase tracking-wide">Current Deductions</span>
+              </div>
+              <CardContent className="p-4">
+                <p className="text-[11px] text-rose-700 font-medium mb-3 leading-relaxed">
+                  Since your free credits are exhausted, Razorpay is currently deducting <strong>2.36%</strong> on every new payment until July 12.
+                </p>
+                <div className="bg-white rounded-lg p-3 border border-rose-100 shadow-sm space-y-2">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Example: ₹399 Plan</div>
+                  <div className="flex justify-between text-xs text-slate-600">
+                    <span>Razorpay Fee (2%)</span>
+                    <span className="font-mono text-rose-600">-₹7.98</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-600">
+                    <span>GST (18% on Fee)</span>
+                    <span className="font-mono text-rose-600">-₹1.44</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-bold pt-1 border-t border-slate-100 text-slate-800">
+                    <span>Total Deduction</span>
+                    <span className="font-mono text-rose-600">-₹9.42</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-black pt-1 text-emerald-600">
+                    <span>You Receive</span>
+                    <span className="font-mono">₹389.58</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Estimated Stats Card */}
+            <Card className="border-slate-200 shadow-sm bg-white">
+               <div className="bg-slate-50/80 p-3 border-b border-slate-100 flex items-center gap-2">
+                <div className="bg-emerald-100 text-emerald-600 p-1.5 rounded-lg"><PiggyBank className="h-4 w-4" /></div>
+                <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">Financial Overview</span>
+              </div>
+              <CardContent className="p-4 space-y-4">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gross Revenue (All Time)</p>
+                  <p className="text-xl font-black text-slate-900">{formatRupees(stats.totalRevenue)}</p>
+                </div>
+                <div className="pt-3 border-t border-slate-100">
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    Most of your past revenue was processed <strong>free of charge</strong> using Razorpay Amount Credits. 
+                    The estimated deduction values have been hidden to prevent inaccurate math, as we do not pull historical fee waivers from Razorpay API.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
