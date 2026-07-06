@@ -134,7 +134,7 @@ export async function saveIncomingMessage({
   }
 }
 
-export async function saveOutgoingMessage(conversationId: string, text: string, sender: 'bot' | 'admin', messageId?: string) {
+export async function saveOutgoingMessage(conversationId: string, text: string, sender: 'bot' | 'admin', messageId?: string, mediaUrl?: string) {
   try {
     await db.insert(supportMessages).values({
       id: messageId || nanoid(),
@@ -142,6 +142,8 @@ export async function saveOutgoingMessage(conversationId: string, text: string, 
       sender,
       text,
       status: 'sent',
+      mediaUrl,
+      messageType: mediaUrl ? 'image' : 'text',
       createdAt: new Date(),
     });
 
@@ -225,7 +227,7 @@ export async function markAsRead(conversationId: string) {
   }
 }
 
-export async function sendAdminReply(conversationId: string, text: string, options?: { buttons?: { id: string, title: string }[] }) {
+export async function sendAdminReply(conversationId: string, text: string, options?: { buttons?: { id: string, title: string }[], mediaUrl?: string }) {
   try {
     await assertAdmin();
     const conv = await db.select().from(supportConversations).where(eq(supportConversations.id, conversationId)).limit(1).then(res => res[0]);
@@ -245,14 +247,24 @@ export async function sendAdminReply(conversationId: string, text: string, optio
           };
         }
 
-        const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        let method = 'sendMessage';
+        let body: any = {
+          chat_id: conv.guestPhone,
+          reply_markup
+        };
+        
+        if (options?.mediaUrl) {
+          method = 'sendPhoto';
+          body.photo = options.mediaUrl;
+          if (text) body.caption = text;
+        } else {
+          body.text = text;
+        }
+
+        const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            chat_id: conv.guestPhone, 
-            text,
-            reply_markup 
-          })
+          body: JSON.stringify(body)
         });
         if (res.ok) {
           apiSuccess = true;
@@ -281,7 +293,11 @@ export async function sendAdminReply(conversationId: string, text: string, optio
           to: conv.guestPhone,
         };
 
-        if (options?.buttons && options.buttons.length > 0 && options.buttons.length <= 3) {
+        if (options?.mediaUrl) {
+          bodyPayload.type = 'image';
+          bodyPayload.image = { link: options.mediaUrl };
+          if (text) bodyPayload.image.caption = text;
+        } else if (options?.buttons && options.buttons.length > 0 && options.buttons.length <= 3) {
           bodyPayload.type = 'interactive';
           bodyPayload.interactive = {
             type: 'button',
@@ -326,7 +342,7 @@ export async function sendAdminReply(conversationId: string, text: string, optio
     }
 
     if (apiSuccess) {
-      await saveOutgoingMessage(conversationId, text, 'admin', metaMessageId);
+      await saveOutgoingMessage(conversationId, text, 'admin', metaMessageId, options?.mediaUrl);
       return { success: true };
     } else {
       return { success: false, error: errorMessage };

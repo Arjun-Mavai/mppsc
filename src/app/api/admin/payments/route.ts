@@ -135,6 +135,8 @@ export async function GET(req: Request) {
       stats: {
         total: allPayments.length,
         totalRevenue,
+        totalPlatformFee: totalRevenue * 0.0236, // 2% + 18% GST
+        totalSettlement: totalRevenue - (totalRevenue * 0.0236),
         liteCount,
         proCount,
         mainsCount,
@@ -149,6 +151,7 @@ export async function GET(req: Request) {
         weekRevenue: weekPayments.reduce((s, p) => s + (p.amount || 0), 0),
         month: monthPayments.length,
         monthRevenue: monthPayments.reduce((s, p) => s + (p.amount || 0), 0),
+        monthPlatformFee: monthPayments.reduce((s, p) => s + (p.amount || 0), 0) * 0.0236,
       },
       dailyChart,
       payments: filtered.map((p) => ({

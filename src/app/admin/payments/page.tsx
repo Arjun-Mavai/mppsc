@@ -23,6 +23,10 @@ import {
   Shield,
   X,
   Check,
+  Receipt,
+  PiggyBank,
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 
 interface PaymentRecord {
@@ -43,6 +47,8 @@ interface PaymentRecord {
 interface Stats {
   total: number;
   totalRevenue: number;
+  totalPlatformFee: number;
+  totalSettlement: number;
   liteCount: number;
   proCount: number;
   mainsCount: number;
@@ -57,6 +63,7 @@ interface Stats {
   weekRevenue: number;
   month: number;
   monthRevenue: number;
+  monthPlatformFee: number;
 }
 
 interface DailyData {
@@ -74,6 +81,15 @@ type FilterType = 'all' | 'today' | 'week' | 'month';
 
 function formatRupees(paise: number) {
   return `₹${(paise / 100).toLocaleString('en-IN')}`;
+}
+
+function getNextQuotaDate() {
+  const now = new Date();
+  let nextDate = new Date(now.getFullYear(), now.getMonth(), 12);
+  if (now.getDate() >= 12) {
+    nextDate.setMonth(nextDate.getMonth() + 1);
+  }
+  return nextDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 export default function PaymentsPage() {
@@ -188,6 +204,136 @@ export default function PaymentsPage() {
           <PlanCard title="Mains" count={stats.mainsCount} revenue={stats.mainsRevenue} total={stats.total} color="emerald" icon={<BookOpen className="h-5 w-5 text-emerald-600" />} />
           <PlanCard title="Combo (PRO+)" count={stats.comboCount} revenue={stats.comboRevenue} total={stats.total} color="violet" icon={<Crown className="h-5 w-5 text-violet-600" />} />
           <PlanCard title="Lite (Legacy)" count={stats.liteCount} revenue={stats.liteRevenue} total={stats.total} color="blue" icon={<Zap className="h-5 w-5 text-blue-600" />} />
+        </div>
+
+        {/* ── Razorpay Credit & Fee Tracker ── */}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Razorpay Credit & Fee Tracker</h2>
+              <p className="text-[11px] text-slate-500">Live monitoring of your free transaction quota and active TDR deductions.</p>
+            </div>
+            <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 border border-rose-200 font-bold px-3 py-1 rounded-lg w-fit">
+              Quota Exhausted — 2.36% Fee Active
+            </Badge>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            {/* Quota Status Card */}
+            <Card className="border-slate-200 shadow-sm bg-white overflow-hidden">
+              <div className="bg-slate-50/80 p-3 border-b border-slate-100 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <div className="bg-blue-100 text-blue-600 p-1.5 rounded-lg"><Receipt className="h-4 w-4" /></div>
+                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">Amount Credits</span>
+                </div>
+                <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-[10px]">Expiring/Exhausted</Badge>
+              </div>
+              <CardContent className="p-4 space-y-3">
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="font-semibold text-slate-600">Balance Left</span>
+                    <span className="font-black text-rose-600">₹9.00</span>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-2.5">
+                    <div className="bg-rose-500 h-2.5 rounded-full" style={{ width: '1%' }}></div>
+                  </div>
+                  <div className="flex justify-between text-[10px] text-slate-400 mt-1 font-medium">
+                    <span>Used: ₹4,991.00</span>
+                    <span>Total Quota: ₹5,000.00</span>
+                  </div>
+                </div>
+                <div className="pt-2 border-t border-slate-100 flex justify-between text-[11px]">
+                  <span className="text-slate-500">New Quota Starts:</span>
+                  <span className="font-bold text-emerald-600">{getNextQuotaDate()}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Live Fee Breakdown Card */}
+            <Card className="border-rose-100 shadow-sm bg-rose-50/30">
+              <div className="bg-rose-100/50 p-3 border-b border-rose-100 flex items-center gap-2">
+                <div className="bg-rose-200 text-rose-700 p-1.5 rounded-lg"><AlertTriangle className="h-4 w-4" /></div>
+                <span className="text-xs font-bold text-rose-900 uppercase tracking-wide">Standard PG Deductions (2.36%)</span>
+              </div>
+              <CardContent className="p-4 overflow-y-auto max-h-64">
+                <p className="text-[11px] text-rose-700 font-medium mb-3 leading-relaxed">
+                  Razorpay is currently deducting <strong>2.36%</strong> on every payment until {getNextQuotaDate()}.
+                </p>
+                
+                <div className="space-y-3">
+                  {/* 399 Plan */}
+                  <div className="bg-white rounded-lg p-2.5 border border-rose-100 shadow-sm space-y-1">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Example: ₹399 Plan</div>
+                    <div className="flex justify-between text-[11px] text-slate-600">
+                      <span>Fee (2%) + GST (18%)</span>
+                      <span className="font-mono text-rose-600">-₹7.98 - ₹1.44</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-bold pt-1 border-t border-slate-100 text-slate-800">
+                      <span>Total Deduction</span>
+                      <span className="font-mono text-rose-600">-₹9.42</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-black pt-1 text-emerald-600">
+                      <span>You Receive</span>
+                      <span className="font-mono">₹389.58</span>
+                    </div>
+                  </div>
+
+                  {/* 599 Plan */}
+                  <div className="bg-white rounded-lg p-2.5 border border-rose-100 shadow-sm space-y-1">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Example: ₹599 Plan</div>
+                    <div className="flex justify-between text-[11px] text-slate-600">
+                      <span>Fee (2%) + GST (18%)</span>
+                      <span className="font-mono text-rose-600">-₹11.98 - ₹2.16</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-bold pt-1 border-t border-slate-100 text-slate-800">
+                      <span>Total Deduction</span>
+                      <span className="font-mono text-rose-600">-₹14.14</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-black pt-1 text-emerald-600">
+                      <span>You Receive</span>
+                      <span className="font-mono">₹584.86</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Same Day Settlement Card */}
+            <Card className="border-emerald-200 shadow-sm bg-emerald-50/30 lg:col-span-1 md:col-span-3">
+               <div className="bg-emerald-100/50 p-3 border-b border-emerald-200 flex items-center gap-2">
+                <div className="bg-emerald-200 text-emerald-700 p-1.5 rounded-lg"><Zap className="h-4 w-4" /></div>
+                <span className="text-xs font-bold text-emerald-900 uppercase tracking-wide">Same Day Settlement (0.15%)</span>
+              </div>
+              <CardContent className="p-4">
+                <p className="text-[10px] text-emerald-700 font-medium mb-3 leading-relaxed">
+                  Additional <strong>0.15% + GST = 0.177%</strong> fee applies for Same Day Settlements. Total combined deduction becomes <strong>2.537%</strong>.
+                </p>
+                <div className="bg-white rounded-lg border border-emerald-100 shadow-sm overflow-hidden">
+                  <table className="w-full text-left text-[11px]">
+                    <thead className="bg-emerald-50 border-b border-emerald-100 text-slate-500 font-semibold">
+                      <tr>
+                        <th className="p-2">Amount</th>
+                        <th className="p-2 text-rose-600">Deduction (PG + SDS)</th>
+                        <th className="p-2 text-emerald-600 text-right">You Receive</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-emerald-50 font-mono text-slate-700">
+                      {[100, 399, 599, 1000, 1198, 5000].map(amt => {
+                        const fee = amt * 0.02537;
+                        return (
+                          <tr key={amt} className="hover:bg-slate-50">
+                            <td className="p-2 font-sans font-bold">₹{amt}</td>
+                            <td className="p-2 text-rose-600">-₹{fee.toFixed(2)}</td>
+                            <td className="p-2 text-emerald-600 font-black text-right">₹{(amt - fee).toFixed(2)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* ── Daily Chart (last 30 days) ── */}
@@ -624,6 +770,7 @@ function MetricCard({
     blue: 'bg-blue-50 text-blue-600',
     violet: 'bg-violet-50 text-violet-600',
     amber: 'bg-amber-50 text-amber-600',
+    rose: 'bg-rose-50 text-rose-600',
   };
   return (
     <Card className="border-slate-100 shadow-sm">
