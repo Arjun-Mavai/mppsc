@@ -417,7 +417,7 @@ export default function SupportInbox() {
                     {msg.sender !== 'user' && !msg.isOptimistic && (
                       msg.status === 'read' || msg.status === 'READ' ? <CheckCheck size={14} className="text-[#53bdeb]" /> :
                       msg.status === 'delivered' || msg.status === 'DELIVERED' ? <CheckCheck size={14} className="text-[#8696a0]" /> :
-                      msg.status === 'failed' || msg.status === 'FAILED' ? <AlertCircle size={14} className="text-red-500" title="Message Failed" /> :
+                      msg.status === 'failed' || msg.status === 'FAILED' ? <span title="Message Failed"><AlertCircle size={14} className="text-red-500" /></span> :
                       <Check size={14} className="text-[#8696a0]" />
                     )}
                     {msg.isOptimistic && <Loader2 size={10} className="animate-spin" />}
