@@ -221,8 +221,23 @@ export async function loginUserAction(formData: LoginParams) {
     }
 
     // ── Telegram Notification ───────────────────────────────────
-    // We purposefully DO NOT send a Telegram notification for every login
-    // to avoid rate-limiting and spam. The activity is safely logged to DB above.
+    // The user requested to re-enable these events.
+    after(async () => {
+      try {
+        const planText = currentPlanTier !== 'free' ? `[${currentPlanTier.toUpperCase()}]` : '[FREE]';
+        const forceText = force ? '⚠️ *FORCED LOGIN (Device Kicked)*' : '✅ *Normal Login*';
+        
+        await sendLeadNotification(
+          `🔐 *USER LOGIN* ${planText}\n` +
+          `👤 Name: ${escapeHTML(user.name || 'User')}\n` +
+          `📧 Email: ${escapeHTML(user.email)}\n` +
+          `📱 IP: ${ip}\n` +
+          `${forceText}`
+        );
+      } catch (err) {
+        logger.error('Failed to send telegram login notification', err);
+      }
+    });
 
     // ── Sign JWT Token ──────────────────────────────────────────
     const payload = {
