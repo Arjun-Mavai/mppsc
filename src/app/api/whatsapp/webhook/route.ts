@@ -156,6 +156,11 @@ export async function POST(req: Request) {
 
                   if (messageId && newStatus) {
                     const statusLower = newStatus.toLowerCase();
+                    
+                    if (statusLower === 'failed' && statusObj.errors) {
+                      logger.error(`WhatsApp message failed to deliver`, new Error(JSON.stringify(statusObj.errors)), { category: 'api', context: { messageId } });
+                    }
+
                     await Promise.allSettled([
                       db.update(whatsappCampaignLogs)
                         .set({ status: newStatus, updatedAt: new Date() })

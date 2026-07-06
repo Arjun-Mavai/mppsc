@@ -86,6 +86,7 @@ export function PWARouteTracker() {
       pathname === '/' || 
       pathname === '/dashboard' || 
       pathname.startsWith('/signin') || 
+      pathname.startsWith('/login') || 
       pathname.startsWith('/register') ||
       pathname.startsWith('/upgrade');
 

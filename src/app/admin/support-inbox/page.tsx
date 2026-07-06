@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Search, Check, CheckCheck, MoreVertical, Phone, Globe, ChevronLeft, MessageCircleOff, ChevronDown, Bot, Power, X, Loader2, Heart } from 'lucide-react';
+import { Send, Search, Check, CheckCheck, MoreVertical, Phone, Globe, ChevronLeft, MessageCircleOff, ChevronDown, Bot, Power, X, Loader2, Heart, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getConversations, getMessages, sendAdminReply, markAsRead, resolveConversation, toggleHumanActive } from '@/actions/support-inbox-actions';
 import { toast } from 'sonner';
@@ -417,6 +417,7 @@ export default function SupportInbox() {
                     {msg.sender !== 'user' && !msg.isOptimistic && (
                       msg.status === 'read' || msg.status === 'READ' ? <CheckCheck size={14} className="text-[#53bdeb]" /> :
                       msg.status === 'delivered' || msg.status === 'DELIVERED' ? <CheckCheck size={14} className="text-[#8696a0]" /> :
+                      msg.status === 'failed' || msg.status === 'FAILED' ? <span title="Message Failed"><AlertCircle size={14} className="text-red-500" /></span> :
                       <Check size={14} className="text-[#8696a0]" />
                     )}
                     {msg.isOptimistic && <Loader2 size={10} className="animate-spin" />}
