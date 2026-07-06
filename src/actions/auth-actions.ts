@@ -225,12 +225,12 @@ export async function loginUserAction(formData: LoginParams) {
     after(async () => {
       try {
         const planText = currentPlanTier !== 'free' ? `[${currentPlanTier.toUpperCase()}]` : '[FREE]';
-        const forceText = force ? '⚠️ *FORCED LOGIN (Device Kicked)*' : '✅ *Normal Login*';
+        const forceText = force ? '⚠️ <b>FORCED LOGIN (Device Kicked)</b>' : '✅ <b>Normal Login</b>';
         
-        await sendLeadNotification(
-          `🔐 *USER LOGIN* ${planText}\n` +
-          `👤 Name: ${escapeHTML(user.name || 'User')}\n` +
-          `📧 Email: ${escapeHTML(user.email)}\n` +
+        await sendTelegramNotification(
+          `🔐 <b>USER LOGIN</b> ${planText}\n` +
+          `👤 Name: <b>${escapeHTML(user.name || 'User')}</b>\n` +
+          `📧 Email: <code>${escapeHTML(user.email)}</code>\n` +
           `📱 IP: ${ip}\n` +
           `${forceText}`
         );
