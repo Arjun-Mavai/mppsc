@@ -414,11 +414,11 @@ export default function SupportInbox() {
                     <div className="mb-1 rounded-md overflow-hidden bg-zinc-100 border border-zinc-200">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img 
-                        src={`/api/whatsapp/media?id=${msg.mediaUrl}`} 
+                        src={msg.mediaUrl.startsWith('http') ? msg.mediaUrl : `/api/whatsapp/media?id=${msg.mediaUrl}`} 
                         alt="Attached media" 
                         className="max-w-full h-auto object-cover max-h-64 cursor-pointer hover:opacity-90 transition-opacity"
                         loading="lazy"
-                        onClick={() => setFullscreenImage(`/api/whatsapp/media?id=${msg.mediaUrl}`)}
+                        onClick={() => setFullscreenImage(msg.mediaUrl!.startsWith('http') ? msg.mediaUrl! : `/api/whatsapp/media?id=${msg.mediaUrl}`)}
                       />
                       {msg.text && msg.text !== '[IMAGE]' && (
                         <p className="p-2 text-xs leading-snug whitespace-pre-wrap break-words border-t border-zinc-200 bg-white">
