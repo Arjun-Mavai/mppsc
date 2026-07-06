@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Search, Check, CheckCheck, MoreVertical, Phone, Globe, ChevronLeft, MessageCircleOff, ChevronDown, Bot, Power, X, Loader2, Heart, AlertCircle } from 'lucide-react';
+import { Send, Search, Check, CheckCheck, MoreVertical, Phone, Globe, ChevronLeft, MessageCircleOff, ChevronDown, Bot, Power, X, Loader2, Heart, AlertCircle, ImagePlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getConversations, getMessages, sendAdminReply, markAsRead, resolveConversation, toggleHumanActive } from '@/actions/support-inbox-actions';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { UploadButton } from '@/utils/uploadthing';
 
 type Message = {
   id: string;
@@ -35,6 +36,24 @@ export default function SupportInbox() {
   const [replyText, setReplyText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const [attachedImage, setAttachedImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (fullscreenImage) {
+        setFullscreenImage(null);
+      }
+    };
+
+    if (fullscreenImage) {
+      window.history.pushState({ modal: 'fullscreenImage' }, '', window.location.href);
+      window.addEventListener('popstate', handlePopState);
+    }
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [fullscreenImage]);
 
   const { data: conversations = [] } = useQuery({
     queryKey: ['support-conversations'],
@@ -158,9 +177,10 @@ export default function SupportInbox() {
   const activeConversation = conversations.find(c => c.id === activeId);
 
   const handleSend = () => {
-    if (!replyText.trim() || !activeId || !activeConversation) return;
-    sendMessageMutation.mutate({ text: replyText });
+    if ((!replyText.trim() && !attachedImage) || !activeId || !activeConversation) return;
+    sendMessageMutation.mutate({ text: replyText, opts: { mediaUrl: attachedImage } });
     setReplyText('');
+    setAttachedImage(null);
   };
 
   const handleResolveFeedback = async () => {
@@ -467,7 +487,42 @@ export default function SupportInbox() {
               ))}
             </div>
             
-            <div className="px-4 py-2 flex items-end gap-3 pb-4">
+            {attachedImage && (
+              <div className="px-4 pt-4 relative">
+                <div className="relative inline-block border-2 border-indigo-200 rounded-lg overflow-hidden w-24 h-24 bg-zinc-100 shadow-sm">
+                  <img src={attachedImage} alt="Attachment" className="w-full h-full object-cover" />
+                  <button 
+                    onClick={() => setAttachedImage(null)}
+                    className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 hover:bg-black transition-colors"
+                    title="Remove attachment"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            <div className="px-4 py-2 flex items-end gap-2 pb-4">
+              <UploadButton
+                endpoint="adminImage"
+                onClientUploadComplete={(res) => {
+                  if (res && res[0]) {
+                    setAttachedImage(res[0].url);
+                    toast.success("Image attached!");
+                  }
+                }}
+                onUploadError={(error: Error) => {
+                  toast.error(`Upload Error: ${error.message}`);
+                }}
+                appearance={{
+                  button: "ut-ready:bg-transparent bg-transparent ut-ready:text-zinc-500 text-zinc-500 hover:ut-ready:text-indigo-600 transition-colors h-11 w-11 p-0 m-0 border-0 focus-within:ring-0 after:hidden",
+                  container: "h-11 w-11 flex-shrink-0 flex items-center justify-center m-0",
+                  allowedContent: "hidden"
+                }}
+                content={{
+                  button: <ImagePlus size={22} className="shrink-0" />
+                }}
+              />
               <textarea
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
@@ -483,10 +538,10 @@ export default function SupportInbox() {
               />
               <button 
                 onClick={handleSend}
-                disabled={!replyText.trim() || sendMessageMutation.isPending}
+                disabled={(!replyText.trim() && !attachedImage) || sendMessageMutation.isPending}
                 className={cn(
                   "flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white shadow-sm transition-colors disabled:opacity-50 disabled:pointer-events-none",
-                  replyText.trim() ? "bg-[#00a884] hover:bg-[#008f6f]" : "bg-[#8696a0]"
+                  (replyText.trim() || attachedImage) ? "bg-[#00a884] hover:bg-[#008f6f]" : "bg-[#8696a0]"
                 )}
               >
                 {sendMessageMutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} className="ml-0.5" />}
@@ -517,7 +572,11 @@ export default function SupportInbox() {
           <button 
             onClick={(e) => {
               e.stopPropagation();
-              setFullscreenImage(null);
+              if (window.history.state?.modal === 'fullscreenImage') {
+                window.history.back();
+              } else {
+                setFullscreenImage(null);
+              }
             }}
             className="absolute top-4 right-4 text-white hover:text-zinc-300 z-[110] p-2 bg-black/50 rounded-full"
           >
