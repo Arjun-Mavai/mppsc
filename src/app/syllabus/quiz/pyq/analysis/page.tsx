@@ -68,6 +68,8 @@ async function AnalysisDataFetcher({ searchParams, user }: { searchParams: Promi
 }
 
 export default async function PYQAnalysisPage({ searchParams }: PageProps) {
+  redirect('/');
+  
   const user = await verifyAuth();
   if (!user) {
     redirect('/pricing');

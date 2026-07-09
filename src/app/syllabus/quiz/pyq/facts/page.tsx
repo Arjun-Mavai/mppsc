@@ -24,6 +24,8 @@ interface PageProps {
 }
 
 export default async function PYQFactsPage({ searchParams }: PageProps) {
+  redirect('/');
+  
   const user = await verifyAuth();
   if (!user) {
     redirect('/pricing');

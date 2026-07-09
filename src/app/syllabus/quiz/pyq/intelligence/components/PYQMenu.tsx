@@ -27,6 +27,7 @@ const menuItems = [
     subtitleHi: 'PYQ के हर रहस्य का विश्लेषण',
     color: 'emerald',
   },
+  /* NOTE: Temporarily hidden as per user request. Uncomment to re-enable Facts feature.
   {
     id: 'facts',
     href: '/syllabus/quiz/pyq/facts',
@@ -37,6 +38,7 @@ const menuItems = [
     subtitleHi: 'परीक्षा फैक्ट्स',
     color: 'emerald',
   },
+  */
   /*
   {
     id: 'analysis',
