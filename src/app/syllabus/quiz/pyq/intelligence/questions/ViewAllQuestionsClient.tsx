@@ -178,7 +178,7 @@ export default function ViewAllQuestionsClient({
   }, [source, topicTitle, year, unitId, unitTitle, subject]);
 
   return (
-    <div className="min-h-screen bg-[#FAFBFD] pb-24 text-slate-900 selection:bg-violet-500/30">
+    <div className="min-h-screen 2xl:min-h-[92vh] w-full mx-auto 2xl:max-w-[1600px] 2xl:my-6 2xl:rounded-[2.5rem] 2xl:border 2xl:border-slate-200/60 2xl:shadow-2xl overflow-hidden bg-[#FAFBFD] pb-24 text-slate-900 selection:bg-violet-500/30 transition-all duration-500">
       {/* Light Multi-Gradient Background */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
         <div className="absolute top-[-10%] left-[-10%] h-[60%] w-[60%] rounded-full bg-indigo-50/60 blur-[120px]" />
@@ -189,7 +189,7 @@ export default function ViewAllQuestionsClient({
 
       {/* Premium Sticky Header */}
       <div className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-2xl">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6">
+        <div className="mx-auto max-w-4xl 2xl:max-w-5xl px-4 sm:px-6 transition-all duration-500">
           <div className="flex h-16 items-center gap-4">
             <Button
               variant="ghost"
@@ -227,7 +227,7 @@ export default function ViewAllQuestionsClient({
 
       {/* Modernized Controls */}
       <div className="sticky top-16 z-40 border-b border-slate-200 bg-white/80 backdrop-blur-xl">
-        <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6">
+        <div className="mx-auto max-w-4xl 2xl:max-w-5xl px-4 py-4 sm:px-6 transition-all duration-500">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             {/* Filter Group - Horizontal Pills */}
             <div className="flex flex-col gap-3">
@@ -288,7 +288,7 @@ export default function ViewAllQuestionsClient({
 
       {/* Questions List - Premium Cards */}
       <div
-        className="relative mx-auto max-w-4xl space-y-4 px-1.5 py-6 sm:px-6"
+        className="relative mx-auto max-w-4xl 2xl:max-w-5xl space-y-4 px-1.5 py-6 sm:px-6 transition-all duration-500"
         data-testid="questions-container"
       >
         {filteredQuestions.map((q, idx) => {

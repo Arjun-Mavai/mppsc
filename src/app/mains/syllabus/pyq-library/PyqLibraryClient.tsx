@@ -338,13 +338,13 @@ export function PyqLibraryClient({
 
   const themeDeep = readingTheme === 'deep';
   const shell = cn(
-    'relative min-h-screen w-screen max-w-[100vw] overflow-x-hidden px-2 pb-24 pt-5 sm:px-2.5 sm:pb-28 sm:pt-6',
-    themeDeep ? 'text-slate-100' : 'bg-[#fafbfc] text-slate-900'
+    'relative min-h-screen w-full mx-auto 2xl:max-w-[1600px] 2xl:min-h-[92vh] 2xl:my-6 2xl:rounded-[2.5rem] 2xl:border 2xl:shadow-2xl overflow-x-hidden px-2 pb-24 pt-5 sm:px-2.5 sm:pb-28 sm:pt-6 transition-all duration-500',
+    themeDeep ? 'text-slate-100 2xl:border-slate-800' : 'bg-[#fafbfc] text-slate-900 2xl:border-slate-200/60'
   );
   const blobClass = 'pointer-events-none absolute rounded-full blur-[100px] opacity-40';
 
   return (
-    <motion.div className={shell} style={{ marginLeft: 'calc(50% - 50vw)', marginRight: 'calc(50% - 50vw)' }}>
+    <motion.div className={shell}>
       {!themeDeep ? (
         <>
           <div className={`${blobClass} top-[-80px] right-[-120px] h-[420px] w-[420px] bg-pink-100`} />
@@ -354,7 +354,7 @@ export function PyqLibraryClient({
         </>
       ) : null}
 
-      <div className="relative mx-auto max-w-3xl px-1 sm:px-1.5">
+      <div className="relative mx-auto max-w-3xl 2xl:max-w-5xl px-1 sm:px-1.5 transition-all duration-500">
         <div className="relative mb-6 flex items-center justify-between gap-4">
           <div className="flex items-center">
             <Button

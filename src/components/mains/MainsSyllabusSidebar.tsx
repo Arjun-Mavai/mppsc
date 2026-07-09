@@ -260,7 +260,7 @@ export function MainsSyllabusSidebar({
       </div>
 
       {/* ── Progress Footer ── */}
-      {!hideHeaderFooter && (
+      {/* {!hideHeaderFooter && (
         <div className="p-4 border-t border-slate-200 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900/20">
           <div className="flex items-center justify-between text-xs font-black tracking-widest uppercase text-slate-500 mb-2">
             <span>Overall Progress</span>
@@ -274,7 +274,7 @@ export function MainsSyllabusSidebar({
             />
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }
