@@ -184,6 +184,7 @@ export default function PYQFactsClient({
               <Filter className="mr-2 h-4 w-4" />
               {isHindi ? 'फिल्टर' : 'Filters'}
             </Button>
+            {/* NOTE: Temporarily hidden as per user request. Uncomment to re-enable Analysis feature.
             <Button
               variant="outline"
               onClick={() => router.push('/syllabus/quiz/pyq/analysis')}
@@ -192,6 +193,7 @@ export default function PYQFactsClient({
               <BarChart3 className="mr-2 h-4 w-4" />
               {isHindi ? 'एनालिसिस' : 'Analysis'}
             </Button>
+            */}
           </div>
         </div>
 
