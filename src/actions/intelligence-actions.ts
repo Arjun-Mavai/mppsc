@@ -6,8 +6,8 @@ import { logger } from '@/lib/logger';
 import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
 import { randomUUID } from 'crypto';
 
-import { assertAdmin } from '@/lib/auth';
-
+import { assertAdmin, verifyAuth } from '@/lib/auth';
+import { eq } from 'drizzle-orm';
 export type IntelligenceReaction = 'helpful' | 'insightful' | 'unhelpful' | 'doubt';
 
 export interface IntelligenceFeedbackData {
@@ -220,5 +220,27 @@ export async function submitZenFeedback(params: {
   } catch (error) {
     logger.error('Failed to submit zen feedback', error);
     return { error: 'Failed to save feedback' };
+  }
+}
+
+export async function replyToDoubt(feedbackId: string, replyText: string) {
+  await assertAdmin();
+
+  try {
+    const adminUser = await verifyAuth();
+    if (!adminUser) return { success: false, message: 'Unauthorized' };
+
+    await db.update(intelligenceFeedback)
+      .set({
+        adminReply: replyText,
+        repliedAt: new Date(),
+        repliedBy: adminUser.name || adminUser.email,
+      })
+      .where(eq(intelligenceFeedback.id, feedbackId));
+
+    return { success: true, message: 'Reply sent successfully' };
+  } catch (error) {
+    logger.error('Failed to reply to doubt', error);
+    return { success: false, message: 'Failed to save reply' };
   }
 }

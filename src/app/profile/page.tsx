@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { verifyAuth } from '@/lib/auth';
 import ProfileClient from './ProfileClient';
-import { getUserProfile } from './actions';
+import { getUserProfile, getUserDoubts } from './actions';
 
 export default async function ProfilePage() {
   const authUser = await verifyAuth();
@@ -15,6 +15,8 @@ export default async function ProfilePage() {
   if (!user) {
     redirect('/login');
   }
+  
+  const doubts = await getUserDoubts();
 
-  return <ProfileClient user={user} />;
+  return <ProfileClient user={user} doubts={doubts} />;
 }

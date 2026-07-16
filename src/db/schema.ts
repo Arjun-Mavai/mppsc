@@ -652,13 +652,19 @@ export const intelligenceFeedback = sqliteTable(
     userName: text('user_name'),
     userMobile: text('user_mobile'),
     userEmail: text('user_email'),
+    // Admin Reply Fields
+    adminReply: text('admin_reply'),
+    repliedAt: integer('replied_at', { mode: 'timestamp' }),
+    repliedBy: text('replied_by'),
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
     examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all', 'mppolice'] })
       .default('mppsc')
       .notNull(),
+    isRead: integer('is_read', { mode: 'boolean' }).default(false),
   },
   (table) => [
     index('idx_intel_feedback_guest').on(table.guestId),
+    index('idx_intel_feedback_user').on(table.userId), // Added index for user profile query
     index('idx_intel_feedback_question').on(table.questionId),
     index('idx_intel_feedback_reaction').on(table.reaction),
   ]
