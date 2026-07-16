@@ -14,6 +14,7 @@ import { ArrowLeft, User, Lock, CheckCircle2, Loader2, Sparkles, Eye, EyeOff, Me
 import { cn } from '@/lib/utils';
 import { updateUserName, updateUserPassword, markDoubtsAsRead } from './actions';
 import { submitIntelligenceFeedback } from '@/actions/intelligence-actions';
+import { useSettingsStore } from '@/store/useSettingsStore';
 
 interface ProfileClientProps {
   user: {
@@ -239,11 +240,14 @@ export default function ProfileClient({ user, doubts }: ProfileClientProps) {
     }
   }, [showDoubts, activeThreads.length]);
 
+  const setHasUnreadDoubts = useSettingsStore((s) => s.setHasUnreadDoubts);
+
   useEffect(() => {
     if (showDoubts) {
+      setHasUnreadDoubts(false);
       markDoubtsAsRead().catch(() => {});
     }
-  }, [showDoubts]);
+  }, [showDoubts, setHasUnreadDoubts]);
 
   const handleNameUpdate = async () => {
     if (!name.trim()) {
@@ -756,8 +760,8 @@ export default function ProfileClient({ user, doubts }: ProfileClientProps) {
                         ))}
                       </div>
 
-                      {/* Action Bar (Show only if not resolved AND last message has an admin reply) */}
-                      {!thread.isResolved && thread.messages[thread.messages.length - 1].adminReply && (
+                      {/* Action Bar (Show only if not resolved) */}
+                      {!thread.isResolved && (
                         <div className="mt-5 pt-4 border-t border-slate-100">
                           <div className="flex items-center gap-2">
                             <Button 

@@ -17,10 +17,16 @@ interface DashboardHeaderProps {
   hasUnreadDoubts?: boolean;
 }
 
-export function DashboardHeader({ user, hasUnreadDoubts }: DashboardHeaderProps) {
-  const { language } = useSettingsStore();
+import { hasUnreadDoubts as fetchUnreadDoubts } from '@/app/profile/actions';
+
+export function DashboardHeader({ user, hasUnreadDoubts: initialUnreadDoubts }: DashboardHeaderProps) {
+  const { language, hasUnreadDoubts, setHasUnreadDoubts } = useSettingsStore();
   const isHindi = language === 'hi';
   const router = useRouter();
+
+  React.useEffect(() => {
+    fetchUnreadDoubts().then(setHasUnreadDoubts).catch(() => {});
+  }, [setHasUnreadDoubts]);
 
   const hasPre = hasPreAccess(user);
   const hasMains = hasMainsAccess(user);
