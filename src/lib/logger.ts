@@ -22,7 +22,8 @@ export type LogCategory =
   | 'admin'
   | 'ui'
   | 'error-boundary'
-  | 'production-error';
+  | 'production-error'
+  | 'profile';
 
 export type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 

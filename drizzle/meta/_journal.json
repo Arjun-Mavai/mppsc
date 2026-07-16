@@ -274,6 +274,20 @@
       "when": 1782726192846,
       "tag": "0038_lethal_james_howlett",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "6",
+      "when": 1784203387365,
+      "tag": "0039_early_serpent_society",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "6",
+      "when": 1784205882909,
+      "tag": "0040_tense_marten_broadcloak",
+      "breakpoints": true
     }
   ]
 }

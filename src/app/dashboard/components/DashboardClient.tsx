@@ -54,6 +54,7 @@ interface DashboardClientProps {
   analyticsData: any;
   syllabusProgress: any;
   totalTopics: number;
+  hasUnreadDoubts?: boolean;
 }
 
 const STUDY_QUOTES = [
@@ -83,7 +84,7 @@ const STUDY_QUOTES = [
   }
 ];
 
-export function DashboardClient({ user, analyticsData, syllabusProgress, totalTopics }: DashboardClientProps) {
+export function DashboardClient({ user, analyticsData, syllabusProgress, totalTopics, hasUnreadDoubts }: DashboardClientProps) {
   const router = useRouter();
   const { language } = useSettingsStore();
   const isHindi = language === 'hi';
@@ -130,7 +131,7 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
       </div>
 
       {/* 🏷️ BILINGUAL HEADER */}
-      <DashboardHeader user={user} />
+      <DashboardHeader user={user} hasUnreadDoubts={hasUnreadDoubts} />
 
       <main className="relative z-10 mx-auto max-w-5xl px-4 py-8">
         

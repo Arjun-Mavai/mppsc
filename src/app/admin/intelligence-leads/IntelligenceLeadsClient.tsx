@@ -27,6 +27,18 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { replyToDoubt } from '@/actions/intelligence-actions';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { toast } from 'sonner';
 
 interface Lead {
   id: string;
@@ -51,6 +63,9 @@ interface Lead {
   question?: {
     subject: string | null;
   };
+  adminReply?: string | null;
+  repliedAt?: string | number | Date | null;
+  repliedBy?: string | null;
 }
 
 interface IntelligenceLeadsClientProps {
@@ -58,13 +73,50 @@ interface IntelligenceLeadsClientProps {
 }
 
 export default function IntelligenceLeadsClient({ initialData }: IntelligenceLeadsClientProps) {
+  const [data, setData] = useState<Lead[]>(initialData);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterReaction, setFilterReaction] = useState<string | null>(null);
   const [filterSubject, setFilterSubject] = useState<string | null>(null);
   const [filterSource, setFilterSource] = useState<string | null>(null);
 
+  // Reply Modal State
+  const [replyModalOpen, setReplyModalOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+
+  const handleOpenReply = (lead: Lead) => {
+    setSelectedLead(lead);
+    setReplyText(lead.adminReply || '');
+    setReplyModalOpen(true);
+  };
+
+  const handleSubmitReply = async () => {
+    if (!selectedLead || !replyText.trim()) return;
+    setIsSubmittingReply(true);
+    try {
+      const res = await replyToDoubt(selectedLead.id, replyText);
+      if (res.success) {
+        toast.success(res.message);
+        setData(prev => prev.map(l => l.id === selectedLead.id ? {
+          ...l,
+          adminReply: replyText,
+          repliedAt: new Date(),
+          repliedBy: 'Admin'
+        } : l));
+        setReplyModalOpen(false);
+      } else {
+        toast.error(res.message || 'Failed to send reply');
+      }
+    } catch (error) {
+      toast.error('An error occurred');
+    } finally {
+      setIsSubmittingReply(false);
+    }
+  };
+
   const filteredData = useMemo(() => {
-    return initialData.filter((item) => {
+    return data.filter((item) => {
       const matchesSearch =
         (item.userName || item.guest?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (item.userMobile || item.guest?.mobile || '').includes(searchTerm) ||
@@ -76,31 +128,31 @@ export default function IntelligenceLeadsClient({ initialData }: IntelligenceLea
 
       return matchesSearch && matchesFilter && matchesSubject && matchesSource;
     });
-  }, [initialData, searchTerm, filterReaction, filterSubject, filterSource]);
+  }, [data, searchTerm, filterReaction, filterSubject, filterSource]);
 
   const uniqueSubjects = useMemo(() => {
-    const subjects = initialData
+    const subjects = data
       .map((item) => item.question?.subject)
       .filter((s): s is string => !!s);
     return Array.from(new Set(subjects)).sort();
-  }, [initialData]);
+  }, [data]);
 
   const uniqueSources = useMemo(() => {
-    const sources = initialData
+    const sources = data
       .map((item) => item.source)
       .filter((s): s is string => !!s);
     return Array.from(new Set(sources)).sort();
-  }, [initialData]);
+  }, [data]);
 
   const stats = useMemo(() => {
     return {
-      total: initialData.length,
-      helpful: initialData.filter((i) => i.reaction === 'helpful').length,
-      insightful: initialData.filter((i) => i.reaction === 'insightful').length,
-      unhelpful: initialData.filter((i) => i.reaction === 'unhelpful').length,
-      doubt: initialData.filter((i) => i.reaction === 'doubt').length,
+      total: data.length,
+      helpful: data.filter((i) => i.reaction === 'helpful').length,
+      insightful: data.filter((i) => i.reaction === 'insightful').length,
+      unhelpful: data.filter((i) => i.reaction === 'unhelpful').length,
+      doubt: data.filter((i) => i.reaction === 'doubt').length,
     };
-  }, [initialData]);
+  }, [data]);
 
   return (
     <div className="space-y-6">
@@ -349,6 +401,16 @@ export default function IntelligenceLeadsClient({ initialData }: IntelligenceLea
                             <Search className="h-4 w-4" />
                           </button>
                         )}
+                        {lead.reaction === 'doubt' && (
+                          <Button
+                            size="sm"
+                            variant={lead.adminReply ? "outline" : "default"}
+                            className={cn("ml-2 text-xs h-8 px-3", !lead.adminReply ? "bg-slate-900 text-white" : "")}
+                            onClick={() => handleOpenReply(lead)}
+                          >
+                            {lead.adminReply ? 'Edit Reply' : 'Reply'}
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   );
@@ -358,6 +420,37 @@ export default function IntelligenceLeadsClient({ initialData }: IntelligenceLea
           </Table>
         </div>
       </Card>
+
+      {/* Reply Modal */}
+      <Dialog open={replyModalOpen} onOpenChange={setReplyModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Reply to Doubt</DialogTitle>
+            <DialogDescription>
+              Write an expert solution for the student's doubt. This will appear in their profile.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="mb-4 text-sm text-slate-600 bg-slate-50 p-3 rounded-md border border-slate-100 italic">
+              "{selectedLead?.message || selectedLead?.questionText}"
+            </div>
+            <Textarea
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              placeholder="Enter your detailed reply here..."
+              className="min-h-[150px] resize-y"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReplyModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmitReply} disabled={isSubmittingReply || !replyText.trim()} className="bg-slate-900 text-white">
+              {isSubmittingReply ? 'Sending...' : 'Send Reply'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

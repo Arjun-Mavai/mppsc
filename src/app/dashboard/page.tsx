@@ -38,12 +38,15 @@ export default async function DashboardPage() {
   );
 }
 
+import { hasUnreadDoubts } from '@/app/profile/actions';
+
 /** 🏗️ Data Wrapper to handle concurrent async fetches within Suspense */
 async function DashboardDataWrapper({ user, totalTopics }: { user: any, totalTopics: number }) {
   // Concurrent fetch without blocking the shell
-  const [analyticsData, syllabusProgress] = await Promise.all([
+  const [analyticsData, syllabusProgress, unreadDoubts] = await Promise.all([
     getUserAnalytics(user.id),
-    getUserSyllabusProgress()
+    getUserSyllabusProgress(),
+    hasUnreadDoubts()
   ]);
 
   return (
@@ -57,6 +60,7 @@ async function DashboardDataWrapper({ user, totalTopics }: { user: any, totalTop
       analyticsData={analyticsData}
       syllabusProgress={syllabusProgress}
       totalTopics={totalTopics}
+      hasUnreadDoubts={unreadDoubts}
     />
   );
 }

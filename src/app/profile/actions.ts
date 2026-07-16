@@ -1,8 +1,8 @@
 'use server';
 
 import { db } from '@/db';
-import { mppscUsers, mppscUserActivities } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { mppscUsers, mppscUserActivities, intelligenceFeedback } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
 import { verifyAuth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
@@ -246,4 +246,74 @@ export async function getUserProfile() {
     planTier: authUser.planTier,
     createdAt: authUser.createdAt,
   };
+}
+
+export async function hasUnreadDoubts() {
+  const authUser = await verifyAuth();
+  if (!authUser) return false;
+
+  try {
+    const unread = await db.query.intelligenceFeedback.findFirst({
+      where: (f, { eq, and, isNotNull }) =>
+        and(
+          eq(f.userId, authUser.id),
+          eq(f.reaction, 'doubt'),
+          isNotNull(f.adminReply),
+          eq(f.isRead, false)
+        ),
+      columns: { id: true },
+    });
+    return !!unread;
+  } catch (error) {
+    return false;
+  }
+}
+
+export async function markDoubtsAsRead() {
+  const authUser = await verifyAuth();
+  if (!authUser) return;
+
+  try {
+    await db.update(intelligenceFeedback)
+      .set({ isRead: true })
+      .where(
+        and(
+          eq(intelligenceFeedback.userId, authUser.id),
+          eq(intelligenceFeedback.reaction, 'doubt'),
+          eq(intelligenceFeedback.isRead, false)
+        )
+      );
+  } catch (error) {
+    // silently fail
+  }
+}
+
+/**
+ * Fetch all doubts raised by the user and admin replies
+ */
+export async function getUserDoubts() {
+  const authUser = await verifyAuth();
+  if (!authUser) {
+    return [];
+  }
+
+  try {
+    const doubts = await db.query.intelligenceFeedback.findMany({
+      where: (f, { eq, and, inArray }) =>
+        and(
+          eq(f.userId, authUser.id),
+          inArray(f.reaction, ['doubt', 'helpful']),
+          eq(f.examType, 'mppsc')
+        ),
+      orderBy: (f, { desc }) => [desc(f.createdAt)],
+    });
+
+    return doubts;
+  } catch (error) {
+    logger.error('Failed to fetch user doubts', error, {
+      category: 'profile',
+      userId: authUser.id,
+    });
+    return [];
+  }
 }
