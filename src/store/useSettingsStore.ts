@@ -24,6 +24,8 @@ interface SettingsState {
   setUiMode: (mode: 'classic' | 'modern') => void;
   guestLead: GuestLead | null;
   setGuestLead: (lead: GuestLead | null) => void;
+  hasUnreadDoubts: boolean;
+  setHasUnreadDoubts: (hasUnread: boolean) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -44,6 +46,8 @@ export const useSettingsStore = create<SettingsState>()(
       setUiMode: (mode) => set({ uiMode: mode }),
       guestLead: null,
       setGuestLead: (lead) => set({ guestLead: lead }),
+      hasUnreadDoubts: false,
+      setHasUnreadDoubts: (hasUnread) => set({ hasUnreadDoubts: hasUnread }),
     }),
     {
       name: 'settings-storage', // localStorage key — removing this key triggers cross-tab logout

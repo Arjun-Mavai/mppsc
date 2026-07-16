@@ -2,7 +2,8 @@
 
 import { db } from '@/db';
 import { mppscUsers, mppscUserActivities, intelligenceFeedback } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNotNull } from 'drizzle-orm';
+import { revalidatePath } from 'next/cache';
 import { verifyAuth } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
@@ -280,7 +281,8 @@ export async function markDoubtsAsRead() {
         and(
           eq(intelligenceFeedback.userId, authUser.id),
           eq(intelligenceFeedback.reaction, 'doubt'),
-          eq(intelligenceFeedback.isRead, false)
+          eq(intelligenceFeedback.isRead, false),
+          isNotNull(intelligenceFeedback.adminReply)
         )
       );
   } catch (error) {

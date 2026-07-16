@@ -14,6 +14,7 @@ import { ArrowLeft, User, Lock, CheckCircle2, Loader2, Sparkles, Eye, EyeOff, Me
 import { cn } from '@/lib/utils';
 import { updateUserName, updateUserPassword, markDoubtsAsRead } from './actions';
 import { submitIntelligenceFeedback } from '@/actions/intelligence-actions';
+import { useSettingsStore } from '@/store/useSettingsStore';
 
 interface ProfileClientProps {
   user: {
@@ -239,11 +240,14 @@ export default function ProfileClient({ user, doubts }: ProfileClientProps) {
     }
   }, [showDoubts, activeThreads.length]);
 
+  const setHasUnreadDoubts = useSettingsStore((s) => s.setHasUnreadDoubts);
+
   useEffect(() => {
     if (showDoubts) {
+      setHasUnreadDoubts(false);
       markDoubtsAsRead().catch(() => {});
     }
-  }, [showDoubts]);
+  }, [showDoubts, setHasUnreadDoubts]);
 
   const handleNameUpdate = async () => {
     if (!name.trim()) {

@@ -235,6 +235,7 @@ export async function replyToDoubt(feedbackId: string, replyText: string) {
         adminReply: replyText,
         repliedAt: new Date(),
         repliedBy: adminUser.name || adminUser.email,
+        isRead: false,
       })
       .where(eq(intelligenceFeedback.id, feedbackId));
 
