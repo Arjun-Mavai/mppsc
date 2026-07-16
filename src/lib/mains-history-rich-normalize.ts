@@ -18,9 +18,23 @@ export function normalizeVariantArr(arr: unknown): MainsModelVariant[] {
     if (v && typeof v === 'object') {
       const o = v as Record<string, unknown>;
       const stem = pickVariantStem(o);
-      if (typeof o.text === 'string') return { text: o.text, stem };
-      const first = Object.values(o).find((x) => typeof x === 'string');
-      if (typeof first === 'string') return { text: first, stem };
+      
+      // ✅ FIX: Support both string and array of strings
+      // Context: The Surgical Updater (and sometimes the AI generator) may output the `text` field as a JSON Array of strings `["point 1", "point 2"]` 
+      // instead of a single Markdown string `"- point 1\n- point 2"`. 
+      // Previously, this function expected ONLY strings and would completely discard the array, causing Model Answers to appear "empty" on the UI 
+      // despite existing in the database (`richPayload`). This fix safely joins array elements into a proper string so the UI can render it.
+      let textStr = '';
+      if (typeof o.text === 'string') {
+        textStr = o.text;
+      } else if (Array.isArray(o.text)) {
+        textStr = o.text.join('\n');
+      } else {
+        const first = Object.values(o).find((x) => typeof x === 'string' && x !== stem);
+        if (typeof first === 'string') textStr = first;
+      }
+      
+      return { text: textStr, stem };
     }
     return { text: '' };
   });
