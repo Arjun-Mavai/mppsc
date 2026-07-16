@@ -760,8 +760,8 @@ export default function ProfileClient({ user, doubts }: ProfileClientProps) {
                         ))}
                       </div>
 
-                      {/* Action Bar (Show only if not resolved AND last message has an admin reply) */}
-                      {!thread.isResolved && thread.messages[thread.messages.length - 1].adminReply && (
+                      {/* Action Bar (Show only if not resolved) */}
+                      {!thread.isResolved && (
                         <div className="mt-5 pt-4 border-t border-slate-100">
                           <div className="flex items-center gap-2">
                             <Button 
