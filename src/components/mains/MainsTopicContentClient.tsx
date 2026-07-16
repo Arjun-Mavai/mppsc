@@ -138,6 +138,24 @@ export function MainsTopicContentClient({
     richPayload: maskedRich,
   } : content;
 
+  // 🐛 DEBUG LOGS ADDED HERE
+  console.log('--- MAINS CONTENT VIEWER DEBUG ---');
+  console.log('1. Is Vault Locked for this user?', vaultLocked);
+  console.log('2. Does this topic have a richPayload?', !!rich);
+  console.log('3. Is UI deciding to use the Premium (Rich) Viewer? (useRich flag):', useRich);
+  
+  if (useRich) {
+    console.log('4. The UI is passing THIS payload to <MainsHistoryRichViewer>:', JSON.stringify(maskedRich).slice(0, 500) + '... (truncated)');
+    console.log('5. Top-level modelAnswers column is being IGNORED.');
+  } else {
+    console.log('4. The UI is passing THIS content to <MainsContentViewer> (Basic UI):', {
+      ...maskedContent,
+      conceptHi: '...[string]...',
+      conceptEn: '...[string]...'
+    });
+  }
+  console.log('-----------------------------------');
+
   const inner =
     useRich && maskedRich ? (
       <MainsHistoryRichViewer standalonePage={standalonePage} topic={topic} payload={maskedRich as Record<string, unknown>} uiLang={lang} />

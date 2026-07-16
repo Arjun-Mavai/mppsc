@@ -18,9 +18,19 @@ export function normalizeVariantArr(arr: unknown): MainsModelVariant[] {
     if (v && typeof v === 'object') {
       const o = v as Record<string, unknown>;
       const stem = pickVariantStem(o);
-      if (typeof o.text === 'string') return { text: o.text, stem };
-      const first = Object.values(o).find((x) => typeof x === 'string');
-      if (typeof first === 'string') return { text: first, stem };
+      
+      // ✅ FIX: Support both string and array of strings
+      let textStr = '';
+      if (typeof o.text === 'string') {
+        textStr = o.text;
+      } else if (Array.isArray(o.text)) {
+        textStr = o.text.join('\n');
+      } else {
+        const first = Object.values(o).find((x) => typeof x === 'string' && x !== stem);
+        if (typeof first === 'string') textStr = first;
+      }
+      
+      return { text: textStr, stem };
     }
     return { text: '' };
   });

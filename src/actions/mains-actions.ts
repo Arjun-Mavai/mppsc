@@ -329,7 +329,8 @@ export async function upsertMainsContent(topicId: string, rawInput: MainsContent
 
     // 💥 DUAL CACHE BURST (Path for UI, Tag for DB RAM Cache)
     revalidatePath('/admin/mains');
-    revalidatePath(`/mains/syllabus`);
+    revalidatePath(`/mains/syllabus`, 'layout');
+    revalidatePath(`/mains/syllabus/[paperId]/[topicId]`, 'page');
     revalidateTag('mains_syllabus', { expire: 0 });
     return { success: true as const };
   } catch (error) {
@@ -348,7 +349,8 @@ export async function adminDeleteMainsContentForTopic(topicId: string) {
     await db.update(mainsTopics).set({ status: 'draft' }).where(eq(mainsTopics.id, topicId));
     // 💥 DUAL CACHE BURST (Path for UI, Tag for DB RAM Cache)
     revalidatePath('/admin/mains');
-    revalidatePath('/mains/syllabus');
+    revalidatePath('/mains/syllabus', 'layout');
+    revalidatePath('/mains/syllabus/[paperId]/[topicId]', 'page');
     revalidateTag('mains_syllabus', { expire: 0 });
     return { success: true as const };
   } catch (error) {
@@ -613,5 +615,87 @@ export async function adminGetRecentMainsActivity() {
   } catch (error) {
     console.error('adminGetRecentMainsActivity', error);
     return { success: false as const, error: 'Failed to fetch activity' };
+  }
+}
+
+/** 🔪 SURGICAL UPDATE: Update a specific section of a topic's content without touching the rest. */
+export async function updateMainsContentSurgically(
+  topicId: string, 
+  sectionKey: keyof MainsContentInput, 
+  contentData: string | object | null
+) {
+  try {
+    console.log(`[SERVER_ACTION] updateMainsContentSurgically triggered for topicId: ${topicId}`);
+    await assertAdmin();
+    
+    // Validate we're not inserting bad keys
+    const validKeys = Object.keys(MainsContentSchema.shape);
+    if (!validKeys.includes(sectionKey)) {
+      console.error(`[SERVER_ACTION] Invalid section key: ${sectionKey}`);
+      return { success: false as const, error: 'invalid_section_key' };
+    }
+
+    console.log(`[SERVER_ACTION] Checking if content exists...`);
+    // Check if content exists
+    const existing = await db
+      .select()
+      .from(mainsContent)
+      .where(eq(mainsContent.topicId, topicId))
+      .limit(1);
+
+    if (existing[0]) {
+      console.log(`[SERVER_ACTION] Content exists! Updating column: ${sectionKey}`);
+      
+      const updateData: any = {
+        [sectionKey]: contentData,
+        updatedAt: new Date(),
+      };
+
+      // 🔄 Sync modelAnswers into richPayload if it exists, since the UI prioritizes richPayload
+      if (sectionKey === 'modelAnswers' && existing[0].richPayload) {
+        const rp = { ...(existing[0].richPayload as any) };
+        rp.model_answers_hi = contentData; // AI json is bilingual, store it here
+        rp.model_answers_en = null; // Clear old English to force fallback to the new bilingual payload
+        updateData.richPayload = rp;
+        console.log(`[SERVER_ACTION] Automatically synced modelAnswers into existing richPayload.`);
+      }
+
+      await db
+        .update(mainsContent)
+        .set(updateData)
+        .where(eq(mainsContent.topicId, topicId));
+    } else {
+      console.log(`[SERVER_ACTION] Content does NOT exist. Inserting new row...`);
+      // Need to create a new content row with defaults if it doesn't exist
+      const payload: any = {
+        id: uuidv4(),
+        topicId,
+        conceptHi: 'Content pending...',
+        conceptEn: '',
+        modelAnswers: {},
+        [sectionKey]: contentData,
+        updatedAt: new Date()
+      };
+      await db.insert(mainsContent).values(payload);
+      
+      // Mark topic as published
+      await db
+        .update(mainsTopics)
+        .set({ status: 'published' })
+        .where(eq(mainsTopics.id, topicId));
+    }
+
+    console.log(`[SERVER_ACTION] Triggering Next.js cache revalidation...`);
+    // 💥 DUAL CACHE BURST
+    revalidatePath('/admin/mains');
+    revalidatePath('/mains/syllabus', 'layout');
+    revalidatePath('/mains/syllabus/[paperId]/[topicId]', 'page');
+    revalidateTag('mains_syllabus', { expire: 0 });
+    console.log(`[SERVER_ACTION] Cache cleared successfully. Returning success.`);
+    return { success: true as const };
+  } catch (error) {
+    logger.error('updateMainsContentSurgically failed', error);
+    console.error(`[SERVER_ACTION] CRITICAL FAILURE:`, error);
+    return { success: false as const, error: 'update_failed' };
   }
 }
