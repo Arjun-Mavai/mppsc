@@ -329,7 +329,7 @@ export function SyllabusTopicSheet({
             </div>
           </div>
 
-          <div className="h-full w-full flex-1 overflow-y-auto">
+          <div id="syllabus-topic-scroll-container" className="h-full w-full flex-1 overflow-y-auto">
             <div className="space-y-10 p-3 pb-40 sm:p-4">
 
               {/* Special Spark Card - Quote */}
@@ -590,7 +590,13 @@ export function SyllabusTopicSheet({
                   {/* Next Step CTA */}
                   <div className="pt-6 pb-2">
                     <button
-                      onClick={() => setViewMode('expert')}
+                      onClick={() => {
+                        setViewMode('expert');
+                        const container = document.getElementById('syllabus-topic-scroll-container');
+                        if (container) {
+                          container.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                      }}
                       className="group relative flex w-full items-center justify-between overflow-hidden rounded-2xl bg-slate-900 p-4 transition-all hover:bg-slate-800 hover:shadow-lg hover:shadow-slate-900/20 active:scale-[0.98]"
                     >
                       <div className="absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-slate-700/50 to-transparent pointer-events-none" />
