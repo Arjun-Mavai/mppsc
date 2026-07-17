@@ -818,31 +818,6 @@ export function SyllabusTopicSheet({
 
               {/* Enhanced Feedback Footer */}
               <div className="relative flex flex-col items-center gap-3 border-t border-slate-200/60 pt-10 text-center mt-6">
-                {/* Polite Feedback Nudge (Appears on Scroll) */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.5, rotate: 10 }}
-                  whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
-                  viewport={{ once: true, amount: 0.2 }}
-                  transition={{ type: "spring", bounce: 0.5, duration: 0.8, delay: 0.2 }}
-                  className="absolute right-0 sm:right-6 -top-2 sm:top-4 z-10 flex flex-col items-end pointer-events-none"
-                >
-                  <div className="relative bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 px-3 py-1.5 rounded-2xl rounded-br-sm shadow-md shadow-rose-500/10 text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-rose-600 mb-1">
-                    {isHindi ? 'कैसा लगा? 🙏' : 'Helpful? 🙏'}
-                    <div className="absolute -bottom-[4px] right-3 w-2 h-2 bg-pink-50 border-b border-r border-rose-200 rotate-45"></div>
-                  </div>
-                  <motion.div 
-                    animate={{ y: [0, -3, 0] }}
-                    transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
-                    className="relative w-16 h-16 sm:w-20 sm:h-20 mt-1 origin-bottom"
-                  >
-                    <img 
-                      src="/images/avatars/notion-namaste.png" 
-                      alt="Guide" 
-                      className="relative w-full h-full object-contain mix-blend-multiply opacity-90"
-                    />
-                  </motion.div>
-                </motion.div>
-
                 <div className="h-1.5 w-16 rounded-full bg-slate-200" />
                 <p className="text-xs font-black text-amber-600 uppercase tracking-[0.2em]">
                   {isHindi ? 'आपका फीडबैक' : 'Your Feedback'}
@@ -859,6 +834,7 @@ export function SyllabusTopicSheet({
                   source="prelims_syllabus_topic"
                   className="mt-2"
                   unitInfo={unitTitle}
+                  isHindi={isHindi}
                 />
               </div>
             </div>

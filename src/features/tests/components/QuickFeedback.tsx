@@ -18,6 +18,7 @@ interface QuickFeedbackProps {
   source?: string; // 'expert_analysis', 'open_paper_view', etc.
   className?: string;
   unitInfo?: string;
+  isHindi?: boolean;
 }
 
 export function QuickFeedback({
@@ -29,6 +30,7 @@ export function QuickFeedback({
   source,
   className,
   unitInfo,
+  isHindi = false,
 }: QuickFeedbackProps) {
   const { isSubscribed, user, guestLead } = useSettingsStore();
   const [reaction, setReaction] = useState<IntelligenceReaction | null>(null);
@@ -145,8 +147,33 @@ export function QuickFeedback({
   };
 
   return (
-    <div className={cn('mt-6 flex flex-col items-center gap-3', className)}>
-      <div className="flex items-center gap-1.5 rounded-full border border-slate-400/20 bg-slate-400/10 p-1.5 shadow-sm">
+    <div className={cn('relative mt-6 flex w-full flex-col items-center gap-3', className)}>
+      {/* Polite Feedback Nudge (Appears on Scroll) */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.5, rotate: 10 }}
+        whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ type: "spring", bounce: 0.5, duration: 0.8, delay: 0.2 }}
+        className="absolute right-2 sm:right-6 -top-20 z-10 flex flex-col items-end pointer-events-none"
+      >
+        <div className="relative bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 px-3 py-1.5 rounded-2xl rounded-br-sm shadow-md shadow-rose-500/10 text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-rose-600 mb-1">
+          {isHindi ? 'कैसा लगा? 🙏' : 'Helpful? 🙏'}
+          <div className="absolute -bottom-[4px] right-3 w-2 h-2 bg-pink-50 border-b border-r border-rose-200 rotate-45"></div>
+        </div>
+        <motion.div 
+          animate={{ y: [0, -3, 0] }}
+          transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+          className="relative w-16 h-16 sm:w-20 sm:h-20 mt-1 origin-bottom"
+        >
+          <img 
+            src="/images/avatars/notion-namaste.png" 
+            alt="Guide" 
+            className="relative w-full h-full object-contain mix-blend-multiply opacity-90"
+          />
+        </motion.div>
+      </motion.div>
+
+      <div className="relative z-20 flex items-center gap-1.5 rounded-full border border-slate-400/20 bg-slate-400/10 p-1.5 shadow-sm backdrop-blur-sm">
         <p className="px-2 text-[9px] font-black tracking-widest text-slate-500 uppercase">
           Helpful?
         </p>
