@@ -281,7 +281,7 @@ export function SyllabusTopicSheet({
                     : 'text-slate-500 hover:text-slate-800'
                 )}
               >
-                {isHindi ? 'क्लासिक नोट्स' : 'Classic Notes'}
+                {isHindi ? 'टॉपिक ओवरव्यू' : 'Topic Overview'}
               </button>
               <button
                 onClick={() => setViewMode('expert')}
