@@ -830,13 +830,18 @@ export function SyllabusTopicSheet({
                     {isHindi ? 'कैसा लगा? 🙏' : 'Helpful? 🙏'}
                     <div className="absolute -bottom-[4px] right-3 w-2 h-2 bg-pink-50 border-b border-r border-rose-200 rotate-45"></div>
                   </div>
-                  <motion.span 
+                  <motion.div 
                     animate={{ y: [0, -3, 0] }}
-                    transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                    className="text-3xl sm:text-4xl filter drop-shadow-md mr-1 origin-bottom"
+                    transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                    className="relative w-16 h-16 sm:w-20 sm:h-20 mt-1 origin-bottom"
                   >
-                    🙇‍♂️
-                  </motion.span>
+                    <div className="absolute inset-0 bg-rose-200/50 rounded-full blur-xl scale-75"></div>
+                    <img 
+                      src="/images/avatars/guide-namaste.png" 
+                      alt="Guide" 
+                      className="relative w-full h-full object-contain filter drop-shadow-md"
+                    />
+                  </motion.div>
                 </motion.div>
 
                 <div className="h-1.5 w-16 rounded-full bg-slate-200" />
