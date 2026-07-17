@@ -154,7 +154,7 @@ export function QuickFeedback({
         whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ type: "spring", bounce: 0.5, duration: 0.8, delay: 0.2 }}
-        className="absolute right-2 sm:right-6 -top-20 z-10 flex flex-col items-end pointer-events-none"
+        className="absolute -right-2 sm:-right-4 md:-right-8 -top-28 sm:-top-36 z-10 flex flex-col items-end pointer-events-none"
       >
         <div className="relative bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 px-3 py-1.5 rounded-2xl rounded-br-sm shadow-md shadow-rose-500/10 text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-rose-600 mb-1">
           {isHindi ? 'कैसा लगा? 🙏' : 'Helpful? 🙏'}
