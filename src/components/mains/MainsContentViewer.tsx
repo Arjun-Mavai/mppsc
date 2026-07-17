@@ -13,7 +13,7 @@ import { PyqAnswerProse } from '@/components/mains/PyqAnswerProse';
 import { MainsKeyTermsFlash } from '@/components/mains/MainsKeyTermsFlash';
 import { useMainsReaderProseTheme } from '@/components/mains/useMainsReaderTheme';
 import { coerceMarkdownBulletsLoose } from '@/lib/mains-readable-coerce';
-import { QuickFeedback } from '@/features/tests/components/QuickFeedback';
+import { QuickFeedback, PoliteFeedbackNudge } from '@/features/tests/components/QuickFeedback';
 import { formatUnitInfoForFeedback } from '@/lib/mains-syllabus-unit-label';
 
 /**
@@ -426,8 +426,9 @@ export function MainsContentViewer({ topic, content, language, onMarkDone, isDon
         </AnimatePresence>
       </div>
 
-      <div className="mx-auto max-w-4xl px-4 py-16 text-center border-t border-slate-100 dark:border-slate-800/50 mt-8">
-        <div className="mb-8 space-y-3">
+      <div className="relative mx-auto max-w-4xl px-4 py-16 text-center border-t border-slate-100 dark:border-slate-800/50 mt-8">
+        <PoliteFeedbackNudge isHindi={hi} />
+        <div className="mb-8 space-y-3 relative z-20">
           <p className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em]">
             {hi ? 'आपका फीडबैक' : 'Your Feedback'}
           </p>

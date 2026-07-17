@@ -44,7 +44,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MainsMarkdownBody } from '@/components/mains/MainsMarkdownBody';
 import Link from 'next/link';
 import { hasMainsAccess } from '@/lib/access-grants';
-import { QuickFeedback } from '@/features/tests/components/QuickFeedback';
+import { QuickFeedback, PoliteFeedbackNudge } from '@/features/tests/components/QuickFeedback';
 
 const pyqSkins = [
   {
@@ -818,6 +818,7 @@ export function SyllabusTopicSheet({
 
               {/* Enhanced Feedback Footer */}
               <div className="relative flex flex-col items-center gap-3 border-t border-slate-200/60 pt-10 text-center mt-6">
+                <PoliteFeedbackNudge isHindi={isHindi} />
                 <div className="h-1.5 w-16 rounded-full bg-slate-200" />
                 <p className="text-xs font-black text-amber-600 uppercase tracking-[0.2em]">
                   {isHindi ? 'आपका फीडबैक' : 'Your Feedback'}
