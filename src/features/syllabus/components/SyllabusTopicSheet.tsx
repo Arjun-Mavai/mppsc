@@ -820,11 +820,11 @@ export function SyllabusTopicSheet({
               <div className="relative flex flex-col items-center gap-3 border-t border-slate-200/60 pt-10 text-center mt-6">
                 {/* Polite Feedback Nudge (Appears on Scroll) */}
                 <motion.div
-                  initial={{ opacity: 0, x: 40, rotate: 10 }}
-                  whileInView={{ opacity: 1, x: 0, rotate: 0 }}
-                  viewport={{ once: true, amount: 0.8 }}
+                  initial={{ opacity: 0, scale: 0.5, rotate: 10 }}
+                  whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
                   transition={{ type: "spring", bounce: 0.5, duration: 0.8, delay: 0.2 }}
-                  className="absolute right-0 sm:right-6 top-8 z-10 flex flex-col items-end pointer-events-none"
+                  className="absolute right-0 sm:right-6 -top-2 sm:top-4 z-10 flex flex-col items-end pointer-events-none"
                 >
                   <div className="relative bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 px-3 py-1.5 rounded-2xl rounded-br-sm shadow-md shadow-rose-500/10 text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-rose-600 mb-1">
                     {isHindi ? 'कैसा लगा? 🙏' : 'Helpful? 🙏'}
