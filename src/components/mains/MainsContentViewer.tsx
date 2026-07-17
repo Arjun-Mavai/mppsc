@@ -424,27 +424,27 @@ export function MainsContentViewer({ topic, content, language, onMarkDone, isDon
             )}
           </motion.div>
         </AnimatePresence>
-      </div>
-
-      <div className="relative mx-auto max-w-4xl px-4 py-16 text-center border-t border-slate-100 dark:border-slate-800/50 mt-8">
-        <PoliteFeedbackNudge isHindi={hi} />
-        <div className="mb-8 space-y-3 relative z-20">
-          <p className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em]">
-            {hi ? 'आपका फीडबैक' : 'Your Feedback'}
-          </p>
-          <h3 className="text-xl font-black text-slate-800 dark:text-slate-100 sm:text-2xl">
-            {hi ? 'यह कंटेंट आपके लिए कितना मददगार रहा?' : 'How helpful was this content for you?'}
-          </h3>
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-            {hi ? 'आपके सुझाव हमें बेहतर बनाने में मदद करेंगे।' : 'Your feedback will help us improve our expert content.'}
-          </p>
+        
+        <div className="relative mx-auto max-w-4xl px-4 py-16 text-center border-t border-slate-100 dark:border-slate-800/50 mt-8">
+          <PoliteFeedbackNudge isHindi={hi} />
+          <div className="mb-8 space-y-3 relative z-20">
+            <p className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em]">
+              {hi ? 'आपका फीडबैक' : 'Your Feedback'}
+            </p>
+            <h3 className="text-xl font-black text-slate-800 dark:text-slate-100 sm:text-2xl">
+              {hi ? 'यह कंटेंट आपके लिए कितना मददगार रहा?' : 'How helpful was this content for you?'}
+            </h3>
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+              {hi ? 'आपके सुझाव हमें बेहतर बनाने में मदद करेंगे।' : 'Your feedback will help us improve our expert content.'}
+            </p>
+          </div>
+          <QuickFeedback 
+            questionId={topic.id}
+            questionText={hi ? topic.titleHi : topic.titleEn}
+            source="mains_syllabus_topic"
+            unitInfo={formatUnitInfoForFeedback(topic)}
+          />
         </div>
-        <QuickFeedback 
-          questionId={topic.id}
-          questionText={hi ? topic.titleHi : topic.titleEn}
-          source="mains_syllabus_topic"
-          unitInfo={formatUnitInfoForFeedback(topic)}
-        />
       </div>
     </div>
   );

@@ -283,7 +283,7 @@ export function PoliteFeedbackNudge({ isHindi = false }: { isHindi?: boolean }) 
       >
         {/* We use multiply for white backgrounds. Even though it's colored, multiply works perfectly to remove pure white bg on light modes without ruining deep colors */}
         <img 
-          src="/images/avatars/colorful-namaste.png" 
+          src="/images/avatars/notion-namaste.png" 
           alt="Guide" 
           className="relative w-full h-full object-contain mix-blend-multiply"
         />
