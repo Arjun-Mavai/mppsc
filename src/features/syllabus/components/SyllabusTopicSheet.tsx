@@ -835,11 +835,10 @@ export function SyllabusTopicSheet({
                     transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
                     className="relative w-16 h-16 sm:w-20 sm:h-20 mt-1 origin-bottom"
                   >
-                    <div className="absolute inset-0 bg-rose-200/50 rounded-full blur-xl scale-75"></div>
                     <img 
-                      src="/images/avatars/guide-namaste.png" 
+                      src="/images/avatars/notion-namaste.png" 
                       alt="Guide" 
-                      className="relative w-full h-full object-contain filter drop-shadow-md"
+                      className="relative w-full h-full object-contain mix-blend-multiply opacity-90"
                     />
                   </motion.div>
                 </motion.div>
