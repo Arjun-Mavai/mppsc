@@ -286,28 +286,50 @@ export function SyllabusTopicSheet({
               <button
                 onClick={() => setViewMode('expert')}
                 className={cn(
-                  'relative flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[10px] font-black uppercase tracking-widest transition-all',
+                  'relative flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[10px] font-black uppercase tracking-widest transition-all group',
                   viewMode === 'expert'
                     ? 'bg-slate-900 text-white shadow-md scale-[1.02]'
-                    : 'text-slate-500 hover:text-slate-800 overflow-hidden group'
+                    : 'text-slate-500 hover:text-slate-800'
                 )}
               >
                 {/* Subtle shine effect that sweeps across the button periodically when inactive */}
                 {viewMode !== 'expert' && (
-                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-slate-400/10 to-transparent" />
+                  <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
+                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-slate-400/10 to-transparent" />
+                  </div>
+                )}
+                
+                {/* One-time minimal onboarding nudge */}
+                {viewMode !== 'expert' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.2, duration: 0.8, ease: "easeOut" }}
+                    className="absolute -top-[30px] right-2 flex flex-col items-center pointer-events-none z-50"
+                  >
+                    <div className="flex items-center gap-1 bg-white/95 backdrop-blur px-2 py-0.5 rounded-full border border-slate-200 shadow-sm ring-1 ring-black/5">
+                      <span className="text-[8px] font-black text-slate-600 tracking-wider uppercase">
+                        {isHindi ? 'यहाँ क्लिक करें' : 'Click Here'}
+                      </span>
+                      <span className="text-[10px]">🚶‍♂️</span>
+                    </div>
+                    {/* Minimal Arrow Pointing Down */}
+                    <div className="mt-0.5 h-1.5 w-[1.5px] bg-gradient-to-b from-slate-300 to-slate-400 rounded-full"></div>
+                    <div className="h-1.5 w-1.5 border-r-[1.5px] border-b-[1.5px] border-slate-400 rotate-45 -mt-[1px]"></div>
+                  </motion.div>
                 )}
                 
                 <Sparkles className={cn(
-                  "h-3 w-3",
+                  "relative z-10 h-3 w-3 transition-colors",
                   viewMode === 'expert' ? "text-amber-400" : "text-indigo-500 group-hover:text-indigo-600"
                 )} />
-                <span>{isHindi ? 'एक्सपर्ट डिकोडिंग' : 'Expert Decoding'}</span>
+                <span className="relative z-10">{isHindi ? 'एक्सपर्ट डिकोडिंग' : 'Expert Decoding'}</span>
                 
-                {/* Tiny pulsing dot to attract attention when inactive */}
+                {/* Multi-color pulsing dot to attract attention when inactive */}
                 {viewMode !== 'expert' && (
-                  <span className="absolute right-3 top-2.5 flex h-1.5 w-1.5">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75"></span>
-                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
+                  <span className="absolute right-3 top-2.5 flex h-1.5 w-1.5 z-10">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gradient-to-tr from-pink-400 via-purple-400 to-indigo-400 opacity-75"></span>
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-gradient-to-tr from-pink-500 via-purple-500 to-indigo-500 shadow-sm"></span>
                   </span>
                 )}
               </button>
