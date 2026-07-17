@@ -44,7 +44,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MainsMarkdownBody } from '@/components/mains/MainsMarkdownBody';
 import Link from 'next/link';
 import { hasMainsAccess } from '@/lib/access-grants';
-import { QuickFeedback } from '@/features/tests/components/QuickFeedback';
+import { QuickFeedback, PoliteFeedbackNudge } from '@/features/tests/components/QuickFeedback';
 
 const pyqSkins = [
   {
@@ -286,28 +286,32 @@ export function SyllabusTopicSheet({
               <button
                 onClick={() => setViewMode('expert')}
                 className={cn(
-                  'relative flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[10px] font-black uppercase tracking-widest transition-all',
+                  'relative flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[10px] font-black uppercase tracking-widest transition-all group',
                   viewMode === 'expert'
                     ? 'bg-slate-900 text-white shadow-md scale-[1.02]'
-                    : 'text-slate-500 hover:text-slate-800 overflow-hidden group'
+                    : 'text-slate-500 hover:text-slate-800'
                 )}
               >
                 {/* Subtle shine effect that sweeps across the button periodically when inactive */}
                 {viewMode !== 'expert' && (
-                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-slate-400/10 to-transparent" />
+                  <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
+                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-slate-400/10 to-transparent" />
+                  </div>
                 )}
                 
+
+                
                 <Sparkles className={cn(
-                  "h-3 w-3",
+                  "relative z-10 h-3 w-3 transition-colors",
                   viewMode === 'expert' ? "text-amber-400" : "text-indigo-500 group-hover:text-indigo-600"
                 )} />
-                <span>{isHindi ? 'एक्सपर्ट डिकोडिंग' : 'Expert Decoding'}</span>
+                <span className="relative z-10">{isHindi ? 'एक्सपर्ट डिकोडिंग' : 'Expert Decoding'}</span>
                 
-                {/* Tiny pulsing dot to attract attention when inactive */}
+                {/* Multi-color pulsing dot to attract attention when inactive */}
                 {viewMode !== 'expert' && (
-                  <span className="absolute right-3 top-2.5 flex h-1.5 w-1.5">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75"></span>
-                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
+                  <span className="absolute right-3 top-2.5 flex h-1.5 w-1.5 z-10">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gradient-to-tr from-pink-400 via-purple-400 to-indigo-400 opacity-75"></span>
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-gradient-to-tr from-pink-500 via-purple-500 to-indigo-500 shadow-sm"></span>
                   </span>
                 )}
               </button>
@@ -325,7 +329,7 @@ export function SyllabusTopicSheet({
             </div>
           </div>
 
-          <div className="h-full w-full flex-1 overflow-y-auto">
+          <div id="syllabus-topic-scroll-container" className="h-full w-full flex-1 overflow-y-auto">
             <div className="space-y-10 p-3 pb-40 sm:p-4">
 
               {/* Special Spark Card - Quote */}
@@ -583,6 +587,40 @@ export function SyllabusTopicSheet({
                       </div>
                     </section>
                   )}
+                  {/* Next Step CTA */}
+                  <div className="pt-6 pb-2">
+                    <button
+                      onClick={() => {
+                        setViewMode('expert');
+                        const container = document.getElementById('syllabus-topic-scroll-container');
+                        if (container) {
+                          container.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                      }}
+                      className="group relative flex w-full items-center justify-between overflow-hidden rounded-2xl bg-slate-900 p-4 transition-all hover:bg-slate-800 hover:shadow-lg hover:shadow-slate-900/20 active:scale-[0.98]"
+                    >
+                      <div className="absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-slate-700/50 to-transparent pointer-events-none" />
+                      <div className="flex items-center gap-4 relative z-10">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-800 text-amber-400 border border-slate-700 group-hover:bg-slate-700 transition-colors">
+                          <Sparkles className="h-5 w-5" />
+                        </div>
+                        <div className="flex flex-col items-start">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                            {isHindi ? 'अगला कदम' : 'Next Step'}
+                          </span>
+                          <span className={cn(
+                            "text-base font-black text-white",
+                            isHindi ? "font-[family-name:var(--font-pyq-dev)]" : ""
+                          )}>
+                            {isHindi ? 'एक्सपर्ट डिकोडिंग खोलें' : 'Unlock Expert Decoding'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-900 group-hover:bg-amber-400 group-hover:translate-x-1 transition-all">
+                        <ArrowRight className="h-4 w-4" />
+                      </div>
+                    </button>
+                  </div>
                 </motion.div>
               )}
 
@@ -779,7 +817,8 @@ export function SyllabusTopicSheet({
               )}
 
               {/* Enhanced Feedback Footer */}
-              <div className="flex flex-col items-center gap-3 border-t border-slate-200/60 pt-10 text-center">
+              <div className="relative flex flex-col items-center gap-3 border-t border-slate-200/60 pt-10 text-center mt-6">
+                <PoliteFeedbackNudge isHindi={isHindi} />
                 <div className="h-1.5 w-16 rounded-full bg-slate-200" />
                 <p className="text-xs font-black text-amber-600 uppercase tracking-[0.2em]">
                   {isHindi ? 'आपका फीडबैक' : 'Your Feedback'}
@@ -796,6 +835,7 @@ export function SyllabusTopicSheet({
                   source="prelims_syllabus_topic"
                   className="mt-2"
                   unitInfo={unitTitle}
+                  isHindi={isHindi}
                 />
               </div>
             </div>

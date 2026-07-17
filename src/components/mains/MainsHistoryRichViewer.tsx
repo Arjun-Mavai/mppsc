@@ -14,7 +14,7 @@ import { CheckCircle, BookOpen, Filter, Network, Brain, Palette, AlertTriangle, 
 import Link from 'next/link';
 import { MainsMobileSyllabusDrawer } from '@/components/mains/MainsMobileSyllabusDrawer';
 import { MainsKeyTermsFlash } from '@/components/mains/MainsKeyTermsFlash';
-import { QuickFeedback } from '@/features/tests/components/QuickFeedback';
+import { QuickFeedback, PoliteFeedbackNudge } from '@/features/tests/components/QuickFeedback';
 import { formatUnitInfoForFeedback } from '@/lib/mains-syllabus-unit-label';
 
 function parseBoldInline(text: string) {
@@ -747,8 +747,9 @@ export function MainsHistoryRichViewer({
             />
           </details>
 
-          <div className="mx-auto max-w-4xl px-4 py-16 text-center border-t border-slate-200/50 dark:border-slate-800/50 mt-12">
-            <div className="mb-8 space-y-3">
+          <div className="relative mx-auto max-w-4xl px-4 py-16 text-center border-t border-slate-200/50 dark:border-slate-800/50 mt-12">
+            <PoliteFeedbackNudge isHindi={hi} />
+            <div className="mb-8 space-y-3 relative z-20">
               <p className="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-[0.2em]">
                 {hi ? 'आपका फीडबैक' : 'Your Feedback'}
               </p>
