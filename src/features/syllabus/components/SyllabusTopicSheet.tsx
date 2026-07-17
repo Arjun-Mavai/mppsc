@@ -299,25 +299,7 @@ export function SyllabusTopicSheet({
                   </div>
                 )}
                 
-                {/* One-time minimal onboarding nudge */}
-                {viewMode !== 'expert' && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.2, duration: 0.8, ease: "easeOut" }}
-                    className="absolute -top-[30px] right-2 flex flex-col items-center pointer-events-none z-50"
-                  >
-                    <div className="flex items-center gap-1 bg-white/95 backdrop-blur px-2 py-0.5 rounded-full border border-slate-200 shadow-sm ring-1 ring-black/5">
-                      <span className="text-[8px] font-black text-slate-600 tracking-wider uppercase">
-                        {isHindi ? 'यहाँ क्लिक करें' : 'Click Here'}
-                      </span>
-                      <span className="text-[10px]">🚶‍♂️</span>
-                    </div>
-                    {/* Minimal Arrow Pointing Down */}
-                    <div className="mt-0.5 h-1.5 w-[1.5px] bg-gradient-to-b from-slate-300 to-slate-400 rounded-full"></div>
-                    <div className="h-1.5 w-1.5 border-r-[1.5px] border-b-[1.5px] border-slate-400 rotate-45 -mt-[1px]"></div>
-                  </motion.div>
-                )}
+
                 
                 <Sparkles className={cn(
                   "relative z-10 h-3 w-3 transition-colors",
@@ -605,6 +587,34 @@ export function SyllabusTopicSheet({
                       </div>
                     </section>
                   )}
+                  {/* Next Step CTA */}
+                  <div className="pt-6 pb-2">
+                    <button
+                      onClick={() => setViewMode('expert')}
+                      className="group relative flex w-full items-center justify-between overflow-hidden rounded-2xl bg-slate-900 p-4 transition-all hover:bg-slate-800 hover:shadow-lg hover:shadow-slate-900/20 active:scale-[0.98]"
+                    >
+                      <div className="absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-slate-700/50 to-transparent pointer-events-none" />
+                      <div className="flex items-center gap-4 relative z-10">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-800 text-amber-400 border border-slate-700 group-hover:bg-slate-700 transition-colors">
+                          <Sparkles className="h-5 w-5" />
+                        </div>
+                        <div className="flex flex-col items-start">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                            {isHindi ? 'अगला कदम' : 'Next Step'}
+                          </span>
+                          <span className={cn(
+                            "text-base font-black text-white",
+                            isHindi ? "font-[family-name:var(--font-pyq-dev)]" : ""
+                          )}>
+                            {isHindi ? 'एक्सपर्ट डिकोडिंग खोलें' : 'Unlock Expert Decoding'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-900 group-hover:bg-amber-400 group-hover:translate-x-1 transition-all">
+                        <ArrowRight className="h-4 w-4" />
+                      </div>
+                    </button>
+                  </div>
                 </motion.div>
               )}
 
