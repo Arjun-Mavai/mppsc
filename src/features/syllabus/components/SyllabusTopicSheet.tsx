@@ -281,18 +281,35 @@ export function SyllabusTopicSheet({
                     : 'text-slate-500 hover:text-slate-800'
                 )}
               >
-                {isHindi ? 'क्लासिक नोट्स' : 'Classic Notes'}
+                {isHindi ? 'टॉपिक ओवरव्यू' : 'Topic Overview'}
               </button>
               <button
                 onClick={() => setViewMode('expert')}
                 className={cn(
-                  'flex-1 rounded-xl py-2.5 text-[10px] font-black uppercase tracking-widest transition-all',
+                  'relative flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[10px] font-black uppercase tracking-widest transition-all',
                   viewMode === 'expert'
                     ? 'bg-slate-900 text-white shadow-md scale-[1.02]'
-                    : 'text-slate-500 hover:text-slate-800'
+                    : 'text-slate-500 hover:text-slate-800 overflow-hidden group'
                 )}
               >
-                {isHindi ? 'एक्सपर्ट डिकोडिंग' : 'Expert Decoding'}
+                {/* Subtle shine effect that sweeps across the button periodically when inactive */}
+                {viewMode !== 'expert' && (
+                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-slate-400/10 to-transparent" />
+                )}
+                
+                <Sparkles className={cn(
+                  "h-3 w-3",
+                  viewMode === 'expert' ? "text-amber-400" : "text-indigo-500 group-hover:text-indigo-600"
+                )} />
+                <span>{isHindi ? 'एक्सपर्ट डिकोडिंग' : 'Expert Decoding'}</span>
+                
+                {/* Tiny pulsing dot to attract attention when inactive */}
+                {viewMode !== 'expert' && (
+                  <span className="absolute right-3 top-2.5 flex h-1.5 w-1.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75"></span>
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
+                  </span>
+                )}
               </button>
               {/* <button
                 onClick={() => setViewMode('official')}
