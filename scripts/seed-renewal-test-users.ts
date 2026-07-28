@@ -10,15 +10,15 @@
 
 import 'dotenv/config';
 import { config as loadEnv } from 'dotenv';
+import bcrypt from 'bcryptjs';
+import { eq } from 'drizzle-orm';
+import { v4 as uuidv4 } from 'uuid';
+import { db } from '../src/db';
+import { mppscUsers, pricingConfig } from '../src/db/schema';
+
 loadEnv({ path: '.env.local', override: true });
 
 async function seedTestUsers() {
-  const { db } = await import('../src/db');
-  const { mppscUsers } = await import('../src/db/schema');
-  const bcrypt = (await import('bcryptjs')).default;
-  const { eq } = await import('drizzle-orm');
-  const { v4: uuidv4 } = await import('uuid');
-
   console.log('🌱 Seeding Renewal Test Accounts into Database...');
 
   const hashedPassword = await bcrypt.hash('password123', 10);
@@ -94,7 +94,6 @@ async function seedTestUsers() {
   }
 
   // Ensure DB pricing_config has renewal_mains_price = 399
-  const { pricingConfig } = await import('../src/db/schema');
   await db
     .update(pricingConfig)
     .set({
