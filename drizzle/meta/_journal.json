@@ -288,6 +288,20 @@
       "when": 1784205882909,
       "tag": "0040_tense_marten_broadcloak",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "6",
+      "when": 1785158362058,
+      "tag": "0041_conscious_karnak",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "6",
+      "when": 1785160426731,
+      "tag": "0042_wandering_carnage",
+      "breakpoints": true
     }
   ]
 }

@@ -117,3 +117,25 @@ export function mergeGrantsAfterMainsPurchase(current: string[]): string[] {
 export function mergeGrantsAfterComboPurchase(): string[] {
   return [ACCESS_PRE, ACCESS_MAINS];
 }
+
+/** Get official display name of the user's plan based on access grants and tier */
+export function getPlanDisplayName(user: UserAccessInfo | null | undefined): string {
+  if (!user) return 'Free Plan';
+  const grants = effectiveAccessGrants(user);
+  const hasPre = grants.includes(ACCESS_PRE);
+  const hasMains = grants.includes(ACCESS_MAINS);
+  const tier = String(user.planTier ?? (user as any).plan_tier ?? 'free').toLowerCase();
+
+  if (hasPre && hasMains) return 'Pro+ Plan (Pre + Mains)';
+  if (hasMains && !hasPre) return 'Mains Pro Plan';
+  if (hasPre && !hasMains) {
+    if (tier === 'lite') return 'Lite Plan';
+    return 'Prelims Pro Plan';
+  }
+  if (tier === 'combo') return 'Pro+ Plan (Pre + Mains)';
+  if (tier === 'mains') return 'Mains Pro Plan';
+  if (tier === 'pro') return 'Prelims Pro Plan';
+  if (tier === 'lite') return 'Lite Plan';
+
+  return 'Free Plan';
+}

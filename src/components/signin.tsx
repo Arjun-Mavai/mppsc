@@ -14,6 +14,8 @@ import { loginUserAction } from '@/actions/auth-actions';
 import { shouldRedirectPreSyllabusToMains } from '@/lib/product-portal-policy';
 import { AuthenticatedUser } from '@/types/auth';
 
+import { getSubscriptionStatus } from '@/lib/subscription-status';
+
 /**
  * Login Screen Flow (Client)
  * 1) Normal login submit
@@ -76,10 +78,21 @@ export default function LoginPage() {
           description: data.message || 'Accessing your syllabus...',
         });
 
+        // 🛡️ Smart Redirect: Expired users -> /renew, else redirectTo query, else /dashboard
+        const statusInfo = getSubscriptionStatus(storeUser);
+        const redirectTo = searchParams.get('redirectTo');
+        
+        let destination = '/dashboard';
+        if (statusInfo.requiresRenewalRedirect || statusInfo.isExpired) {
+          destination = '/renew';
+        } else if (redirectTo && redirectTo.startsWith('/')) {
+          destination = redirectTo;
+        }
+
         // Wait a bit for store to sync then redirect
         setTimeout(() => {
           if (storeUser) {
-            window.location.href = '/dashboard';
+            window.location.href = destination;
           }
         }, 600);
       } else {

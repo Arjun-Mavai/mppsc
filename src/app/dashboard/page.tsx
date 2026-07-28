@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 import { getUserAnalytics } from '@/features/analytics/actions';
 import { syllabusData } from '@/data/syllabusData';
 import { verifyAuth } from '@/lib/auth';
+import { getSubscriptionStatus } from '@/lib/subscription-status';
 import { getUserSyllabusProgress } from '@/features/syllabus/actions/revision';
 import { DashboardClient } from './components/DashboardClient';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -22,6 +23,12 @@ export default async function DashboardPage() {
 
   if (!user) {
     redirect('/login');
+  }
+
+  // 🛡️ Guard: Expired users are redirected directly to /renew
+  const statusInfo = getSubscriptionStatus(user);
+  if (statusInfo.requiresRenewalRedirect || statusInfo.isExpired) {
+    redirect('/renew');
   }
 
   // Total topics calculation (static data, extremely fast)
