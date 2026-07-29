@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { updateUserName, updateUserPassword, markDoubtsAsRead } from './actions';
 import { submitIntelligenceFeedback } from '@/actions/intelligence-actions';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { getPlanDisplayName } from '@/lib/access-grants';
 
 interface ProfileClientProps {
   user: {
@@ -348,15 +349,17 @@ export default function ProfileClient({ user, doubts }: ProfileClientProps) {
             <div className="mt-1 flex items-center gap-2">
               <Badge
                 className={cn(
-                  'text-[10px] font-black uppercase',
-                  user.planTier === 'pro'
-                    ? 'bg-amber-100 text-amber-700'
-                    : user.planTier === 'lite'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-slate-100 text-slate-600'
+                  'text-[10px] font-black uppercase px-2.5 py-0.5',
+                  (user.planTier === 'pro' || user.planTier === 'combo')
+                    ? 'bg-amber-100 text-amber-800 border-amber-200'
+                    : user.planTier === 'mains'
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                      : user.planTier === 'lite'
+                        ? 'bg-blue-100 text-blue-800 border-blue-200'
+                        : 'bg-slate-100 text-slate-600'
                 )}
               >
-                {user.planTier || 'Free'}
+                {getPlanDisplayName(user)}
               </Badge>
               {user.createdAt && (
                 <span className="text-[10px] text-slate-400">

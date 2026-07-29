@@ -94,12 +94,14 @@ export async function POST(request: Request) {
     // Free users have no expiry (null) → always allowed
     let currentPlanTier = user.planTier;
     let currentIsSubscribed = user.isSubscribed;
+    let isExpiredPaidUser = false;
 
     if (user.accessExpiresAt) {
       const now = new Date();
       const expiryDate = new Date(user.accessExpiresAt);
       const hadPaidAccess = user.planTier !== 'free' || user.isSubscribed;
       if (expiryDate < now && hadPaidAccess) {
+        isExpiredPaidUser = true;
         await db
           .update(mppscUsers)
           .set({
@@ -218,6 +220,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
+      requiresRenewal: isExpiredPaidUser,
+      redirectTo: isExpiredPaidUser ? '/renew' : undefined,
       user: {
         email: user.email,
         name: user.name,

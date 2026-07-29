@@ -30,6 +30,11 @@ export const mppscUsers = sqliteTable(
     // Previous user ID — when lite→pro upgrade happens via soft-delete+recreate
     // Links to the old record for tracking migration history
     previousUserId: text('previous_user_id'),
+    // ── Renewal Tracking Fields ──────────────────────────────────
+    // Last renewal timestamp — null for new users, populated on renewal
+    lastRenewedAt: integer('last_renewed_at', { mode: 'timestamp' }),
+    // Total times user has renewed subscription — 0 = initial purchase, 1+ = renewed
+    renewalCount: integer('renewal_count').default(0),
     // Exam type segregation - UPSC/MPPSC isolation
     examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all', 'mppolice'] })
       .default('mppsc')
@@ -775,7 +780,7 @@ export const mppscUserActivities = sqliteTable(
     userName: text('user_name'),
     adminId: text('admin_id'), // Who performed the action
     action: text('action', {
-      enum: ['PLAN_CHANGE', 'DELETE', 'GRANT', 'UPDATE', 'LOGIN', 'LOGOUT'],
+      enum: ['PLAN_CHANGE', 'PLAN_RENEWAL', 'DELETE', 'GRANT', 'UPDATE', 'LOGIN', 'LOGOUT'],
     }).notNull(),
     details: text('details', { mode: 'json' }), // Store old/new values
     createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
@@ -798,6 +803,7 @@ export const payments = sqliteTable(
     signature: text('signature'),
     amount: integer('amount').notNull(),
     planTier: text('plan_tier'), // lite | pro | mains | combo | upgrade (analytics)
+    paymentType: text('payment_type', { enum: ['new', 'renewal', 'upgrade'] }).default('new'),
     status: text('status', { enum: ['created', 'captured', 'failed'] })
       .default('created')
       .notNull(),
@@ -1203,6 +1209,13 @@ export const pricingConfig = sqliteTable('pricing_config', {
   comboOriginalPrice: integer('combo_original_price').default(3999),
   comboValidityText: text('combo_validity_text').default('Pre + Mains — Valid for 6 Months'),
   comboMonths: integer('combo_months').default(6),
+  /** Specific renewal pricing for expiring/returning users */
+  renewalProPrice: integer('renewal_pro_price').default(299),
+  renewalProOriginalPrice: integer('renewal_pro_original_price').default(999),
+  renewalMainsPrice: integer('renewal_mains_price').default(399),
+  renewalMainsOriginalPrice: integer('renewal_mains_original_price').default(1499),
+  renewalComboPrice: integer('renewal_combo_price').default(499),
+  renewalComboOriginalPrice: integer('renewal_combo_original_price').default(599),
   /** Optional overrides merged with defaults — admin + app only reads for `id=mppsc`. */
   mppscProductCopyJson: text('mppsc_product_copy_json'),
   urgencyText: text('urgency_text').default('Special Offer'),

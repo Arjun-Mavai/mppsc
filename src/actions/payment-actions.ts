@@ -99,18 +99,29 @@ export async function startPayment(input: StartPaymentInput) {
 
     const currentSession = await verifyAuth();
 
-    // Paid Pre (lite/pro) + same email + duplicate Pre SKU → block unless that user is logged in (mains/combo/add-ons use logged-in flow)
+    let isRenewalOrder = false;
+
+    // Paid Pre (lite/pro) + same email + duplicate Pre SKU → block UNLESS user is logged in as that user OR account plan is expired
     if (existingUser) {
       const tier = String(existingUser.planTier ?? 'free').toLowerCase();
       const hasPaidPre = tier === 'lite' || tier === 'pro';
       const duplicatePreSku =
         hasPaidPre && (planType === 'lite' || planType === 'pro' || planType === 'upgrade');
 
-      if (duplicatePreSku) {
+      const isExpired = existingUser.accessExpiresAt
+        ? new Date(existingUser.accessExpiresAt).getTime() < Date.now()
+        : false;
+
+      const isSameUserSession = currentSession && currentSession.id === existingUser.id;
+
+      if (isSameUserSession || isExpired) {
+        // Safe renewal flow — user is renewing their own account or plan has expired
+        isRenewalOrder = true;
+      } else if (duplicatePreSku) {
         if (!currentSession || currentSession.id !== existingUser.id) {
           return {
             error:
-              'This email is already registered with a plan. Please log in to access your account or upgrade.',
+              'This email is already registered with an active plan. Please log in to renew or manage your account.',
           };
         }
       }
@@ -243,6 +254,7 @@ export async function startPayment(input: StartPaymentInput) {
         planType,
         userId,
         examType,
+        paymentType: isRenewalOrder ? 'renewal' : (planType === 'upgrade' ? 'upgrade' : 'new'),
       },
     });
 
@@ -428,7 +440,15 @@ export async function verifyPayment(input: VerifyPaymentInput) {
 
     const paidUserBefore = await db.query.mppscUsers.findFirst({
       where: eq(mppscUsers.id, userId!),
-      columns: { accessGrants: true, planTier: true, metadata: true },
+      columns: {
+        accessGrants: true,
+        planTier: true,
+        metadata: true,
+        accessExpiresAt: true,
+        renewalCount: true,
+        email: true,
+        name: true,
+      },
     });
 
     const resolved = resolveVerifiedPayment(
@@ -447,12 +467,26 @@ export async function verifyPayment(input: VerifyPaymentInput) {
       return { error: 'Payment amount does not match any valid plan' };
     }
 
-    const accessExpiresAt = new Date();
+    // 🧠 Smart Expiry Calculation:
+    // 1. Early Renewal (old expiry in future) -> add months to old expiry
+    // 2. Late/Expired Renewal (old expiry in past or null) -> add months to NOW
+    const now = new Date();
+    let baseExpiryDate = now;
+    if (paidUserBefore?.accessExpiresAt && new Date(paidUserBefore.accessExpiresAt) > now) {
+      baseExpiryDate = new Date(paidUserBefore.accessExpiresAt);
+    }
+
+    const accessExpiresAt = new Date(baseExpiryDate);
     accessExpiresAt.setMonth(accessExpiresAt.getMonth() + resolved.months);
 
     const planTier = resolved.planTier;
     const subscribedNow =
       planTier === 'lite' || planTier === 'pro' || resolved.paymentLabel === 'mains' || resolved.paymentLabel === 'combo';
+
+    // Payment Type Resolution
+    const orderPaymentType = order.notes?.paymentType as 'new' | 'renewal' | 'upgrade' | undefined;
+    const isRenewal = orderPaymentType === 'renewal' || (paidUserBefore?.accessExpiresAt !== null && paidUserBefore?.accessExpiresAt !== undefined);
+    const resolvedPaymentType = orderPaymentType || (isRenewal ? 'renewal' : (order.notes?.planType === 'upgrade' ? 'upgrade' : 'new'));
 
     // Extract consent info from user metadata
     let consentFromMeta = null;
@@ -479,10 +513,14 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         signature: razorpay_signature,
         amount: amountInPaise,
         planTier: resolved.paymentLabel,
+        paymentType: resolvedPaymentType,
         status: 'captured',
         examType,
         notes: JSON.stringify({
           planType: order.notes?.planType || resolved.paymentLabel,
+          paymentType: resolvedPaymentType,
+          extendedFrom: baseExpiryDate.toISOString(),
+          extendedTo: accessExpiresAt.toISOString(),
           consent: consentFromMeta || {
             accepted: true,
             version: 'v1.2',
@@ -493,6 +531,10 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         }),
       });
 
+      const nextRenewalCount = isRenewal
+        ? ((paidUserBefore?.renewalCount || 0) + 1)
+        : (paidUserBefore?.renewalCount || 0);
+
       await tx
         .update(mppscUsers)
         .set({
@@ -500,10 +542,32 @@ export async function verifyPayment(input: VerifyPaymentInput) {
           isSubscribed: subscribedNow,
           isActive: true,
           accessExpiresAt,
+          lastRenewedAt: isRenewal ? new Date() : undefined,
+          renewalCount: nextRenewalCount,
           accessGrants: serializeAccessGrants(resolved.accessGrants),
           deletedAt: null,
         })
         .where(eq(mppscUsers.id, userId!));
+
+      // Audit Log Entry for Renewal
+      if (isRenewal) {
+        const { mppscUserActivities } = await import('@/db/schema');
+        await tx.insert(mppscUserActivities).values({
+          id: uuidv4(),
+          userId,
+          userEmail: paidUserBefore?.email || 'student',
+          userName: paidUserBefore?.name || 'Aspirant',
+          action: 'PLAN_RENEWAL',
+          details: JSON.stringify({
+            oldExpiresAt: paidUserBefore?.accessExpiresAt || null,
+            newExpiresAt: accessExpiresAt.toISOString(),
+            paymentId: razorpay_payment_id,
+            amountPaidRupees: amountInPaise / 100,
+            planTier,
+            renewalCount: nextRenewalCount,
+          }),
+        });
+      }
     });
 
     // 🎫 + 📧 Set-password token + welcome email

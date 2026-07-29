@@ -48,6 +48,7 @@ import {
   History,
   Info,
   Library,
+  User,
 } from './icons';
 
 // Import optimized sub-components
@@ -55,6 +56,7 @@ import { NavbarLogo } from './NavbarLogo';
 import { DesktopNavigation } from './DesktopNavigation';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { UserSection } from './UserSection';
+import { RenewalWarningBanner } from '@/components/subscription/RenewalWarningBanner';
 
 interface AppNavbarProps {
   user: AuthenticatedUser | null;
@@ -225,6 +227,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
         { name: language === 'hi' ? 'मुख्य पाठ्यक्रम' : 'Mains Syllabus', href: '/mains/syllabus', icon: Crown, color: 'text-emerald-500' },
         { name: language === 'hi' ? 'मेंस PYQ लाइब्रेरी' : 'Mains PYQ Library', href: '/mains/syllabus/pyq-library', icon: Library, color: 'text-violet-600' },
         { name: 'About Us', href: '/mains', icon: Info, color: 'text-slate-500' },
+        { name: language === 'hi' ? 'प्रोफ़ाइल' : 'Profile', href: '/profile', icon: User, color: 'text-indigo-600' },
       ];
     }
 
@@ -239,6 +242,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
         { name: language === 'hi' ? 'मुख्य पाठ्यक्रम' : 'Mains Syllabus', href: '/mains/syllabus', icon: Crown, color: 'text-emerald-500' },
         { name: language === 'hi' ? 'मेंस PYQ लाइब्रेरी' : 'Mains PYQ Library', href: '/mains/syllabus/pyq-library', icon: Library, color: 'text-violet-600' },
         { name: 'About Us', href: '/', icon: Info, color: 'text-slate-500' },
+        { name: language === 'hi' ? 'प्रोफ़ाइल' : 'Profile', href: '/profile', icon: User, color: 'text-indigo-600' },
       ];
     }
 
@@ -250,6 +254,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
       { name: 'Blogs', href: '/blogs', icon: BookOpen, color: 'text-sky-600' },
       { name: 'Test History', href: '/syllabus/test-history', icon: History, color: 'text-violet-600' },
       { name: 'About Us', href: '/', icon: Info, color: 'text-slate-500' },
+      { name: language === 'hi' ? 'प्रोफ़ाइल' : 'Profile', href: '/profile', icon: User, color: 'text-indigo-600' },
     ];
   }, [user, language]);
 
@@ -364,6 +369,15 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     setAuthCheckStatus
   ]);
 
+  const daysLeft = useMemo(() => {
+    if (!user || !user.accessExpiresAt || !user.isSubscribed) return null;
+    const expDate = new Date(user.accessExpiresAt);
+    if (isNaN(expDate.getTime())) return null;
+    const diffMs = expDate.getTime() - Date.now();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    return diffDays <= 10 && diffDays > 0 ? diffDays : null;
+  }, [user]);
+
   const isCompleted = searchParams.get('completed') === 'true';
   const isQuizPlay = (pathname.includes('/quiz/play') || pathname.includes('/free-quiz/play')) && !isCompleted;
   
@@ -371,6 +385,9 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
 
   return (
     <header className="fixed top-0 right-0 left-0 z-50 [animation:navbar-scroll_linear_both] border-b border-slate-200 bg-white/80 shadow-sm backdrop-blur-md transition-all duration-300 [animation-range:0px_50px] [animation-timeline:scroll()]">
+      {daysLeft !== null && (
+        <RenewalWarningBanner daysLeft={daysLeft} userEmail={user?.email} />
+      )}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between">
           <NavbarLogo user={user} />

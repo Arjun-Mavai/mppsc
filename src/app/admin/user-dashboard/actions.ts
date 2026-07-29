@@ -14,6 +14,8 @@ export interface UserWithStats {
   isSubscribed: boolean | null;
   createdAt: Date | null;
   accessExpiresAt: Date | null;
+  lastRenewedAt?: Date | null;
+  renewalCount?: number | null;
   totalAttempts: number;
   completedAttempts: number;
   avgScore: number | null;
@@ -66,6 +68,8 @@ export async function getUserDashboardData(): Promise<UserWithStats[]> {
       isSubscribed: mppscUsers.isSubscribed,
       createdAt: mppscUsers.createdAt,
       accessExpiresAt: mppscUsers.accessExpiresAt,
+      lastRenewedAt: mppscUsers.lastRenewedAt,
+      renewalCount: mppscUsers.renewalCount,
       totalAttempts: sql<number>`count(${userAttempts.id})`,
       completedAttempts: sql<number>`sum(case when ${userAttempts.isCompleted} = 1 then 1 else 0 end)`,
       avgScore: sql<number>`avg(case when ${userAttempts.isCompleted} = 1 then ${userAttempts.score} else null end)`,
@@ -96,6 +100,8 @@ export async function getUserDashboardData(): Promise<UserWithStats[]> {
     avgScore: r.avgScore != null ? Math.round(Number(r.avgScore) * 100) / 100 : null,
     lastActiveAt: r.lastActiveAt,
     accessExpiresAt: r.accessExpiresAt,
+    lastRenewedAt: r.lastRenewedAt,
+    renewalCount: Number(r.renewalCount) || 0,
     fltCount: Number(r.fltCount) || 0,
     unitCount: Number(r.unitCount) || 0,
     csatCount: Number(r.csatCount) || 0,

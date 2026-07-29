@@ -26,6 +26,13 @@ export interface PricingData {
   comboOriginalPrice: number;
   comboValidityText: string;
   comboMonths: number;
+  /** Specific renewal pricing for returning/expiring users */
+  renewalProPrice: number;
+  renewalProOriginalPrice: number;
+  renewalMainsPrice: number;
+  renewalMainsOriginalPrice: number;
+  renewalComboPrice: number;
+  renewalComboOriginalPrice: number;
   urgencyText: string;
   urgencyTextHi: string;
   studentsBought: number;
@@ -50,6 +57,12 @@ export const PRICING_DEFAULTS: PricingData = {
   comboOriginalPrice: 3999,
   comboValidityText: 'Pre + Mains — Valid for 6 Months',
   comboMonths: 6,
+  renewalProPrice: 299,
+  renewalProOriginalPrice: 999,
+  renewalMainsPrice: 399,
+  renewalMainsOriginalPrice: 1499,
+  renewalComboPrice: 499,
+  renewalComboOriginalPrice: 599,
   urgencyText: 'Special pricing for first 100 students',
   urgencyTextHi: 'पहले 100 छात्रों के लिए विशेष मूल्य',
   studentsBought: 23,

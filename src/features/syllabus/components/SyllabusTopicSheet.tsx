@@ -736,7 +736,7 @@ export function SyllabusTopicSheet({
                           </div>
 
                           {hasMains ? (
-                            <Link href="/mains/pyq-library" passHref>
+                            <Link href="/mains/syllabus/pyq-library" passHref>
                               <Button className="rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-[10px] tracking-widest h-9 px-4 shadow-lg group">
                                 {isHindi ? 'लाइब्रेरी देखें' : 'View Library'}
                                 <ExternalLink className="ml-2 h-3 w-3" />

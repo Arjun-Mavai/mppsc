@@ -15,6 +15,7 @@
     "db:pull": "npx tsx scripts/db-pull.ts",
     "db:studio": "drizzle-kit studio",
     "db:seed:mains": "npx tsx src/scripts/seed-mains.ts",
+    "db:seed:renewal": "npx tsx src/scripts/seed-renewal-test-users.ts",
     "db:seed:mains:remote": "USE_PROD_DB=true npx tsx src/scripts/seed-mains.ts",
     "db:seed:blogs:remote": "USE_PROD_DB=true npx tsx src/scripts/seed-seo-blogs.ts",
     "db:fix:mains-cols": "USE_PROD_DB=true node scripts/fix-mains-exam-type-columns.mjs",

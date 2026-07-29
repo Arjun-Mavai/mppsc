@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { getSubscriptionStatus } from '@/lib/subscription-status';
 
 const TRACKING_KEY = 'mppsc_pwa_last_route'; // Apun ka khufiya bahi-khata jisme last location likha jayega
 const EXPIRY_HOURS = 8; // 8 ghante ke baad memory wash, uske baad user sidha dashboard pe land karega!
@@ -43,11 +44,23 @@ const EXPIRY_HOURS = 8; // 8 ghante ke baad memory wash, uske baad user sidha da
 export function PWARouteTracker() {
   const pathname = usePathname(); // Abhi user kis page ki gali me khada hai
   const router = useRouter(); // Apun ka driver jo redirect marega
+  const user = useSettingsStore((state) => state.user); // Reactively listen to user state
   const hasResumed = useRef(false); // Ek hi baar resume marne ka, baar-baar chipakne ka nahi
 
   useEffect(() => {
     // 1. Agar ye server-side pe run ho raha hai, toh kat le yaha se. Apun sirf browser (client) pe game karta hai!
     if (typeof window === 'undefined' || !pathname) return;
+
+    // 🛡️ 1.5. EXPIRED USER CHECK: Expired users MUST be routed to /renew and nowhere else
+    if (user) {
+      const statusInfo = getSubscriptionStatus(user);
+      if (statusInfo.requiresRenewalRedirect || statusInfo.isExpired) {
+        if (pathname !== '/renew') {
+          router.replace('/renew');
+          return;
+        }
+      }
+    }
 
     // 2. AUTO-RESUME LOGIC: Agar user direct App me tapka hai (Fresh Launch)
     // PWA `manifest.json` ka start_url '/' hai. Toh jab app khulti hai, wo '/' ya '/dashboard' pe land hoti hai.
@@ -60,7 +73,7 @@ export function PWARouteTracker() {
           const hoursSinceSaved = (Date.now() - timestamp) / 3600000; // Kitne ghante pehle ki baat hai?
 
           // Agar location solid hai, aur 8 ghante ke andar ki baat hai, toh chal bidu wahi chalte hai!
-          if (path && path !== '/dashboard' && path !== '/' && hoursSinceSaved < EXPIRY_HOURS) {
+          if (path && path !== '/dashboard' && path !== '/' && path !== '/renew' && hoursSinceSaved < EXPIRY_HOURS) {
             localStorage.removeItem(TRACKING_KEY); // Purani entry hata de, varna aage loop me ghumte rahenge
             router.replace(path); // Bina history me kachra kiye (replace), turant wahi teleport kar de
             return; // Yaha se nikal le jaldi
@@ -87,7 +100,8 @@ export function PWARouteTracker() {
       pathname.startsWith('/signin') || 
       pathname.startsWith('/login') || 
       pathname.startsWith('/register') ||
-      pathname.startsWith('/upgrade');
+      pathname.startsWith('/upgrade') ||
+      pathname.startsWith('/renew');
 
     if (!isExcluded) {
       try {
@@ -103,7 +117,7 @@ export function PWARouteTracker() {
       // Agar user KHUD chal ke wapas home ya dashboard pe aaya hai, toh pichla record saaf kar de
       localStorage.removeItem(TRACKING_KEY);
     }
-  }, [pathname, router]);
+  }, [pathname, router, user]);
  // This component renders absolutely nothing. 
   // Purely a client-side headless tracker.
   // Ye component UI pe dikhta nahi hai, sirf pichhe se game karta hai. Solid bouncer!

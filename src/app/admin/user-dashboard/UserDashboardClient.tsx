@@ -267,13 +267,33 @@ export default function UserDashboardClient({ users }: Props) {
 
                     {/* Info */}
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
                         <h3 className="truncate text-sm font-bold text-slate-900">
                           {user.name || 'No Name'}
                         </h3>
                         <Badge className={cn('text-[9px]', TIER_COLORS[user.planTier || 'free'])}>
                           {user.planTier || 'free'}
                         </Badge>
+                        {user.renewalCount && user.renewalCount > 0 ? (
+                          <Badge className="bg-emerald-100 text-emerald-800 text-[9px] font-black border border-emerald-300">
+                            🔁 Renewed ({user.renewalCount}x)
+                          </Badge>
+                        ) : null}
+                        {user.accessExpiresAt ? (
+                          new Date(user.accessExpiresAt) < new Date() ? (
+                            <Badge className="bg-rose-100 text-rose-700 text-[9px] font-bold">
+                              🔴 Expired
+                            </Badge>
+                          ) : (Math.ceil((new Date(user.accessExpiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) <= 10) ? (
+                            <Badge className="bg-amber-100 text-amber-800 text-[9px] font-bold">
+                              🟠 Expiring ({Math.ceil((new Date(user.accessExpiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))}d left)
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-emerald-50 text-emerald-700 text-[9px] font-semibold">
+                              🟢 Active
+                            </Badge>
+                          )
+                        ) : null}
                       </div>
                       <p className="truncate text-[11px] text-slate-400">{user.email}</p>
                     </div>
