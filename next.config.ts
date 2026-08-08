@@ -41,8 +41,7 @@ const nextConfig: NextConfig = {
   // typedRoutes: true, // Enable when ready - requires full type generation
   
   experimental: {
-    // ⚡ Next.js 16 Performance Features
-    viewTransition: true,
+    // ⚡ Next.js 16.3 Performance Features
     prefetchInlining: true,
     appNewScrollHandler: true,
     
