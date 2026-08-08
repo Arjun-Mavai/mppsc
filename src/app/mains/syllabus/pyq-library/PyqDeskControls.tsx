@@ -253,8 +253,8 @@ export const PyqDeskControls = memo(({
                 <SlidersHorizontal className={cn('h-4 w-4 mt-0.5 shrink-0', themeDeep ? 'text-amber-500' : 'text-amber-600')} />
                 <p className="text-xs leading-relaxed font-semibold">
                   {hi
-                    ? 'सभी वर्ष ब्राउज़ करें। मुफ़्त: 2024 पेपर 1 — खंड A और B में सीमित नमूना; बाकी तुरंत लाइब्रेरी अनलॉक।'
-                    : 'Browse every year. Free: 2024 Paper 1 samples in Part A & B; other papers show unlock instantly.'}
+                    ? `सभी वर्ष ब्राउज़ करें। मुफ़्त: ${MAINS_PYQ_DEMO_YEAR} पेपर ${MAINS_PYQ_DEMO_PAPER_NUMBER} — खंड A और B में सीमित नमूना; बाकी तुरंत लाइब्रेरी अनलॉक।`
+                    : `Browse every year. Free: ${MAINS_PYQ_DEMO_YEAR} Paper ${MAINS_PYQ_DEMO_PAPER_NUMBER} samples in Part A & B; other papers show unlock instantly.`}
                 </p>
               </div>
             </div>
