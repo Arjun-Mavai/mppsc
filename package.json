@@ -72,7 +72,7 @@
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.563.0",
     "nanoid": "^5.1.11",
-    "next": "16.2.6",
+    "next": "16.3.0",
     "next-themes": "^0.4.6",
     "radix-ui": "^1.5.0",
     "razorpay": "^2.9.6",
@@ -100,7 +100,7 @@
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
-    "eslint-config-next": "16.2.0",
+    "eslint-config-next": "16.3.0",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4",
@@ -123,7 +123,7 @@
     "@types/react-dom": "19.2.3"
   },
   "engines": {
-    "node": ">=20.0.0",
+    "node": ">=20.9.0",
     "pnpm": ">=9.0.0"
   },
   "packageManager": "pnpm@9.15.4"
