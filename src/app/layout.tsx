@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Outfit } from 'next/font/google';
+import { Geist, Geist_Mono, Outfit } from 'next/font/google';
 import './globals.css';
 
 import PwaRegistry from '@/components/PwaRegistry';
@@ -24,9 +24,15 @@ const SupportButton = dynamic(() =>
   import('@/components/SupportButton').then((m) => m.SupportButton)
 );
 
-const inter = Inter({
+const geistSans = Geist({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-geist-sans',
+  display: 'swap',
+});
+
+const geistMono = Geist_Mono({
+  subsets: ['latin'],
+  variable: '--font-geist-mono',
   display: 'swap',
 });
 
@@ -145,7 +151,7 @@ export default async function RootLayout({
   };
 
   return (
-    <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable}`}>
       <head>
         <Script
           id="schema-website"
