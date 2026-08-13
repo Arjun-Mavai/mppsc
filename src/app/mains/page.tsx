@@ -2,11 +2,12 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Target, Sparkles, Zap, ShieldCheck, ArrowRight, ChevronRight } from 'lucide-react';
+import { BookOpen, Target, Sparkles, Zap, ShieldCheck, ArrowRight, ChevronRight, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon';
 
 /**
  * 🏛️ MAINS LANDING PAGE (ULTRA-UX EDITION)
@@ -441,6 +442,59 @@ export default function MainsLandingPage() {
             <span>{hi ? '📚 सिलेबस खोलें' : '📚 Open Syllabus Tree'}</span>
             <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
           </button>
+        </div>
+
+        {/* 💬 Instant WhatsApp & Support Guidance Banner */}
+        <div className="mt-20 max-w-4xl mx-auto rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-950/40 via-slate-900/80 to-[#060a12] p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+          <div className="space-y-2 relative z-10">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-emerald-400">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+              </span>
+              <span>{hi ? '24x7 सहायता टीम' : '24x7 Support Available'}</span>
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              {hi ? 'Mains तैयारी में कोई संशय है?' : 'Have Questions About Mains Prep?'}
+            </h3>
+            <p className="text-sm font-semibold text-slate-300 max-w-lg">
+              {hi
+                ? 'हमारी विशेषज्ञ टीम से WhatsApp पर तुरंत उत्तर पाएँ। गाइडेंस, प्लान्स और स्टडी मटीरियल पर त्वरित सहायता।'
+                : 'Get instant answers from our expert support team on WhatsApp. Guidance for plans, structure & syllabus.'}
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto relative z-10 shrink-0">
+            <a
+              href="https://wa.me/917489388350?text=Hi,%20I%20need%20help%20with%20MPPSC%20Mains."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group relative flex h-13 w-full sm:w-auto items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-600 px-6 py-3.5 font-black text-white shadow-[0_4px_25px_rgba(16,185,129,0.3)] transition-all hover:scale-105 hover:shadow-[0_4px_35px_rgba(16,185,129,0.5)] active:scale-95"
+            >
+              <div className="relative flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-white shadow-xs group-hover:scale-110 transition-transform">
+                <WhatsAppIcon className="h-4 w-4 fill-white" />
+                <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-300 opacity-75"></span>
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400 border border-white"></span>
+                </span>
+              </div>
+              <span className="text-sm font-black tracking-tight">WhatsApp Support</span>
+              <span className="rounded-full bg-emerald-950/40 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-200">
+                {hi ? 'ऑनलाइन' : 'Online'}
+              </span>
+            </a>
+
+            <a
+              href="https://t.me/mppsc_conversation_bot?start=mains_landing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-13 w-full sm:w-auto items-center justify-center gap-2 rounded-2xl border border-sky-500/30 bg-sky-500/10 px-5 py-3.5 text-sm font-bold text-sky-300 transition-all hover:bg-sky-500/20 active:scale-95"
+            >
+              <Send className="h-4 w-4 text-sky-400" />
+              <span>Telegram</span>
+            </a>
+          </div>
         </div>
       </section>
 
