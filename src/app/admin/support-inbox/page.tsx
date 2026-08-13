@@ -39,12 +39,16 @@ export default function SupportInbox() {
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const handleCopyMessage = (text: string, id: string) => {
+  const handleCopyMessage = async (text: string, id: string) => {
     if (!text) return;
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    toast.success('Message copied!');
-    setTimeout(() => setCopiedId(null), 2000);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      toast.success('Message copied!');
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      toast.error('Failed to copy message');
+    }
   };
 
   useEffect(() => {

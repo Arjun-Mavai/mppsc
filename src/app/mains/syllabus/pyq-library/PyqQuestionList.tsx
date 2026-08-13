@@ -9,11 +9,6 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { PyqAnswerProse } from '@/components/mains/PyqAnswerProse';
 import { Button } from '@/components/ui/button';
 
-const NEW_CA_TEXT_STYLE = {
-  color: '#0fffff',
-  WebkitTextStroke: '0.5px #082f49',
-  textShadow: '0px 1px 0px #0369a1, 0px 2px 0px #075985, 0px 3px 0px #082f49, 0px 4px 6px rgba(0,0,0,0.8)'
-};
 import {
   MAIN_SYLLABUS_CARD_HUES,
   mainsSyllabusTileSkin,
@@ -32,6 +27,12 @@ import {
   isMainsPyqDemoPaper,
   pickMainsPyqFreeDemoQuestionIds,
 } from '@/lib/mains-vault-demo';
+
+const NEW_CA_TEXT_STYLE = {
+  color: '#0fffff',
+  WebkitTextStroke: '0.5px #082f49',
+  textShadow: '0px 1px 0px #0369a1, 0px 2px 0px #075985, 0px 3px 0px #082f49, 0px 4px 6px rgba(0,0,0,0.8)'
+};
 
 export type QRow = {
   id: string;
@@ -81,7 +82,7 @@ interface PyqQuestionListProps {
   onPaperChange?: (id: string) => void;
 }
 
-const BOOKMARK_STORAGE_KEY = 'mppsc_mains_saved_bookmarks';
+export const BOOKMARK_STORAGE_KEY = 'mppsc_mains_saved_bookmarks';
 
 function getSavedBookmarkIds(): string[] {
   if (typeof window === 'undefined') return [];
@@ -170,32 +171,31 @@ export const PyqQuestionList = memo(function PyqQuestionList({
       return;
     }
 
-    let isSavedNow = false;
-
     setBookmarkedIds((prev) => {
       const alreadySaved = prev.includes(qId);
-      isSavedNow = !alreadySaved;
+      const isSavedNow = !alreadySaved;
       const next = alreadySaved ? prev.filter((id) => id !== qId) : [...prev, qId];
       try {
         localStorage.setItem(BOOKMARK_STORAGE_KEY, JSON.stringify(next));
       } catch {}
+
+      toast.dismiss();
+      toast(
+        isSavedNow
+          ? (hi ? "प्रश्न बुकमार्क हो गया! 🔖" : "Bookmark saved! 🔖")
+          : (hi ? "बुकमार्क हटा दिया गया 🗑️" : "Bookmark removed 🗑️"),
+        {
+          duration: 2000,
+          style: {
+            background: isSavedNow ? '#f0fdf4' : '#fef2f2',
+            color: isSavedNow ? '#166534' : '#991b1b',
+            border: `1px solid ${isSavedNow ? '#86efac' : '#fca5a5'}`,
+          },
+        }
+      );
+
       return next;
     });
-
-    toast.dismiss();
-    toast(
-      isSavedNow
-        ? (hi ? "प्रश्न बुकमार्क हो गया! 🔖" : "Bookmark saved! 🔖")
-        : (hi ? "बुकमार्क हटा दिया गया 🗑️" : "Bookmark removed 🗑️"),
-      {
-        duration: 2000,
-        style: {
-          background: isSavedNow ? '#f0fdf4' : '#fef2f2',
-          color: isSavedNow ? '#166534' : '#991b1b',
-          border: `1px solid ${isSavedNow ? '#86efac' : '#fca5a5'}`,
-        },
-      }
-    );
   }, [vaultUnlocked, hi]);
 
   // ⚡ Stable callbacks prevent cascading re-renders

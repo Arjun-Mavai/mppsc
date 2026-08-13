@@ -11,6 +11,7 @@ import { DashboardActionCard } from './DashboardActionCard';
 import AnalyticsDashboardWrapper from '@/app/syllabus/analytics/AnalyticsDashboardWrapper';
 import { hasPreAccess, hasMainsAccess } from '@/lib/access-grants';
 import { cn } from '@/lib/utils';
+import { BOOKMARK_STORAGE_KEY } from '@/app/mains/syllabus/pyq-library/PyqQuestionList';
 import { motion } from 'framer-motion';
 import { 
   BookOpen, 
@@ -72,15 +73,15 @@ const STUDY_QUOTES = [
   },
   {
     en: "Arise, awake, and stop not until the goal is reached.",
-    hi: "उठो, जागो और तब तक मत रुको जब तक लक्ष्य प्राप्त न हो जाए।"
+    hi: "उठो, जागो और तब तक मत रुको जब तक लक्ष्य प्राप्त न हो जाए。"
   },
   {
     en: "Consistency beats talent. Keep practicing, keep improving, keep moving forward.",
-    hi: "निरंतरता प्रतिभा को मात देती है। अभ्यास करते रहें, सुधार करते रहें, आगे बढ़ते रहें।"
+    hi: "निरंतरता प्रतिभा को मात देती है। अभ्यास करते रहें, सुधार करते रहें, आगे बढ़ते रहें。"
   },
   {
     en: "The best way to predict the future is to create it. Crack MPPSC with strategy.",
-    hi: "भविष्य का अनुमान लगाने का सबसे अच्छा तरीका इसे बनाना है। रणनीति के साथ MPPSC क्रैक करें।"
+    hi: "भविष्य का अनुमान लगाने का सबसे अच्छा तरीका इसे बनाना है। रणनीति के साथ MPPSC क्रैक करें。"
   }
 ];
 
@@ -104,7 +105,7 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
 
     if (typeof window !== 'undefined') {
       try {
-        const raw = localStorage.getItem('mppsc_mains_saved_bookmarks');
+        const raw = localStorage.getItem(BOOKMARK_STORAGE_KEY);
         if (raw) {
           const arr = JSON.parse(raw);
           setBookmarkCount(Array.isArray(arr) ? arr.length : 0);
