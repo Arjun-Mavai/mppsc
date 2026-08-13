@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Outfit } from 'next/font/google';
+import { Inter, Outfit, Noto_Sans_Devanagari, Source_Serif_4 } from 'next/font/google';
 import './globals.css';
 
 import PwaRegistry from '@/components/PwaRegistry';
@@ -33,6 +33,19 @@ const inter = Inter({
 const outfit = Outfit({
   subsets: ['latin'],
   variable: '--font-outfit',
+  display: 'swap',
+});
+
+const devanagari = Noto_Sans_Devanagari({
+  subsets: ['devanagari'],
+  variable: '--font-pyq-dev',
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+});
+
+const serif = Source_Serif_4({
+  subsets: ['latin', 'latin-ext'],
+  variable: '--font-pyq-serif',
   display: 'swap',
 });
 
@@ -145,7 +158,7 @@ export default async function RootLayout({
   };
 
   return (
-    <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
+    <html lang="en" className={`${inter.variable} ${outfit.variable} ${devanagari.variable} ${serif.variable}`}>
       <head>
         <Script
           id="schema-website"

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Target, Sparkles, Filter, Layers, MousePointer2, ListTree, HelpCircle, LayoutGrid, X } from 'lucide-react';
+import { Target, Sparkles, Filter, Layers, MousePointer2, ListTree, HelpCircle, LayoutGrid, X, Bookmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import {
@@ -64,6 +64,16 @@ const STEPS = [
     desc: { 
       en: 'Click the grid icon next to topics to quickly filter questions by specific syllabus units.', 
       hi: 'प्रश्नों को विशिष्ट इकाइयों (Units) के अनुसार जल्दी से छाँटने के लिए टॉपिक्स के बगल वाले ग्रिड आइकन पर क्लिक करें।' 
+    }
+  },
+  {
+    id: 'bookmark',
+    icon: Bookmark,
+    colorClass: 'text-rose-500 bg-rose-500/10 border-rose-500/20',
+    title: { en: 'Bookmark & Saved (🔖)', hi: 'बुकमार्क और सेव्ड प्रश्न (🔖)' },
+    desc: { 
+      en: 'Tap 🔖 icon on any tile to save questions. Click "SAVED" pill or access them directly from your Dashboard!', 
+      hi: 'किसी भी कार्ड पर 🔖 दबाकर सेव करें। "सेव्ड" बटन या डैशबोर्ड से एक टैप में रिवीज़न करें।' 
     }
   },
   {
@@ -311,6 +321,12 @@ export function PyqNavigationGuide({ themeDeep, triggerType = 'banner', customTr
                         )}>
                             <LayoutGrid className="h-2 w-2" />
                         </div>
+
+                        {/* SAVED Bookmark Filter Pill Mockup */}
+                        <div className={cn("h-4 px-2 rounded-full flex items-center gap-1 text-[6px] font-black uppercase transition-all shrink-0 border", activeStep === 5 ? "bg-[#e91e63] text-white border-pink-400 shadow-md scale-105" : themeDeep ? "bg-slate-800 text-slate-500 border-slate-700" : "bg-slate-100 text-slate-400 border-slate-200")}>
+                          <Bookmark className={cn("h-2 w-2", activeStep === 5 && "fill-white")} />
+                          SAVED (1)
+                        </div>
                       </div>
                       
                       <AnimatePresence>
@@ -356,22 +372,46 @@ export function PyqNavigationGuide({ themeDeep, triggerType = 'banner', customTr
 
                 {/* Real-looking Question Content Mockup */}
                 <motion.div layout className={cn(
-                  "p-3 rounded-xl border shadow-sm",
+                  "p-3 rounded-xl border shadow-sm relative",
                   themeDeep ? "bg-slate-800 border-slate-700" : "bg-white border-slate-100"
                 )}>
-                  <div className="flex gap-1.5 items-center mb-1.5">
-                    <span className={cn("px-1.5 py-0.5 rounded text-[6px] font-black", themeDeep ? "bg-emerald-900/50 text-emerald-300" : "bg-emerald-100 text-emerald-700")}>7m</span>
-                    <span className={cn("text-[6px] font-black uppercase tracking-wider opacity-60", themeDeep ? "text-slate-400" : "text-slate-600")}>PART A · U1 · Q2</span>
+                  <div className="flex items-start gap-2">
+                    {/* Left Column: Marks + Bookmark Icon */}
+                    <div className="flex flex-col items-center gap-1 shrink-0">
+                      <span className={cn("px-1.5 py-0.5 rounded text-[6px] font-black", themeDeep ? "bg-emerald-900/50 text-emerald-300" : "bg-emerald-100 text-emerald-700")}>7m</span>
+                      <div className={cn("p-0.5 rounded transition-all", activeStep === 5 ? "text-[#e91e63] scale-125 animate-bounce" : "text-slate-400")}>
+                        <Bookmark className={cn("h-3.5 w-3.5", activeStep === 5 && "fill-[#e91e63]")} />
+                      </div>
+                    </div>
+
+                    {/* Right Column: Question Info */}
+                    <div className="min-w-0 flex-1">
+                      <p className={cn("text-[6px] font-black uppercase tracking-wider opacity-60 mb-1", themeDeep ? "text-slate-400" : "text-slate-600")}>PYQ 2025 · Part A · U1 · Q2</p>
+                      <p className={cn("text-[9px] font-bold leading-relaxed mb-2", themeDeep ? "text-slate-200" : "text-slate-800")}>
+                        {hi ? "सिंधु घाटी सभ्यता की प्रमुख विशेषताओं का वर्णन करें।" : "Describe the main features of the Indus Valley Civilization."}
+                      </p>
+                      
+                      {/* Mock Answer Button */}
+                      <div className={cn("h-5 rounded-full w-[110px] border flex items-center gap-1 px-2", themeDeep ? "border-amber-500/20 bg-amber-500/10" : "border-amber-300/50 bg-amber-50")}>
+                        <Layers className={cn("h-2.5 w-2.5", themeDeep ? "text-amber-400" : "text-amber-600")} />
+                        <span className={cn("text-[6px] font-bold uppercase", themeDeep ? "text-amber-400" : "text-amber-600")}>{hi ? 'आदर्श उत्तर देखें' : 'View Model Answer'}</span>
+                      </div>
+                    </div>
                   </div>
-                  <p className={cn("text-[9px] font-bold leading-relaxed mb-3", themeDeep ? "text-slate-200" : "text-slate-800")}>
-                    {hi ? "सिंधु घाटी सभ्यता की प्रमुख विशेषताओं का वर्णन करें।" : "Describe the main features of the Indus Valley Civilization."}
-                  </p>
-                  
-                  {/* Mock Answer Button */}
-                  <div className={cn("h-5 rounded-full w-[120px] border flex items-center gap-1.5 px-2", themeDeep ? "border-amber-500/20 bg-amber-500/10" : "border-amber-300/50 bg-amber-50")}>
-                    <Layers className={cn("h-2.5 w-2.5", themeDeep ? "text-amber-400" : "text-amber-600")} />
-                    <span className={cn("text-[6px] font-bold uppercase", themeDeep ? "text-amber-400" : "text-amber-600")}>{hi ? 'आदर्श उत्तर देखें' : 'View Model Answer'}</span>
-                  </div>
+
+                  {/* Toast animation popup for Step 5 */}
+                  <AnimatePresence>
+                    {activeStep === 5 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.9 }}
+                        className="absolute bottom-2 right-2 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-300 text-[7px] font-black shadow-md flex items-center gap-1 z-30"
+                      >
+                        <span>प्रश्न बुकमार्क हो गया! 🔖</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
 
                 {/* Animated Simulated Cursor Overlay */}
@@ -383,6 +423,7 @@ export function PyqNavigationGuide({ themeDeep, triggerType = 'banner', customTr
                     activeStep === 2 ? { top: 85, right: 80 } :
                     activeStep === 3 ? { top: 130, right: 150 } : // Marks
                     activeStep === 4 ? { top: 85, right: 60 } : // Units
+                    activeStep === 5 ? { top: 195, right: 250 } : // Bookmark
                     { top: 12, right: 45 } // Focus
                   }
                   transition={{ type: "spring", stiffness: 100, damping: 20 }}
@@ -396,6 +437,7 @@ export function PyqNavigationGuide({ themeDeep, triggerType = 'banner', customTr
                       activeStep === 2 ? "border-emerald-400" : 
                       activeStep === 3 ? "border-orange-400" : 
                       activeStep === 4 ? "border-indigo-400" : 
+                      activeStep === 5 ? "border-rose-400" :
                       "border-sky-400"
                     )}
                     animate={{ opacity: [0, 0.8, 0], scale: [0.5, 1.2, 1.5] }}

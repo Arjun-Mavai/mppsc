@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Search, Check, CheckCheck, MoreVertical, Phone, Globe, ChevronLeft, MessageCircleOff, ChevronDown, Bot, Power, X, Loader2, Heart, AlertCircle, ImagePlus } from 'lucide-react';
+import { Send, Search, Check, CheckCheck, MoreVertical, Phone, Globe, ChevronLeft, MessageCircleOff, ChevronDown, Bot, Power, X, Loader2, Heart, AlertCircle, ImagePlus, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getConversations, getMessages, sendAdminReply, markAsRead, resolveConversation, toggleHumanActive } from '@/actions/support-inbox-actions';
 import { toast } from 'sonner';
@@ -37,6 +37,19 @@ export default function SupportInbox() {
   const [searchQuery, setSearchQuery] = useState('');
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleCopyMessage = async (text: string, id: string) => {
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      toast.success('Message copied!');
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      toast.error('Failed to copy message');
+    }
+  };
 
   useEffect(() => {
     const handlePopState = () => {
@@ -393,7 +406,7 @@ export default function SupportInbox() {
                 )}
               >
                 <div className={cn(
-                  "max-w-[85%] md:max-w-[65%] rounded-lg px-3 py-1.5 text-[14.2px] shadow-sm relative",
+                  "max-w-[85%] md:max-w-[65%] rounded-lg px-3 py-1.5 text-[14.2px] shadow-sm relative group",
                   msg.sender === 'user' 
                     ? "bg-white text-[#111b21] rounded-tl-none" 
                     : msg.sender === 'bot'
@@ -401,14 +414,41 @@ export default function SupportInbox() {
                       : "bg-[#d9fdd3] text-[#111b21] rounded-tr-none",
                   msg.isOptimistic && "opacity-70"
                 )}>
-                  {msg.sender !== 'user' && (
+                  {/* Top row: Sender Tag & Copy Button */}
+                  <div className="flex items-center justify-between gap-2 mb-1">
                     <span className={cn(
-                      "text-[10px] font-bold uppercase tracking-wider mb-0.5 block",
-                      msg.sender === 'bot' ? "text-zinc-400" : "text-emerald-700"
+                      "text-[10px] font-bold uppercase tracking-wider block",
+                      msg.sender === 'user' ? "text-slate-500" : msg.sender === 'bot' ? "text-zinc-400" : "text-emerald-700"
                     )}>
-                      {msg.sender === 'bot' ? '🤖 Bot' : 'Admin'}
+                      {msg.sender === 'user' ? '👤 User' : msg.sender === 'bot' ? '🤖 Bot' : 'Admin'}
                     </span>
-                  )}
+
+                    {msg.text && (
+                      <button
+                        type="button"
+                        onClick={() => handleCopyMessage(msg.text, msg.id)}
+                        className={cn(
+                          "flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold transition-colors opacity-70 hover:opacity-100",
+                          msg.sender === 'bot'
+                            ? "text-zinc-300 hover:bg-zinc-700 hover:text-white"
+                            : "text-zinc-600 hover:bg-black/5 hover:text-zinc-900"
+                        )}
+                        title="Copy message"
+                      >
+                        {copiedId === msg.id ? (
+                          <>
+                            <Check size={11} className="text-emerald-600 shrink-0" />
+                            <span className="text-emerald-600 font-bold">Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={11} className="shrink-0" />
+                            <span>Copy</span>
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
                   
                   {msg.mediaUrl ? (
                     <div className="mb-1 rounded-md overflow-hidden bg-zinc-100 border border-zinc-200">

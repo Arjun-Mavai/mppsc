@@ -39,7 +39,8 @@ export function MainsTopicContentClient({
 }) {
   const router = useRouter();
   const { language } = useSettingsStore();
-  const lang: 'hi' | 'en' = language === 'hi' ? 'hi' : 'en';
+  const isHindiPaper = topic.paperNumber === 5 || topic.paperNumber === 6;
+  const lang: 'hi' | 'en' = isHindiPaper ? 'hi' : (language === 'hi' ? 'hi' : 'en');
   const [vaultModalOpen, setVaultModalOpen] = useState(false);
 
   if (!content) {
