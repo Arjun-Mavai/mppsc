@@ -415,72 +415,74 @@ export const PyqQuestionList = memo(function PyqQuestionList({
                   </button>
                 ))}
 
-                <div className="h-3.5 sm:h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5 sm:mx-1 shrink-0" />
+                <div className="h-4 sm:h-5 w-px bg-slate-200 dark:bg-slate-800 mx-1 sm:mx-2 shrink-0 ml-auto" />
 
-                {/* Subject, Unit & Year Quick Tool Triggers (Placed at Right End with Enlarged Touch Target & Spacing) */}
-                <button
-                  type="button"
-                  onClick={() => vaultUnlocked ? setShowSubjectFilter(!showSubjectFilter) : toast(hi ? "यह एक प्रीमियम फ़ीचर है। सब्सक्राइब करें 💎" : "Premium feature. Subscribe to unlock 💎", {
-                    style: { background: '#ecfdf5', color: '#064e3b', border: '1px solid #34d399' }
-                  })}
-                  className={cn(
-                    "flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 rounded-full transition-all active:scale-95 relative shrink-0 border shadow-xs ml-1",
-                    showSubjectFilter
-                      ? "bg-amber-50 border-amber-300 dark:bg-amber-950/40 dark:border-amber-700"
-                      : themeDeep 
-                        ? "bg-slate-800 border-slate-700 hover:bg-slate-700" 
-                        : "bg-white border-slate-200 hover:bg-slate-50"
-                  )}
-                  title={hi ? "विषय / टॉपिक अनुसार फ़िल्टर" : "Filter by Topic"}
-                >
-                  <div className="flex items-center justify-center h-4 w-4 sm:h-4.5 sm:w-4.5 rounded-full border-[2px] border-[#FF9933] bg-white relative">
-                    <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-[#138808]"></div>
-                  </div>
-                  {!vaultUnlocked && (
-                    <div className="absolute -bottom-0.5 -right-0.5 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full p-[1.5px] sm:p-[2px] shadow-sm ring-1 ring-white dark:ring-slate-900">
-                      <Lock className="h-2 w-2 sm:h-2.5 sm:w-2.5 text-white drop-shadow-xs" />
+                {/* Subject, Unit & Year Quick Tool Triggers (Enlarged, Spaced & Pushed to Right End) */}
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => vaultUnlocked ? setShowSubjectFilter(!showSubjectFilter) : toast(hi ? "यह एक प्रीमियम फ़ीचर है। सब्सक्राइब करें 💎" : "Premium feature. Subscribe to unlock 💎", {
+                      style: { background: '#ecfdf5', color: '#064e3b', border: '1px solid #34d399' }
+                    })}
+                    className={cn(
+                      "flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 rounded-full transition-all active:scale-95 relative shrink-0 border shadow-sm",
+                      showSubjectFilter
+                        ? "bg-amber-100 border-amber-400 dark:bg-amber-950/60 dark:border-amber-600 ring-2 ring-amber-400/30"
+                        : themeDeep 
+                          ? "bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-200" 
+                          : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
+                    )}
+                    title={hi ? "विषय / टॉपिक अनुसार फ़िल्टर" : "Filter by Topic"}
+                  >
+                    <div className="flex items-center justify-center h-4.5 w-4.5 sm:h-5 sm:w-5 rounded-full border-[2.5px] border-[#FF9933] bg-white relative">
+                      <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-[#138808]"></div>
                     </div>
-                  )}
-                </button>
+                    {!vaultUnlocked && (
+                      <div className="absolute -bottom-0.5 -right-0.5 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full p-[2px] shadow-sm ring-1 ring-white dark:ring-slate-900">
+                        <Lock className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-white drop-shadow-xs" />
+                      </div>
+                    )}
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => vaultUnlocked ? setShowUnitDropdown(!showUnitDropdown) : toast(hi ? "यह एक प्रीमियम फ़ीचर है। सब्सक्राइब करें 💎" : "Premium feature. Subscribe to unlock 💎", {
-                    style: { background: '#ecfdf5', color: '#064e3b', border: '1px solid #34d399' }
-                  })}
-                  className={cn(
-                    "flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 rounded-full transition-all active:scale-95 relative shrink-0 border shadow-xs",
-                    showUnitDropdown
-                      ? "bg-indigo-50 border-indigo-300 dark:bg-indigo-950/40 dark:border-indigo-700"
-                      : themeDeep 
-                        ? "bg-slate-800 border-slate-700 hover:bg-slate-700" 
-                        : "bg-white border-slate-200 hover:bg-slate-50"
-                  )}
-                  title={hi ? "इकाई अनुसार फ़िल्टर" : "Filter by Unit"}
-                >
-                  <LayoutGrid className={cn("h-4 w-4 sm:h-4.5 sm:w-4.5", themeDeep ? "text-indigo-400" : "text-indigo-500")} />
-                  {!vaultUnlocked && (
-                    <div className="absolute -bottom-0.5 -right-0.5 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full p-[1.5px] sm:p-[2px] shadow-sm ring-1 ring-white dark:ring-slate-900">
-                      <Lock className="h-2 w-2 sm:h-2.5 sm:w-2.5 text-white drop-shadow-xs" />
-                    </div>
-                  )}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => vaultUnlocked ? setShowUnitDropdown(!showUnitDropdown) : toast(hi ? "यह एक प्रीमियम फ़ीचर है। सब्सक्राइब करें 💎" : "Premium feature. Subscribe to unlock 💎", {
+                      style: { background: '#ecfdf5', color: '#064e3b', border: '1px solid #34d399' }
+                    })}
+                    className={cn(
+                      "flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 rounded-full transition-all active:scale-95 relative shrink-0 border shadow-sm",
+                      showUnitDropdown
+                        ? "bg-indigo-100 border-indigo-400 dark:bg-indigo-950/60 dark:border-indigo-600 ring-2 ring-indigo-400/30"
+                        : themeDeep 
+                          ? "bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-200" 
+                          : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
+                    )}
+                    title={hi ? "इकाई अनुसार फ़िल्टर" : "Filter by Unit"}
+                  >
+                    <LayoutGrid className={cn("h-4.5 w-4.5 sm:h-5 sm:w-5", themeDeep ? "text-indigo-400" : "text-indigo-500")} />
+                    {!vaultUnlocked && (
+                      <div className="absolute -bottom-0.5 -right-0.5 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full p-[2px] shadow-sm ring-1 ring-white dark:ring-slate-900">
+                        <Lock className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-white drop-shadow-xs" />
+                      </div>
+                    )}
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => setShowYearSlider(!showYearSlider)}
-                  className={cn(
-                    "flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 rounded-full transition-all active:scale-95 relative shrink-0 border shadow-xs",
-                    showYearSlider
-                      ? "bg-pink-50 border-pink-300 text-pink-600 dark:bg-pink-950/40 dark:border-pink-700 dark:text-pink-300"
-                      : themeDeep 
-                        ? "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700" 
-                        : "bg-white border-slate-200 hover:bg-slate-50"
-                  )}
-                  title={hi ? (showYearSlider ? "वर्ष फ़िल्टर छुपाएं" : "वर्ष फ़िल्टर दिखाएं") : (showYearSlider ? "Hide Year Filter" : "Show Year Filter")}
-                >
-                  <Calendar className={cn("h-4 w-4 sm:h-4.5 sm:w-4.5", showYearSlider ? "text-pink-600 dark:text-pink-400" : "text-pink-500")} />
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowYearSlider(!showYearSlider)}
+                    className={cn(
+                      "flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 rounded-full transition-all active:scale-95 relative shrink-0 border shadow-sm",
+                      showYearSlider
+                        ? "bg-pink-100 border-pink-400 text-pink-700 dark:bg-pink-950/60 dark:border-pink-600 dark:text-pink-300 ring-2 ring-pink-400/30"
+                        : themeDeep 
+                          ? "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700" 
+                          : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
+                    )}
+                    title={hi ? (showYearSlider ? "वर्ष फ़िल्टर छुपाएं" : "वर्ष फ़िल्टर दिखाएं") : (showYearSlider ? "Hide Year Filter" : "Show Year Filter")}
+                  >
+                    <Calendar className={cn("h-4.5 w-4.5 sm:h-5 sm:w-5", showYearSlider ? "text-pink-600 dark:text-pink-400" : "text-pink-500")} />
+                  </button>
+                </div>
               </div>
             </div>
 

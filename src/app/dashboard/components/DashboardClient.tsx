@@ -331,7 +331,7 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                   <LauncherLink
                     href="/mains/syllabus/pyq-library"
                     icon={<Library size={18} />}
-                    title={isHindi ? 'मेंस PYQ लाइब्रेरी (2014-2025)' : 'Mains PYQ Vault & Answer Bank (2014-2025)'}
+                    title={isHindi ? 'मेंस PYQ लाइब्रेरी' : 'Mains PYQ Vault & Answer Bank'}
                     description={isHindi ? 'वर्ष वार सॉल्वेड मेंस प्रश्न उत्तर बैंक, एक्सपर्ट मॉडल आंसर्स एवं स्मार्ट फ़िल्टर्स।' : 'Browse year-wise solved PYQ bank with dual model answers & insights.'}
                     color="blue"
                   />
