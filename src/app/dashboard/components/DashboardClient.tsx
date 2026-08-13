@@ -13,6 +13,7 @@ import { hasPreAccess, hasMainsAccess } from '@/lib/access-grants';
 import { cn } from '@/lib/utils';
 import { BOOKMARK_STORAGE_KEY } from '@/app/mains/syllabus/pyq-library/PyqQuestionList';
 import { motion } from 'framer-motion';
+import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon';
 import { 
   BookOpen, 
   GraduationCap, 
@@ -647,11 +648,20 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                 <div className="grid grid-cols-2 gap-3 pb-1">
                   <Button
                     asChild
-                    className="w-full bg-green-50 hover:bg-green-100 border border-green-200 text-green-800 font-bold py-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2"
+                    className="w-full bg-gradient-to-r from-emerald-50 via-green-50 to-emerald-100/80 hover:from-emerald-100 hover:to-green-100 border border-emerald-300/80 text-emerald-950 font-black py-3 rounded-xl transition-all shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 relative overflow-hidden group"
                   >
                     <a href="https://wa.me/917489388350?text=Hi,%20I%20need%20help%20with%20the%20MPPSC%20App." target="_blank" rel="noopener noreferrer">
-                      <Phone className="h-4 w-4 text-green-600" />
-                      <span>WhatsApp</span>
+                      <div className="relative flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-600 to-green-500 text-white shadow-xs group-hover:scale-110 transition-transform">
+                        <WhatsAppIcon className="h-3.5 w-3.5 fill-white" />
+                        <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 border border-white"></span>
+                        </span>
+                      </div>
+                      <span className="font-extrabold text-sm text-emerald-950">WhatsApp</span>
+                      <span className="rounded-full bg-emerald-600 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white shadow-xs ml-0.5">
+                        {isHindi ? 'ऑनलाइन' : 'Online'}
+                      </span>
                     </a>
                   </Button>
                   <Button
