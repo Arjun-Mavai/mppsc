@@ -329,6 +329,13 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                     color="purple"
                   />
                   <LauncherLink
+                    href="/mains/syllabus/pyq-library"
+                    icon={<Library size={18} />}
+                    title={isHindi ? 'मेंस PYQ लाइब्रेरी (2014-2025)' : 'Mains PYQ Vault & Answer Bank (2014-2025)'}
+                    description={isHindi ? 'वर्ष वार सॉल्वेड मेंस प्रश्न उत्तर बैंक, एक्सपर्ट मॉडल आंसर्स एवं स्मार्ट फ़िल्टर्स।' : 'Browse year-wise solved PYQ bank with dual model answers & insights.'}
+                    color="blue"
+                  />
+                  <LauncherLink
                     href="/mains/syllabus/pyq-library?saved=true"
                     icon={<Bookmark size={18} className="text-[#e91e63] fill-[#e91e63]/20" />}
                     title={isHindi ? `सेव्ड मेंस प्रश्न (Saved Bookmarks ${bookmarkCount > 0 ? `· ${bookmarkCount}` : ''})` : `Saved Bookmarks (${bookmarkCount > 0 ? bookmarkCount : 'My PYQs'})`}
