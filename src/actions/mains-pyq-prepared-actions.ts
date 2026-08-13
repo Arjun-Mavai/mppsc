@@ -219,7 +219,7 @@ const cachedGetMainsPyqPaperPublic = unstable_cache(
 
       const qs = await loadPaperQuestionsWithVariantsRelational(pyqPaperId);
 
-      // 🛡️ HOTFIX: If unit titles are missing (e.g., older PYQ imports), patch them from authoritative syllabus
+      // 🛡️ HOTFIX: If unit titles are missing or generic (e.g., "इकाई 1"), patch them from authoritative syllabus
       try {
         const { mainsPapers, mainsUnits } = await import('@/db/schema');
         const basePaper = await db.query.mainsPapers.findFirst({
@@ -229,13 +229,18 @@ const cachedGetMainsPyqPaperPublic = unstable_cache(
           const units = await db.query.mainsUnits.findMany({
             where: eq(mainsUnits.paperId, basePaper.id)
           });
+          const normalizePart = (p: string | null | undefined) => (!p || p === 'null' || p === 'undefined' || p === 'NONE' ? 'NONE' : String(p).trim().toUpperCase());
           const unitMap = new Map();
           for (const u of units) {
-            unitMap.set(`${u.part}-${u.unitNumber}`, u);
+            unitMap.set(`${normalizePart(u.part)}-${u.unitNumber}`, u);
+            unitMap.set(`${u.unitNumber}`, u);
           }
           for (const q of qs) {
-            if (!q.unitTitleHi || !q.unitTitleEn) {
-              const matched = unitMap.get(`${q.part}-${q.unitNumber}`);
+            const isGenericHi = !q.unitTitleHi || /^इकाई\s*\d+$/i.test(q.unitTitleHi.trim()) || /^unit\s*\d+$/i.test(q.unitTitleHi.trim());
+            const isGenericEn = !q.unitTitleEn || /^unit\s*\d+$/i.test(q.unitTitleEn.trim());
+
+            if (isGenericHi || isGenericEn) {
+              const matched = unitMap.get(`${normalizePart(q.part)}-${q.unitNumber}`) || unitMap.get(`${q.unitNumber}`);
               if (matched) {
                 q.unitTitleHi = matched.titleHi;
                 q.unitTitleEn = matched.titleEn;

@@ -1,0 +1,1 @@
+ALTER TABLE `intelligence_feedback` ADD `is_read` integer DEFAULT false;

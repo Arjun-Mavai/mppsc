@@ -1,0 +1,1 @@
+ALTER TABLE `whatsapp_campaign_logs` ADD `template_name` text;

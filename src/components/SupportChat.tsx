@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { submitSupportTicket } from '@/actions/support-actions';
 import Link from 'next/link';
+import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon';
 
 type QA = {
   question: { en: string; hi: string };
@@ -334,17 +335,38 @@ export function SupportChat() {
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         onClick={handleWhatsApp}
-                        className="group flex flex-col items-center justify-center rounded-xl border border-green-200 bg-green-50/80 p-3 transition-colors hover:bg-green-100"
+                        className="group relative flex flex-col items-center justify-center rounded-xl border border-emerald-300/80 bg-gradient-to-br from-emerald-50 via-green-50 to-emerald-100/60 p-3.5 transition-all duration-300 hover:scale-[1.03] hover:shadow-lg hover:shadow-emerald-500/20 active:scale-95 overflow-hidden"
                       >
-                        <Phone className="mb-1 h-6 w-6 text-green-600 transition-transform group-hover:scale-110" />
-                        <span className="text-xs font-semibold text-green-800">WhatsApp</span>
+                        {/* Live Online Badge */}
+                        <div className="absolute top-1.5 right-1.5 flex items-center gap-1 rounded-full bg-emerald-500/15 px-1.5 py-0.5 border border-emerald-500/30">
+                          <span className="relative flex h-2 w-2">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                          </span>
+                          <span className="text-[9px] font-black tracking-tight text-emerald-700 uppercase">
+                            {hi ? 'ऑनलाइन' : 'Online'}
+                          </span>
+                        </div>
+
+                        <div className="mb-1 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-600 to-green-500 text-white shadow-md transition-transform group-hover:scale-110 group-hover:rotate-6">
+                          <WhatsAppIcon className="h-5 w-5 fill-white" />
+                        </div>
+                        <span className="text-xs font-black text-emerald-950">WhatsApp</span>
+                        <span className="text-[10px] font-bold text-emerald-700/90 mt-0.5">
+                          {hi ? 'त्वरित सहायता' : 'Instant Reply'}
+                        </span>
                       </button>
                       <button
                         onClick={handleTelegram}
-                        className="group flex flex-col items-center justify-center rounded-xl border border-sky-200 bg-sky-50/80 p-3 transition-colors hover:bg-sky-100"
+                        className="group flex flex-col items-center justify-center rounded-xl border border-sky-200 bg-sky-50/80 p-3.5 transition-all duration-300 hover:scale-[1.03] hover:shadow-md active:scale-95"
                       >
-                        <Send className="mb-1 h-6 w-6 text-sky-600 transition-transform group-hover:scale-110" />
-                        <span className="text-xs font-semibold text-sky-800">Telegram</span>
+                        <div className="mb-1 flex h-10 w-10 items-center justify-center rounded-full bg-sky-500 text-white shadow-sm transition-transform group-hover:scale-110 group-hover:-rotate-6">
+                          <Send className="h-5 w-5" />
+                        </div>
+                        <span className="text-xs font-bold text-sky-900">Telegram</span>
+                        <span className="text-[10px] font-bold text-sky-600/90 mt-0.5">
+                          {hi ? 'स्वचालित बॉट' : 'Automated Bot'}
+                        </span>
                       </button>
                     </div>
 

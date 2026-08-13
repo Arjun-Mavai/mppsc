@@ -42,6 +42,13 @@ export function stripCiteMarkers(s: string): string {
   return s.replace(/\[cite:\s*\d+\]/gi, '').replace(/\s+/g, ' ').trim();
 }
 
+export function isGenericUnitTitle(t: string | null | undefined): boolean {
+  if (!t) return true;
+  const cleaned = t.trim();
+  if (!cleaned) return true;
+  return /^इकाई\s*\d*$/i.test(cleaned) || /^unit\s*\d*$/i.test(cleaned);
+}
+
 function isPaperShape(v: unknown): v is Record<string, unknown> {
   return (
     !!v &&
