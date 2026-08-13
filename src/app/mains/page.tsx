@@ -453,15 +453,15 @@ export default function MainsLandingPage() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
               </span>
-              <span>{hi ? '24x7 सहायता टीम' : '24x7 Support Available'}</span>
+              <span>{hi ? 'सहायता टीम उपलब्ध' : 'Support Available'}</span>
             </div>
             <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
               {hi ? 'Mains तैयारी में कोई संशय है?' : 'Have Questions About Mains Prep?'}
             </h3>
             <p className="text-sm font-semibold text-slate-300 max-w-lg">
               {hi
-                ? 'हमारी विशेषज्ञ टीम से WhatsApp पर तुरंत उत्तर पाएँ। गाइडेंस, प्लान्स और स्टडी मटीरियल पर त्वरित सहायता।'
-                : 'Get instant answers from our expert support team on WhatsApp. Guidance for plans, structure & syllabus.'}
+                ? 'हमारी विशेषज्ञ टीम से WhatsApp पर तुरंत उत्तर पाएँ।'
+                : 'Get instant answers from our expert support team on WhatsApp.'}
             </p>
           </div>
 
