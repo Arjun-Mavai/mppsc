@@ -81,5 +81,6 @@ db-backup.sh
 !/backups/learning/**/*.md
 *.sqlite
 *.sql
+!drizzle/*.sql
 *.db-info
 /scratch/
