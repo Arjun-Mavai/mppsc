@@ -96,11 +96,21 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
   const [showWelcomeTour, setShowWelcomeTour] = React.useState(false);
   const [tourStep, setTourStep] = React.useState(1);
 
+  const [bookmarkCount, setBookmarkCount] = React.useState(0);
+
   React.useEffect(() => {
     const day = new Date().getDate();
     setQuote(STUDY_QUOTES[day % STUDY_QUOTES.length]);
 
     if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('mppsc_mains_saved_bookmarks');
+        if (raw) {
+          const arr = JSON.parse(raw);
+          setBookmarkCount(Array.isArray(arr) ? arr.length : 0);
+        }
+      } catch {}
+
       const isFreshPayment = sessionStorage.getItem('payment_success_fresh') === 'true';
       const alreadyTourShown = localStorage.getItem('welcome_tour_completed') === 'true';
       if (isFreshPayment && !alreadyTourShown) {
@@ -318,11 +328,11 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                     color="purple"
                   />
                   <LauncherLink
-                    href="/mains/syllabus/pyq-library"
-                    icon={<Library size={18} />}
-                    title={isHindi ? 'मेंस PYQ इनसाइट लाइब्रेरी' : 'Mains PYQ Insight Library'}
-                    description={isHindi ? 'पिछले प्रश्नों में छिपी परीक्षा की सोच और प्रवृत्ति को समझें।' : 'Discover the patterns and expectations hidden within previous year questions.'}
-                    color="amber"
+                    href="/mains/syllabus/pyq-library?saved=true"
+                    icon={<Bookmark size={18} className="text-[#e91e63] fill-[#e91e63]/20" />}
+                    title={isHindi ? `सेव्ड मेंस प्रश्न (Saved Bookmarks ${bookmarkCount > 0 ? `· ${bookmarkCount}` : ''})` : `Saved Bookmarks (${bookmarkCount > 0 ? bookmarkCount : 'My PYQs'})`}
+                    description={isHindi ? 'आपके द्वारा बुकमार्क किए गए सभी महत्वपूर्ण प्रश्न और 5-मिनट क्विक रिवीज़न।' : 'Access all your saved Mains PYQ bookmarks instantly for fast revision.'}
+                    color="emerald"
                   />
                 </LauncherCard>
                 

@@ -840,6 +840,35 @@ export const verificationTokens = sqliteTable(
   ]
 );
 
+// User Bookmarks Table (Fast user-wise saves for PYQs, Topics & Facts)
+export const userBookmarks = sqliteTable(
+  'user_bookmarks',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .references(() => mppscUsers.id, { onDelete: 'cascade' })
+      .notNull(),
+    targetType: text('target_type', { enum: ['mains_pyq', 'pre_pyq', 'syllabus_topic', 'fact'] })
+      .default('mains_pyq')
+      .notNull(),
+    targetId: text('target_id').notNull(),
+    paperId: text('paper_id'),
+    examYear: integer('exam_year'),
+    paperNumber: integer('paper_number'),
+    part: text('part'),
+    unitNumber: integer('unit_number'),
+    marks: integer('marks'),
+    questionStem: text('question_stem'),
+    notes: text('notes'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => [
+    uniqueIndex('idx_user_target_unique').on(table.userId, table.targetType, table.targetId),
+    index('idx_user_bookmarks_user_target').on(table.userId, table.targetType),
+    index('idx_user_bookmarks_year_paper').on(table.userId, table.examYear, table.paperNumber),
+  ]
+);
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🏛️ MPPSC MAINS SECTION TABLES
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

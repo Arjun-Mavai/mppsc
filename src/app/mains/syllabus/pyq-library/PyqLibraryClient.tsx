@@ -491,6 +491,9 @@ export function PyqLibraryClient({
             allowDemoAccess={allowDemoAccess}
             onVaultModalOpen={() => setVaultModalOpen(true)}
             showGlobalFilters={showGlobalFilters}
+            papers={papers}
+            paperId={paperId}
+            onPaperChange={handlePaperChange}
           />
         </PyqLibraryErrorBoundary>
       </div>

@@ -241,16 +241,17 @@ export function MainsHistoryRichViewer({
   uiLang: 'hi' | 'en';
   standalonePage?: boolean;
 }) {
-  const hi = uiLang === 'hi';
+  const isHindiPaper = topic.paperNumber === 5 || topic.paperNumber === 6;
+  const hi = isHindiPaper || uiLang === 'hi';
   const proseTheme = useMainsReaderProseTheme();
-  const [modelLang, setModelLang] = useState<'hi' | 'en'>(uiLang === 'hi' ? 'hi' : 'en');
+  const [modelLang, setModelLang] = useState<'hi' | 'en'>(isHindiPaper ? 'hi' : (uiLang === 'hi' ? 'hi' : 'en'));
   const [topicMetaOpen, setTopicMetaOpen] = useState(false);
 
   const title = hi ? topic.titleHi : topic.titleEn;
 
   useEffect(() => {
-    setModelLang(uiLang === 'hi' ? 'hi' : 'en');
-  }, [uiLang]);
+    setModelLang(isHindiPaper ? 'hi' : (uiLang === 'hi' ? 'hi' : 'en'));
+  }, [uiLang, isHindiPaper]);
 
   const pyqMd = useMemo(() => {
     const raw = pick(payload, 'pyq_trend_analysis', hi).trim();

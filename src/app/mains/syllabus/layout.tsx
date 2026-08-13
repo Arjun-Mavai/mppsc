@@ -1,20 +1,6 @@
-import { Noto_Sans_Devanagari, Source_Serif_4 } from 'next/font/google';
 import { verifyAuth } from '@/lib/auth';
 import { isMainsVaultUnlockedUser } from '@/lib/mains-vault-access';
 import { MainsGuestAccessGuards } from '@/app/mains/syllabus/MainsGuestAccessGuards';
-
-const serif = Source_Serif_4({
-  subsets: ['latin', 'latin-ext'],
-  variable: '--font-pyq-serif',
-  display: 'swap',
-});
-
-const devanagari = Noto_Sans_Devanagari({
-  subsets: ['devanagari'],
-  variable: '--font-pyq-dev',
-  weight: ['400', '500', '600', '700'],
-  display: 'swap',
-});
 
 /**
  * Mains syllabus tree + PYQ desk are publicly navigable for demos.
@@ -28,7 +14,7 @@ export default async function MainsSyllabusLayout({ children }: { children: Reac
   return (
     <div
       data-mains-vault={vaultUnlocked ? 'open' : 'demo'}
-      className={`${serif.variable} ${devanagari.variable} min-h-screen bg-slate-950 text-slate-100`}
+      className="min-h-screen bg-slate-950 text-slate-100"
     >
       <MainsGuestAccessGuards />
       {children}
