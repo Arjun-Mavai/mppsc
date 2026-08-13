@@ -16,7 +16,7 @@ import { revalidatePath, revalidateTag as originalRevalidateTag } from 'next/cac
 const revalidateTag = originalRevalidateTag as any;
 import { MAINS_PYQ_PURGE_CONFIRMATION_PHRASE } from '@/config/mains-pyq-admin';
 import { stripJsonFence } from '@/lib/mains-pyq-batch-paste';
-import { parseMainsPyqImportJson, stripCiteMarkers, stableQuestionKey } from '@/lib/mains-pyq-import';
+import { parseMainsPyqImportJson, stripCiteMarkers, stableQuestionKey, isGenericUnitTitle } from '@/lib/mains-pyq-import';
 import { repairInteriorDoubleQuotesInMappedStrings } from '@/lib/mains-pyq-paste-json-parse';
 import { jsonrepair } from 'jsonrepair';
 import {
@@ -147,7 +147,40 @@ export async function importMainsPyqPaperJson(rawText: string) {
     const survived = new Set<string>();
     const toInsert: (typeof mainsPyqQuestions.$inferInsert)[] = [];
 
+    // 🛡️ Auto-patch generic unit titles (e.g. "इकाई 1") from authoritative syllabus during import
+    const syllabusUnitsMap = new Map<string, { titleHi: string; titleEn: string }>();
+    try {
+      const { mainsPapers, mainsUnits } = await import('@/db/schema');
+      const basePaper = await tx.query.mainsPapers.findFirst({
+        where: and(eq(mainsPapers.paperNumber, parsed.paperNumber), eq(mainsPapers.examType, 'mppsc_mains')),
+      });
+      if (basePaper) {
+        const units = await tx.query.mainsUnits.findMany({
+          where: eq(mainsUnits.paperId, basePaper.id),
+        });
+        const normPart = (p: string | null | undefined) => (!p || p === 'NONE' ? 'NONE' : String(p).trim().toUpperCase());
+        for (const u of units) {
+          syllabusUnitsMap.set(`${normPart(u.part)}-${u.unitNumber}`, { titleHi: u.titleHi, titleEn: u.titleEn });
+          syllabusUnitsMap.set(`${u.unitNumber}`, { titleHi: u.titleHi, titleEn: u.titleEn });
+        }
+      }
+    } catch {
+      // fallback silent
+    }
+
     for (const q of parsed.questions) {
+      let finalUnitTitleHi = q.unitTitleHi;
+      let finalUnitTitleEn = q.unitTitleEn;
+
+      if (isGenericUnitTitle(finalUnitTitleHi) || isGenericUnitTitle(finalUnitTitleEn)) {
+        const normPart = (!q.part || q.part === 'NONE') ? 'NONE' : String(q.part).trim().toUpperCase();
+        const matched = syllabusUnitsMap.get(`${normPart}-${q.unitNumber}`) || syllabusUnitsMap.get(`${q.unitNumber}`);
+        if (matched) {
+          finalUnitTitleHi = matched.titleHi;
+          finalUnitTitleEn = matched.titleEn;
+        }
+      }
+
       const key = qRowKey(q.part, q.unitNumber, q.questionNumber, q.displayOrder);
       const prev = byKey.get(key);
 
@@ -155,8 +188,8 @@ export async function importMainsPyqPaperJson(rawText: string) {
         await tx
           .update(mainsPyqQuestions)
           .set({
-            unitTitleHi: q.unitTitleHi || null,
-            unitTitleEn: q.unitTitleEn || null,
+            unitTitleHi: finalUnitTitleHi || null,
+            unitTitleEn: finalUnitTitleEn || null,
             questionNumber: q.questionNumber,
             marks: q.marks,
             questionType: q.questionType,
@@ -174,8 +207,8 @@ export async function importMainsPyqPaperJson(rawText: string) {
           paperId,
           part: q.part,
           unitNumber: q.unitNumber,
-          unitTitleHi: q.unitTitleHi || null,
-          unitTitleEn: q.unitTitleEn || null,
+          unitTitleHi: finalUnitTitleHi || null,
+          unitTitleEn: finalUnitTitleEn || null,
           questionNumber: q.questionNumber,
           marks: q.marks,
           questionType: q.questionType,

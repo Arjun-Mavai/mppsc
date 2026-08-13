@@ -107,7 +107,7 @@ export function PyqLibraryClient({
   const [partFilter, setPartFilter] = useState<string>('ALL');
   const [vaultModalOpen, setVaultModalOpen] = useState(false);
   const [showGlobalFilters, setShowGlobalFilters] = useState(true);
-  const [showAdminInsights, setShowAdminInsights] = useState(true);
+  const [showAdminInsights, setShowAdminInsights] = useState(false);
 
   const selectedPaper = useMemo(() => papers.find((p) => p.id === paperId), [papers, paperId]);
   const premiumLockedView = isPremiumLockedPaper(selectedPaper, vaultUnlocked);
