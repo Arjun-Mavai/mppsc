@@ -171,32 +171,30 @@ export const PyqQuestionList = memo(function PyqQuestionList({
       return;
     }
 
-    setBookmarkedIds((prev) => {
-      const alreadySaved = prev.includes(qId);
-      const isSavedNow = !alreadySaved;
-      const next = alreadySaved ? prev.filter((id) => id !== qId) : [...prev, qId];
-      try {
-        localStorage.setItem(BOOKMARK_STORAGE_KEY, JSON.stringify(next));
-      } catch {}
+    const alreadySaved = bookmarkedIds.includes(qId);
+    const isSavedNow = !alreadySaved;
+    const next = alreadySaved ? bookmarkedIds.filter((id) => id !== qId) : [...bookmarkedIds, qId];
 
-      toast.dismiss();
-      toast(
-        isSavedNow
-          ? (hi ? "प्रश्न बुकमार्क हो गया! 🔖" : "Bookmark saved! 🔖")
-          : (hi ? "बुकमार्क हटा दिया गया 🗑️" : "Bookmark removed 🗑️"),
-        {
-          duration: 2000,
-          style: {
-            background: isSavedNow ? '#f0fdf4' : '#fef2f2',
-            color: isSavedNow ? '#166534' : '#991b1b',
-            border: `1px solid ${isSavedNow ? '#86efac' : '#fca5a5'}`,
-          },
-        }
-      );
+    setBookmarkedIds(next);
+    try {
+      localStorage.setItem(BOOKMARK_STORAGE_KEY, JSON.stringify(next));
+    } catch {}
 
-      return next;
-    });
-  }, [vaultUnlocked, hi]);
+    toast.dismiss();
+    toast(
+      isSavedNow
+        ? (hi ? "प्रश्न बुकमार्क हो गया! 🔖" : "Bookmark saved! 🔖")
+        : (hi ? "बुकमार्क हटा दिया गया 🗑️" : "Bookmark removed 🗑️"),
+      {
+        duration: 2000,
+        style: {
+          background: isSavedNow ? '#f0fdf4' : '#fef2f2',
+          color: isSavedNow ? '#166534' : '#991b1b',
+          border: `1px solid ${isSavedNow ? '#86efac' : '#fca5a5'}`,
+        },
+      }
+    );
+  }, [vaultUnlocked, hi, bookmarkedIds]);
 
   // ⚡ Stable callbacks prevent cascading re-renders
   const handleQOpen = useCallback((qId: string, val: boolean) => {
