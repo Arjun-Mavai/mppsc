@@ -589,9 +589,9 @@ export function LiveChatWidget() {
                                 
                                 {!isStudent && (
                                   <>
-                                    <span className="absolute -top-0.5 -right-0.5 z-10">
-                                      <CustomBadge />
-                                    </span>
+                                  <span style={{ top: '-8px', right: '-8px' }} className="absolute z-10">
+                                    <CustomBadge />
+                                  </span>
                                     <span className="border-white absolute -right-1 -bottom-1 h-3 w-3 rounded-full border-2 bg-green-500 z-10" />
                                   </>
                                 )}
