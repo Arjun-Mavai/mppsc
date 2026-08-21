@@ -59,7 +59,12 @@ export default function AdminLiveChatPage() {
       return;
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080/ws';
+    const getWsUrl = () => {
+      if (process.env.NEXT_PUBLIC_WS_URL) return process.env.NEXT_PUBLIC_WS_URL;
+      if (process.env.NODE_ENV === 'production') return 'wss://websocket-realtime-chat-render.onrender.com/ws';
+      return 'ws://localhost:8080/ws';
+    };
+    const baseUrl = getWsUrl();
     const adminUrl = `${baseUrl}?role=admin&userId=admin_arjun&name=${encodeURIComponent('Admin Arjun')}`;
 
     try {

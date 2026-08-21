@@ -212,7 +212,12 @@ export function LiveChatWidget() {
 
     setIsConnecting(true);
 
-    const baseUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080/ws';
+    const getWsUrl = () => {
+      if (process.env.NEXT_PUBLIC_WS_URL) return process.env.NEXT_PUBLIC_WS_URL;
+      if (process.env.NODE_ENV === 'production') return 'wss://websocket-realtime-chat-render.onrender.com/ws';
+      return 'ws://localhost:8080/ws';
+    };
+    const baseUrl = getWsUrl();
     const socketUrl = `${baseUrl}?role=student&userId=${encodeURIComponent(studentId)}&name=${encodeURIComponent(studentName)}`;
 
     try {
