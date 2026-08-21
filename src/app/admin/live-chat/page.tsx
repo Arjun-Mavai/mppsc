@@ -413,7 +413,7 @@ export default function AdminLiveChatPage() {
                             <AvatarImage src="/images/avatars/notion-admin.jpg" alt="Admin" className="object-cover" />
                           )}
                           {!isAdmin && (
-                            <AvatarImage src={`https://api.dicebear.com/9.x/initials/svg?seed=${activeStudent.name}&backgroundColor=e2e8f0&textColor=475569`} alt={activeStudent.name} />
+                            <AvatarImage src={`https://api.dicebear.com/9.x/notionists/svg?seed=${activeStudent.name}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`} alt={activeStudent.name} />
                           )}
                           <AvatarFallback
                             className={cn(

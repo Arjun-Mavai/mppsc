@@ -105,7 +105,6 @@ const FAQS: QA[] = [
   },
 ];
 
-];
 
 export function LiveChatWidget() {
   const user = useSettingsStore((state) => state.user);
@@ -503,7 +502,7 @@ export function LiveChatWidget() {
                                     : "ring-offset-background animate-pulse ring-2 ring-green-500 ring-offset-2 bg-white"
                                 )}>
                                   {isStudent && (
-                                    <AvatarImage src={`https://api.dicebear.com/9.x/initials/svg?seed=${studentName}&backgroundColor=e2e8f0&textColor=475569`} alt={studentName} />
+                                    <AvatarImage src={`https://api.dicebear.com/9.x/notionists/svg?seed=${studentName}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`} alt={studentName} />
                                   )}
                                   {!isStudent && (
                                     <AvatarImage src="/images/avatars/notion-admin.jpg" alt="Admin" className="object-cover" />
