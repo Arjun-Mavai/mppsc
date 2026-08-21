@@ -22,6 +22,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { notifyLiveChatSession } from '@/actions/live-chat-actions';
 import Link from 'next/link';
+import {
+  useChatStorage,
+  loadMessages,
+  saveMessages,
+  incrementUnread,
+} from '@/hooks/useChatStorage';
 
 export type SupportMessage = {
   id?: string;
@@ -139,12 +145,13 @@ export function LiveChatWidget() {
   const [hasNotifiedTelegram, setHasNotifiedTelegram] = useState(false);
   const [showReconnectBanner, setShowReconnectBanner] = useState(false);
 
-  // Persistent Unique Student ID & Name
-  const [studentId, setStudentId] = useState<string>('');
-  const [studentName, setStudentName] = useState<string>('');
-
   const ws = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Persistent visitor-based identity (SSR-safe, never changes across sessions)
+  const { visitorId, studentId: persistentStudentId, unreadCount, clearUnreadCount } = useChatStorage();
+  const [studentId, setStudentId] = useState<string>('');
+  const [studentName, setStudentName] = useState<string>('');
 
   // Dynamic FAQs based on route
   const dynamicFaqs = isMainsPage
@@ -204,47 +211,45 @@ export function LiveChatWidget() {
     }
   }, [isNudgeOpen]);
 
-  // Setup Student Identifier on mount
+  // Setup Student Identifier using persistent visitorId from useChatStorage
   useEffect(() => {
+    if (persistentStudentId) {
+      setStudentId(persistentStudentId);
+    }
     if (typeof window !== 'undefined') {
-      let storedId = localStorage.getItem('zen_support_user_id');
-      if (!storedId) {
-        storedId = 'student_' + Math.random().toString(36).substring(2, 9);
-        localStorage.setItem('zen_support_user_id', storedId);
-      }
-      setStudentId(storedId);
-
       const guestName = localStorage.getItem('mppsc_guest_name');
       const name = user?.name || guestName || 'Aspirant';
       setStudentName(name);
     }
-  }, [user?.name]);
+  }, [persistentStudentId, user?.name]);
 
-  // Restore messages from localStorage when opening (handles user-left-and-came-back)
+  // Restore messages from persistent storage when opening
   useEffect(() => {
     if (isOpen && studentId) {
-      const savedKey = `lcw_msgs_${studentId}`;
-      const saved = localStorage.getItem(savedKey);
-      if (saved) {
-        try {
-          const parsed: SupportMessage[] = JSON.parse(saved);
-          if (parsed.length > 0) {
-            setMessages(parsed);
-            // Show a subtle reconnect banner only if there are existing messages
-            setShowReconnectBanner(true);
-            setTimeout(() => setShowReconnectBanner(false), 4000);
-          }
-        } catch { /* ignore */ }
+      const persisted = loadMessages<SupportMessage>(visitorId);
+      if (persisted.length > 0) {
+        setMessages(persisted);
+        setShowReconnectBanner(true);
+        setTimeout(() => setShowReconnectBanner(false), 4000);
       }
     }
-  }, [isOpen, studentId]);
+  }, [isOpen, studentId, visitorId]);
 
-  // Persist messages to localStorage whenever they change
+  // Persist messages whenever they change (with 24hr TTL)
   useEffect(() => {
-    if (studentId && messages.length > 0) {
-      localStorage.setItem(`lcw_msgs_${studentId}`, JSON.stringify(messages.slice(-50)));
+    if (visitorId && messages.length > 0) {
+      saveMessages<SupportMessage>(visitorId, messages);
     }
-  }, [messages, studentId]);
+  }, [messages, visitorId]);
+
+  // Clear unread count when chat is opened
+  useEffect(() => {
+    if (isOpen) {
+      clearUnreadCount();
+    }
+  }, [isOpen, clearUnreadCount]);
+
+  // (messages are now persisted via saveMessages in the effect above)
 
   const connectWebSocket = useCallback(() => {
     if (!studentId) return;
@@ -284,6 +289,10 @@ export function LiveChatWidget() {
 
           setMessages((prev) => {
             if (prev.some((m) => m.id === msgId)) return prev;
+            // If chat is closed and this is an admin message, increment unread badge
+            if (data.senderRole === 'admin' && !isOpen) {
+              incrementUnread(visitorId);
+            }
             return [...prev, data];
           });
         } catch {
@@ -589,7 +598,7 @@ export function LiveChatWidget() {
                                 
                                 {!isStudent && (
                                   <>
-                                  <span style={{ top: '-8px', right: '-8px' }} className="absolute z-10">
+                                  <span style={{ top: '-0.5rem', right: '-0.5rem' }} className="absolute z-10">
                                     <CustomBadge />
                                   </span>
                                     <span className="border-white absolute -right-1 -bottom-1 h-3 w-3 rounded-full border-2 bg-green-500 z-10" />
@@ -804,8 +813,14 @@ export function LiveChatWidget() {
               <MessageCircle className="h-6 w-6 transition-transform group-hover:rotate-12" />
             )}
 
-            {!isOpen && (
-              <span className="absolute top-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-slate-950 bg-red-500" />
+            {/* Unread Message Count Badge */}
+            {!isOpen && unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 border-2 border-slate-950 shadow-lg">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                <span className="relative text-[9px] font-black text-white leading-none">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              </span>
             )}
           </button>
         </div>
