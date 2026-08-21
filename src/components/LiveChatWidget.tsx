@@ -22,6 +22,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { notifyLiveChatSession } from '@/actions/live-chat-actions';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export type SupportMessage = {
   id?: string;
@@ -240,19 +241,25 @@ export function LiveChatWidget() {
           });
         } catch {
           const rawText = event.data;
-          const msgId = `raw_${Date.now()}`;
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: msgId,
-              type: 'chat',
-              senderRole: 'admin',
-              senderId: 'admin_sys',
-              senderName: 'ZenScroll Team',
-              text: rawText,
-              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            },
-          ]);
+          setMessages((prev) => {
+            // Check if this exact system message is already in the list to prevent repeats
+            if (prev.some(m => m.text === rawText && m.senderId === 'admin_sys')) {
+              return prev;
+            }
+            
+            return [
+              ...prev,
+              {
+                id: `raw_${Date.now()}`,
+                type: 'chat',
+                senderRole: 'admin',
+                senderId: 'admin_sys',
+                senderName: 'ZenScroll Team',
+                text: rawText,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              },
+            ];
+          });
         }
       };
 
@@ -370,7 +377,15 @@ export function LiveChatWidget() {
                   <div className="flex-1">
                     <h3 className="mb-1 font-sans text-xl font-bold text-slate-900 flex items-center gap-2">
                       {hi ? 'नमस्ते' : 'Hello'}
-                      {studentName !== 'Aspirant' ? `, ${studentName}` : ''}! 👋
+                      {studentName !== 'Aspirant' ? `, ${studentName}` : ''}!
+                      <Image 
+                        src="/images/avatars/notion-namaste.png" 
+                        alt="Namaste" 
+                        width={26} 
+                        height={26} 
+                        priority 
+                        className="object-contain"
+                      />
                     </h3>
                     <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
                       {hi ? 'लाइव मार्गदर्शन' : 'Live Guidance'}
@@ -616,27 +631,33 @@ export function LiveChatWidget() {
           )}
         </AnimatePresence>
 
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className={cn(
-            'group relative flex h-14 w-14 items-center justify-center rounded-full border-3 border-slate-950 bg-gradient-to-tr from-amber-600 via-amber-500 to-orange-500 text-white shadow-2xl shadow-amber-500/20 transition-all duration-300 hover:scale-110 active:scale-95',
-            isOpen ? 'rotate-90 bg-slate-800' : 'hover:shadow-[0_0_30px_rgba(245,158,11,0.45)]'
-          )}
-        >
-          {isOpen ? (
-            <X className="h-6 w-6" />
-          ) : (
-            <MessageCircle className="h-6 w-6 transition-transform group-hover:rotate-12" />
-          )}
+        <div className="relative flex h-14 w-14 items-center justify-center">
+          {/* Animated Glowing Ring Backdrop (Tailwind Native & Safari Safe) */}
+          <div className="absolute -inset-[10px] -z-10 blur-[12px] opacity-85 will-change-transform">
+            <div 
+              className="h-full w-full animate-spin rounded-full bg-[linear-gradient(135deg,rgb(47,190,238),rgb(218,57,143),rgb(139,255,23))]" 
+              style={{ animationDuration: '2s' }} 
+            />
+          </div>
 
-          {!isOpen && (
-            <span className="absolute top-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-slate-950 bg-red-500" />
-          )}
-          
-          {!isOpen && (
-            <span className="absolute inset-0 -z-10 rounded-full bg-amber-500/10 animate-ping" />
-          )}
-        </button>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className={cn(
+              'group relative z-10 flex h-14 w-14 items-center justify-center rounded-full border-3 border-slate-950 bg-gradient-to-tr from-amber-600 via-amber-500 to-orange-500 text-white shadow-2xl shadow-amber-500/20 transition-all duration-300 hover:scale-110 active:scale-95',
+              isOpen ? 'rotate-90 bg-slate-800' : 'hover:shadow-[0_0_30px_rgba(245,158,11,0.45)]'
+            )}
+          >
+            {isOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <MessageCircle className="h-6 w-6 transition-transform group-hover:rotate-12" />
+            )}
+
+            {!isOpen && (
+              <span className="absolute top-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-slate-950 bg-red-500" />
+            )}
+          </button>
+        </div>
       </div>
 
       <style dangerouslySetInnerHTML={{__html: `
