@@ -13,6 +13,7 @@ import {
   Sparkles,
   HelpCircle,
   ShieldCheck,
+  Bell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -817,15 +818,17 @@ export function LiveChatWidget() {
           >
             {isOpen ? (
               <X className="h-6 w-6" />
+            ) : unreadCount > 0 ? (
+              <Bell className="h-6 w-6 animate-pulse transition-transform group-hover:rotate-12" />
             ) : (
               <MessageCircle className="h-6 w-6 transition-transform group-hover:rotate-12" />
             )}
 
             {/* Unread Message Count Badge */}
             {!isOpen && unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 z-50 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 border-2 border-slate-950 shadow-lg">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
-                <span className="relative text-[9px] font-black text-white leading-none">
+              <span className="absolute -top-2 -right-2 z-[9999] flex h-6 w-6 items-center justify-center rounded-full bg-red-600 border-[3px] border-slate-950 shadow-2xl scale-110">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+                <span className="relative text-[10px] font-black text-white leading-none">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               </span>
