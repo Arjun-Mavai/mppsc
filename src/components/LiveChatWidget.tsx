@@ -509,12 +509,12 @@ export function LiveChatWidget() {
                               )}
                             >
                               <div className="relative w-fit">
-                                <Avatar className={cn("h-9 w-9 shrink-0 shadow-sm mt-0.5", isStudent ? "border-2 border-indigo-100 bg-slate-100" : "ring-offset-background animate-pulse ring-2 ring-emerald-500 ring-offset-1 bg-white")}>
+                                <Avatar className={cn("h-9 w-9 shrink-0 shadow-sm mt-0.5", isStudent ? "border border-slate-200 bg-slate-100" : "ring-offset-background animate-pulse ring-2 ring-emerald-500 ring-offset-1 bg-white")}>
                                   {isStudent && (
-                                    <AvatarImage src={`https://api.dicebear.com/9.x/avataaars/svg?seed=${studentName}&backgroundColor=e2e8f0`} alt={studentName} />
+                                    <AvatarImage src={`https://api.dicebear.com/9.x/initials/svg?seed=${studentName}&backgroundColor=e2e8f0&textColor=475569`} alt={studentName} />
                                   )}
                                   {!isStudent && (
-                                    <AvatarImage src={`https://api.dicebear.com/9.x/micah/svg?seed=AdminJude&backgroundColor=ffffff`} alt="Admin" />
+                                    <AvatarImage src={`https://api.dicebear.com/9.x/notionists/svg?seed=Felix&backgroundColor=fcd34d`} alt="Admin" />
                                   )}
                                   <AvatarFallback
                                     className={cn(
@@ -527,10 +527,16 @@ export function LiveChatWidget() {
                                     {isStudent ? studentName.substring(0, 2).toUpperCase() : 'AD'}
                                   </AvatarFallback>
                                 </Avatar>
+                                
                                 {!isStudent && (
-                                  <span className="absolute -top-0.5 -right-0.5 bg-white rounded-full p-[1px] shadow-sm">
-                                    <CustomBadge />
-                                  </span>
+                                  <>
+                                    {/* Verified Badge (Top Right) */}
+                                    <span className="absolute -top-1 -right-1 bg-white rounded-full p-[1px] shadow-sm z-10">
+                                      <CustomBadge />
+                                    </span>
+                                    {/* Online Indicator (Bottom Right) */}
+                                    <span className="border-white absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 bg-emerald-500 z-10" />
+                                  </>
                                 )}
                               </div>
 
