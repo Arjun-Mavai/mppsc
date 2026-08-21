@@ -800,7 +800,10 @@ export function LiveChatWidget() {
           )}
         </AnimatePresence>
 
-        <div className="relative flex h-14 w-14 items-center justify-center">
+        <div className={cn(
+          "relative flex h-14 items-center justify-center transition-all duration-300",
+          !isOpen && unreadCount > 0 ? "w-auto min-w-[5.5rem]" : "w-14"
+        )}>
           {/* Animated Glowing Ring Backdrop (Tailwind Native & Safari Safe) */}
           <div className="absolute -inset-[10px] -z-10 blur-[12px] opacity-85 will-change-transform">
             <div 
@@ -812,28 +815,32 @@ export function LiveChatWidget() {
           <button
             onClick={() => setIsOpen(!isOpen)}
             className={cn(
-              'group relative z-10 flex h-14 w-14 items-center justify-center rounded-full border-3 border-slate-950 bg-gradient-to-tr from-amber-600 via-amber-500 to-orange-500 text-white shadow-2xl shadow-amber-500/20 transition-all duration-300 hover:scale-110 active:scale-95',
-              isOpen ? 'rotate-90 bg-slate-800' : 'hover:shadow-[0_0_30px_rgba(245,158,11,0.45)]'
+              'group relative z-10 flex h-14 items-center justify-center rounded-full border-3 border-slate-950 bg-gradient-to-tr from-amber-600 via-amber-500 to-orange-500 text-white shadow-2xl shadow-amber-500/20 transition-all duration-300 hover:scale-110 active:scale-95',
+              isOpen 
+                ? 'rotate-90 bg-slate-800 w-14' 
+                : unreadCount > 0 
+                  ? 'w-full px-4 gap-2 border-red-500 bg-gradient-to-tr from-red-600 to-rose-500' 
+                  : 'w-14 hover:shadow-[0_0_30px_rgba(245,158,11,0.45)]'
             )}
           >
             {isOpen ? (
               <X className="h-6 w-6" />
             ) : unreadCount > 0 ? (
-              <Bell className="h-6 w-6 animate-pulse transition-transform group-hover:rotate-12" />
+              <>
+                <Bell className="h-5 w-5 animate-wiggle" />
+                <span className="font-black text-sm tracking-wide">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+                {/* Ping dot indicator inside pill */}
+                <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 border-2 border-slate-950"></span>
+                </span>
+              </>
             ) : (
               <MessageCircle className="h-6 w-6 transition-transform group-hover:rotate-12" />
             )}
           </button>
-
-          {/* Unread Message Count Badge - Placed OUTSIDE button so it never gets clipped by button transforms */}
-          {!isOpen && unreadCount > 0 && (
-            <span style={{ top: '-0.5rem', right: '-0.5rem' }} className="absolute z-[9999] flex h-6 w-6 items-center justify-center rounded-full bg-red-600 border-[3px] border-slate-950 shadow-2xl scale-110 pointer-events-none">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
-              <span className="relative text-[10px] font-black text-white leading-none">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            </span>
-          )}
         </div>
       </div>
 
