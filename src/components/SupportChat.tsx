@@ -215,8 +215,9 @@ export function SupportChat() {
     return 'general';
   };
   
-  // Show ONLY on the Home page & /mains landing page to reduce clutter, especially on mobile
-  if (pathname !== '/' && pathname !== '/mains') return null;
+  // Show on specific pages to reduce clutter, especially on mobile
+  const allowedPaths = ['/', '/mains',  '/contact', '/profile'];
+  if (!allowedPaths.includes(pathname)) return null;
 
   const handleWhatsApp = () => {
     const message = isMainsPage
@@ -533,30 +534,30 @@ export function SupportChat() {
           )}
         </AnimatePresence>
 
-        <button
-          onMouseEnter={() => !isOpen} // Just for interaction tracking if needed
-          onClick={() => setIsOpen(!isOpen)}
-          className={cn(
-            'group relative flex h-14 w-14 items-center justify-center rounded-full border-3 border-slate-950 bg-gradient-to-tr from-amber-600 via-amber-500 to-orange-500 text-white shadow-2xl shadow-amber-500/20 transition-all duration-300 hover:scale-110 active:scale-95',
-            isOpen ? 'rotate-90 bg-slate-800' : 'hover:shadow-[0_0_30px_rgba(245,158,11,0.45)]'
-          )}
-        >
-          {isOpen ? (
-            <X className="h-6 w-6" />
-          ) : (
-            <MessageCircle className="h-6 w-6 transition-transform group-hover:rotate-12" />
-          )}
+        <div className="relative flex h-14 w-14 items-center justify-center">
+          {/* Animated Glowing Ring Backdrop from globals.css */}
+          <div className="support-glow-ring" />
 
-          {/* Ping animation when closed */}
-          {!isOpen && (
-            <span className="absolute top-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-slate-950 bg-red-500" />
-          )}
+          <button
+            onMouseEnter={() => !isOpen} // Just for interaction tracking if needed
+            onClick={() => setIsOpen(!isOpen)}
+            className={cn(
+              'group relative z-10 flex h-14 w-14 items-center justify-center rounded-full border-3 border-slate-950 bg-gradient-to-tr from-amber-600 via-amber-500 to-orange-500 text-white shadow-2xl shadow-amber-500/20 transition-all duration-300 hover:scale-110 active:scale-95',
+              isOpen ? 'rotate-90 bg-slate-800' : 'hover:shadow-[0_0_30px_rgba(245,158,11,0.45)]'
+            )}
+          >
+            {isOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <MessageCircle className="h-6 w-6 transition-transform group-hover:rotate-12" />
+            )}
 
-          {/* Golden Ring Pulse when closed */}
-          {!isOpen && (
-            <span className="absolute inset-0 -z-10 rounded-full bg-amber-500/10 animate-ping" />
-          )}
-        </button>
+            {/* Ping animation when closed */}
+            {!isOpen && (
+              <span className="absolute top-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-slate-950 bg-red-500" />
+            )}
+          </button>
+        </div>
       </div>
     </>
   );

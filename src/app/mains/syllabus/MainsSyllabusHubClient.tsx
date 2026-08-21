@@ -594,8 +594,8 @@ export function MainsSyllabusHubClient({
                           </p>
                         </div>
 
-                        {/* Progress Bar & Stats */}
-                        <div className="space-y-1 pt-0.5">
+                        {/* Progress Bar & Stats (Temporarily Disabled) */}
+                        {/* <div className="space-y-1 pt-0.5">
                           <div className="flex items-center justify-between text-[9px] sm:text-[11px] font-black tracking-tight">
                             <span className={cn("font-bold", themeDeep ? "text-emerald-400" : "text-emerald-700")}>
                               {progress}% {hi ? 'तैयार' : 'ready'}
@@ -611,10 +611,10 @@ export function MainsSyllabusHubClient({
                           )}>
                             <div
                               className="h-full rounded-full bg-emerald-500 transition-all duration-500 shadow-2xs"
-                              style={{ width: `${progress}%` }}
+                              style={{ width: \`\${progress}%\` }}
                             />
                           </div>
-                        </div>
+                        </div> */}
                       </div>
                     </Link>
                   </motion.div>
