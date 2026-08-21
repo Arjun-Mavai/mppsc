@@ -823,17 +823,17 @@ export function LiveChatWidget() {
             ) : (
               <MessageCircle className="h-6 w-6 transition-transform group-hover:rotate-12" />
             )}
-
-            {/* Unread Message Count Badge */}
-            {!isOpen && unreadCount > 0 && (
-              <span className="absolute -top-2 -right-2 z-[9999] flex h-6 w-6 items-center justify-center rounded-full bg-red-600 border-[3px] border-slate-950 shadow-2xl scale-110">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
-                <span className="relative text-[10px] font-black text-white leading-none">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              </span>
-            )}
           </button>
+
+          {/* Unread Message Count Badge - Placed OUTSIDE button so it never gets clipped by button transforms */}
+          {!isOpen && unreadCount > 0 && (
+            <span style={{ top: '-0.5rem', right: '-0.5rem' }} className="absolute z-[9999] flex h-6 w-6 items-center justify-center rounded-full bg-red-600 border-[3px] border-slate-950 shadow-2xl scale-110 pointer-events-none">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+              <span className="relative text-[10px] font-black text-white leading-none">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            </span>
+          )}
         </div>
       </div>
 
