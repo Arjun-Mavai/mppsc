@@ -815,7 +815,7 @@ export function LiveChatWidget() {
           <button
             onClick={() => setIsOpen(!isOpen)}
             className={cn(
-              'group relative z-10 flex h-14 items-center justify-center rounded-full border-3 border-slate-950 bg-gradient-to-tr from-amber-600 via-amber-500 to-orange-500 text-white shadow-2xl shadow-amber-500/20 transition-all duration-300 hover:scale-110 active:scale-95',
+              'group relative z-10 flex h-14 items-center justify-center rounded-full border-3 border-slate-950 bg-gradient-to-tr from-amber-600 via-amber-500 to-orange-500 text-white shadow-2xl shadow-amber-500/20 transition-all duration-300 hover:scale-110 active:scale-95 overflow-visible',
               isOpen 
                 ? 'rotate-90 bg-slate-800 w-14' 
                 : unreadCount > 0 
@@ -831,16 +831,19 @@ export function LiveChatWidget() {
                 <span className="font-black text-sm tracking-wide">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
-                {/* Ping dot indicator inside pill */}
-                <span className="absolute -top-1 -right-1 flex h-4 w-4">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 border-2 border-slate-950"></span>
-                </span>
               </>
             ) : (
               <MessageCircle className="h-6 w-6 transition-transform group-hover:rotate-12" />
             )}
           </button>
+
+          {/* Ping dot indicator placed OUTSIDE the button to absolutely prevent any browser clipping/stacking issues */}
+          {!isOpen && unreadCount > 0 && (
+            <span style={{ top: '-0.25rem', right: '-0.25rem' }} className="absolute z-[99999] flex h-4 w-4 pointer-events-none">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 border-2 border-slate-950"></span>
+            </span>
+          )}
         </div>
       </div>
 
