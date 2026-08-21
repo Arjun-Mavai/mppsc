@@ -147,6 +147,12 @@ export function LiveChatWidget() {
 
   const ws = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isOpenRef = useRef(isOpen);
+
+  // Sync isOpen state to ref for websocket callbacks without triggering reconnections
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
 
   // Persistent visitor-based identity (SSR-safe, never changes across sessions)
   const { visitorId, studentId: persistentStudentId, unreadCount, clearUnreadCount } = useChatStorage();
@@ -287,13 +293,14 @@ export function LiveChatWidget() {
           const msgId = data.id || `${data.senderId}_${data.timestamp}_${data.text}`;
           data.id = msgId;
 
+          // Process side effects outside of the setState updater to prevent React render errors
           setMessages((prev) => {
-            if (prev.some((m) => m.id === msgId)) return prev;
-            // If chat is closed and this is an admin message, increment unread badge
-            if (data.senderRole === 'admin' && !isOpen) {
-              incrementUnread(visitorId);
+            const exists = prev.some((m) => m.id === msgId);
+            if (!exists && data.senderRole === 'admin' && !isOpenRef.current) {
+              // Wait until next tick to avoid any sync issues during React render phase
+              setTimeout(() => incrementUnread(visitorId), 0);
             }
-            return [...prev, data];
+            return exists ? prev : [...prev, data];
           });
         } catch {
           const rawText = event.data;
@@ -305,11 +312,12 @@ export function LiveChatWidget() {
 
           setMessages((prev) => {
             // Check if this exact system message is already in the list to prevent repeats
-            if (prev.some(m => m.text === rawText && m.senderId === 'admin_sys')) {
-              return prev;
+            const exists = prev.some(m => m.text === rawText && m.senderId === 'admin_sys');
+            if (!exists && !isOpenRef.current) {
+              setTimeout(() => incrementUnread(visitorId), 0);
             }
             
-            return [
+            return exists ? prev : [
               ...prev,
               {
                 id: `raw_${Date.now()}`,
@@ -340,11 +348,11 @@ export function LiveChatWidget() {
       setIsConnecting(false);
       setIsConnected(false);
     }
-  }, [studentId, studentName]);
+  }, [studentId, studentName, visitorId]);
 
-  // Connect when open
+  // Connect when studentId is available (stay connected across open/close)
   useEffect(() => {
-    if (isOpen) {
+    if (studentId) {
       connectWebSocket();
     }
     return () => {
@@ -352,7 +360,7 @@ export function LiveChatWidget() {
         ws.current.close();
       }
     };
-  }, [isOpen, connectWebSocket]);
+  }, [studentId, connectWebSocket]);
 
   // Auto scroll
   useEffect(() => {
@@ -815,7 +823,7 @@ export function LiveChatWidget() {
 
             {/* Unread Message Count Badge */}
             {!isOpen && unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 border-2 border-slate-950 shadow-lg">
+              <span className="absolute -top-1 -right-1 z-50 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 border-2 border-slate-950 shadow-lg">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
                 <span className="relative text-[9px] font-black text-white leading-none">
                   {unreadCount > 9 ? '9+' : unreadCount}
