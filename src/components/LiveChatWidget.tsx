@@ -231,6 +231,12 @@ export function LiveChatWidget() {
       socket.onmessage = (event) => {
         try {
           const data: SupportMessage = JSON.parse(event.data);
+          
+          // Completely discard the annoying backend system welcome message
+          if (data.type === 'system' && data.text.includes('Admin team online hai')) {
+            return;
+          }
+
           const msgId = data.id || `${data.senderId}_${data.timestamp}_${data.text}`;
           data.id = msgId;
 
@@ -487,24 +493,22 @@ export function LiveChatWidget() {
                                 isStudent ? 'ml-auto flex-row-reverse' : 'mr-auto flex-row'
                               )}
                             >
-                              <Avatar className={cn("h-8 w-8 shrink-0 border-2 shadow-sm mt-0.5", isStudent ? "border-indigo-100" : "border-[#00D1E0]/30")}>
-                                {isStudent ? (
+                              <Avatar className={cn("h-8 w-8 shrink-0 border-2 shadow-sm mt-0.5", isStudent ? "border-indigo-100 bg-slate-100" : "border-[#00D1E0]/30 bg-gradient-to-tr from-[#00D1E0] to-[#0091A8]")}>
+                                {isStudent && (
                                   <AvatarImage src={`https://api.dicebear.com/9.x/avataaars/svg?seed=${studentName}&backgroundColor=e2e8f0`} alt={studentName} />
-                                ) : (
-                                  <AvatarImage src={`https://api.dicebear.com/9.x/bottts/svg?seed=mppsc-admin&backgroundColor=00D1E0`} alt="Admin" />
                                 )}
                                 <AvatarFallback
                                   className={cn(
                                     'text-[10px] font-black',
                                     isStudent
                                       ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 text-white'
-                                      : 'bg-gradient-to-tr from-[#00D1E0] to-[#0091A8] text-white'
+                                      : 'bg-transparent text-white'
                                   )}
                                 >
                                   {isStudent ? (
                                     studentName.substring(0, 2).toUpperCase()
                                   ) : (
-                                    <ShieldCheck size={14} className="text-white" />
+                                    <ShieldCheck size={16} className="text-white" />
                                   )}
                                 </AvatarFallback>
                               </Avatar>

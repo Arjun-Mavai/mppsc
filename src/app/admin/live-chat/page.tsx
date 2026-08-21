@@ -78,6 +78,11 @@ export default function AdminLiveChatPage() {
       socket.onmessage = (event) => {
         try {
           const msg: SupportMessage = JSON.parse(event.data);
+          
+          // Completely discard the annoying backend system welcome message
+          if (msg.type === 'system' && msg.text.includes('Admin team online hai')) {
+            return;
+          }
 
           // Assign ID if missing
           const msgId = msg.id || `${msg.senderId}_${msg.timestamp}_${msg.text}`;
@@ -397,17 +402,15 @@ export default function AdminLiveChatPage() {
                       )}
                     >
                       {/* Avatar */}
-                      <Avatar className={cn('h-7 w-7 shrink-0 border-2 shadow-sm mt-0.5', isAdmin ? 'border-indigo-100' : 'border-slate-200')}>
-                        {isAdmin ? (
-                          <AvatarImage src={`https://api.dicebear.com/9.x/bottts/svg?seed=mppsc-admin&backgroundColor=4f46e5`} alt="Admin" />
-                        ) : (
+                      <Avatar className={cn('h-8 w-8 shrink-0 border-2 shadow-sm mt-0.5', isAdmin ? 'border-indigo-100 bg-indigo-600' : 'border-slate-200 bg-slate-100')}>
+                        {!isAdmin && (
                           <AvatarImage src={`https://api.dicebear.com/9.x/avataaars/svg?seed=${activeStudent.name}&backgroundColor=e2e8f0`} alt={activeStudent.name} />
                         )}
                         <AvatarFallback
                           className={cn(
                             'text-[10px] font-black',
                             isAdmin
-                              ? 'bg-indigo-600 text-white'
+                              ? 'bg-transparent text-white'
                               : 'bg-slate-200 text-slate-700'
                           )}
                         >
