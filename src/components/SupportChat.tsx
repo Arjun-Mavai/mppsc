@@ -535,8 +535,13 @@ export function SupportChat() {
         </AnimatePresence>
 
         <div className="relative flex h-14 w-14 items-center justify-center">
-          {/* Animated Glowing Ring Backdrop from globals.css */}
-          <div className="support-glow-ring" />
+          {/* Animated Glowing Ring Backdrop (Tailwind Native & Safari Safe) */}
+          <div className="absolute -inset-[10px] -z-10 blur-[12px] opacity-85 will-change-transform">
+            <div 
+              className="h-full w-full animate-spin rounded-full bg-[linear-gradient(135deg,rgb(47,190,238),rgb(218,57,143),rgb(139,255,23))]" 
+              style={{ animationDuration: '2s' }} 
+            />
+          </div>
 
           <button
             onMouseEnter={() => !isOpen} // Just for interaction tracking if needed

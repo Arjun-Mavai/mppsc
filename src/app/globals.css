@@ -335,19 +335,4 @@ body:has([data-overlay-open='true']) {
   touch-action: none;
 }
 
-/* Animated Glowing Ring for Support Button */
-.support-glow-ring {
-  position: absolute;
-  z-index: 0;
-  inset: -10px; /* Extends exactly 10px outside the button for the glow */
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgb(47, 190, 238), rgb(218, 57, 143), rgb(139, 255, 23));
-  filter: blur(12px);
-  animation: support-glow-spin 1.5s linear infinite;
-  opacity: 0.85;
-}
 
-@keyframes support-glow-spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
