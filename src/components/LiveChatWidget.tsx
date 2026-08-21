@@ -18,11 +18,10 @@ import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { notifyLiveChatSession } from '@/actions/live-chat-actions';
 import Link from 'next/link';
-import Image from 'next/image';
 
 export type SupportMessage = {
   id?: string;
@@ -241,6 +240,12 @@ export function LiveChatWidget() {
           });
         } catch {
           const rawText = event.data;
+          
+          // Completely discard the annoying backend welcome message
+          if (rawText.includes('Admin team online hai')) {
+            return;
+          }
+
           setMessages((prev) => {
             // Check if this exact system message is already in the list to prevent repeats
             if (prev.some(m => m.text === rawText && m.senderId === 'admin_sys')) {
@@ -377,15 +382,7 @@ export function LiveChatWidget() {
                   <div className="flex-1">
                     <h3 className="mb-1 font-sans text-xl font-bold text-slate-900 flex items-center gap-2">
                       {hi ? 'नमस्ते' : 'Hello'}
-                      {studentName !== 'Aspirant' ? `, ${studentName}` : ''}!
-                      <Image 
-                        src="/images/avatars/notion-namaste.png" 
-                        alt="Namaste" 
-                        width={26} 
-                        height={26} 
-                        priority 
-                        className="object-contain"
-                      />
+                      {studentName !== 'Aspirant' ? `, ${studentName}` : ''}! 👋
                     </h3>
                     <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
                       {hi ? 'लाइव मार्गदर्शन' : 'Live Guidance'}
@@ -490,7 +487,12 @@ export function LiveChatWidget() {
                                 isStudent ? 'ml-auto flex-row-reverse' : 'mr-auto flex-row'
                               )}
                             >
-                              <Avatar className="h-7 w-7 shrink-0 border border-slate-200 shadow-xs mt-0.5">
+                              <Avatar className={cn("h-8 w-8 shrink-0 border-2 shadow-sm mt-0.5", isStudent ? "border-indigo-100" : "border-[#00D1E0]/30")}>
+                                {isStudent ? (
+                                  <AvatarImage src={`https://api.dicebear.com/9.x/avataaars/svg?seed=${studentName}&backgroundColor=e2e8f0`} alt={studentName} />
+                                ) : (
+                                  <AvatarImage src={`https://api.dicebear.com/9.x/bottts/svg?seed=mppsc-admin&backgroundColor=00D1E0`} alt="Admin" />
+                                )}
                                 <AvatarFallback
                                   className={cn(
                                     'text-[10px] font-black',
