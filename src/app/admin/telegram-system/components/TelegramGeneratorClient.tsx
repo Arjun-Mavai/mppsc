@@ -55,7 +55,7 @@ export default function TelegramGeneratorClient({
 
   const getDestinationLabel = (dest: 'test' | 'live' | 'constable') => {
     if (dest === 'live') return 'MPPSC Live Channel (@MPPSCZenScroll)';
-    if (dest === 'constable') return 'Constable Live Channel (@zenmpconstable)';
+    if (dest === 'constable') return 'Constable Live Channel (@mppolice_constable_si)';
     return 'Test Bot';
   };
 

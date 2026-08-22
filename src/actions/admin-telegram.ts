@@ -83,7 +83,7 @@ export async function sendTelegramBotMessage(rawText: string, opts?: SendTelegra
   if (opts?.destination === 'live') {
     chatId = '@MPPSCZenScroll';
   } else if (opts?.destination === 'constable') {
-    chatId = '@zenmpconstable';
+    chatId = '@mppolice_constable_si';
   }
 
   if (!token || !chatId) {
@@ -234,7 +234,7 @@ export async function sendTelegramPolls(polls: TelegramPollData[], destination: 
   if (destination === 'live') {
     chatId = '@MPPSCZenScroll';
   } else if (destination === 'constable') {
-    chatId = '@zenmpconstable';
+    chatId = '@mppolice_constable_si';
   }
 
   if (!token || !chatId) {
