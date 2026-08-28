@@ -1380,3 +1380,52 @@ export const supportMessagesRelations = relations(supportMessages, ({ one }) => 
     references: [supportConversations.id],
   }),
 }));
+
+// Real-Time Web Chat Sessions (WebSockets)
+export const chatSessions = sqliteTable('chat_sessions', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => mppscUsers.id), // If logged in
+  guestName: text('guest_name'), // If anonymous guest
+  contactId: text('contact_id'), // The unique guest ID generated for this user
+  sessionSecret: text('session_secret').notNull(), // Saved in localStorage to resume chats
+  status: text('status', { enum: ['active', 'closed'] }).default('active'),
+  isBanned: integer('is_banned', { mode: 'boolean' }).default(false), // Anti-spam ban flag
+  banExpiresAt: integer('ban_expires_at', { mode: 'timestamp' }), // Time-based ban (e.g. 10 mins)
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+}, (table) => [
+  index('idx_chat_sessions_contact').on(table.contactId),
+  index('idx_chat_sessions_user').on(table.userId),
+]);
+
+// Real-Time Web Chat Messages (WebSockets)
+export const chatMessages = sqliteTable('chat_messages', {
+  id: text('id').primaryKey(),
+  sessionId: text('session_id').references(() => chatSessions.id, { onDelete: 'cascade' }).notNull(),
+  sequenceNumber: integer('sequence_number').notNull(),
+  direction: text('direction', { enum: ['inbound', 'outbound'] }).notNull(), // inbound (user to admin), outbound (admin to user)
+  msgType: text('msg_type', { enum: ['text', 'rich_link', 'interactive'] }).default('text'),
+  content: text('content').notNull(),
+  metadata: text('metadata', { mode: 'json' }), // JSON for Rich Links (title, url) and Buttons (Yes/No)
+  adminId: text('admin_id'), // Who replied
+  isRead: integer('is_read', { mode: 'boolean' }).default(false),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+}, (table) => [
+  index('idx_chat_msgs_session').on(table.sessionId),
+  index('idx_chat_msgs_sequence').on(table.sessionId, table.sequenceNumber),
+]);
+
+export const chatSessionsRelations = relations(chatSessions, ({ many, one }) => ({
+  messages: many(chatMessages),
+  user: one(mppscUsers, {
+    fields: [chatSessions.userId],
+    references: [mppscUsers.id],
+  }),
+}));
+
+export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
+  session: one(chatSessions, {
+    fields: [chatMessages.sessionId],
+    references: [chatSessions.id],
+  }),
+}));

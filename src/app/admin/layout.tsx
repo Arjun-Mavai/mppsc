@@ -117,6 +117,12 @@ const ADMIN_ROUTES = [
     description: 'WhatsApp & Telegram CRM',
   },
   {
+    href: '/admin/live-chat',
+    label: 'Live Doubt Desk',
+    icon: MessageSquare,
+    description: 'Real-time 1-on-1 WebSocket Chat Workspace',
+  },
+  {
     href: '/admin/whatsapp',
     label: 'WhatsApp Marketing',
     icon: MessageSquare,
