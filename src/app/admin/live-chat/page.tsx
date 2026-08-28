@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   MessageSquare,
   Send,
@@ -12,10 +13,57 @@ import {
   Sparkles,
   ShieldCheck,
   CheckCheck,
+  Heart,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
+// Markdown URL parser to make links clickable and parse bold text in messages
+const MarkdownRenderer = ({ text, isAdmin }: { text: string; isAdmin?: boolean }) => {
+  if (!text) return null;
+  
+  const processBold = (str: string) => {
+    const parts = str.split(/(\*\*.*?\*\*|\*.*?\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i} className="font-bold">{part.slice(2, -2)}</strong>;
+      }
+      if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+        return <strong key={i} className="font-bold">{part.slice(1, -1)}</strong>;
+      }
+      return part;
+    });
+  };
+
+  const processText = (str: string) => {
+    const urlRegex = /(\[.*?\]\(https?:\/\/[^\s\)]+\)|https?:\/\/[^\s\)]+)/g;
+    const parts = str.split(urlRegex);
+    
+    return parts.map((part, i) => {
+      if (part.startsWith('[')) {
+        const match = part.match(/\[(.*?)\]\((https?:\/\/[^\s]+)\)/);
+        if (match) {
+          return (
+            <a key={i} href={match[2]} target="_blank" rel="noopener noreferrer" className={cn("underline underline-offset-2 transition-colors font-bold", isAdmin ? "text-white hover:text-white/80" : "text-slate-900 hover:text-black")}>
+              {match[1]}
+            </a>
+          );
+        }
+      }
+      if (part.startsWith('http')) {
+        return (
+          <a key={i} href={part} target="_blank" rel="noopener noreferrer" className={cn("underline underline-offset-2 transition-colors font-semibold break-all", isAdmin ? "text-white hover:text-white/80" : "text-slate-900 hover:text-black")}>
+            {part}
+          </a>
+        );
+      }
+      return <React.Fragment key={i}>{processBold(part)}</React.Fragment>;
+    });
+  };
+
+  return <span className="whitespace-pre-wrap">{processText(text)}</span>;
+};
 
 const CustomBadge = () => {
   return (
@@ -41,6 +89,8 @@ export type SupportMessage = {
   targetId?: string;
   text: string;
   timestamp: string;
+  msgType?: 'text' | 'rich_link' | 'interactive';
+  metadata?: any;
 };
 
 export type StudentSession = {
@@ -48,26 +98,55 @@ export type StudentSession = {
   name: string;
   lastMessage: string;
   lastTime: string;
+  lastTimestamp?: number;
   unreadCount: number;
   isOnline: boolean;
   messages: SupportMessage[];
+  isBanned?: boolean;
 };
 
+import { getActiveSessions, getChatHistory, banStudentAction, unbanStudentAction } from './actions';
+
 export default function AdminLiveChatPage() {
-  const [students, setStudents] = useState<Record<string, StudentSession>>({});
+  const queryClient = useQueryClient();
   const [activeStudentId, setActiveStudentId] = useState<string | null>(null);
   const [input, setInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isConnected, setIsConnected] = useState(false);
+  const [isBanning, setIsBanning] = useState(false);
+  const [isUnbanning, setIsUnbanning] = useState(false);
 
   const ws = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const activeStudentIdRef = useRef<string | null>(null);
 
-  // Keep activeStudentId ref synced for onmessage callbacks
-  useEffect(() => {
-    activeStudentIdRef.current = activeStudentId;
-  }, [activeStudentId]);
+  // 1. Initial sessions fetch via TanStack Query (no useEffect needed)
+  const { data: students = {} } = useQuery<Record<string, StudentSession>>({
+    queryKey: ['adminChatSessions'],
+    queryFn: async () => {
+      const activeSessions = await getActiveSessions();
+      const result: Record<string, StudentSession> = {};
+      if (activeSessions && Array.isArray(activeSessions)) {
+        activeSessions.forEach((session) => {
+          const sessionTime = new Date(session.updatedAt || Date.now());
+          result[session.id] = {
+            id: session.id,
+            name: session.name || 'Aspirant',
+            lastMessage: session.isBanned ? '🚫 Banned' : 'Tap to load history...',
+            lastTime: sessionTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            lastTimestamp: sessionTime.getTime(),
+            unreadCount: 0,
+            isOnline: false,
+            messages: [],
+            isBanned: session.isBanned || false,
+          };
+        });
+      }
+      return result;
+    },
+    staleTime: Infinity, // Ensure this only fetches once on mount
+  });
+
 
   // Connect Admin WebSocket
   const connectAdminWs = useCallback(() => {
@@ -94,8 +173,13 @@ export default function AdminLiveChatPage() {
         try {
           const msg: SupportMessage = JSON.parse(event.data);
           
-          // Completely discard the annoying backend system welcome message (case-insensitive)
-          if (msg.text.toLowerCase().includes('admin team online hai')) {
+          const textLower = msg.text.toLowerCase();
+          // Completely discard the annoying backend system welcome messages
+          if (
+            textLower.includes('admin team online hai') || 
+            textLower.includes('naya student connect hua') ||
+            textLower.includes('has joined the chat')
+          ) {
             return;
           }
 
@@ -111,16 +195,44 @@ export default function AdminLiveChatPage() {
 
           if (!studentId || studentId === 'admin_arjun') return;
 
-          setStudents((prev) => {
+          // Handle ban/unban system messages
+          let isBanUpdate = false;
+          let newBanState = false;
+          
+          if (msg.type === 'system') {
+            if (msg.text === 'BAN_USER' || textLower.includes('banned')) {
+              isBanUpdate = true;
+              newBanState = true;
+            } else if (msg.text === 'UNBAN_USER' || textLower.includes('unbanned')) {
+              isBanUpdate = true;
+              newBanState = false;
+            }
+          }
+
+          queryClient.setQueryData<Record<string, StudentSession>>(['adminChatSessions'], (prev = {}) => {
             const existing = prev[studentId] || {
               id: studentId,
               name: msg.senderName || 'Aspirant',
-              lastMessage: msg.text,
+              lastMessage: isBanUpdate ? (newBanState ? '🚫 Banned' : '✅ Unbanned') : msg.text,
               lastTime: msg.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              lastTimestamp: Date.now(),
               unreadCount: 0,
               isOnline: true,
               messages: [],
+              isBanned: newBanState,
             };
+
+            // If it's just a ban status update system message, update state and don't add to messages array
+            if (isBanUpdate) {
+              return {
+                ...prev,
+                [studentId]: {
+                  ...existing,
+                  lastMessage: newBanState ? '🚫 Banned' : '✅ Unbanned',
+                  isBanned: newBanState,
+                }
+              };
+            }
 
             // Deduplication Check by Message ID
             if (existing.messages.some((m) => m.id === msgId)) {
@@ -146,6 +258,7 @@ export default function AdminLiveChatPage() {
                 name: displayName,
                 lastMessage: msg.text,
                 lastTime: msg.timestamp || existing.lastTime,
+                lastTimestamp: Date.now(),
                 unreadCount: updatedUnread,
                 isOnline: true,
                 messages: [...existing.messages, msg],
@@ -175,15 +288,19 @@ export default function AdminLiveChatPage() {
     };
   }, [connectAdminWs]);
 
+
+
   // Auto scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [students, activeStudentId]);
 
-  // Select student & reset unread count
-  const handleSelectStudent = (id: string) => {
+  // Select student & reset unread count & fetch history
+  const handleSelectStudent = async (id: string) => {
     setActiveStudentId(id);
-    setStudents((prev) => {
+    activeStudentIdRef.current = id; // Sync ref in the event handler (no useEffect needed)
+    
+    queryClient.setQueryData<Record<string, StudentSession>>(['adminChatSessions'], (prev = {}) => {
       if (!prev[id]) return prev;
       return {
         ...prev,
@@ -193,10 +310,103 @@ export default function AdminLiveChatPage() {
         },
       };
     });
+
+    // Fetch history using Server Action
+    try {
+      const history = await getChatHistory(id);
+      if (history && history.length > 0) {
+        queryClient.setQueryData<Record<string, StudentSession>>(['adminChatSessions'], (prev = {}) => {
+          const existing = prev[id];
+          if (!existing) return prev;
+          
+          // Deduplicate
+          const allMessages = [...history, ...existing.messages];
+          const uniqueMessages = Array.from(new Map(allMessages.map(m => [m.id, m])).values());
+          
+          return {
+            ...prev,
+            [id]: {
+              ...existing,
+              messages: uniqueMessages,
+            },
+          };
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch chat history:', err);
+    }
+  };
+
+  const handleBanStudent = async () => {
+    if (!activeStudentId) return;
+    if (!confirm('Are you sure you want to ban this user for 10 minutes?')) return;
+    
+    setIsBanning(true);
+    const res = await banStudentAction(activeStudentId);
+    if (res.success) {
+      alert('User banned successfully for 10 minutes.');
+      queryClient.setQueryData<Record<string, StudentSession>>(['adminChatSessions'], (prev = {}) => ({
+        ...prev,
+        [activeStudentId]: {
+          ...prev[activeStudentId],
+          lastMessage: '🚫 Banned',
+          isBanned: true,
+        }
+      }));
+
+      // Tell Go server to instantly drop the user's connection
+      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify({
+          id: `sys_ban_${Date.now()}`,
+          type: 'system',
+          senderRole: 'admin',
+          senderId: 'admin_arjun',
+          targetId: activeStudentId,
+          text: 'BAN_USER'
+        }));
+      }
+    } else {
+      alert('Failed to ban user.');
+    }
+    setIsBanning(false);
+  };
+
+  const handleUnbanStudent = async () => {
+    if (!activeStudentId) return;
+    if (!confirm('Are you sure you want to unban this user?')) return;
+    
+    setIsUnbanning(true);
+    const res = await unbanStudentAction(activeStudentId);
+    if (res.success) {
+      alert('User unbanned successfully.');
+      queryClient.setQueryData<Record<string, StudentSession>>(['adminChatSessions'], (prev = {}) => ({
+        ...prev,
+        [activeStudentId]: {
+          ...prev[activeStudentId],
+          lastMessage: '✅ Unbanned',
+          isBanned: false,
+        }
+      }));
+
+      // Tell frontend to allow messages again
+      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify({
+          id: `sys_unban_${Date.now()}`,
+          type: 'system',
+          senderRole: 'admin',
+          senderId: 'admin_arjun',
+          targetId: activeStudentId,
+          text: 'UNBAN_USER'
+        }));
+      }
+    } else {
+      alert('Failed to unban user.');
+    }
+    setIsUnbanning(false);
   };
 
   // Send message to active student
-  const sendMessage = (e?: React.FormEvent, customText?: string) => {
+  const sendMessage = (e?: React.FormEvent, customText?: string, msgType: 'text' | 'rich_link' | 'interactive' = 'text', metadata?: any) => {
     if (e) e.preventDefault();
     if (!activeStudentId || (!input.trim() && !customText)) return;
 
@@ -215,6 +425,8 @@ export default function AdminLiveChatPage() {
       targetId: activeStudentId,
       text: textToSend.trim(),
       timestamp,
+      msgType,
+      metadata,
     };
 
     // Send over WebSocket (WebSocket will echo it back to ws.onmessage)
@@ -222,44 +434,56 @@ export default function AdminLiveChatPage() {
     if (!customText) setInput('');
   };
 
-  // Canned Admin Quick Replies
-  const cannedResponses = [
-    'Namaste! Welcome to ZenScroll. How can I help you today?',
-    'You can unlock Pro access directly from our Pricing page.',
-    'Our Mains model answers feature 2 distinct variations in Hindi & English.',
-    'Prelims Unit-wise tests and mnemonics are available under Prelims section.',
+  const QUICK_REPLIES = [
+    { label: '👋 Hi (Hindi)', text: 'नमस्ते! 🙏\n\nमैं अर्जुन बात कर रहा हूँ। MPPSC ZenScroll की सपोर्ट टीम से जुड़ने के लिए धन्यवाद।\n\nमैं आज आपकी क्या सहायता कर सकता हूँ?\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*' },
+    { label: '👋 Hi (English)', text: 'Hello! 🙏\n\nThis is Arjun. Thank you for reaching out to MPPSC ZenScroll support.\n\nHow can I help you today?\n\nRegards,\nArjun\n*MPPSC ZenScroll Team*' },
+    { label: '🔗 Pre + Mains Links', text: '🎯 *MPPSC ZenScroll - Active Libraries* 🚀\n\nनमस्ते! 🙏\n\nआप अपनी तैयारी के अनुसार नीचे दिए गए डायरेक्ट लिंक्स से हमारी लाइब्रेरीज को एक्सप्लोर कर सकते हैं:\n\n💻 [Home (Prelims Library)](https://mppsc.zenscroll.app)\n🏛️ [Mains Library (Syllabus & Model Answers)](https://mppsc.zenscroll.app/mains)\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '💡 Pre Strategy Advice', text: '💡 *MPPSC Prelims - ZenScroll Strategy* 🎯\n\nनमस्ते! 🙏\n\nPrelims की तैयारी को लेकर हमारी एप्रोच बहुत सिंपल है:\n\n1️⃣ *Syllabus की गहरी समझ:* रटने से पहले पूरे सिलेबस (Unit-wise) को माइक्रो-लेवल पर समझें।\n2️⃣ *PYQs का गहरा विश्लेषण:* पिछले साल के प्रश्नों (PYQs) को समझें ताकि पता चले कि आयोग किस तरह के प्रश्न और फैक्ट्स पूछ रहा है।\n3️⃣ *Clarity Before Content:* पहले अपनी समझ मजबूत करें, फिर कंटेंट पढ़ें।\n\nअपनी तैयारी शुरू करने के लिए यहाँ जाएँ:\n🔗 [Home / Prelims](https://mppsc.zenscroll.app)\n🔗 [Free Demo Quiz](https://mppsc.zenscroll.app/free-quiz)\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '💡 Mains Strategy Advice', text: '💡 *MPPSC Mains - ZenScroll Strategy* 🏛️\n\nनमस्ते! 🙏\n\nMains परीक्षा को क्रैक करने के लिए हमारी थिंकिंग:\n\n1️⃣ *Keyword Level Decoding:* सिलेबस के हर एक टॉपिक पर आपके पास 3, 5, और 11 markers के पॉइंट तैयार होने चाहिए।\n2️⃣ *PYQ Integration:* टॉपिक को पुराने साल के प्रश्नों से लिंक करके पढ़ें ताकि एग्जाम का पैटर्न समझ आए।\n3️⃣ *Answer Thinking (उत्तर सोचने का तरीका):* नोट्स रटने के बजाय सही उत्तर लिखने की एप्रोच सीखें।\n\nमैल्यू-ऐडेड नोट्स और मॉडल उत्तर देखने के लिए यहाँ जाएँ:\n🔗 [Mains Library](https://mppsc.zenscroll.app/mains)\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '💳 Pre Payment', text: '🎯 *Prelims Intelligence Course*\n\nनमस्ते! 🙏\nCourse access ke liye aap apna secure payment yahan se complete kar sakte hain:\n\n🔗 [Payment Link](https://mppsc.zenscroll.app/pricing?need=pre)\n\n⚡ (Payment complete hone ke baad please yahan ek screenshot bhej dijiye!)\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '💳 Mains Payment', text: '🏛️ *Mains Syllabus Hub*\n\nनमस्ते! 🙏\nCourse access ke liye aap apna secure payment yahan se complete kar sakte hain:\n\n🔗 [Payment Link](https://mppsc.zenscroll.app/pricing?need=mains)\n\n⚡ (Payment complete hone ke baad please yahan ek screenshot bhej dijiye!)\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '💳 Combo Plan', text: '🏛️ *Combo Plan (Prelims + Mains)*\n\nनमस्ते! 🙏\nPrelims and Mains dono courses ko join karne ke liye secure payment complete karein:\n\n🔗 [Pricing Page](https://mppsc.zenscroll.app/pricing)\n👉 [Direct Prelims](https://mppsc.zenscroll.app/pricing?need=pre)\n👉 [Direct Mains](https://mppsc.zenscroll.app/pricing?need=mains)\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '⚙️ Tech Fixed', text: '🛠️ *Issue Resolved / तकनीकी समस्या हल*\n\nनमस्ते! 🙏\nAapne jo issue report kiya tha, humari technical team ne use successfully resolve kar diya hai.\n\nKripya ek baar website ko refresh karein aur check karein.\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '⏳ Follow up', text: '⏳ *Awaiting Your Reply / प्रतीक्षा*\n\nनमस्ते! 🙏\nHum aapke reply ka wait kar rahe hain. Agar aapko abhi bhi koi doubt ya issue hai, toh please humein batayein.\n\nHum aapki help karne ke liye ready hain!\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '🔐 Login Issue', text: '🔐 *Login Assistance /ログイン सहायता*\n\nनमस्ते! 🙏\nLogin karne me issue aa raha hai?\n\nPlease make sure ki aap exactly usi Google Account (Gmail) se login karein, jisse aapne payment kiya tha. Agar aapko yaad nahi hai toh please yahan apna email id likh kar bhej dein.\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '🎯 Pre Strategy', text: '🎯 *MPPSC Prelims 2026 - Master Strategy*\n\nनमस्ते! 🙏\nAgar aap MPPSC Prelims ki taiyari ekdum ZERO se start kar rahe hain, toh humne aapke liye ek detailed step-by-step strategy blog banaya hai.\n\nIse dhyaan se padhein:\n🔗 [Prelims 2026 Strategy Blog](https://mppsc.zenscroll.app/blogs/how-to-crack-mppsc-prelims-2026-strategy?from=category%3Dgeneral)\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '🏛️ Mains Strategy', text: '🏛️ *MPPSC Mains - Zero to Selection Strategy*\n\nनमस्ते! 🙏\nMPPSC Mains syllabus ko samajhne aur answer writing master karne ke liye humara yeh comprehensive blog zarur padhein.\n\nLink par click karein:\n🔗 [Mains Strategy Blog](https://mppsc.zenscroll.app/blogs/mppsc-mains-master-strategy-2024-zero-to-selection-comprehensive)\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '🎁 Free Resources', text: '🎁 *Explore MPPSC ZenScroll Free Resources*\n\nनमस्ते! 🙏\nMPPSC ki taiyari ko directional aur simple banane ke liye humare saare free resources check karein:\n\n🎯 *Prelims Library & Demo:*\n👉 [Attempt Free Demo Quiz](https://mppsc.zenscroll.app/free-quiz)\n👉 [Track Syllabus Unit-wise](https://mppsc.zenscroll.app/syllabus)\n\n🏛️ *Mains Library:*\n👉 [Explore Syllabus Map & Model Answer Frameworks](https://mppsc.zenscroll.app/mains)\n\n📝 *Strategy Blogs & Preparation Tips:*\n🔗 [Read Blogs](https://mppsc.zenscroll.app/blogs)\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '📱 App Download', text: '📱 *MPPSC ZenScroll App Install Guide*\n\nनमस्ते! 🙏\nZenScroll fast aur lightweight Web-App hai. Ise install karne ke liye niche diye step-by-step points check karein:\n\n🤖 *For Android Users (Chrome):*\n1️⃣ Open: 🔗 https://mppsc.zenscroll.app\n2️⃣ Click **Three Dots (⋮)** in top right corner.\n3️⃣ Tap **"Add to Home screen"**.\n4️⃣ Click **"Add"** again. Done! 🎉\n\n🍎 *For iPhone Users (Safari):*\n1️⃣ Open: 🔗 https://mppsc.zenscroll.app\n2️⃣ Tap **Share icon** (square with up arrow) at bottom.\n3️⃣ Scroll down & tap **"Add to Home Screen"** ➕.\n4️⃣ Tap **"Add"** in top right. Done! 🎉\n\nAb aap ZenScroll ko direct app ki tarah use kar sakte hain! 🚀\n\nRegards,\n*MPPSC ZenScroll Team*' },
+    { label: '📄 2026 Paper Solution', text: '📄 *MPPSC 2026 Official Prelims Paper Solution*\n\nनमस्ते! 🙏\nHumne MPPSC 2026 ka Prelims Paper detailed analytics aur official answer key ke sath upload kar diya hai.\n\n🔗 [Check Paper Solution Here](https://mppsc.zenscroll.app/paper-solution)\n\nRegards,\n*MPPSC ZenScroll Team*' },
   ];
 
-  const studentList = Object.values(students).filter(
-    (s) =>
+  const studentList = Object.values(students)
+    .filter((s) =>
       s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.id.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    )
+    .sort((a, b) => (b.lastTimestamp || 0) - (a.lastTimestamp || 0));
 
   const activeStudent = activeStudentId ? students[activeStudentId] : null;
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-3.5rem)] lg:h-[100dvh] w-full bg-white text-slate-900 overflow-hidden font-sans">
+    <div className="fixed top-14 bottom-0 left-0 right-0 lg:top-0 lg:left-64 flex flex-col bg-[#FAFAFA] text-slate-900 overflow-hidden z-40" style={{ fontFamily: 'var(--font-outfit), var(--font-inter), system-ui, sans-serif' }}>
       {/* ─── GLOBAL HEADER (FIXED HEIGHT) ───────────────────────────────── */}
       <header className="h-14 shrink-0 flex items-center justify-between border-b border-slate-200 bg-white px-4 md:px-6 shadow-sm z-20">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white shadow-sm">
             <Zap size={16} className="fill-white" />
           </div>
           <div>
             <h1 className="text-sm md:text-base font-bold text-slate-900 flex items-center gap-2 tracking-tight">
               Support Desk
-              <span className="hidden sm:inline-flex text-[9px] font-mono bg-indigo-50 text-indigo-600 border border-indigo-200 px-2 py-0.5 rounded-full font-bold">
+              <span className="hidden sm:inline-flex text-[9px] font-mono bg-slate-100 text-slate-900 border border-slate-300 px-2 py-0.5 rounded-full font-bold">
                 PRO ENGINE
               </span>
             </h1>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <div className={cn(
-            "flex items-center gap-1.5 text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full border shadow-sm transition-colors",
-            isConnected ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-red-50 border-red-200 text-red-700"
+            "flex items-center gap-2 text-[11px] font-bold px-3.5 py-1.5 rounded-full border shadow-sm transition-all duration-300",
+            isConnected ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600" : "bg-rose-500/10 border-rose-500/20 text-rose-600"
           )}>
             {isConnected ? (
               <>
@@ -280,23 +504,23 @@ export default function AdminLiveChatPage() {
       </header>
 
       {/* ─── MAIN SPLIT LAYOUT (FLEX-1 OVERFLOW-HIDDEN) ──────────────────── */}
-      <div className="flex flex-1 overflow-hidden relative bg-slate-50/30">
+      <div className="flex flex-1 min-h-0 min-w-0 overflow-hidden bg-slate-50/30">
         
         {/* ─── LEFT SIDEBAR: STUDENT LIST ─── */}
         <div className={cn(
-          "w-full md:w-80 h-full shrink-0 flex flex-col border-r border-slate-200 bg-white/80 backdrop-blur-xl absolute md:relative z-10 transition-transform duration-300 shadow-sm",
-          activeStudentId ? "-translate-x-full md:translate-x-0" : "translate-x-0"
+          "w-full md:w-[350px] lg:w-[400px] flex-col bg-white border-r border-slate-200 shrink-0 min-w-0 h-full",
+          activeStudentId ? "hidden md:flex" : "flex"
         )}>
           {/* Sidebar Search - Fixed Top */}
-          <div className="p-3 shrink-0 border-b border-slate-100 bg-white">
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+          <div className="p-4 shrink-0 border-b border-slate-100 bg-white/50 backdrop-blur-xl">
+            <div className="relative group">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 transition-colors group-focus-within:text-slate-900" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search student..."
-                className="w-full rounded-lg bg-slate-50 border border-slate-200 pl-9 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+                placeholder="Search student or ID..."
+                className="w-full rounded-xl bg-slate-100/50 border border-slate-200/60 pl-9 pr-3 py-2 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-900/10 focus:border-slate-400 transition-all shadow-sm"
               />
             </div>
           </div>
@@ -321,35 +545,39 @@ export default function AdminLiveChatPage() {
                     key={student.id}
                     onClick={() => handleSelectStudent(student.id)}
                     className={cn(
-                      'w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 relative border outline-none',
+                      'w-full text-left p-3.5 rounded-2xl transition-all duration-200 flex items-center gap-3.5 relative border outline-none group',
                       isActive
-                        ? 'bg-indigo-50 border-indigo-200 shadow-sm'
-                        : 'bg-transparent border-transparent hover:bg-slate-100'
+                        ? 'bg-white border-slate-200/60 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] ring-1 ring-slate-900/20'
+                        : 'bg-transparent border-transparent hover:bg-white/60 hover:shadow-sm'
                     )}
                   >
                     <div className="relative shrink-0">
-                      <div className="h-10 w-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-xs text-slate-600 shadow-sm">
+                      <div className={cn(
+                        "h-11 w-11 rounded-2xl flex items-center justify-center font-bold text-sm shadow-sm transition-colors",
+                        isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 border border-slate-200/60 group-hover:bg-slate-200/50"
+                      )}>
                         {student.name.substring(0, 2).toUpperCase()}
                       </div>
-                      <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white" />
+                      <span className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-white shadow-sm" />
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <h4 className={cn("text-sm font-bold truncate", isActive ? "text-indigo-900" : "text-slate-900")}>
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className={cn("text-[13px] font-bold truncate tracking-tight flex items-center gap-1.5", isActive ? "text-black" : "text-slate-900")}>
                           {student.name}
+                          {student.isBanned && <span className="bg-red-100 text-red-600 text-[9px] px-1.5 py-0.5 rounded font-bold tracking-wider">BANNED</span>}
                         </h4>
-                        <span className="text-[10px] font-medium text-slate-400 shrink-0 ml-2">
+                        <span className={cn("text-[10px] font-semibold shrink-0 ml-2", isActive ? "text-slate-600" : "text-slate-400")}>
                           {student.lastTime}
                         </span>
                       </div>
-                      <p className={cn("text-xs truncate", student.unreadCount > 0 ? "text-slate-900 font-semibold" : "text-slate-500 font-medium")}>
+                      <p className={cn("text-[11px] truncate leading-relaxed", student.unreadCount > 0 ? "text-slate-900 font-bold" : "text-slate-500 font-medium")}>
                         {student.lastMessage || 'Connected'}
                       </p>
                     </div>
 
                     {student.unreadCount > 0 && (
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white shadow-sm shrink-0">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-900 text-[10px] font-bold text-white shadow-sm shrink-0">
                         {student.unreadCount}
                       </span>
                     )}
@@ -361,14 +589,20 @@ export default function AdminLiveChatPage() {
         </div>
 
         {/* ─── RIGHT CHAT WINDOW ─── */}
-        <div className="flex-1 h-full flex flex-col min-w-0 w-full absolute md:relative inset-0 transition-transform duration-300 bg-white">
+        <div className={cn(
+          "flex-col flex-1 h-full min-w-0 bg-white overflow-hidden",
+          !activeStudentId ? "hidden md:flex" : "flex"
+        )}>
           {activeStudent ? (
             <>
               {/* Chat Header - Fixed Top */}
               <div className="h-16 shrink-0 flex items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm z-10">
                 <div className="flex items-center gap-3">
                   <button 
-                    onClick={() => setActiveStudentId(null)}
+                    onClick={() => {
+                      setActiveStudentId(null);
+                      activeStudentIdRef.current = null;
+                    }}
                     className="md:hidden h-8 w-8 -ml-2 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
@@ -385,10 +619,20 @@ export default function AdminLiveChatPage() {
                     </p>
                   </div>
                 </div>
-
-                <div className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-slate-500 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 shadow-sm">
-                  <ShieldCheck size={14} className="text-indigo-500" />
-                  <span>Private Thread</span>
+                <div className="hidden sm:flex items-center gap-2">
+                  {activeStudent.isBanned ? (
+                    <Button variant="outline" size="sm" onClick={handleUnbanStudent} disabled={isUnbanning} className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-200 shadow-sm h-8">
+                      {isUnbanning ? 'Unbanning...' : '✅ Unban User'}
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" onClick={handleBanStudent} disabled={isBanning} className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 shadow-sm h-8">
+                      {isBanning ? 'Banning...' : '🚫 Ban (10m)'}
+                    </Button>
+                  )}
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 shadow-sm">
+                    <ShieldCheck size={14} className="text-slate-600" />
+                    <span>Private</span>
+                  </div>
                 </div>
               </div>
 
@@ -466,13 +710,31 @@ export default function AdminLiveChatPage() {
                         {/* Light Mode Distinct Message Bubbles */}
                         <div
                           className={cn(
-                            'px-4 py-2.5 rounded-2xl text-[13px] leading-relaxed shadow-sm font-medium break-words',
-                            isAdmin
-                              ? 'bg-indigo-600 text-white rounded-br-sm shadow-indigo-600/20'
-                              : 'bg-white text-slate-800 border border-slate-200 rounded-bl-sm'
+                            'px-4 py-2.5 rounded-2xl text-[13px] leading-relaxed shadow-sm font-medium break-words max-w-[320px]',
+                            msg.msgType === 'rich_link'
+                              ? 'bg-slate-50 border border-slate-200/80 rounded-br-[4px] shadow-sm'
+                              : isAdmin
+                                ? 'bg-slate-900 text-white rounded-br-[4px] shadow-sm'
+                                : 'bg-white text-slate-800 border border-slate-200/80 rounded-bl-[4px] shadow-sm'
                           )}
                         >
-                          {msg.text}
+                          {msg.msgType === 'rich_link' ? (
+                            <div className="flex flex-col gap-3">
+                              <p className="text-slate-800 leading-relaxed text-sm"><MarkdownRenderer text={msg.text} isAdmin={isAdmin} /></p>
+                              {msg.metadata?.url && (
+                                <a 
+                                  href={msg.metadata.url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="flex items-center justify-center w-full px-4 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl shadow-md hover:bg-black hover:shadow-lg transition-all"
+                                >
+                                  {msg.metadata.title || 'View Link'}
+                                </a>
+                              )}
+                            </div>
+                          ) : (
+                            <MarkdownRenderer text={msg.text} isAdmin={isAdmin} />
+                          )}
                         </div>
                       </div>
                     </div>
@@ -483,49 +745,89 @@ export default function AdminLiveChatPage() {
 
               {/* Quick Admin Responses - Fixed Bottom Above Input */}
               <div className="shrink-0 px-4 py-2 bg-white border-t border-slate-200 flex items-center gap-2 overflow-x-auto hide-scrollbar shadow-sm z-10">
-                <span className="text-[10px] font-bold text-indigo-600 flex items-center gap-1 shrink-0 uppercase tracking-wide">
-                  <Sparkles size={12} /> Canned:
+                <span className="text-[10px] font-bold text-slate-800 flex items-center gap-1 shrink-0 uppercase tracking-wide">
+                  <Sparkles size={12} /> Send:
                 </span>
-                {cannedResponses.map((preset, idx) => (
+                <button
+                  onClick={() => sendMessage(undefined, 'Here is the direct link to the MPPSC 2026 Prelims Solved Paper.', 'rich_link', { title: '2026 Prelims Solution', url: '/open/2026-mppsc-prelims' })}
+                  className="whitespace-nowrap rounded-full bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm hover:bg-slate-50 transition-colors flex items-center gap-1 shrink-0"
+                >
+                  <Zap size={14} className="text-slate-700" /> 2026 Prelims Link
+                </button>
+                <button
+                  onClick={() => sendMessage(undefined, 'Here is the link to our Pricing & Plans.', 'rich_link', { title: 'View Pricing & Plans', url: '/pricing' })}
+                  className="whitespace-nowrap rounded-full bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm hover:bg-slate-50 transition-colors flex items-center gap-1 shrink-0"
+                >
+                  <Zap size={14} className="text-slate-700" /> Pricing Link
+                </button>
+                <button
+                  onClick={() => sendMessage(undefined, 'You can access the Mains Gyan Kosh here.', 'rich_link', { title: 'Mains Gyan Kosh', url: '/pricing?need=mains' })}
+                  className="whitespace-nowrap rounded-full bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm hover:bg-slate-50 transition-colors flex items-center gap-1 shrink-0"
+                >
+                  <Sparkles size={14} className="text-emerald-500" /> Mains Kosh Link
+                </button>
+                <button
+                  onClick={() => setInput('✅ क्या आपकी समस्या का समाधान हो गया है? (Has your query been resolved?)\n\nआपको हमारा सपोर्ट कैसा लगा? कृपया नीचे दिए गए बटनों में से कोई एक चुनें (How was your experience?):\n\nRegards,\n*MPPSC ZenScroll Team*')}
+                  className="whitespace-nowrap rounded-full bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm hover:bg-slate-50 transition-colors flex items-center gap-1 shrink-0"
+                >
+                  <CheckCheck size={14} className="text-emerald-500" /> Resolve & Ask Feedback
+                </button>
+                <button
+                  onClick={() => setInput('नमस्ते! 🙏\n\nबातचीत के बाद आपसे फीडबैक लेना चाहते हैं। आपको हमारा सपोर्ट और गाइडेंस कैसा लगा? कृपया नीचे दिए गए बटनों में से कोई एक चुनें:\n\nRegards,\n*MPPSC ZenScroll Team*')}
+                  className="whitespace-nowrap rounded-full bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm hover:bg-slate-50 transition-colors flex items-center gap-1 shrink-0"
+                >
+                  <Heart size={14} className="text-rose-500" /> Ask General Feedback
+                </button>
+                <div className="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
+                {QUICK_REPLIES.map((qr, idx) => (
                   <button
                     key={idx}
-                    onClick={() => sendMessage(undefined, preset)}
-                    className="text-[11px] bg-slate-50 border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-700 hover:bg-indigo-50 px-3 py-1.5 rounded-full transition-all shrink-0 font-semibold whitespace-nowrap shadow-sm"
+                    onClick={() => setInput(qr.text)}
+                    className="whitespace-nowrap rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50 transition-colors"
                   >
-                    {preset.substring(0, 35)}...
+                    {qr.label}
                   </button>
                 ))}
               </div>
 
               {/* Chat Input - Fixed Bottom */}
-              <div className="shrink-0 p-3 md:p-4 bg-white border-t border-slate-200 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)]">
-                <form onSubmit={sendMessage} className="flex gap-2 items-end">
-                  <div className="flex-1 relative">
-                    <textarea
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          sendMessage();
-                        }
-                      }}
-                      placeholder={`Reply to ${activeStudent.name}...`}
-                      className="w-full resize-none rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all min-h-[48px] max-h-[120px] custom-scrollbar shadow-sm"
-                      rows={1}
-                    />
+              <div className="shrink-0 p-4 md:p-5 bg-white border-t border-slate-100 z-10">
+                {activeStudent.isBanned ? (
+                  <div className="w-full bg-red-50 border border-red-200 text-red-600 text-sm font-bold px-4 py-4 rounded-xl text-center flex items-center justify-center gap-2 shadow-sm">
+                    <ShieldCheck size={18} className="text-red-500" />
+                    This user is currently banned. You cannot send them messages until you unban them.
                   </div>
-                  <Button
-                    type="submit"
-                    disabled={!input.trim()}
-                    className="h-[48px] px-5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all shrink-0 active:scale-95 disabled:opacity-50 shadow-md shadow-indigo-600/20"
-                  >
-                    <Send size={18} className="md:mr-2" /> <span className="hidden md:inline">Send</span>
-                  </Button>
-                </form>
-                <div className="text-center mt-2">
-                   <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">Press Enter to send, Shift+Enter for new line</p>
-                </div>
+                ) : (
+                  <>
+                    <form onSubmit={sendMessage} className="flex gap-3 items-end max-w-4xl mx-auto">
+                      <div className="flex-1 relative group">
+                        <textarea
+                          value={input}
+                          onChange={(e) => setInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              sendMessage();
+                            }
+                          }}
+                          placeholder={`Message ${activeStudent.name}...`}
+                          className="w-full resize-none rounded-2xl bg-slate-50 border border-slate-200/80 px-4 py-3.5 text-[14px] font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-900/10 focus:border-slate-400 transition-all min-h-[52px] max-h-[140px] custom-scrollbar shadow-sm"
+                          rows={1}
+                        />
+                      </div>
+                      <Button
+                        type="submit"
+                        disabled={!input.trim()}
+                        className="h-[52px] w-[52px] md:w-auto md:px-6 rounded-2xl bg-slate-900 hover:bg-black text-white font-bold transition-all shrink-0 active:scale-95 disabled:opacity-50 shadow-md shadow-slate-900/20"
+                      >
+                        <Send size={20} className="md:mr-2 shrink-0" /> <span className="hidden md:inline text-sm">Send</span>
+                      </Button>
+                    </form>
+                    <div className="text-center mt-2">
+                       <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">Press Enter to send, Shift+Enter for new line</p>
+                    </div>
+                  </>
+                )}
               </div>
             </>
           ) : (

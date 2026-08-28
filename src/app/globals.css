@@ -56,6 +56,12 @@
   --animate-blob-pulse: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   --animate-gradient-x: gradient-x 3s ease infinite;
   --animate-fade-in-up: fade-in-up 0.8s ease-out forwards;
+  --animate-wiggle: wiggle 0.5s ease-in-out infinite;
+
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(-12deg); }
+    50% { transform: rotate(12deg); }
+  }
 
   @keyframes marquee-scroll {
     from {
