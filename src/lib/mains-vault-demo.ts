@@ -1,6 +1,6 @@
 /** Public teaser: full PYQ desk UI; only these unlock without `mppsc_mains`. */
 
-export const MAINS_PYQ_DEMO_YEAR = 2025;
+export const MAINS_PYQ_DEMO_YEAR = 2026;
 export const MAINS_PYQ_DEMO_PAPER_NUMBER = 1;
 
 /** Free samples per part (A and B) on demo paper — same bands as before. */
