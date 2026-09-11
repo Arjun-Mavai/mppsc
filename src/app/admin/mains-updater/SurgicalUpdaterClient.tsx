@@ -111,49 +111,114 @@ ENGAGEMENT (NOT A WIKIPEDIA DUMP)
 
 `;
 
-    // 🚀 INJECT PYQs OR EXPECTED QUESTIONS LOGIC
-    if (hasPyqs && pyqReference) {
-      prompt += `══════════════════════════════════════════════════════════════════
-LATEST — TARGET + REAL QUESTIONS (PYQs)
+    prompt += `══════════════════════════════════════════════════════════════════
+🎯 CORE MANDATE: 100% TOPIC-LINE SPECIFIC QUESTIONS & ANSWERS
 ══════════════════════════════════════════════════════════════════
-The following are real past year questions (2023-2024) from MPPSC Mains for this topic. 
-You MUST provide model answers for these exact questions where applicable. Do not invent new questions if these cover the dimensions well.
+TARGET SYLLABUS TOPIC LINE:
+• Hindi: "${topic.titleHi}"
+• English: "${topic.titleEn}"
 
-${pyqReference}
+EXAMINER INSTRUCTION (CRITICAL):
+- You MUST formulate all questions and model answers based strictly and exclusively on THIS EXACT TOPIC LINE.
+- Do NOT bring in unrelated PYQs or off-topic questions from other parts of the unit.
+- Act as an MPPSC Mains 2026 paper-setter: Create the most probable, high-scoring examination questions (2m, 7m, 10m/11m) that directly test an aspirant's deep conceptual and analytical understanding of "${topic.titleEn}" / "${topic.titleHi}".
+- Every question and answer must revolve completely around this topic line's definitions, core dimensions, statutory/constitutional aspects, real-world examples, and MP context.
 
 `;
-    } else {
-      prompt += `══════════════════════════════════════════════════════════════════
-LATEST — TARGET + EXPECTED QUESTIONS
-══════════════════════════════════════════════════════════════════
---- NO IMPORTED PYQ STEMS FOUND ---
-You MUST invent highly probable, MPPSC-style "Expected" questions based on the syllabus line.
-Think like an examiner: What are the most likely dimensions to be asked this year?
-Generate:
-- 2-marker expected questions.
-- 7-marker expected questions.
-- 10/11-marker expected questions.
-
-`;
-    }
     
     if (selectedSection === 'modelAnswers') {
-      prompt += `Generate STRICTLY BILINGUAL model answers for this topic.
-You must output ONE raw JSON object. Do not include markdown formatting like \`\`\`json outside the structure.
+      const pn = paper?.paperNumber ?? 1;
+      const isPureHindi = pn >= 5;
+      const longMarkKey = pn === 4 ? '11m' : '10m';
+
+      prompt += `══════════════════════════════════════════════════════════════════
+EXPERT MODEL ANSWERS SUITE (STRICT MPPSC 2026 PATTERN & PYQ DESK QUALITY)
+══════════════════════════════════════════════════════════════════
+You are an Elite MPPSC Mains Evaluator & Rank-1 Mentor. Generate top-tier, exam-hall ready model answers that fetch 90%+ marks.
+
+OUTPUT REQUIREMENT:
+Output EXACTLY ONE raw JSON object. Do NOT wrap in \`\`\`json markdown fences. No pre/post explanatory text.
 
 JSON SHAPE REQUIRED:
 {
-  "2m": [{"stem": "Hindi Q1", "text": "- point 1\\n- point 2"}, {"stem": "English Q1", "text": "- point 1\\n- point 2"}],
-  "7m": [{"stem": "Hindi Q2", "text": "- point 1\\n- point 2"}, {"stem": "English Q2", "text": "- point 1\\n- point 2"}],
-  "10m": [{"stem": "Hindi Q3", "text": "- point 1\\n- point 2"}, {"stem": "English Q3", "text": "- point 1\\n- point 2"}]
+  "model_answers_hi": {
+    "2m": [
+      {
+        "stem": "सटीक 2-अंक प्रश्न 1?",
+        "text": "- **परिभाषा/मर्म:** सीधा उत्तर पहली ही पंक्ति में (शून्य भूमिका)।\\n- **मुख्य तथ्य:** वर्ष, स्थान, संबंधित व्यक्तित्व या संवैधानिक अनुच्छेद।\\n- **अतिरिक्त आयाम:** एक प्रासंगिक उदाहरण या MP संदर्भ।"
+      },
+      {
+        "stem": "सटीक 2-अंक प्रश्न 2?",
+        "text": "- **मुख्य बिंदु 1:** सटीक तथ्य, संस्थापक या कानूनी प्रावधान।\\n- **मुख्य बिंदु 2:** मुख्य उद्देश्य, महत्व या प्रभाव।"
+      }
+    ],
+    "7m": [
+      {
+        "stem": "सटीक 7-अंक प्रश्न?",
+        "text": "- **परिचय (Intro Hook):** 1 पंक्ति में विषय का मूल अर्थ, संदर्भ व सामयिक महत्व।\\n## मुख्य आयाम (Key Dimensions)\\n- **प्रावधान/कारण 1:** पहला महत्वपूर्ण बिंदु प्रमाण/तथ्य के साथ।\\n- **प्रावधान/कारण 2:** दूसरा विश्लेषणात्मक बिंदु (कारण-प्रभाव)।\\n- **मध्य प्रदेश संदर्भ (MP Angle):** राज्य की विशिष्ट योजना, नीति, आंकड़ा या उदाहरण।\\n## आगे की राह (Way Forward)\\n- **निष्कर्ष:** 1 पंक्ति में संतुलित, संवैधानिक या भविष्योन्मुखी समापन।"
+      }
+    ],
+    "${longMarkKey}": [
+      {
+        "stem": "सटीक ${longMarkKey} दीर्घ-उत्तरीय प्रश्न?",
+        "text": "- **भूमिका (Introductory Hook):** 1-2 पंक्तियों में विषय की पृष्ठभूमि, संवैधानिक स्थिति या परिभाषा।\\n## कोर संरचना व मुख्य बिंदु (Core Analytical Pillars)\\n- **स्तंभ 1 (ढांचा/कारण):** मुख्य तंत्र, नीतिगत प्रावधान या कानूनी आधार।\\n- **स्तंभ 2 (प्रभाव व चुनौतियां):** सामाजिक-आर्थिक निहितार्थ एवं मौजूदा बाधाएं।\\n- **स्तंभ 3 (संस्थागत कार्यप्रणाली):** क्रियान्वयन की स्थिति व व्यवहारिक पहलू।\\n## मध्य प्रदेश का विशेष दृष्टिकोण (MP Strategic Anchor)\\n- **MP योजना / डेटा:** राज्य का प्रासंगिक डेटा, जनजातीय नायक, जीआई टैग या पहल।\\n## सुधार व मूल्यांकन (Reforms & Way Forward)\\n- **सिफारिश:** 2nd ARC / नीति आयोग रिपोर्ट / सुप्रीम कोर्ट के ऐतिहासिक निर्णय का संदर्भ।\\n- **निष्कर्ष:** 1-2 पंक्तियों में आशावादी, संतुलित व सुशासन पर आधारित समापन।"
+      }
+    ]${pn === 4 ? `,\n    "case18": []` : ''}
+  },
+  "model_answers_en": ${isPureHindi ? 'null' : `{
+    "2m": [
+      {
+        "stem": "Exact 2-marker Question 1?",
+        "text": "- **Core Meaning:** Direct answer in the very first bullet (zero filler intro).\\n- **Key Fact:** Year, HQ, founder, or constitutional Article.\\n- **Value-Add:** One crisp fact or MP anchor."
+      },
+      {
+        "stem": "Exact 2-marker Question 2?",
+        "text": "- **Point 1:** Precise statutory or historical fact.\\n- **Point 2:** Crucial mandate, impact, or objective."
+      }
+    ],
+    "7m": [
+      {
+        "stem": "Exact 7-marker Question?",
+        "text": "- **Intro Hook:** 1 crisp line defining the core essence & contemporary context.\\n## Key Dimensions\\n- **Dimension 1:** First substantive pillar backed by empirical fact or Article.\\n- **Dimension 2:** Analytical core point (cause-effect or institutional trait).\\n- **MP Angle / Example:** Concrete state scheme, survey data, or best practice.\\n## Way Forward\\n- **Conclusion:** 1 forward-looking, constitutionally grounded closing line."
+      }
+    ],
+    "${longMarkKey}": [
+      {
+        "stem": "Exact ${longMarkKey} Long-Answer Question?",
+        "text": "- **Introduction:** 1-2 lines establishing the historical/constitutional context & core definition.\\n## Core Analytical Pillars\\n- **Pillar 1 (Framework):** In-depth explanation of mechanism, statutory basis, or doctrine.\\n- **Pillar 2 (Socio-Economic Impact):** Structural implications and key bottlenecks.\\n- **Pillar 3 (Institutional Role):** Implementation reality and administrative dynamics.\\n## MP Strategic Anchor\\n- **State Link:** Specific MP scheme, survey stat, tribal hero, or flagship initiative.\\n## Reforms & Way Forward\\n- **Recommendation:** Reference to 2nd ARC / NITI Aayog / Landmark SC judgment.\\n- **Conclusion:** 1-2 lines visionary, balanced synthesis upholding good governance."
+      }
+    ]${pn === 4 ? `,\n    "case18": []` : ''}
+  }`}
 }
 
-RULES:
-1. Provide exactly three 2-marker questions (max 20 words each).
-2. Provide two 7-marker questions (max 60 words each).
-3. Provide one 10/11-marker question (max 200 words each).
-4. For each mark category, provide BOTH Hindi and English variants as separate objects in the array.
-5. All text answers MUST use vertical bullet points starting with "- " (hyphen + space). No giant paragraphs.`;
+══════════════════════════════════════════════════════════════════
+EXAMINER RULES & WORD LIMIT DISCIPLINE (STRICT):
+══════════════════════════════════════════════════════════════════
+1. 🚨 STRICT LANGUAGE ISOLATION:
+   - "model_answers_hi" = 100% pure authentic Hindi questions & answers.
+   - "model_answers_en" = 100% pure authentic English questions & answers.
+   - NEVER mix Hindi and English in the same array! Each array must contain ONLY its language.
+   ${isPureHindi ? '- NOTE: For Papers 5 & 6, English is strictly prohibited. model_answers_en MUST be null.' : '- Both language blocks must have MATCHING questions and mark bands (parallel structure).'}
+
+2. 📏 STRICT WORD LIMITS (Official MPPSC Norms):
+   • 2-MARKER (2m): MAXIMUM 20 words total! Exactly 2 to 3 vertical bullets ("- "). No introductory sentences, zero fluff. Pure high-density facts.
+   • 7-MARKER (7m): MAXIMUM 60 words total! Structure: 1-line intro hook + "## Section Title" + 3-5 bullet points + 1-line forward conclusion.
+   • 10/11-MARKER (${longMarkKey}): ~180 to 200 words! Structured like a topper's copy:
+     - 1-2 line crisp definition/intro
+     - "## Heading" sections dividing the answer into 2-3 logical pillars
+     - Concrete value additions: Article numbers, Reports (2nd ARC / Law Commission / NITI Aayog), or MP-specific schemes
+     - 1-2 line visionary, constitutional conclusion.
+
+3. ✍️ POINT-FIRST FORMATTING (Matches ZenScroll PYQ Desk UI):
+   - Every substantive line MUST start with "- " (hyphen + space). No long dense paragraphs!
+   - Use bold mini-labels at the start of bullets (e.g., "- **कारण:** ...", "- **Impact:** ...") for rapid visual scanning.
+   - Use "## Section Heading" lines inside the text for 7m and ${longMarkKey} to organize thought flow.
+   - For difference questions, use a clean Markdown table (\`| Basis | Concept A | Concept B |\`).
+   - For quotes, landmark cases, or core maxims, use blockquotes (\`> "Quote"\`).
+
+4. 🎯 VALUE-ADDITION INTEGRATION:
+   - Include authentic MPPSC hooks: Articles, Acts, MP-specific data/schemes, Committees, Thinkers.
+   - Do NOT invent fake PYQ years or speculative statistics.`;
     } else if (selectedSection === 'richPayload') {
       prompt += `Generate the complete Expert-Rich payload for this topic.
 You must output ONE raw JSON object. Do not include markdown formatting like \`\`\`json outside the structure.
@@ -230,7 +295,12 @@ Generate 8-12 high-value cards. Output raw JSON array only. No markdown fences.`
     if (isJson) {
       console.log(`[3] Parsing JSON input...`);
       try {
-        payload = JSON.parse(contentInput);
+        const cleaned = contentInput
+          .trim()
+          .replace(/^```(?:json)?\s*/i, '')
+          .replace(/\s*```$/i, '')
+          .trim();
+        payload = JSON.parse(cleaned);
         console.log(`[4] JSON parsed successfully.`);
       } catch (e) {
         toast.error("Invalid JSON format. Please validate your JSON.");

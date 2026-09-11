@@ -652,12 +652,61 @@ export async function updateMainsContentSurgically(
       };
 
       // 🔄 Sync modelAnswers into richPayload if it exists, since the UI prioritizes richPayload
-      if (sectionKey === 'modelAnswers' && existing[0].richPayload) {
-        const rp = { ...(existing[0].richPayload as any) };
-        rp.model_answers_hi = contentData; // AI json is bilingual, store it here
-        rp.model_answers_en = null; // Clear old English to force fallback to the new bilingual payload
-        updateData.richPayload = rp;
-        console.log(`[SERVER_ACTION] Automatically synced modelAnswers into existing richPayload.`);
+      if (sectionKey === 'modelAnswers') {
+        let maHi: any = null;
+        let maEn: any = null;
+
+        if (contentData && typeof contentData === 'object') {
+          const cd = contentData as Record<string, any>;
+          if (cd.model_answers_hi || cd.model_answers_en) {
+            maHi = cd.model_answers_hi || {};
+            maEn = cd.model_answers_en || {};
+          } else {
+            // Smart auto-split: check if AI placed Hindi and English together in the same band arrays
+            const hiBands: Record<string, any[]> = {};
+            const enBands: Record<string, any[]> = {};
+            const isDevanagari = (s: string) => /[\u0900-\u097F]/.test(s || '');
+
+            for (const [band, list] of Object.entries(cd)) {
+              if (Array.isArray(list)) {
+                hiBands[band] = [];
+                enBands[band] = [];
+                for (const item of list) {
+                  const probe = typeof item === 'string' ? item : (item?.stem || item?.text || '');
+                  if (isDevanagari(probe)) {
+                    hiBands[band].push(item);
+                  } else {
+                    enBands[band].push(item);
+                  }
+                }
+              }
+            }
+
+            const hasHi = Object.values(hiBands).some((arr) => arr.length > 0);
+            const hasEn = Object.values(enBands).some((arr) => arr.length > 0);
+
+            if (hasHi && hasEn) {
+              maHi = hiBands;
+              maEn = enBands;
+              console.log(`[SERVER_ACTION] Smart split mixed model answers: ${Object.keys(hiBands).length} Hindi bands, ${Object.keys(enBands).length} English bands.`);
+            } else if (hasHi) {
+              maHi = cd;
+            } else if (hasEn) {
+              maEn = cd;
+            } else {
+              maHi = cd;
+            }
+          }
+        }
+
+        if (existing[0].richPayload) {
+          const rp = { ...(existing[0].richPayload as any) };
+          if (maHi && Object.keys(maHi).length > 0) rp.model_answers_hi = maHi;
+          if (maEn && Object.keys(maEn).length > 0) rp.model_answers_en = maEn;
+          updateData.richPayload = rp;
+          console.log(`[SERVER_ACTION] Automatically synced modelAnswers into existing richPayload.`);
+        }
+        updateData.modelAnswers = maHi || contentData;
       }
 
       await db
@@ -667,12 +716,27 @@ export async function updateMainsContentSurgically(
     } else {
       console.log(`[SERVER_ACTION] Content does NOT exist. Inserting new row...`);
       // Need to create a new content row with defaults if it doesn't exist
+      let initMaHi: any = null;
+      let initMaEn: any = null;
+      if (sectionKey === 'modelAnswers' && contentData && typeof contentData === 'object') {
+        const cd = contentData as Record<string, any>;
+        if (cd.model_answers_hi || cd.model_answers_en) {
+          initMaHi = cd.model_answers_hi || {};
+          initMaEn = cd.model_answers_en || {};
+        }
+      }
+
       const payload: any = {
         id: uuidv4(),
         topicId,
         conceptHi: 'Content pending...',
         conceptEn: '',
-        modelAnswers: {},
+        modelAnswers: initMaHi || contentData || {},
+        richPayload: initMaHi || initMaEn ? {
+          schema_version: 'v3_history_rich',
+          model_answers_hi: initMaHi || null,
+          model_answers_en: initMaEn || null,
+        } : null,
         [sectionKey]: contentData,
         updatedAt: new Date()
       };
