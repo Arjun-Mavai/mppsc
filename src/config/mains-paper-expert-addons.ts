@@ -81,64 +81,57 @@ CRITICAL: Since this is a pure Hindi paper, you MUST set all \`_en\` keys to \`n
 WORD LIMITS & FORMATTING RULES:
 - 50 Marks Essay: Target ~1000 words. Provide a highly dense, expert essay spanning this length. At the very top, label it explicitly: "**निबंध (लगभग 1000 शब्द)**".
 - 25 Marks Essay: Target ~500 words. At the very top, label it explicitly: "**निबंध (लगभग 500 शब्द)**".
-- 25 Marks Draft/Report (प्रारूप लेखन):
-  The format should look exactly like a handwritten MPPSC mains answer sheet draft.
+- 25 Marks or 15 Marks / 12.5 Marks Draft/Report (प्रारूप लेखन):
+  The format MUST look exactly like an authentic MPPSC mains handwritten answer sheet draft using our official alignment tags.
 
-  Requirements:
-  ✓ Maintain proper top heading
-  ✓ Maintain left-right alignment
-  ✓ Keep subject line separate
-  ✓ Show sender and receiver positions correctly
-  ✓ Show signature block
-  ✓ Use Hindi only
-  ✓ Use monospaced formatting
-  ✓ Use code block (markdown text block)
-  ✓ Do not explain the format
-  ✓ Directly generate the final draft
+  CRITICAL LAYOUT RULES (DO NOT USE BOX DRAWINGS):
+  ✓ STRICTLY FORBIDDEN: DO NOT use ASCII/Unicode box borders (NO ┌, ─, │, ├, └, ┘, ━, etc.).
+  ✓ STRICTLY FORBIDDEN: DO NOT wrap the draft in markdown code fences (\`\`\`text or \`text).
+  ✓ Use standard alignment tags at the start of specific lines so our interactive UI renders examiners' placement hints:
+    • [मध्य में/Center Align] - for Ministry, Department, Title, Subject, etc.
+    • [दाईं ओर/Right Align] - for Place and Date (e.g. [दाईं ओर/Right Align] भोपाल, दिनांक : 15 नवंबर 2026)
+    • [दाईं ओर नीचे/Bottom Right] - for Signatory block (e.g. आदेशानुसार / भवदीय, हस्ताक्षर, नाम, पदनाम)
+    • [बाईं ओर/Left Align] - for reference numbers, dispatch, recipients (प्रति / सेवा में)
+    • [बाईं ओर नीचे/Bottom Left] - for left-aligned footers/annexures if any
+    • [मुख्य कलेवर / Body] - optional marker before the main content paragraphs/points
+  ✓ For body text, use numbered points (1., 2., 3. or क, ख, ग) or clear indented paragraphs.
+  ✓ Show पृष्ठांकन (Endorsement) with प्रतिलिपि सूचनार्थ when appropriate for circulars/orders.
+  ✓ Directly generate the clean formatted draft without meta-commentary.
 
-  Whenever I ask:
-  - शासकीय पत्र
-  - अर्धशासकीय पत्र
-  - परिपत्र
-  - अधिसूचना
-  - कार्यालय आदेश
-  - अनुस्मारक
-  - पृष्ठांकन
-  - प्रेस विज्ञप्ति
+  Standard Example Layout (MPPSC Topper Format):
+  [मध्य में/Center Align] मध्य प्रदेश शासन, स्कूल शिक्षा विभाग
+  [मध्य में/Center Align] मंत्रालय, वल्लभ भवन, भोपाल
 
-  show them exactly in visual layout form.
+  क्रमांक : एफ-12/2026/20-1
+  [दाईं ओर/Right Align] भोपाल, दिनांक : 15 नवंबर 2026
 
-  Output example style:
-  ┌──────────────────────────────────────────────────┐
-  │                    शासकीय पत्र                     │
-  ├──────────────────────────────────────────────────┤
-  │ पत्र क्रमांक : _______                               │
-  │                               स्थान : _______    │
-  │                               दिनांक : _______   │
-  ├──────────────────────────────────────────────────┤
-  │ सेवा में,                                           │
-  │ _________________________                        │
-  │ _________________________                        │
-  ├──────────────────────────────────────────────────┤
-  │ विषय : _________________________                 │
-  ├──────────────────────────────────────────────────┤
-  │ महोदय,                                            │
-  │                                                  │
-  │ पत्र का मुख्य भाग...                                  │
-  │                                                  │
-  ├──────────────────────────────────────────────────┤
-  │ संलग्नक :                                          │
-  │ 1. _______                                       │
-  │ 2. _______                                       │
-  │                                                  │
-  │                                           भवदीय  │
-  │                                           हस्ताक्षर │
-  │                                           नाम    │
-  │                                           पदनाम   │
-  └──────────────────────────────────────────────────┘
+  [मध्य में/Center Align] :: आदेश ::
 
-  Do not write explanations.
-  Generate only the formatted draft.
+  [मुख्य कलेवर / Body]
+  राज्य शासन द्वारा 'राष्ट्रीय शिक्षा नीति 2020' के सुचारू क्रियान्वयन एवं प्रदेश के विद्यालयों में गुणवत्तापूर्ण शिक्षा सुनिश्चित करने हेतु एक 'राज्य सलाहकार परिषद्' का एतद्द्वारा गठन किया जाता है।
+
+  2. परिषद् का स्वरूप निम्नानुसार होगा:
+  (i) माननीय मंत्री, स्कूल शिक्षा विभाग - अध्यक्ष
+  (ii) प्रमुख सचिव, स्कूल शिक्षा विभाग - उपाध्यक्ष
+  (iii) आयुक्त, लोक शिक्षण संचालनालय - सदस्य सचिव
+
+  3. यह आदेश तत्काल प्रभाव से लागू होगा।
+
+  [दाईं ओर नीचे/Bottom Right] मध्य प्रदेश के राज्यपाल के नाम से तथा आदेशानुसार,
+  [दाईं ओर नीचे/Bottom Right] (हस्ताक्षर)
+  [दाईं ओर नीचे/Bottom Right] (नाम ...........)
+  [दाईं ओर नीचे/Bottom Right] अवर सचिव
+  [दाईं ओर नीचे/Bottom Right] स्कूल शिक्षा विभाग, मध्य प्रदेश शासन
+
+  पृष्ठांकन क्र.: एफ-12/2026/20-1/प्रतिलिपि
+  [दाईं ओर/Right Align] भोपाल, दिनांक : 15 नवंबर 2026
+  प्रतिलिपि सूचनार्थ एवं आवश्यक कार्यवाही हेतु:
+  1. निज सचिव, माननीय मुख्यमंत्री, मध्य प्रदेश शासन।
+  2. संबंधित अधिकारी/सदस्य।
+
+  [दाईं ओर नीचे/Bottom Right] (हस्ताक्षर)
+  [दाईं ओर नीचे/Bottom Right] अवर सचिव
+  [दाईं ओर नीचे/Bottom Right] स्कूल शिक्षा विभाग
 STRUCTURE & FLOW (The Golden Thread):
 1. **Dynamic Engaging Start (प्रस्तावना)**: Start with a powerful, engaging hook. ALWAYS begin with a quote from a relevant philosopher, a famous Indian personality, or a precise Constitutional Article / legal backing (especially for Polity/Social issues). Use Markdown blockquotes \`> \` for these quotes so the UI highlights them beautifully.
 2. **Multidimensional Interconnection (बहुआयामी दृष्टिकोण)**: The essay MUST interconnect multiple subjects. Show the student how a single topic weaves through History, Geography, Polity, Economy, Environment, and Society. Demonstrate a broad "Administrator's Mindset" (प्रशासकीय सोच).
