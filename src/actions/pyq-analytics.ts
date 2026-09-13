@@ -1,8 +1,8 @@
 'use server';
 
 import { db } from '@/db';
-import { questions, pyqQuestionTopics, pyqTopics } from '@/db/schema';
-import { eq, inArray, and, sql, desc } from 'drizzle-orm';
+import { questions, pyqQuestionTopics, pyqTopics, pyqPrelimsIntelligence } from '@/db/schema';
+import { eq, inArray, and, sql, desc, asc } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import { syllabusData } from '@/data/syllabusData';
 import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
@@ -38,6 +38,53 @@ export interface OverallWeightageSubjectData {
 
 // Function to get subject-wise questions for Intelligence Overall Weightage
 export async function getOverallWeightageSubjectData(limit?: number): Promise<OverallWeightageSubjectData[]> {
+  try {
+    const intelRows = await db
+      .select({
+        id: questions.id,
+        text: questions.questionText,
+        textEn: questions.questionTextEn,
+        subject: pyqPrelimsIntelligence.subject,
+        testId: pyqPrelimsIntelligence.testId,
+        year: pyqPrelimsIntelligence.year,
+        qNo: pyqPrelimsIntelligence.qNo,
+      })
+      .from(pyqPrelimsIntelligence)
+      .innerJoin(questions, eq(pyqPrelimsIntelligence.questionId, questions.id))
+      .orderBy(desc(pyqPrelimsIntelligence.year), asc(pyqPrelimsIntelligence.qNo));
+
+    if (intelRows.length > 0) {
+      const subjectGroups: Record<string, typeof intelRows> = {};
+      for (const q of intelRows) {
+        const sub = q.subject || 'GS';
+        if (!subjectGroups[sub]) subjectGroups[sub] = [];
+        subjectGroups[sub].push(q);
+      }
+
+      return Object.entries(subjectGroups).map(([subject, qs]) => {
+        let resultQuestions = qs.map((q) => ({
+          id: q.id,
+          text: q.text,
+          textEn: q.textEn,
+          year: q.year,
+          qNo: q.qNo,
+          testTitle: `MPPSC Prelims ${q.year}`,
+          testId: q.testId,
+          subject: q.subject,
+        }));
+        if (limit) {
+          resultQuestions = resultQuestions.slice(0, limit);
+        }
+        return {
+          subject,
+          questions: resultQuestions,
+        };
+      });
+    }
+  } catch (err) {
+    console.error('Error fetching overall weightage from pyqPrelimsIntelligence:', err);
+  }
+
   const canonicalTestIds = getCanonicalTestIds();
   
   // Get all questions from canonical tests with subject grouping
@@ -458,6 +505,47 @@ function jaccardSimilarity(text1: string, text2: string): number {
 export const getRepeatedQuestions = unstable_cache(
   async (): Promise<RepeatedQuestion[]> => {
     try {
+      // 🚀 Prefer dedicated Prelims Intelligence data if present
+      const repeatedRows = await db
+        .select({
+          questionId: pyqPrelimsIntelligence.questionId,
+          text: questions.questionText,
+          textEn: questions.questionTextEn,
+          year: pyqPrelimsIntelligence.year,
+          qNo: pyqPrelimsIntelligence.qNo,
+          repeatedInYears: pyqPrelimsIntelligence.repeatedInYears,
+          repeatCount: pyqPrelimsIntelligence.repeatCount,
+          unitId: pyqPrelimsIntelligence.unitId,
+          unitTitle: pyqPrelimsIntelligence.unitTitle,
+          topic: pyqPrelimsIntelligence.topic,
+        })
+        .from(pyqPrelimsIntelligence)
+        .innerJoin(questions, eq(pyqPrelimsIntelligence.questionId, questions.id))
+        .where(eq(pyqPrelimsIntelligence.isRepeated, true));
+
+      if (repeatedRows.length > 0) {
+        return repeatedRows.map((r) => {
+          const years: number[] = Array.isArray(r.repeatedInYears)
+            ? (r.repeatedInYears as number[])
+            : typeof r.repeatedInYears === 'string'
+              ? JSON.parse(r.repeatedInYears)
+              : [];
+          const occurrences = [
+            { year: r.year, qNo: r.qNo },
+            ...years.map((y) => ({ year: y, qNo: 0 })),
+          ];
+          return {
+            questionId: r.questionId,
+            text: r.text || '',
+            textEn: r.textEn,
+            occurrences,
+            count: r.repeatCount || (years.length + 1),
+            topics: [{ id: r.unitId, name: r.topic }],
+            unit: { id: r.unitId, title: r.unitTitle },
+          };
+        });
+      }
+
       const testIds = getCanonicalTestIds();
       // ... (rest of the logic stays the same)
       const allQuestions = await db
@@ -632,7 +720,7 @@ export const getRepeatedQuestions = unstable_cache(
       return [];
     }
   },
-  ['pyq-repeated-questions-v14-2026'],
+  ['pyq-repeated-questions-v15-intel'],
   { revalidate: 604800, tags: ['pyq-insights', 'questions'] }
 );
 
@@ -650,6 +738,51 @@ export const getUnifiedSubjectStatsCached = unstable_cache(
 export const getUnitDistributionStats = unstable_cache(
   async (limit?: number): Promise<UnitDistributionStats[]> => {
   try {
+    // 🚀 Prefer dedicated Prelims Intelligence data if present
+    const intelRows = await db
+      .select({
+        id: questions.id,
+        testId: pyqPrelimsIntelligence.testId,
+        text: questions.questionText,
+        textEn: questions.questionTextEn,
+        subject: pyqPrelimsIntelligence.subject,
+        unitId: pyqPrelimsIntelligence.unitId,
+        unitTitle: pyqPrelimsIntelligence.unitTitle,
+        year: pyqPrelimsIntelligence.year,
+        qNo: pyqPrelimsIntelligence.qNo,
+      })
+      .from(pyqPrelimsIntelligence)
+      .innerJoin(questions, eq(pyqPrelimsIntelligence.questionId, questions.id))
+      .orderBy(desc(pyqPrelimsIntelligence.year), asc(pyqPrelimsIntelligence.qNo));
+
+    if (intelRows.length > 0) {
+      const stats: Record<string, UnitDistributionStats> = {};
+      for (const q of intelRows) {
+        const key = `${q.year}-${q.unitId}`;
+        if (!stats[key]) {
+          stats[key] = {
+            year: q.year,
+            unitId: q.unitId,
+            unitTitle: q.unitTitle,
+            count: 0,
+            questions: [],
+          };
+        }
+        stats[key].count++;
+        if (!limit || stats[key].questions.length < limit) {
+          stats[key].questions.push({
+            id: q.id,
+            text: q.text || '',
+            textEn: q.textEn,
+            year: q.year,
+            qNo: q.qNo,
+            subject: q.subject || undefined,
+          });
+        }
+      }
+      return Object.values(stats).sort((a, b) => b.year - a.year || a.unitId.localeCompare(b.unitId));
+    }
+
     const testIds = getCanonicalTestIds();
 
     // Fetch all questions from canonical tests
@@ -718,7 +851,7 @@ export const getUnitDistributionStats = unstable_cache(
     return [];
   }
 },
-['pyq-unit-distribution-v1-2026'],
+['pyq-unit-distribution-v2-intel'],
 { revalidate: 604800, tags: ['pyq-insights', 'questions'] }
 );
 

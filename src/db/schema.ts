@@ -233,6 +233,37 @@ export const pyqTopicTrends = sqliteTable(
   ]
 );
 
+// PYQ Prelims Intelligence Categorization (2020-2026 Canonical Papers)
+export const pyqPrelimsIntelligence = sqliteTable(
+  'pyq_prelims_intelligence',
+  {
+    id: text('id').primaryKey(),
+    questionId: text('question_id')
+      .references(() => questions.id, { onDelete: 'cascade' })
+      .notNull(),
+    testId: text('test_id').notNull(),
+    year: integer('year').notNull(),
+    qNo: integer('q_no').notNull(),
+    unitId: text('unit_id').notNull(),
+    unitTitle: text('unit_title').notNull(),
+    subject: text('subject').notNull(),
+    topic: text('topic').notNull(),
+    isRepeated: integer('is_repeated', { mode: 'boolean' }).default(false),
+    repeatedInYears: text('repeated_in_years', { mode: 'json' })
+      .$type<number[]>()
+      .default(sql`'[]'`),
+    repeatCount: integer('repeat_count').default(1),
+    importance: text('importance', { enum: ['high', 'medium', 'low'] }).default('medium'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  },
+  (table) => [
+    uniqueIndex('idx_pyq_pi_qid').on(table.questionId),
+    index('idx_pyq_pi_year_unit').on(table.year, table.unitId),
+    index('idx_pyq_pi_subject').on(table.subject),
+    index('idx_pyq_pi_year').on(table.year),
+  ]
+);
+
 // PYQ Import Jobs (Admin Audit)
 export const pyqContentImportJobs = sqliteTable(
   'pyq_content_import_jobs',
@@ -1380,3 +1411,11 @@ export const supportMessagesRelations = relations(supportMessages, ({ one }) => 
     references: [supportConversations.id],
   }),
 }));
+
+export const pyqPrelimsIntelligenceRelations = relations(pyqPrelimsIntelligence, ({ one }) => ({
+  question: one(questions, {
+    fields: [pyqPrelimsIntelligence.questionId],
+    references: [questions.id],
+  }),
+}));
+

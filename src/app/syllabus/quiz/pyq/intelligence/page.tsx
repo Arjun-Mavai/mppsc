@@ -25,12 +25,12 @@ export const revalidate = 21600;
 // ── Cached analytics functions (unique stable keys) ─────────────────────────
 const getCachedUnitStats = unstable_cache(
   getUnitDistributionStats,
-  ['intelligence-unit-stats-v7-2026'],
+  ['intelligence-unit-stats-v8-intel'],
   { revalidate: 21600 }
 );
 const getCachedSubjectQuestionsData = unstable_cache(
   getOverallWeightageSubjectData,
-  ['intelligence-subject-questions-v7-2026'],
+  ['intelligence-subject-questions-v8-intel'],
   { revalidate: 21600 }
 );
 

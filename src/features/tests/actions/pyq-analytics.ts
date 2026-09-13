@@ -1,8 +1,8 @@
 'use server';
 
 import { db } from '@/db';
-import { questions, tests } from '@/db/schema';
-import { and, eq, or, inArray } from 'drizzle-orm';
+import { questions, tests, pyqPrelimsIntelligence } from '@/db/schema';
+import { and, eq, or, inArray, sql } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
 import { getCanonicalTestIds } from '@/lib/pyq-constants';
@@ -13,6 +13,28 @@ import { getCanonicalTestIds } from '@/lib/pyq-constants';
 // ------------------------------------------------------------------
 export const getSubjectWisePYQStats = unstable_cache(
   async () => {
+    try {
+      const intelCounts = await db
+        .select({
+          subject: pyqPrelimsIntelligence.subject,
+          count: sql<number>`count(*)`.as('count'),
+        })
+        .from(pyqPrelimsIntelligence)
+        .groupBy(pyqPrelimsIntelligence.subject);
+
+      if (intelCounts.length > 0) {
+        const stats: Record<string, number> = {};
+        for (const row of intelCounts) {
+          if (row.subject) {
+            stats[row.subject] = Number(row.count);
+          }
+        }
+        return stats;
+      }
+    } catch (err) {
+      console.error('Error fetching subject stats from pyqPrelimsIntelligence:', err);
+    }
+
     // 🚀 RESTRICTION: Only use canonical PYQ tests (see CANONICAL_TEST_IDS) for analysis.
     const pyqTestIds = getCanonicalTestIds();
 
@@ -39,7 +61,7 @@ export const getSubjectWisePYQStats = unstable_cache(
     // Only return categories with > 0 questions
     return stats;
   },
-  ['subject-wise-pyq-stats-v2-2026'],
+  ['subject-wise-pyq-stats-v3-intel'],
   { revalidate: 3600, tags: ['pyq-stats'] } // Revalidate every hour
 );
 
