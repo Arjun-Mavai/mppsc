@@ -568,11 +568,11 @@ export function HotTopicsSection({ isHindi }: HotTopicsSectionProps) {
                                 <span className="h-2.5 w-2.5 rounded-full bg-zinc-400" />
                               </span>
                               <span className="font-mono text-xs sm:text-sm font-bold text-[#0b0d14]">
-                                {'//'} {topic.topicNumber.toLowerCase().replace(/\s+/g, '-')}-cheat-sheet.md
+                                {'//'} {topic.topicNumber.toLowerCase().replace(/\s+/g, '-')}-cheat-sheet
                               </span>
                             </div>
 
-                            <div className="flex items-center gap-2 font-mono">
+                            {/* <div className="flex items-center gap-2 font-mono">
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -604,7 +604,7 @@ export function HotTopicsSection({ isHindi }: HotTopicsSectionProps) {
                                   <ChevronDown className="h-4 w-4" />
                                 )}
                               </Button>
-                            </div>
+                            </div> */}
                           </div>
 
                           {/* Cheat Sheet Expanded Content */}
