@@ -2,11 +2,10 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ChevronDown, ChevronUp, Repeat } from 'lucide-react';
+import { ArrowRight, ChevronDown, Repeat } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
 import { YearBadge } from './shared/UnitBadge';
 
 export interface QuestionData {
@@ -36,6 +35,7 @@ interface QuestionItemProps {
   theme?: 'light' | 'dark';
   /** Hide link to in-app full question (e.g. public open page). */
   hideFullQuestionLink?: boolean;
+  showAnswer?: boolean;
 }
 
 export function QuestionItem({
@@ -45,23 +45,22 @@ export function QuestionItem({
   repeatCount = 0,
   showYear = true,
   variant = 'compact',
-  defaultExpanded = false,
   theme = 'dark',
-  hideFullQuestionLink = false,
+  showAnswer = false,
 }: QuestionItemProps) {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  // Local toggle state for tapping individual question cards
+  const [prevShowAnswer, setPrevShowAnswer] = useState(showAnswer);
+  const [isAnswerToggled, setIsAnswerToggled] = useState<boolean | null>(null);
+
+  // When parent showAnswer changes (unit level toggle "उत्तर दिखाएं / छिपाएं"), sync during render
+  if (prevShowAnswer !== showAnswer) {
+    setPrevShowAnswer(showAnswer);
+    setIsAnswerToggled(null);
+  }
+
+  const isAnswerVisible = isAnswerToggled !== null ? isAnswerToggled : Boolean(showAnswer);
   const displayText = isHindi ? question.text : question.textEn || question.text;
   const altText = isHindi ? question.textEn : question.text;
-  const explPrimary = isHindi
-    ? (question.explanation?.trim() || question.explanationEn?.trim() || '')
-    : (question.explanationEn?.trim() || question.explanation?.trim() || '');
-  const explAlt = isHindi
-    ? question.explanationEn && question.explanationEn !== explPrimary
-      ? question.explanationEn
-      : ''
-    : question.explanation && question.explanation !== explPrimary
-      ? question.explanation
-      : '';
 
   // Helper to normalize options and correct answer
   const normalizedOptions = useMemo(() => {
@@ -69,62 +68,126 @@ export function QuestionItem({
 
     type OptionObj = { id?: unknown; text?: unknown; text_en?: unknown; textEn?: unknown };
 
-    try {
-      // If it's already an array, check if it's strings or objects
-      if (Array.isArray(question.options)) {
-        if (question.options.length === 0) return [];
-
-        if (typeof question.options[0] === 'string') {
-          return (question.options as string[]).map((opt, i) => ({
-            id: String.fromCharCode(65 + i),
-            text: opt,
-            textEn: question.optionsEn?.[i] || opt,
-          }));
+    let rawList: unknown[] = [];
+    if (Array.isArray(question.options)) {
+      rawList = question.options;
+    } else if (typeof question.options === 'string') {
+      try {
+        let parsed = JSON.parse(question.options);
+        if (typeof parsed === 'string') {
+          try { parsed = JSON.parse(parsed); } catch { /* ignore */ }
         }
-
-        // Handle DB JSON format: [{id, text, text_en}]
-        return (question.options as unknown[]).map((opt) => {
-          const o = (opt ?? {}) as OptionObj;
-          return {
-            id: String(o.id ?? ''),
-            text: String(o.text ?? ''),
-            textEn: String(o.text_en ?? o.textEn ?? o.text ?? ''),
-          };
-        });
-      }
-
-      // If it's a string, try parsing
-      if (typeof question.options === 'string') {
-        const opts = JSON.parse(question.options) as unknown;
-        if (Array.isArray(opts)) {
-          return (opts as unknown[]).map((opt) => {
-            const o = (opt ?? {}) as OptionObj;
-            return {
-              id: String(o.id ?? ''),
-              text: String(o.text ?? ''),
-              textEn: String(o.text_en ?? o.textEn ?? o.text ?? ''),
-            };
-          });
+        if (Array.isArray(parsed)) {
+          rawList = parsed;
         }
+      } catch (e) {
+        console.error('Error parsing question options:', e);
       }
-    } catch (e) {
-      console.error('Error normalizing options for question:', question.id, e);
     }
-    return [];
-  }, [question.options, question.optionsEn, question.id]);
+
+    if (!rawList || rawList.length === 0) return [];
+
+    return rawList.map((opt, i) => {
+      if (typeof opt === 'string') {
+        return {
+          id: String.fromCharCode(65 + i),
+          text: opt,
+          textEn: question.optionsEn?.[i] || opt,
+        };
+      }
+      const o = (opt ?? {}) as OptionObj;
+      return {
+        id: String(o.id ?? String.fromCharCode(65 + i)),
+        text: String(o.text ?? ''),
+        textEn: String(o.text_en ?? o.textEn ?? o.text ?? ''),
+      };
+    });
+  }, [question.options, question.optionsEn]);
 
   const correctIdx = useMemo(() => {
     if (question.correctAnswer === undefined || question.correctAnswer === null) return -1;
-    if (typeof question.correctAnswer === 'number') return question.correctAnswer;
 
-    // Match 'A', 'B', 'C', 'D' to 0, 1, 2, 3
-    const ans = String(question.correctAnswer).toUpperCase();
-    const charCode = ans.charCodeAt(0);
-    if (ans.length === 1 && charCode >= 65 && charCode <= 68) return charCode - 65;
+    // 1. Direct number
+    if (typeof question.correctAnswer === 'number') {
+      return Math.floor(question.correctAnswer);
+    }
 
-    // Fallback: try to find by ID in normalized options
-    return normalizedOptions.findIndex((opt) => opt.id === question.correctAnswer);
+    const rawAns = String(question.correctAnswer).trim();
+    if (!rawAns) return -1;
+
+    // 2. Numeric / Float strings like "1.0", "0.0", "2", "3"
+    const num = Number(rawAns);
+    if (!isNaN(num) && rawAns !== '') {
+      const idx = Math.floor(num);
+      if (idx >= 0 && (normalizedOptions.length === 0 || idx < normalizedOptions.length)) {
+        return idx;
+      }
+    }
+
+    // 3. Single letter 'A', 'B', 'C', 'D' (or 'a', 'b', 'c', 'd')
+    const upper = rawAns.toUpperCase();
+    if (upper.length === 1) {
+      const code = upper.charCodeAt(0);
+      if (code >= 65 && code <= 90) {
+        return code - 65;
+      }
+    }
+
+    // 4. Try matching option ID in normalizedOptions
+    const byId = normalizedOptions.findIndex(
+      (opt) => opt.id.toLowerCase() === rawAns.toLowerCase()
+    );
+    if (byId !== -1) return byId;
+
+    // 5. Try matching option text in normalizedOptions
+    const byText = normalizedOptions.findIndex(
+      (opt) =>
+        opt.text.trim().toLowerCase() === rawAns.toLowerCase() ||
+        opt.textEn.trim().toLowerCase() === rawAns.toLowerCase()
+    );
+    if (byText !== -1) return byText;
+
+    return -1;
   }, [question.correctAnswer, normalizedOptions]);
+
+  // Sahi Uttar (Hindi + English formatted cleanly like in screenshot)
+  const correctDisplay = useMemo(() => {
+    // 1. If we found the correct option in normalizedOptions
+    if (correctIdx >= 0 && correctIdx < normalizedOptions.length) {
+      const opt = normalizedOptions[correctIdx];
+      const hi = opt.text?.trim() || '';
+      const en = opt.textEn?.trim() || '';
+      if (hi && en && hi.toLowerCase() !== en.toLowerCase()) {
+        return `${hi} (${en})`;
+      }
+      return isHindi ? (hi || en) : (en || hi);
+    }
+
+    // 2. Fallback: If options not found or empty, never show raw "1.0" or "0.0"
+    if (question.correctAnswer !== undefined && question.correctAnswer !== null) {
+      const rawAns = String(question.correctAnswer).trim();
+      const num = Number(rawAns);
+
+      // If it's a numeric float/int like "1.0", convert to human option name
+      if (!isNaN(num) && rawAns !== '') {
+        const letter = String.fromCharCode(65 + Math.floor(num));
+        return isHindi ? `विकल्प ${letter}` : `Option ${letter}`;
+      }
+
+      // If it's single letter like "A"
+      if (rawAns.length === 1 && /^[A-Za-z]$/.test(rawAns)) {
+        return isHindi ? `विकल्प ${rawAns.toUpperCase()}` : `Option ${rawAns.toUpperCase()}`;
+      }
+
+      return rawAns;
+    }
+
+    return '';
+  }, [normalizedOptions, correctIdx, question.correctAnswer, isHindi]);
+
+  const handleCardClick = () => {
+    setIsAnswerToggled((prev) => (prev !== null ? !prev : !showAnswer));
+  };
 
   if (variant === 'card') {
     return (
@@ -134,12 +197,12 @@ export function QuestionItem({
           theme === 'light' 
             ? 'border-[#E5E5EA] bg-white hover:bg-[#F5F5F7]' 
             : 'border-white/[0.03] bg-black/20 hover:bg-black/30',
-          isExpanded && (theme === 'light' ? 'bg-[#F2F8FF] ring-1 ring-blue-500/20' : 'bg-black/40 ring-1 ring-emerald-500/20')
+          isAnswerVisible && (theme === 'light' ? 'bg-[#F2F8FF] ring-1 ring-blue-500/20' : 'bg-black/40 ring-1 ring-emerald-500/20')
         )}
       >
         <div
           className="flex cursor-pointer items-start gap-4 p-4 sm:p-5"
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={handleCardClick}
         >
           {/* Question Number */}
           <div className={cn(
@@ -156,13 +219,32 @@ export function QuestionItem({
             <p
               className={cn(
                 'mb-2 text-sm leading-relaxed font-semibold transition-colors sm:text-[15px]',
-                theme === 'light'
-                  ? (isExpanded ? 'text-[#1D1D1F]' : 'text-[#86868B]')
-                  : (isExpanded ? 'text-white' : 'text-slate-200')
+                theme === 'light' ? 'text-[#1D1D1F]' : 'text-slate-200'
               )}
             >
               {displayText}
             </p>
+
+            {/* Answer Display */}
+            {isAnswerVisible && correctDisplay && (
+              <div className="flex items-center gap-1.5 mb-2 pt-0.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                <span className={cn(
+                  "text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md border shrink-0",
+                  theme === 'light'
+                    ? "text-emerald-700 bg-emerald-50 border-emerald-200/60"
+                    : "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                )}>
+                  {isHindi ? 'सही उत्तर' : 'Correct Answer'}:
+                </span>
+                <span className={cn(
+                  "text-xs sm:text-sm font-semibold line-clamp-2",
+                  theme === 'light' ? "text-slate-800" : "text-emerald-300"
+                )}>
+                  {correctDisplay}
+                </span>
+              </div>
+            )}
+
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[10px] font-black tracking-wider text-slate-500/90 uppercase">
               <span className="text-emerald-500/80">{question.year}</span>
               <span className="h-1 w-1 rounded-full bg-slate-800" />
@@ -182,100 +264,39 @@ export function QuestionItem({
                 </>
               )}
               <div className="ml-auto flex items-center gap-1 text-slate-600">
-                {isExpanded ? (
-                  <ChevronUp className="h-3 w-3" />
-                ) : (
-                  <ChevronDown className="h-3 w-3" />
-                )}
+                <ChevronDown className={cn("h-3 w-3 transition-transform duration-200", isAnswerVisible && "rotate-180 text-emerald-400")} />
               </div>
             </div>
           </div>
         </div>
-
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="space-y-4 border-t border-white/[0.05] p-4 pt-4 sm:p-5">
-                {/* Full question text */}
-                {altText && altText !== displayText && (
-                  <p className="text-[12px] leading-relaxed text-slate-400 italic">{altText}</p>
-                )}
-
-                {/* Options if available */}
-                {normalizedOptions.length > 0 && (
-                  <div className="space-y-2">
-                    {normalizedOptions.map((opt, i) => {
-                      const isCorrect = correctIdx === i;
-                      return (
-                        <div
-                          key={i}
-                          className={cn(
-                            'rounded-xl border px-3 py-2 text-[12px] leading-relaxed',
-                            isCorrect
-                              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
-                              : 'border-white/[0.04] bg-white/[0.02] text-slate-300'
-                          )}
-                        >
-                          <span className="mr-2 font-black text-slate-500">{opt.id}</span>
-                          {isHindi ? opt.text : opt.textEn || opt.text}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* View full question link */}
-                {/* <div className="flex items-center justify-between">
-                  <Link
-                    href={`/syllabus/quiz/pyq/question/${question.id}`}
-                    className="inline-flex items-center gap-1.5 text-[10px] font-black tracking-widest text-emerald-500 uppercase hover:text-emerald-400"
-                  >
-                    {isHindi ? 'पूरा प्रश्न' : 'View Full'}
-                    <ArrowRight className="h-3 w-3" />
-                  </Link>
-                </div> */}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     );
   }
 
   if (variant === 'compact') {
-    const correctOpt = normalizedOptions[correctIdx];
-    const correctDisplay = correctOpt 
-      ? (isHindi ? correctOpt.text : correctOpt.textEn || correctOpt.text) 
-      : '';
-
     return (
       <div className={cn("group/question relative transition-colors", theme === 'light' ? "bg-white" : "")}>
         <div
           className={cn(
-            "flex cursor-pointer flex-col px-2 py-3.5 transition-all sm:p-5 gap-2",
+            "flex cursor-pointer flex-col px-3 py-3.5 transition-all sm:p-5 gap-2",
             theme === 'light' ? "hover:bg-[#F5F5F7]" : "hover:bg-slate-800/40"
           )}
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={handleCardClick}
         >
           {/* Top line: Q-number and Chevron */}
           <div className="flex items-center justify-between">
             <span className={cn(
-              "text-[10px] font-black uppercase tracking-widest",
-              theme === 'light' ? "text-blue-600" : "text-blue-500"
+              "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider",
+              theme === 'light' ? "border-blue-200 bg-blue-50 text-blue-600" : "border-blue-500/20 bg-blue-500/10 text-blue-400"
             )}>
               Q{index + 1}
             </span>
-            <div className="flex items-center gap-2">
-              {isExpanded ? (
-                <ChevronUp className="h-4 w-4 text-emerald-400" />
-              ) : (
-                <ChevronDown className="h-4 w-4 text-slate-600" />
-              )}
+            <div className={cn(
+              "flex h-6 w-6 items-center justify-center rounded-full transition-all",
+              theme === 'light' ? "bg-slate-100 text-slate-500 hover:bg-slate-200" : "bg-slate-800 text-slate-400",
+              isAnswerVisible && (theme === 'light' ? "bg-emerald-50 text-emerald-600" : "bg-emerald-500/20 text-emerald-400")
+            )}>
+              <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", isAnswerVisible && "rotate-180")} />
             </div>
           </div>
 
@@ -283,142 +304,53 @@ export function QuestionItem({
           <div className="min-w-0 flex-1">
             <p
               className={cn(
-                'text-sm leading-relaxed transition-colors font-bold',
-                theme === 'light'
-                  ? 'text-[#1D1D1F]'
-                  : (isExpanded ? 'text-white' : 'text-slate-200'),
-                !isExpanded && 'line-clamp-2'
+                'text-sm leading-relaxed transition-colors font-bold sm:text-[15px]',
+                theme === 'light' ? 'text-slate-900' : 'text-slate-200'
               )}
             >
               {displayText}
             </p>
           </div>
 
-          {/* Third line: Correct Option/Answer in blue bold text */}
-          {correctDisplay && (
-            <p className={cn(
-              "text-sm font-extrabold sm:text-base leading-relaxed",
-              theme === 'light' ? "text-blue-600" : "text-blue-400"
-            )}>
-              {correctDisplay}
-            </p>
+          {/* Third line: Sahi Uttar (Clean green badge matching screenshot) */}
+          {isAnswerVisible && correctDisplay && (
+            <div className="flex items-start gap-1.5 pt-0.5 animate-in fade-in slide-in-from-top-1 duration-200">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200/60 shrink-0">
+                {isHindi ? 'सही उत्तर' : 'Correct Answer'}:
+              </span>
+              <span className="text-xs sm:text-sm font-semibold text-slate-800 line-clamp-2">
+                {correctDisplay}
+              </span>
+            </div>
           )}
 
-          {/* Fourth line: Badges/Action row */}
+          {/* Fourth line: Badges row */}
           <div className="flex flex-wrap items-center gap-2 pt-1">
+            {showYear && (
+              <YearBadge
+                year={question.year}
+                variant="amber"
+                className="border-amber-200 bg-amber-50 px-2 py-0.5 text-[9px] font-bold text-amber-700 uppercase rounded-md"
+              />
+            )}
             {question.subject && (
-              <Badge
-                variant="outline"
-                className="h-5 border-emerald-500/30 bg-emerald-500/10 px-1.5 text-[9px] font-black tracking-tight text-emerald-400 uppercase"
-              >
+              <Badge className="border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold tracking-widest text-emerald-700 hover:bg-emerald-50 uppercase rounded-md">
                 {question.subject}
               </Badge>
             )}
             {question.qNo && (
-              <span className="font-mono text-[10px] text-slate-500">SET-Q{question.qNo}</span>
+              <span className="font-mono text-[9px] font-bold tracking-widest text-slate-400 uppercase">
+                SET-Q{question.qNo}
+              </span>
             )}
-            {showYear && <YearBadge year={question.year} variant="emerald" />}
             {repeatCount > 1 && (
               <Badge className="h-5 border-none bg-rose-500/20 px-1.5 text-[10px] text-rose-400">
                 <Repeat className="mr-0.5 h-3 w-3" />
                 {isHindi ? `${repeatCount}x रिपीट` : `Repeated ${repeatCount}x`}
               </Badge>
             )}
-            <Badge
-              variant="outline"
-              className={cn(
-                "h-5 border-blue-500/20 bg-blue-500/10 px-1.5 text-[9px] font-black tracking-tight text-blue-400 uppercase transition-all select-none",
-                isExpanded && "border-amber-500/20 bg-amber-500/10 text-amber-400"
-              )}
-            >
-              {isExpanded 
-                ? (isHindi ? 'कम विवरण' : 'Less Detail') 
-                : (isHindi ? 'अधिक विवरण' : 'More Detail')}
-            </Badge>
           </div>
         </div>
-
-        <AnimatePresence>
-            {isExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <div
-                className={cn(
-                  'space-y-3 border-t px-2 py-3 sm:px-4',
-                  theme === 'light'
-                    ? 'border-slate-200 bg-[#F5F5F7]'
-                    : 'border-slate-800/50 bg-slate-900/50'
-                )}
-              >
-
-                {/* Alternate language */}
-                {altText && altText !== displayText && (
-                  <p
-                    className={cn(
-                      'text-xs leading-relaxed italic',
-                      theme === 'light' ? 'text-slate-500' : 'text-slate-500'
-                    )}
-                  >
-                    {altText}
-                  </p>
-                )}
-
-                {/* Options if available */}
-                {normalizedOptions.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    {normalizedOptions.map((opt, i) => {
-                      const isCorrect = correctIdx === i;
-                      return (
-                        <div
-                          key={i}
-                          className={cn(
-                            'rounded-lg border px-3 py-2 text-sm',
-                            theme === 'light'
-                              ? isCorrect
-                                ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
-                                : 'border-slate-200 bg-white text-slate-700'
-                              : isCorrect
-                                ? 'border-green-500/30 bg-green-500/10 text-green-300'
-                                : 'border-slate-700/50 bg-slate-800/30 text-slate-400'
-                          )}
-                        >
-                          <span className="font-medium">{opt.id}.</span>{' '}
-                          {isHindi ? opt.text : opt.textEn || opt.text}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Explanation */}
-                {explPrimary ? (
-                  <div
-                    className={cn(
-                      'rounded-lg border p-3 text-sm leading-relaxed',
-                      theme === 'light'
-                        ? 'border-slate-200 bg-white text-slate-800'
-                        : 'border-emerald-500/20 bg-emerald-50/5 text-slate-200'
-                    )}
-                  >
-                    <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
-                      {isHindi ? 'व्याख्या' : 'Explanation'}
-                    </p>
-                    <p className="whitespace-pre-wrap">{explPrimary}</p>
-                    {explAlt ? (
-                      <p className="mt-2 border-t border-slate-200 pt-2 text-xs italic text-slate-500">
-                        {explAlt}
-                      </p>
-                    ) : null}
-                  </div>
-                ) : null}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     );
   }
@@ -476,6 +408,7 @@ interface QuestionListProps {
   maxVisible?: number;
   variant?: 'compact' | 'full' | 'card';
   showAllExpanded?: boolean;
+  showAnswers?: boolean;
   theme?: 'light' | 'dark';
   hideFullQuestionLink?: boolean;
 }
@@ -489,6 +422,7 @@ export function QuestionList({
   maxVisible,
   variant = 'compact',
   showAllExpanded = false,
+  showAnswers = false,
   theme = 'dark',
   hideFullQuestionLink = false,
 }: QuestionListProps) {
@@ -547,6 +481,7 @@ export function QuestionList({
                   showYear={false}
                   variant={variant}
                   defaultExpanded={showAllExpanded}
+                  showAnswer={showAnswers}
                   theme={theme}
                   hideFullQuestionLink={hideFullQuestionLink}
                 />
@@ -580,6 +515,7 @@ export function QuestionList({
             showYear={showYears}
             variant={variant}
             defaultExpanded={showAllExpanded}
+            showAnswer={showAnswers}
             theme={theme}
             hideFullQuestionLink={hideFullQuestionLink}
           />

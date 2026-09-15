@@ -146,7 +146,7 @@ export function PaperAnalysis({ stats, repeatedQuestions, isHindi, theme = 'dark
                       <CardContent className="px-1.5 py-4 sm:p-6">
                         <div className="space-y-4">
                           {sortedUnits.map((unitStat) => {
-                            // Map questions to QuestionData format (including qNo)
+                            // Map questions to QuestionData format (including qNo, options, correctAnswer)
                             const questions: QuestionData[] = unitStat.questions.map((q) => ({
                               id: q.id,
                               text: q.text,
@@ -154,6 +154,8 @@ export function PaperAnalysis({ stats, repeatedQuestions, isHindi, theme = 'dark
                               year: q.year,
                               qNo: q.qNo,
                               subject: q.subject, // Map subject from DB
+                              options: q.options,
+                              correctAnswer: q.correctAnswer,
                               testTitle: `MPPSC Prelims ${q.year}`,
                             }));
 

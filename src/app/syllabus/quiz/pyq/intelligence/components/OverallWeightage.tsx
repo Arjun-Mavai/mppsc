@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, ChevronUp, Eye, ExternalLink, Loader2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink, Loader2, ArrowRight, Layers } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -75,16 +75,115 @@ export function OverallWeightage({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 px-1">
-        <div className={cn(
-          "h-1.5 w-1.5 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]",
-          theme === 'light' ? "bg-indigo-500" : "bg-emerald-500"
-        )} />
-        <h2 className={cn("text-xl font-black tracking-tight sm:text-2xl", theme === 'light' ? "text-[#1D1D1F]" : "text-white")}>
-          {isHindi ? 'कुल महत्व (2020-2026)' : 'Overall Weightage (2020-2026)'}
-        </h2>
+    <div className="space-y-8">
+      {/* 🏛️ Full-Width Master Repository Showcase Card: px0.ai Clean Monospace Design */}
+      <div className="relative overflow-hidden border border-[#0b0d14]/15 bg-white p-6 sm:p-8 text-[#0b0d14] shadow-xs font-mono">
+        {/* Geometric Grid Background */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-40"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(11, 13, 20, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(11, 13, 20, 0.06) 1px, transparent 1px)',
+            backgroundSize: '28px 28px',
+          }}
+        />
+        {/* Ambient Subtle Glow */}
+        <div className="pointer-events-none absolute -right-20 -bottom-20 h-72 w-72 rounded-full bg-amber-500/[0.08] blur-3xl" />
+        <div className="pointer-events-none absolute -left-20 -top-20 h-72 w-72 rounded-full bg-indigo-500/[0.05] blur-3xl" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-3.5 max-w-2xl">
+            {/* Header / Year Range Metadata */}
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-xs text-zinc-600 tracking-wider uppercase">
+                <span className="text-[#b45309] font-bold">{'//'}</span>{' '}
+                {isHindi ? 'सर्व-विषय प्रश्न बैंक · 2020–2026' : 'MASTER QUESTION REPOSITORY · 2020–2026'}
+              </p>
+              <span className="text-zinc-300 text-xs hidden sm:inline">|</span>
+              <span className="text-[11px] text-[#b45309] bg-amber-500/15 border border-amber-600/30 px-2 py-0.5 font-bold">
+                {totalQuestions > 0 ? `${totalQuestions} ${isHindi ? 'प्रश्न' : 'Questions'}` : (isHindi ? '700+ प्रश्न' : '700+ Questions')} · {subjectsWithCounts.length} {isHindi ? 'विषय' : 'Subjects'}
+              </span>
+            </div>
+
+            {/* Main Punchy Heading */}
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-[#0b0d14] leading-tight">
+              {isHindi ? (
+                <>
+                  जब हर विषय का अभ्यास{' '}
+                  <span className="text-[#b45309]">
+                    एक ही जगह
+                  </span>{' '}
+                  चाहिए।
+                </>
+              ) : (
+                <>
+                  When complete coverage is{' '}
+                  <span className="text-[#b45309]">
+                    non-negotiable.
+                  </span>
+                </>
+              )}
+            </h2>
+
+            {/* Succinct Description */}
+            <p className="text-xs sm:text-sm text-zinc-600 leading-relaxed max-w-xl font-sans">
+              {isHindi
+                ? '2020 से 2026 तक के सभी 7 वर्षों के 700+ वास्तविक MPPSC प्रश्न एक ही स्थान पर। म.प्र. सामान्य ज्ञान, राजव्यवस्था, इतिहास, भूगोल, अर्थव्यवस्था, विज्ञान एवं आईसीटी के सभी प्रश्न वर्ष और विषयवार फ़िल्टर करके अभ्यास करें।'
+                : 'Empirical archive of 700+ authentic MPPSC Prelims questions across 7 consecutive exam years (2020–2026). Seamlessly filter, review, and master every single question by subject, year, or topic in one unified repository.'}
+            </p>
+
+            {/* Feature Badges */}
+            <div className="flex flex-wrap gap-2 pt-1 text-[11px]">
+              {[
+                { labelEn: '2020–2026 All 7 Years Covered', labelHi: '2020–2026 सभी 7 वर्ष शामिल' },
+                { labelEn: `${subjectsWithCounts.length} Subjects Indexed`, labelHi: `${subjectsWithCounts.length} विषय व्यवस्थित` },
+                { labelEn: 'Filter by Subject & Year', labelHi: 'विषय एवं वर्ष अनुसार फ़िल्टर' },
+                { labelEn: 'Verified Keys & Details', labelHi: 'सत्यापित उत्तर कुंजी सहित' },
+              ].map((item, idx) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center bg-[#f4f5f8] px-2.5 py-1 text-zinc-700 border border-[#0b0d14]/15"
+                >
+                  <span className="text-[#b45309] font-bold mr-1.5">✓</span>
+                  {isHindi ? item.labelHi : item.labelEn}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Action CTA Button */}
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0 self-start lg:self-center w-full sm:w-auto">
+            <Button
+              onClick={handleViewAll}
+              disabled={isPending}
+              className="w-full sm:w-auto h-12 px-7 rounded-none bg-[#0b0d14] hover:bg-[#b45309] text-white font-mono font-bold text-xs sm:text-sm border border-[#0b0d14] hover:border-[#b45309] shadow-xs flex items-center justify-center gap-2.5 transition-all cursor-pointer"
+            >
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin text-[#d97706]" />
+              ) : (
+                <Layers className="h-4 w-4 text-[#d97706]" />
+              )}
+              <span>{isHindi ? 'सभी विषय प्रश्न खोलें (700+ Qs)' : 'Explore All Subject Questions'}</span>
+              {!isPending && <ArrowRight className="h-4 w-4 text-[#d97706]" />}
+            </Button>
+            <div className="text-center font-mono text-[11px] text-zinc-500">
+              {isHindi ? '// विषयवार सर्च, उत्तर व पूर्ण विवरण' : '// Subject-wise search, keys & breakdown'}
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Main Overall Weightage Section */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 px-1">
+          <div className={cn(
+            "h-1.5 w-1.5 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]",
+            theme === 'light' ? "bg-indigo-500" : "bg-emerald-500"
+          )} />
+          <h2 className={cn("text-xl font-black tracking-tight sm:text-2xl", theme === 'light' ? "text-[#1D1D1F]" : "text-white")}>
+            {isHindi ? 'कुल महत्व (2020-2026)' : 'Overall Weightage (2020-2026)'}
+          </h2>
+        </div>
 
       {/* Main Overall Weightage Section - Same style as Paper Analysis */}
       <div className="relative">
@@ -321,29 +420,7 @@ export function OverallWeightage({
           </AnimatePresence>
         </Card>
       </div>
-
-      <div className="flex justify-center pt-8">
-        <Button
-          variant="outline"
-          size="lg"
-          onClick={handleViewAll}
-          disabled={isPending}
-          className={cn(
-            "h-14 w-full rounded-2xl px-10 text-xs font-black tracking-[0.1em] uppercase transition-all active:scale-95 sm:w-fit sm:min-w-[360px]",
-            theme === 'light'
-              ? "border-indigo-100 bg-white text-indigo-600 hover:bg-[#F5F5F7] hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)]"
-              : "border-emerald-500/20 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 hover:text-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]"
-          )}
-        >
-          {isPending ? (
-            <Loader2 className="mr-3 h-4 w-4 animate-spin" />
-          ) : (
-            <Eye className="mr-3 h-4 w-4" />
-          )}
-          {isHindi ? 'सभी विषय प्रश्न देखें' : 'View All Subject Questions'}
-          {!isPending && <ExternalLink className="ml-3 h-4 w-4 opacity-50" />}
-        </Button>
-      </div>
     </div>
-  );
+  </div>
+);
 }

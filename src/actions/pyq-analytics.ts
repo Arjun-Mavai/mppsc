@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { questions, pyqQuestionTopics, pyqTopics, pyqPrelimsIntelligence } from '@/db/schema';
-import { eq, inArray, and, sql, desc, asc } from 'drizzle-orm';
+import { eq, inArray, and, desc, asc } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import { syllabusData } from '@/data/syllabusData';
 import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
@@ -153,6 +153,8 @@ export interface UnitDistributionStats {
     year: number; 
     qNo: number; 
     subject?: string;
+    options?: unknown;
+    correctAnswer?: string | number;
   }[];
 }
 
@@ -745,6 +747,8 @@ export const getUnitDistributionStats = unstable_cache(
         testId: pyqPrelimsIntelligence.testId,
         text: questions.questionText,
         textEn: questions.questionTextEn,
+        options: questions.options,
+        correctAnswer: questions.correctAnswer,
         subject: pyqPrelimsIntelligence.subject,
         unitId: pyqPrelimsIntelligence.unitId,
         unitTitle: pyqPrelimsIntelligence.unitTitle,
@@ -774,6 +778,8 @@ export const getUnitDistributionStats = unstable_cache(
             id: q.id,
             text: q.text || '',
             textEn: q.textEn,
+            options: q.options,
+            correctAnswer: q.correctAnswer,
             year: q.year,
             qNo: q.qNo,
             subject: q.subject || undefined,
@@ -792,6 +798,8 @@ export const getUnitDistributionStats = unstable_cache(
         testId: questions.testId,
         text: questions.questionText,
         textEn: questions.questionTextEn,
+        options: questions.options,
+        correctAnswer: questions.correctAnswer,
         subject: questions.subject,
         order: questions.order,
       })
@@ -838,6 +846,8 @@ export const getUnitDistributionStats = unstable_cache(
           id: q.id,
           text: q.text || '',
           textEn: q.textEn,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
           year,
           qNo: q.order,
           subject: q.subject || undefined,
@@ -851,7 +861,7 @@ export const getUnitDistributionStats = unstable_cache(
     return [];
   }
 },
-['pyq-unit-distribution-v2-intel'],
+['pyq-unit-distribution-v4-options-intel'],
 { revalidate: 604800, tags: ['pyq-insights', 'questions'] }
 );
 

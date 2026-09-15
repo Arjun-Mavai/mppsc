@@ -10,7 +10,7 @@ interface ExpandableCardProps {
   id: string;
   defaultExpanded?: boolean;
   onToggle?: (id: string, isExpanded: boolean) => void;
-  header: ReactNode;
+  header?: ReactNode;
   headerClassName?: string;
   children: ReactNode;
   className?: string;
@@ -52,28 +52,30 @@ export function ExpandableCard({
           : (className?.includes('bg-') ? '' : 'border-slate-800 bg-slate-900'),
         className
       )}>
-        <div
-          className={cn(
-            'flex cursor-pointer items-center justify-between bg-transparent px-6 py-6',
-            theme === 'light' ? 'border-b border-slate-100' : 'border-b border-white/5',
-            headerClassName
-          )}
-          onClick={handleToggle}
-        >
-          {header}
-          <div className="flex items-center gap-4">
-            <div className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-full shadow-inner transition-colors",
-              theme === 'light' ? "border border-slate-200 bg-slate-50" : "border border-slate-700 bg-slate-800"
-            )}>
-              {isExpanded ? (
-                <ChevronUp className={cn("h-5 w-5", theme === 'light' ? "text-indigo-600" : "text-blue-400")} />
-              ) : (
-                <ChevronDown className={cn("h-5 w-5", theme === 'light' ? "text-slate-500" : "text-slate-400")} />
-              )}
+        {header && (
+          <div
+            className={cn(
+              'flex cursor-pointer items-center justify-between bg-transparent px-6 py-6',
+              theme === 'light' ? 'border-b border-slate-100' : 'border-b border-white/5',
+              headerClassName
+            )}
+            onClick={handleToggle}
+          >
+            {header}
+            <div className="flex items-center gap-4">
+              <div className={cn(
+                "flex h-10 w-10 items-center justify-center rounded-full shadow-inner transition-colors",
+                theme === 'light' ? "border border-slate-200 bg-slate-50" : "border border-slate-700 bg-slate-800"
+              )}>
+                {isExpanded ? (
+                  <ChevronUp className={cn("h-5 w-5", theme === 'light' ? "text-indigo-600" : "text-blue-400")} />
+                ) : (
+                  <ChevronDown className={cn("h-5 w-5", theme === 'light' ? "text-slate-500" : "text-slate-400")} />
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <AnimatePresence>
           {isExpanded && (
