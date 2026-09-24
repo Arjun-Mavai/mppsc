@@ -18,7 +18,8 @@ import { unstable_cache } from 'next/cache';
 import { headers } from 'next/headers';
 import { verifyAuth } from '@/lib/auth';
 import { logger } from '@/lib/logger';
-import { sendTelegramNotification } from '@/lib/telegram';
+import { getClientIp, getClientLocation } from '@/lib/ip';
+import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
 import { getTelegramStatsSummary } from '@/lib/telegram-stats-loader';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 
@@ -61,11 +62,16 @@ export async function recordGuestAttempt(data: {
 
     // 🔥 NEW: Fetch global stats summary
     const statsSummary = await getTelegramStatsSummary();
+    const reqHeaders = await headers().catch(() => null);
+    const ip = reqHeaders ? getClientIp(reqHeaders) : '127.0.0.1';
+    const location = reqHeaders ? await getClientLocation(reqHeaders, ip) : 'Unknown Location';
 
     await sendTelegramNotification(
       `📊 <b>FREE QUIZ RESULT</b>\n\n` +
-      `<b>👤 Student:</b> ${data.guestName}\n` +
-      `<b>📝 Test:</b> ${data.testTitle || test?.title || 'Practice Test'}\n\n` +
+      `<b>👤 Student:</b> ${escapeHTML(data.guestName)}\n` +
+      `<b>📝 Test:</b> ${escapeHTML(data.testTitle || test?.title || 'Practice Test')}\n` +
+      `🌐 <b>Real IP:</b> <code>${escapeHTML(ip)}</code>\n` +
+      `📍 <b>Location:</b> ${escapeHTML(location)}\n\n` +
       `<b>🏆 Performance Card:</b>\n` +
       `━━━━━━━━━━━━━━━━\n` +
       `• <b>Score:</b> ${data.score} / ${data.totalQuestions * SCORING_CONFIG.MARKS_PER_QUESTION}\n` +
@@ -182,7 +188,7 @@ export async function notifyInstantModeGuideClick(clientGuestName?: string, clie
   try {
     const user = await verifyAuth().catch(() => null);
     const headersList = await headers();
-    const ip = headersList.get('x-forwarded-for')?.split(',')[0] || 'Unknown IP';
+    const ip = getClientIp(headersList);
     const city = headersList.get('x-vercel-ip-city') || 'Unknown City';
     const region = headersList.get('x-vercel-ip-country-region') || 'Unknown Region';
 

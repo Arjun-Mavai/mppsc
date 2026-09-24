@@ -11,6 +11,8 @@ import { sendTelegramNotification, sendLeadNotification, escapeHTML } from '@/li
 import { v4 as uuidv4 } from 'uuid';
 import { after } from 'next/server';
 import { hasActiveAuthSession, touchAuthLoginMetadata } from '@/lib/auth-session-metadata';
+import { setAuthCookies } from '@/lib/auth-constants';
+import { getClientIp, getClientLocation } from '@/lib/ip';
 
 import { AuthenticatedUser } from '@/types/auth';
 
@@ -51,6 +53,11 @@ export async function getCurrentUser() {
     return { user: null, reason: 'multi_device' };
   }
 
+  // 🛡️ Detected device mismatch (copied token / unauthorized device)
+  if (user._deviceMismatch) {
+    return { user: null, reason: 'device_mismatch' };
+  }
+
   return {
     user: {
       id: user.id,
@@ -69,6 +76,7 @@ interface LoginParams {
   email?: string;
   password?: string;
   force?: boolean;
+  deviceId?: string;
 }
 
 /**
@@ -83,7 +91,7 @@ export async function loginUserAction(formData: LoginParams) {
   try {
     // ── Rate Limiting ───────────────────────────────────────────
     const headersList = await headers();
-    const ip = headersList.get('x-forwarded-for') ?? '127.0.0.1';
+    const ip = getClientIp(headersList);
     const { loginLimiter, checkRateLimit } = await import('@/lib/rate-limit');
 
     const { success } = await checkRateLimit(loginLimiter, ip);
@@ -226,12 +234,14 @@ export async function loginUserAction(formData: LoginParams) {
       try {
         const planText = currentPlanTier !== 'free' ? `[${currentPlanTier.toUpperCase()}]` : '[FREE]';
         const forceText = force ? '⚠️ <b>FORCED LOGIN (Device Kicked)</b>' : '✅ <b>Normal Login</b>';
+        const location = await getClientLocation(headersList, ip);
         
         await sendTelegramNotification(
           `🔐 <b>USER LOGIN</b> ${planText}\n` +
           `👤 Name: <b>${escapeHTML(user.name || 'User')}</b>\n` +
           `📧 Email: <code>${escapeHTML(user.email)}</code>\n` +
-          `📱 IP: ${ip}\n` +
+          `🌐 Real IP: <code>${ip}</code>\n` +
+          `📍 Location: ${escapeHTML(location)}\n` +
           `${forceText}`
         );
       } catch (err) {
@@ -245,6 +255,7 @@ export async function loginUserAction(formData: LoginParams) {
       email: user.email,
       role: user.role,
       sessionVersion: newVersion,
+      deviceId: formData.deviceId?.trim() || null,
     };
 
     const { signToken } = await import('@/lib/jwt');
@@ -254,15 +265,9 @@ export async function loginUserAction(formData: LoginParams) {
       throw new Error('Token generation failed');
     }
 
-    // ── Set HTTP-Only Cookie (30 days) ──────────────────────────
+    // ── Set Standardized Auth & Device Cookies (30 days) ───────
     const cookieStore = await cookies();
-    cookieStore.set('mppsc_token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 30,
-      sameSite: 'lax',
-    });
+    setAuthCookies(cookieStore, token, formData.deviceId);
 
     const freshGrants = parseAccessGrants(currentAccessGrants);
 

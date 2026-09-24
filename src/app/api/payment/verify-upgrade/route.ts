@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { PRICING_DEFAULTS } from '@/config/pricing';
 import { notifyAdminOnPayment, notifyAdminOnEmailFailure, notifyAdminOnVerificationFailure } from '@/lib/admin-notify';
+import { getClientIp } from '@/lib/ip';
 
 /**
  * Payment Verification API FOR UPGRADES 🚀
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
   let requestPaymentId: string | undefined;
   try {
     // 🛑 Rate Limit
-    const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const ip = getClientIp(req.headers);
     const { paymentLimiter } = await import('@/lib/rate-limit');
     const { success } = await checkRateLimit(paymentLimiter, ip);
     if (!success) {

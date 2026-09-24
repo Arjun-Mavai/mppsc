@@ -15,6 +15,7 @@ export interface JWTPayload {
   email?: string | null;
   role?: string | null;
   sessionVersion?: number | null;
+  deviceId?: string | null;
 }
 
 export function signToken(payload: JWTPayload) {

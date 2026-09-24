@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/jwt';
+import { extractAuthToken } from '@/lib/auth-constants';
 import { db } from '@/db';
 import { payments, mppscUsers } from '@/db/schema';
 import { desc, eq } from 'drizzle-orm';
@@ -11,7 +12,7 @@ export async function GET(req: Request) {
   try {
     // Auth check — admin only
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
+    const token = extractAuthToken(cookieStore);
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     payload = (await verifyToken(token)) as any;

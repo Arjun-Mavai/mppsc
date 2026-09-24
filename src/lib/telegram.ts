@@ -155,6 +155,8 @@ interface LeadNotificationInput {
   source?: string;
   attemptCount?: number;
   status?: string;
+  ip?: string;
+  location?: string;
 }
 
 /**
@@ -162,7 +164,7 @@ interface LeadNotificationInput {
  * Bhai, formatting ek hi jagah rakhenge to consistency bani rahegi.
  */
 export async function sendLeadNotification(input: LeadNotificationInput) {
-  const { type, name, email, phone, plan, exam, source, attemptCount, status } = input;
+  const { type, name, email, phone, plan, exam, source, attemptCount, status, ip, location } = input;
 
   const planEmoji: Record<string, string> = {
     lite: '⚡', pro: '👑', upgrade: '🚀', mains: '🏛️', combo: '💎',
@@ -187,6 +189,8 @@ export async function sendLeadNotification(input: LeadNotificationInput) {
     (plan ? `${planEmoji[plan.toLowerCase()] || '🎯'} Plan: <b>${plan.toUpperCase()}</b>\n` : '') +
     (exam ? `📋 Exam: <b>${exam.toUpperCase()}</b>\n` : '') +
     (source ? `🔍 Source: <code>${escapeHTML(source)}</code>\n` : '') +
+    (ip && ip !== '127.0.0.1' ? `🌐 Real IP: <code>${escapeHTML(ip)}</code>\n` : '') +
+    (location && location !== 'Unknown Location' ? `📍 Location: ${escapeHTML(location)}\n` : '') +
     (attemptCount && attemptCount > 1 ? `🔄 Attempt: #${attemptCount}\n` : '') +
     `⏱️ Time: ${formattedTime} IST\n\n` +
     `⚠️ <i>Status: ${status || 'System Logged'}</i>`;

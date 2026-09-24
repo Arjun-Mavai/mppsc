@@ -5,11 +5,12 @@ import { randomUUID } from 'crypto';
 import { logger } from '@/lib/logger';
 import { feedbackLimiter, checkRateLimit } from '@/lib/rate-limit';
 import { sendTelegramNotification } from '@/lib/telegram';
+import { getClientIp } from '@/lib/ip';
 
 export async function POST(request: Request) {
   try {
     // 1. Rate Limiting Check
-    const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const ip = getClientIp(request.headers);
     const { success, limit, remaining, reset } = await checkRateLimit(feedbackLimiter, ip);
 
     if (!success) {

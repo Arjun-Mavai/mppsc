@@ -1,10 +1,13 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { eq, isNull, and } from 'drizzle-orm';
 import { cache } from 'react';
 import { logger } from '@/lib/logger';
 import type { AuthenticatedUser, UserRole, PlanTier } from '@/types/auth';
+import { extractAuthToken, extractDeviceCookie } from '@/lib/auth-constants';
+import { getClientIp, getClientLocation, getClientUserAgent } from '@/lib/ip';
+import { sendSecurityAlertNotification } from '@/lib/security-alerts';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🔐 AUTH VERIFICATION — har server component me use hota h
@@ -26,14 +29,14 @@ import type { AuthenticatedUser, UserRole, PlanTier } from '@/types/auth';
 
 export const verifyAuthInternal = cache(async (): Promise<AuthenticatedUser | null> => {
   const cookieStore = await cookies();
-  const token = cookieStore.get('mppsc_token');
+  const token = extractAuthToken(cookieStore);
 
   if (!token) {
     return null;
   }
 
   const { verifyToken } = await import('@/lib/jwt');
-  const decoded = verifyToken(token.value);
+  const decoded = verifyToken(token);
 
   if (!decoded || !decoded.userId) {
     return null;
@@ -97,6 +100,45 @@ export const verifyAuthInternal = cache(async (): Promise<AuthenticatedUser | nu
       return { ...user, _mismatch: true };
     }
 
+    // 🛡️ Anti-Cookie-Theft: Device Binding Check
+    // - If decoded.deviceId is present, it MUST match the browser's device cookie '_app_cid' (or legacy 'mppsc_did').
+    // - If decoded.deviceId is absent, this is an existing legacy user session → ALLOW with zero disruption!
+    if (decoded.deviceId) {
+      const clientDeviceId = extractDeviceCookie(cookieStore);
+      if (!clientDeviceId || clientDeviceId !== decoded.deviceId) {
+        logger.warn('Device mismatch detected — copied token or unauthorized device', {
+          category: 'auth',
+          userId,
+          tokenDeviceId: decoded.deviceId,
+          clientDeviceId: clientDeviceId || 'missing',
+        });
+
+        // 🚨 Telegram Security Alert
+        headers()
+          .then(async (reqHeaders) => {
+            const ip = getClientIp(reqHeaders);
+            const location = await getClientLocation(reqHeaders, ip);
+            sendSecurityAlertNotification({
+              reason: 'unauthorized_device',
+              token,
+              userId: user.id,
+              userEmail: user.email,
+              userName: user.name,
+              userRole: user.role,
+              tokenDeviceId: decoded.deviceId,
+              clientDeviceId: clientDeviceId || null,
+              ip,
+              location,
+              userAgent: getClientUserAgent(reqHeaders),
+              triggerSource: 'server_auth',
+            }).catch(() => {});
+          })
+          .catch(() => {});
+
+        return { ...user, _deviceMismatch: true };
+      }
+    }
+
     return user;
   } catch (error) {
     // DB errors → null (graceful degradation, user redirected to login)
@@ -110,11 +152,11 @@ export const verifyAuthInternal = cache(async (): Promise<AuthenticatedUser | nu
 
 /**
  * 🔐 Standard Auth Verification
- * Returns user if valid, null if not (including session mismatch).
+ * Returns user if valid, null if not (including session version mismatch or device mismatch).
  */
 export const verifyAuth = cache(async (): Promise<AuthenticatedUser | null> => {
   const user = await verifyAuthInternal();
-  if (user && user._mismatch) {
+  if (user && (user._mismatch || user._deviceMismatch)) {
     return null;
   }
   return user;

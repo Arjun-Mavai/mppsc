@@ -8,6 +8,8 @@ import { randomUUID } from 'crypto';
 
 import { assertAdmin, verifyAuth } from '@/lib/auth';
 import { eq } from 'drizzle-orm';
+import { headers } from 'next/headers';
+import { getClientIp, getClientLocation } from '@/lib/ip';
 export type IntelligenceReaction = 'helpful' | 'insightful' | 'unhelpful' | 'doubt';
 
 export interface IntelligenceFeedbackData {
@@ -112,6 +114,10 @@ export async function submitIntelligenceFeedback(data: IntelligenceFeedbackData)
                        source === 'prelims_syllabus_topic' ? '🧭 Prelims Syllabus Hub' :
                        source || 'Generic Page';
 
+    const reqHeaders = await headers().catch(() => null);
+    const ip = reqHeaders ? getClientIp(reqHeaders) : '127.0.0.1';
+    const location = reqHeaders ? await getClientLocation(reqHeaders, ip) : 'Unknown Location';
+
     await sendTelegramNotification(
       `${isPro ? '💎' : '🧠'} <b>MPPSC Zen - Solution Interaction</b>\n` +
       `━━━━━━━━━━━━━━━━\n` +
@@ -121,6 +127,8 @@ export async function submitIntelligenceFeedback(data: IntelligenceFeedbackData)
       (unitInfo ? `<b>Unit:</b> <code>${escapeHTML(unitInfo)}</code>\n` : '') +
       (userGrants ? `<b>Grants:</b> <code>${escapeHTML(userGrants)}</code>\n` : '') +
       `${studentInfo}\n` +
+      `🌐 <b>Real IP:</b> <code>${escapeHTML(ip)}</code>\n` +
+      `📍 <b>Location:</b> ${escapeHTML(location)}\n` +
       `<b>When:</b> ${dayStr}, ${dateStr} at ${timeStr}\n` +
       `<b>Question ID:</b> <code>${questionId}</code>\n` +
       `<b>Content:</b> <i>"${escapeHTML(questionText).slice(0, 150)}${questionText.length > 150 ? '...' : ''}"</i>\n` +
@@ -202,6 +210,10 @@ export async function submitZenFeedback(params: {
     const priorityEmoji = isPro ? '🔴 PRIORITY: ' : '';
     const studentLabel = isPro ? '💎 Subscribed Pro User' : '👤 Guest Student';
 
+    const reqHeaders = await headers().catch(() => null);
+    const ip = reqHeaders ? getClientIp(reqHeaders) : '127.0.0.1';
+    const location = reqHeaders ? await getClientLocation(reqHeaders, ip) : 'Unknown Location';
+
     await sendTelegramNotification(
       `${isPro ? '💎' : '🏆'} <b>Zen Completion Feedback</b>\n` +
       `━━━━━━━━━━━━━━━━\n` +
@@ -210,6 +222,8 @@ export async function submitZenFeedback(params: {
       `<b>Tags:</b> ${tags.join(', ')}\n` +
       (guestName ? `<b>Name:</b> ${escapeHTML(guestName)}\n` : '') +
       (guestMobile ? `<b>Mobile:</b> <code>${guestMobile}</code>\n` : '') +
+      `🌐 <b>Real IP:</b> <code>${escapeHTML(ip)}</code>\n` +
+      `📍 <b>Location:</b> ${escapeHTML(location)}\n` +
       (leadSource ? `<b>Source:</b> <code>${leadSource}</code>\n` : '') +
       (comment ? `\n<b>Comment:</b> ${escapeHTML(comment)}\n` : '') +
       `━━━━━━━━━━━━━━━━\n` +

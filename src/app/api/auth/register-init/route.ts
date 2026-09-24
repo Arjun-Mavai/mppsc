@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { sendLeadNotification } from '@/lib/telegram';
+import { getClientIp } from '@/lib/ip';
 import { mppscUserActivities } from '@/db/schema';
 
 const registerSchema = z.object({
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
   try {
     // 🚦 Strict Rate Limit: 10 signups / hour
     // Prevent abuse of database storage by bots creating junk accounts.
-    const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const ip = getClientIp(req.headers);
     const { signupLimiter } = await import('@/lib/rate-limit');
     const { success } = await checkRateLimit(signupLimiter, ip);
     if (!success) {

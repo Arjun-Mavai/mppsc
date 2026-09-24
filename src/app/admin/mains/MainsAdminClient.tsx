@@ -427,7 +427,7 @@ export function MainsAdminClient() {
               <li>
                 <strong>Browser me admin login</strong> — is site par wahi session jisme user ka{' '}
                 <code className="rounded bg-slate-100 px-1 text-xs">role === &quot;admin&quot;</code> ho (
-                <code className="text-xs">mppsc_token</code> cookie). Bina admin ke prompt load par error toast aayega.
+                <code className="text-xs">_app_sid</code> cookie). Bina admin ke prompt load par error toast aayega.
               </li>
               <li>
                 <strong>URL:</strong>{' '}

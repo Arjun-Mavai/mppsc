@@ -140,16 +140,16 @@ async function formatTelemetryMessage(event: TelemetryEvent): Promise<string> {
   const deviceType = event.device ? `[${event.device}]` : '';
   const browserOs = event.userAgent ? parseReadableUserAgent(event.userAgent) : 'Unknown Browser';
   const connectionDisplay = `📱 ${escapeHTML(browserOs)} ${deviceType}`;
-  const locationDisplay = event.location ? `🌍 <b>Location:</b> ${escapeHTML(event.location)}` : '';
-  const ipDisplay = event.ip && event.ip !== 'Unknown IP' ? `🖥️ <code>${escapeHTML(event.ip)}</code>` : '';
+  const ipDisplay = event.ip && event.ip !== 'Unknown IP' ? `🌐 <b>Real IP:</b> <code>${escapeHTML(event.ip)}</code>` : '';
+  const locationDisplay = event.location && event.location !== 'Unknown Location' ? `📍 <b>Location:</b> ${escapeHTML(event.location)}` : '';
 
   let networkInfo = '';
-  if (locationDisplay && ipDisplay) {
-    networkInfo = `${locationDisplay} | ${ipDisplay}\n`;
-  } else if (locationDisplay) {
-    networkInfo = `${locationDisplay}\n`;
+  if (ipDisplay && locationDisplay) {
+    networkInfo = `${ipDisplay}\n${locationDisplay}\n`;
   } else if (ipDisplay) {
     networkInfo = `${ipDisplay}\n`;
+  } else if (locationDisplay) {
+    networkInfo = `${locationDisplay}\n`;
   }
 
 

@@ -22,6 +22,7 @@ import {
   notifyAdminOnEmailFailure,
   notifyAdminOnVerificationFailure,
 } from '@/lib/admin-notify';
+import { getClientIp } from '@/lib/ip';
 
 /**
  * Payment Verification API - The Trust Center 🏦
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
   let requestPaymentId: string | undefined;
   try {
     // 🛑 Rate Limit: Protect verification endpoint
-    const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const ip = getClientIp(req.headers);
     const { paymentLimiter } = await import('@/lib/rate-limit');
     const { success } = await checkRateLimit(paymentLimiter, ip);
     if (!success) {

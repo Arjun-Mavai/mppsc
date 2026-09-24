@@ -106,9 +106,10 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
       setUser(null, false);
       setAuthCheckStatus('checked');
 
-      // 1. Nuke persisted Zustand state from localStorage FIRST (Synchronous)
+      // 1. Nuke persisted Zustand state and device security keys from localStorage FIRST (Synchronous)
       if (typeof window !== 'undefined') {
         localStorage.removeItem('settings-storage');
+        import('@/lib/device-client').then((m) => m.clearLocalDeviceData()).catch(() => {});
       }
 
       // 2. Fire background network requests to clear server cookies & service worker caches (with timeout)
@@ -289,6 +290,31 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   // 1. Mount Status & Auth Fetch Delay (Hydration)
   useEffect(() => {
     setIsMounted(true);
+
+    // 🛡️ Client Device Integrity Check
+    import('@/lib/device-client').then(({ getOrCreateDeviceId, validateClientDeviceBinding }) => {
+      const didMatch = document.cookie.match(/(?:^|;\s*)(?:_app_cid|mppsc_did)=([^;]+)/);
+      const cookieDid = didMatch ? decodeURIComponent(didMatch[1]) : null;
+      if (cookieDid && !validateClientDeviceBinding(cookieDid)) {
+        // Someone pasted cookies into an isolated/incognito browser profile without local storage
+        try {
+          fetch('/api/auth/security-alert', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              reason: 'client_vault_missing',
+              detail: 'Device cookie present but IndexedDB/LocalStorage vault missing',
+              path: window.location.pathname,
+            }),
+            keepalive: true,
+          }).catch(() => {});
+        } catch {}
+        handleLogout('unauthorized_device');
+        return;
+      }
+      getOrCreateDeviceId().catch(() => {});
+    });
+
     // Optimization: If we have a cached user, we can fetch immediately to check if session is still valid.
     // If not, delay the check by 1.5 seconds to let the critical UI render first for guests.
     if (globalUser) {
@@ -297,7 +323,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
       const timer = setTimeout(() => setShouldFetchAuth(true), 1500);
       return () => clearTimeout(timer);
     }
-  }, [globalUser]);
+  }, [globalUser, handleLogout]);
 
   // 2. Master Auth State Sync (Eliminates Effect Chaining)
   useEffect(() => {
@@ -319,6 +345,15 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
           duration: 10000,
         });
         handleLogout('multi_device');
+        return;
+      }
+
+      if ((sessionData as any).reason === 'device_mismatch' || (sessionData as any).reason === 'unauthorized_device') {
+        toast.error('Security Alert', {
+          description: 'This session is tied to another browser or device. Please log in directly.',
+          duration: 10000,
+        });
+        handleLogout('device_mismatch');
         return;
       }
 

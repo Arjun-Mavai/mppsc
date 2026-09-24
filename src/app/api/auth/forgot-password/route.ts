@@ -9,10 +9,11 @@ import { Resend } from 'resend';
 import { appPath } from '@/lib/app-url';
 import { notifyAdminOnEmailFailure } from '@/lib/admin-notify';
 import { escapeHTML } from '@/lib/telegram';
+import { getClientIp } from '@/lib/ip';
 
 export async function POST(request: Request) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const ip = getClientIp(request.headers);
     const { resetLimiter, checkRateLimit } = await import('@/lib/rate-limit');
 
     const { success } = await checkRateLimit(resetLimiter, ip);

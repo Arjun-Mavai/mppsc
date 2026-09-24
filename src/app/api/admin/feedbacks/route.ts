@@ -8,7 +8,8 @@ export async function GET(request: Request) {
   try {
     // Verify Admin
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
+    const { extractAuthToken } = await import('@/lib/auth-constants');
+    const token = extractAuthToken(cookieStore);
 
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

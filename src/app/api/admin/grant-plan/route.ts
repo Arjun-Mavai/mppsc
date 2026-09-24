@@ -48,7 +48,8 @@ export async function POST(request: Request) {
   try {
     // Admin Auth
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
+    const { extractAuthToken } = await import('@/lib/auth-constants');
+    const token = extractAuthToken(cookieStore);
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { sql } from 'drizzle-orm';
 import { checkRateLimit, loginLimiter } from '@/lib/rate-limit';
+import { getClientIp } from '@/lib/ip';
 
 /**
  * Lightweight Email Check — prevents duplicate payments.
@@ -10,7 +11,7 @@ import { checkRateLimit, loginLimiter } from '@/lib/rate-limit';
  */
 export async function POST(req: Request) {
   try {
-    const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const ip = getClientIp(req.headers);
     const { success } = await checkRateLimit(loginLimiter, ip);
     if (!success) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 });

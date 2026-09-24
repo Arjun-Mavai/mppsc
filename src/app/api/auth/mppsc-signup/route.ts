@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import { sendLeadNotification } from '@/lib/telegram';
+import { getClientIp } from '@/lib/ip';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🔐 ADMIN SIGNUP API — Sirf admin hi naya user bana sakta h
@@ -28,7 +29,7 @@ const PLAN_DEFAULT_MONTHS: Record<string, number> = { free: 0, lite: 4, pro: 7 }
 export async function POST(request: Request) {
   try {
     // ── Rate Limiting — brute force se bachao ───────────────────
-    const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const ip = getClientIp(request.headers);
     const { signupLimiter, checkRateLimit } = await import('@/lib/rate-limit');
 
     const { success, limit, remaining, reset } = await checkRateLimit(signupLimiter, ip);
@@ -51,7 +52,8 @@ export async function POST(request: Request) {
 
     // ── Admin Auth Check — sirf admin bana sakta h user ─────────
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
+    const { extractAuthToken } = await import('@/lib/auth-constants');
+    const token = extractAuthToken(cookieStore);
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized: Admin session required' }, { status: 401 });

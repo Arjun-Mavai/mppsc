@@ -7,7 +7,8 @@ import { eq } from 'drizzle-orm';
 export async function GET() {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token');
+    const { extractAuthToken } = await import('@/lib/auth-constants');
+    const token = extractAuthToken(cookieStore);
 
     if (!token) {
       return NextResponse.json({ authenticated: false });
@@ -15,7 +16,7 @@ export async function GET() {
 
     // CRITICAL FIX: Decode the JWT to get the actual user ID
     const { verifyToken } = await import('@/lib/jwt');
-    const decoded: any = verifyToken(token.value);
+    const decoded: any = verifyToken(token);
 
     if (!decoded || !decoded.userId) {
       return NextResponse.json({ authenticated: false });
