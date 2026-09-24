@@ -20,26 +20,10 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: Request) {
   try {
     // ── Admin Auth ──────────────────────────────────────────────
-    const cookieStore = await cookies();
-    const { extractAuthToken } = await import('@/lib/auth-constants');
-    const token = extractAuthToken(cookieStore);
+    const { verifyAdminApi } = await import('@/lib/auth');
+    const adminUser = await verifyAdminApi();
 
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { verifyToken } = await import('@/lib/jwt');
-    const decoded: any = verifyToken(token);
-
-    if (!decoded?.userId) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
-    }
-
-    const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
-    });
-
-    if (!adminUser || adminUser.role !== 'admin') {
+    if (!adminUser) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
@@ -174,22 +158,10 @@ export async function DELETE(req: Request) {
     const { userId } = await req.json();
 
     // ── Admin Auth ──────────────────────────────────────────────
-    const cookieStore = await cookies();
-    const { extractAuthToken } = await import('@/lib/auth-constants');
-    const token = extractAuthToken(cookieStore);
+    const { verifyAdminApi } = await import('@/lib/auth');
+    const adminUser = await verifyAdminApi();
 
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const { verifyToken } = await import('@/lib/jwt');
-    const decoded: any = verifyToken(token);
-
-    if (!decoded?.userId) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
-
-    const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
-    });
-
-    if (!adminUser || adminUser.role !== 'admin') {
+    if (!adminUser) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 

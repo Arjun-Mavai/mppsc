@@ -84,21 +84,29 @@ function sanitizeIp(rawIp: string): string {
 export function getClientIp(headers: HeaderSource): string {
   if (!headers) return '127.0.0.1';
 
-  // 1. Cloudflare True Client IP (Sabse trusted agar Cloudflare laga hai)
+  // 1. Vercel Edge Forwarded IP (Set by Vercel edge infrastructure, tamper-proof on Vercel)
+  const vercelIp = getHeaderValue(headers, 'x-vercel-forwarded-for');
+  if (vercelIp) {
+    const first = vercelIp.split(',')[0].trim();
+    if (first) return sanitizeIp(first);
+  }
+
+  // 2. Cloudflare True Client IP (Only trusted if cf-ray is present to verify request went through Cloudflare)
+  const cfRay = getHeaderValue(headers, 'cf-ray');
   const cfIp = getHeaderValue(headers, 'cf-connecting-ip');
-  if (cfIp) {
+  if (cfRay && cfIp) {
     const first = cfIp.split(',')[0].trim();
     if (first) return sanitizeIp(first);
   }
 
-  // 2. Nginx / Reverse Proxy Real IP
+  // 3. Nginx / Reverse Proxy Real IP
   const realIp = getHeaderValue(headers, 'x-real-ip');
   if (realIp) {
     const first = realIp.split(',')[0].trim();
     if (first) return sanitizeIp(first);
   }
 
-  // 3. X-Forwarded-For (Format: "client, proxy1, proxy2")
+  // 4. X-Forwarded-For (Format: "client, proxy1, proxy2")
   // 👉 FIRST ELEMENT IS ALWAYS THE CLIENT IP!
   const forwardedFor = getHeaderValue(headers, 'x-forwarded-for');
   if (forwardedFor) {
@@ -106,7 +114,7 @@ export function getClientIp(headers: HeaderSource): string {
     if (first) return sanitizeIp(first);
   }
 
-  // 4. Fallback CDN headers
+  // 5. Fallback CDN headers
   const trueClientIp = getHeaderValue(headers, 'true-client-ip') || getHeaderValue(headers, 'x-client-ip');
   if (trueClientIp) {
     const first = trueClientIp.split(',')[0].trim();
@@ -184,13 +192,13 @@ export async function getClientLocation(headers: HeaderSource, explicitIp?: stri
     return cached.location;
   }
 
-  // 5. Ngrok / Public IP GeoIP fallback
+  // 5. Ngrok / Public IP GeoIP fallback (Encrypted HTTPS with strict privacy)
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 1200); // 1.2s strict timeout
 
     const res = await fetch(
-      `http://ip-api.com/json/${encodeURIComponent(ip)}?fields=status,city,regionName,countryCode`,
+      `https://ipwho.is/${encodeURIComponent(ip)}`,
       {
         signal: controller.signal,
         headers: { Accept: 'application/json' },
@@ -200,8 +208,8 @@ export async function getClientLocation(headers: HeaderSource, explicitIp?: stri
 
     if (res.ok) {
       const data = await res.json();
-      if (data && data.status === 'success') {
-        const parts = [data.city, data.regionName, data.countryCode].filter(Boolean);
+      if (data && data.success) {
+        const parts = [data.city, data.region, data.country_code].filter(Boolean);
         const resolved = parts.length > 0 ? parts.join(', ') : 'Unknown Location';
         geoCache.set(ip, { location: resolved, timestamp: Date.now() });
         return resolved;

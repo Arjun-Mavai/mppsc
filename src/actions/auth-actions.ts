@@ -240,7 +240,7 @@ export async function loginUserAction(formData: LoginParams) {
           `🔐 <b>USER LOGIN</b> ${planText}\n` +
           `👤 Name: <b>${escapeHTML(user.name || 'User')}</b>\n` +
           `📧 Email: <code>${escapeHTML(user.email)}</code>\n` +
-          `🌐 Real IP: <code>${ip}</code>\n` +
+          `🌐 Real IP: <code>${escapeHTML(ip)}</code>\n` +
           `📍 Location: ${escapeHTML(location)}\n` +
           `${forceText}`
         );

@@ -33,24 +33,13 @@ export async function POST(request: Request) {
   let adminId: string | undefined;
   let targetUserId: string | undefined;
   try {
-    // ── Admin Auth ────────────────────────────────────────────
-    const cookieStore = await cookies();
-    const { extractAuthToken } = await import('@/lib/auth-constants');
-    const token = extractAuthToken(cookieStore);
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const { verifyToken } = await import('@/lib/jwt');
-    const decoded = verifyToken(token);
-    if (!decoded?.userId) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
-    adminId = decoded.userId;
-
-    const adminUser = await db.query.mppscUsers.findFirst({
-      where: eq(mppscUsers.id, adminId),
-      columns: { role: true, id: true },
-    });
-    if (!adminUser || adminUser.role !== 'admin') {
+    // ── Admin Auth (device-aware) ────────────────────────────
+    const { verifyAdminApi } = await import('@/lib/auth');
+    const adminUser = await verifyAdminApi();
+    if (!adminUser) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
+    adminId = adminUser.id;
 
     // ── Parse + Validate ─────────────────────────────────────
     const body = await request.json();

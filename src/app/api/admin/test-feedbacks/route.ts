@@ -6,27 +6,10 @@ import { desc, eq, sql } from 'drizzle-orm';
 
 export async function GET(request: Request) {
   try {
-    // Verify Admin
-    const cookieStore = await cookies();
-    const { extractAuthToken } = await import('@/lib/auth-constants');
-    const token = extractAuthToken(cookieStore);
-
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const { verifyToken } = await import('@/lib/jwt');
-    const decoded: any = verifyToken(token);
-
-    if (!decoded?.userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    // Check role
-    const user = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
-      columns: { role: true },
-    });
-
-    if (user?.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    // Verify Admin (device-aware)
+    const { verifyAdminApi } = await import('@/lib/auth');
+    const admin = await verifyAdminApi();
+    if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     // Extract pagination params
     const url = new URL(request.url);

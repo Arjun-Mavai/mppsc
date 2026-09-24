@@ -10,25 +10,13 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   let decoded: any;
   try {
-    const cookieStore = await cookies();
-    const { extractAuthToken } = await import('@/lib/auth-constants');
-    const token = extractAuthToken(cookieStore);
-
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const { verifyToken } = await import('@/lib/jwt');
-    const decodedToken: any = verifyToken(token);
-    decoded = decodedToken;
-
-    if (!decoded?.userId) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
-
-    const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
-    });
-
-    if (!adminUser || adminUser.role !== 'admin') {
+    // Admin Auth (device-aware)
+    const { verifyAdminApi } = await import('@/lib/auth');
+    const adminUser = await verifyAdminApi();
+    if (!adminUser) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
+    decoded = { userId: adminUser.id };
 
     const logs = await db
       .select()

@@ -50,31 +50,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // ── Admin Auth Check — sirf admin bana sakta h user ─────────
-    const cookieStore = await cookies();
-    const { extractAuthToken } = await import('@/lib/auth-constants');
-    const token = extractAuthToken(cookieStore);
-
-    if (!token) {
+    // ── Admin Auth Check — sirf admin bana sakta h user (device-aware) ─────────
+    const { verifyAdminApi } = await import('@/lib/auth');
+    const adminUser = await verifyAdminApi();
+    if (!adminUser) {
       return NextResponse.json({ error: 'Unauthorized: Admin session required' }, { status: 401 });
-    }
-
-    const { verifyToken } = await import('@/lib/jwt');
-    const decoded: any = verifyToken(token);
-
-    if (!decoded || !decoded.userId) {
-      return NextResponse.json({ error: 'Unauthorized: Invalid session' }, { status: 401 });
-    }
-
-    const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
-    });
-
-    if (!adminUser || adminUser.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden: Only admins can create accounts.' },
-        { status: 403 }
-      );
     }
 
     // ── Parse Request Body ──────────────────────────────────────

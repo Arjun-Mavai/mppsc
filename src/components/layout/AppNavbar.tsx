@@ -291,26 +291,29 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   useEffect(() => {
     setIsMounted(true);
 
-    // 🛡️ Client Device Integrity Check
-    import('@/lib/device-client').then(({ getOrCreateDeviceId, validateClientDeviceBinding }) => {
+    // 🛡️ Client Device Integrity & Cryptographic Proof-of-Possession Check
+    import('@/lib/device-client').then(async ({ getOrCreateDeviceId, verifyClientVaultPossession }) => {
       const didMatch = document.cookie.match(/(?:^|;\s*)(?:_app_cid|mppsc_did)=([^;]+)/);
       const cookieDid = didMatch ? decodeURIComponent(didMatch[1]) : null;
-      if (cookieDid && !validateClientDeviceBinding(cookieDid)) {
-        // Someone pasted cookies into an isolated/incognito browser profile without local storage
-        try {
-          fetch('/api/auth/security-alert', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              reason: 'client_vault_missing',
-              detail: 'Device cookie present but IndexedDB/LocalStorage vault missing',
-              path: window.location.pathname,
-            }),
-            keepalive: true,
-          }).catch(() => {});
-        } catch {}
-        handleLogout('unauthorized_device');
-        return;
+      if (cookieDid) {
+        const isPossessionValid = await verifyClientVaultPossession(cookieDid);
+        if (!isPossessionValid) {
+          // Cryptographic private key is absent from IndexedDB! (Copied session into Incognito or another machine)
+          try {
+            fetch('/api/auth/security-alert', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                reason: 'client_vault_missing',
+                detail: 'Device cookie present but non-extractable IndexedDB cryptographic key is absent',
+                path: window.location.pathname,
+              }),
+              keepalive: true,
+            }).catch(() => {});
+          } catch {}
+          handleLogout('unauthorized_device');
+          return;
+        }
       }
       getOrCreateDeviceId().catch(() => {});
     });

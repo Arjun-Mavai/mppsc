@@ -144,3 +144,20 @@ export function deleteAuthCookies(cookieStore: {
   cookieStore.delete(DEVICE_COOKIE_NAME);
   cookieStore.delete(LEGACY_DEVICE_COOKIE_NAME);
 }
+
+/**
+ * 🛠️ HELPER 5: Device-Aware Token Validator
+ * Validates whether the token's embedded deviceId matches the incoming request's device cookie.
+ * - Legacy tokens (without deviceId): returns true (100% backward compatible).
+ * - Device-bound tokens: returns true only if the device cookie matches decoded.deviceId.
+ */
+export function isDeviceBindingValid(
+  decodedToken: { deviceId?: string | null } | null | undefined,
+  cookieStore: { get(name: string): { value?: string } | undefined }
+): boolean {
+  if (!decodedToken) return false;
+  if (!decodedToken.deviceId) return true; // Legacy session backward compatibility
+
+  const clientDeviceId = extractDeviceCookie(cookieStore);
+  return !!clientDeviceId && clientDeviceId === decodedToken.deviceId;
+}

@@ -174,3 +174,16 @@ export async function assertAdmin() {
   }
   return user;
 }
+
+/**
+ * 🛡️ Verify Admin Access for Route Handlers (API Routes)
+ * Returns authenticated admin user if valid (including device binding check, sessionVersion, and active status).
+ * Returns null if not logged in, device mismatch, session mismatch, or not admin.
+ */
+export async function verifyAdminApi(): Promise<AuthenticatedUser | null> {
+  const user = await verifyAuth();
+  if (!user || user.role !== 'admin') {
+    return null;
+  }
+  return user;
+}

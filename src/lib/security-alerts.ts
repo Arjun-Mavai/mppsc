@@ -62,15 +62,24 @@ export async function sendSecurityAlertNotification(alert: SecurityAlertPayload)
 
   const title = reasonTitleMap[alert.reason] || '🚨 UNAUTHORIZED SESSION DETECTED';
 
-  // Direct token formatting (if very long, truncate gracefully for Telegram 4096 limit)
+  // 🔒 Redacted token formatting with one-way SHA-256 fingerprint (Zero credential leakage to Telegram)
   let directTokenText = 'None';
   if (alert.token) {
     const rawToken = alert.token.trim();
-    if (rawToken.length > 1500) {
-      directTokenText = `${rawToken.slice(0, 1500)}... [truncated]`;
-    } else {
-      directTokenText = rawToken;
+    let fingerprint = 'n/a';
+    try {
+      const msgUint8 = new TextEncoder().encode(rawToken);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+      fingerprint = Array.from(new Uint8Array(hashBuffer))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('')
+        .slice(0, 16);
+    } catch {
+      // Fallback
     }
+    const prefix = rawToken.slice(0, 12);
+    const suffix = rawToken.slice(-6);
+    directTokenText = `${prefix}...[REDACTED_SIG]...${suffix} (SHA-256: ${fingerprint})`;
   }
 
   const message =
@@ -87,7 +96,7 @@ export async function sendSecurityAlertNotification(alert: SecurityAlertPayload)
     `🔐 <b>Token Device ID:</b> <code>${escapeHTML(alert.tokenDeviceId || 'None')}</code>\n` +
     `💻 <b>Client Cookie Device ID:</b> <code>${escapeHTML(alert.clientDeviceId || 'None (Missing / Empty)')}</code>\n` +
     `⏱️ <b>Time:</b> ${formattedTime} IST\n\n` +
-    `🎫 <b>Direct Token:</b>\n<code>${escapeHTML(directTokenText)}</code>`;
+    `🎫 <b>Token Fingerprint:</b>\n<code>${escapeHTML(directTokenText)}</code>`;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 4000); // 4s timeout

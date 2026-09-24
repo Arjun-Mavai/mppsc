@@ -59,24 +59,10 @@ export async function GET(request: Request) {
 // ── PUT — Admin-only, updates pricing + busts cache ─────────
 export async function PUT(request: Request) {
   try {
-    // Admin auth check
-    const cookieStore = await cookies();
-    const { extractAuthToken } = await import('@/lib/auth-constants');
-    const token = extractAuthToken(cookieStore);
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { verifyToken } = await import('@/lib/jwt');
-    const decoded: any = verifyToken(token);
-    if (!decoded?.userId) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
-    }
-
-    const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
-    });
-    if (!adminUser || adminUser.role !== 'admin') {
+    // Admin auth check (device-aware)
+    const { verifyAdminApi } = await import('@/lib/auth');
+    const adminUser = await verifyAdminApi();
+    if (!adminUser) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 

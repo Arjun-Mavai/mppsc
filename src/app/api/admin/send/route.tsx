@@ -8,30 +8,10 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   try {
-    // Admin auth check
-    const cookieStore = await cookies();
-    const { extractAuthToken } = await import('@/lib/auth-constants');
-    const token = extractAuthToken(cookieStore);
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const { verifyToken } = await import('@/lib/jwt');
-
-    interface SessionPayload {
-      userId: string;
-      iat?: number;
-      exp?: number;
-    }
-
-    const decoded = verifyToken(token) as SessionPayload | null;
-
-    if (!decoded?.userId) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
-    }
-    const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId), // Type safe now
-    });
-    if (!adminUser || adminUser.role !== 'admin') {
+    // Admin auth check (device-aware)
+    const { verifyAdminApi } = await import('@/lib/auth');
+    const adminUser = await verifyAdminApi();
+    if (!adminUser) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 

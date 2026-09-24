@@ -158,29 +158,45 @@ async function removeFromIdb(): Promise<void> {
 }
 
 /**
- * 🔑 WebCrypto Subtle: Generates an Asymmetric ECDSA (P-256) Key Pair.
- * The Private Key has `extractable: false` so browser forbids DevTools export!
- * The Public Key is SHA-256 digested into a cryptographic Device ID.
+ * 🔑 TAPORI EXPLANATION: WebCrypto Asymmetric Key Pair Generator (ECDSA P-256)
+ *
+ * ❓ KYA HO RAHA HAI YAHAN?
+ * Browser apne factory ke andar 2 chaabiyaan (Asymmetric Key Pair) dhaal raha hai:
+ *
+ * 1. 🔒 PRIVATE KEY (Khufiya Chaabi):
+ *    - Parameter dekho: `false` (yani `extractable: false`).
+ *    - Iska matlab: Browser is chaabi ko safe tijori me daal dega aur bol dega:
+ *      "Isko koi baahar nahi nikaal sakta, chahe DevTools console me hacker apna sar fod le!"
+ *    - Is chaabi ka kaam hai: Challenge par digital signature maarna.
+ *
+ * 2. 🌐 PUBLIC KEY (Duniya ke dekhne wala Thappa):
+ *    - Isko hum `exportKey` karke bahar nikaalte hain aur uska `SHA-256` ka juice (hash) nikaalte hain.
+ *    - Wahi banta hai apna `deviceId` (`dvid_f89a...`).
+ *    - Ye `deviceId` server ke JWT me aur browser ke cookie me chipak jata hai.
  */
 async function generateWebCryptoDeviceBinding(): Promise<string> {
   if (isBrowser() && window.crypto && window.crypto.subtle) {
     try {
+      // 🛠️ 1. Tijori me ECDSA P-256 ka naya joda banao
       const keyPair = await window.crypto.subtle.generateKey(
         { name: 'ECDSA', namedCurve: 'P-256' },
-        false, // 🔒 NOT extractable! Even DevTools console cannot export private key!
+        false, // 🔒 extractable: false! DevTools me console.log(key) karoge to bhi raw private key nahi milegi!
         ['sign', 'verify']
       );
 
-      // Export public key to create a cryptographic thumbprint
+      // 🔍 2. Public key ko bahar nikaalo aur SHA-256 hash karo taaki chhota sa unique ID ban sake
       const rawPub = await window.crypto.subtle.exportKey('raw', keyPair.publicKey);
       const hashBuf = await window.crypto.subtle.digest('SHA-256', rawPub);
+
+      // 🔢 3. Hash ke buffer (0s aur 1s) ko human-readable Hex string me badlo
       const hex = Array.from(new Uint8Array(hashBuf))
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('');
 
+      // 🏷️ 4. Device ID ka naamkaran: "dvid_abc123..."
       const deviceId = 'dvid_' + hex.slice(0, 32);
 
-      // Save Private Key, Public Key, and Device ID in IndexedDB
+      // 💾 5. Private Key, Public Key aur Device ID ko IndexedDB ki tijori me band karke lock kar do!
       await saveKeyPairToIdb(keyPair, deviceId);
       return deviceId;
     } catch (e) {
@@ -248,6 +264,110 @@ export function getLocalDeviceId(): string | null {
 }
 
 /**
+ * 🔑 Retrieves the non-extractable private key from IndexedDB vault
+ */
+export async function getPrivateKeyFromIdb(): Promise<CryptoKey | null> {
+  if (!isBrowser() || !window.indexedDB) return null;
+  return new Promise((resolve) => {
+    try {
+      const request = indexedDB.open(IDB_DB_NAME, 1);
+      request.onsuccess = () => {
+        const db = request.result;
+        try {
+          const tx = db.transaction(IDB_STORE_NAME, 'readonly');
+          const store = tx.objectStore(IDB_STORE_NAME);
+          const req = store.get('private_key');
+          req.onsuccess = () => resolve((req.result as CryptoKey) || null);
+          req.onerror = () => resolve(null);
+        } catch {
+          resolve(null);
+        }
+      };
+      request.onerror = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+/**
+ * 🔒 TAPORI EXPLANATION: Cryptographic Proof-of-Possession Signature (ECDSA P-256)
+ *
+ * ❓ BHAI YE FUNCTION KARTA KYA HAI?
+ * Simple shabdon me: Browser apni jeb se 'Asli Private Chaabi' nikalta hai aur ek parchi (challenge)
+ * par apna digital angutha (signature) laga kar deta hai.
+ *
+ * Agar koi chor cookie chura ke Incognito me le gaya, toh chor ke paas ye 'Private Chaabi'
+ * hoti hi nahi (kyunki ye browser ke hardware/IndexedDB se bahar nikal hi nahi sakti)!
+ * Isliye chor ka sign fail ho jayega aur wo dhar liya jayega!
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * 🧠 COMPUTER KE BASICS SAMJHO (TextEncoder, Uint8Array, subtle.sign, btoa):
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * 1️⃣ `TextEncoder().encode(challenge)`:
+ *    - Apne computer ko English ("vault_challenge_123") samajh nahi aati bhai!
+ *    - Computer ko sirf NUMBERS (0 se 255) samajh aate hain.
+ *    - `TextEncoder` text ke har akshar ko number (ASCII/UTF-8 byte) me badal deta hai.
+ *    - Example: "A" ban jata hai 65, "B" ban jata hai 66.
+ *
+ * 2️⃣ `crypto.subtle.sign()`:
+ *    - Yeh browser ka official 'Sarkari Thappa' (Crypto Engine) hai.
+ *    - Yeh Private Key aur un numbers ko aapas me aisi khatarnak ganit (Maths) me ghumata hai
+ *      ki ek aisi seal ban jaati hai jise duniya ka koi bhi hacker nakli nahi bana sakta!
+ *    - Output: Raw Memory Buffer (`ArrayBuffer` - pure 0s aur 1s).
+ *
+ * 3️⃣ `new Uint8Array(signatureBuffer)`:
+ *    - "Uint8Array" ka full form: Unsigned Integer 8-Bit Array.
+ *    - Desi bhasha me: "0 se lekar 255 tak ke numbers ka ek lamba dabba (List)".
+ *    - Crypto calculation ke baad jo raw memory aati hai, usko numbers ki list me padhne ke liye
+ *      Uint8Array ka chashma lagana padta hai.
+ *
+ * 4️⃣ `btoa(binary)`:
+ *    - Full form: "Binary to ASCII" (Base64 Encoder).
+ *    - Jo signature ke bytes nikle, wo binary hain. Unko agar direct console ya JSON me bhejoge
+ *      to ajeeb se aliens wale symbol ban jayenge (jaise #@).
+ *    - `btoa` un sabhi numbers ko clean, readable English characters ("eyJhbGciOi...") me badalta hai
+ *      taaki internet pe wire ke upar aram se travel kar sake!
+ */
+export async function signDeviceChallenge(challenge: string): Promise<string | null> {
+  // Agar browser hi nahi hai (Server side hai) ya crypto engine gayab hai, to haath khade kar do
+  if (!isBrowser() || !window.crypto?.subtle) return null;
+
+  try {
+    // 🔑 Step 1: IndexedDB ke locker se apni 'Private Key' dhoond ke nikalo
+    const privateKey = await getPrivateKeyFromIdb();
+    if (!privateKey) {
+      // Arre re! Private Key nahi mili! Matlab ye fake/Incognito window hai!
+      return null;
+    }
+
+    // 🔤 Step 2: English challenge text ko numbers (Bytes) me convert karo
+    const data = new TextEncoder().encode(challenge);
+
+    // ✍️ Step 3: Browser ke subtle crypto se bolo: "Bhai, Private Key se is par signature maar de!"
+    const signatureBuffer = await window.crypto.subtle.sign(
+      { name: 'ECDSA', hash: { name: 'SHA-256' } },
+      privateKey,
+      data
+    );
+
+    // 🔢 Step 4: Raw buffer ko 0-255 wale numbers (Uint8Array) me dhaal lo
+    const bytes = new Uint8Array(signatureBuffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+
+    // 📦 Step 5: 'btoa' se clean Base64 string bana do taaki network pe bhej sakein
+    return btoa(binary);
+  } catch (err) {
+    console.warn('[DeviceClient] Cryptographic challenge signature failed:', err);
+    return null;
+  }
+}
+
+/**
  * Validates whether the browser has legitimate local storage for the given device ID cookie.
  * If cookie exists but localStorage/IndexedDB is completely empty, someone pasted the cookie
  * into Incognito or another browser profile!
@@ -263,6 +383,31 @@ export function validateClientDeviceBinding(cookieDid?: string | null): boolean 
   }
 
   return localId === cookieDid;
+}
+
+/**
+ * 🛡️ Deep Cryptographic Proof-of-Possession Check:
+ * Proves that this browser environment physically contains the non-extractable private key
+ * inside IndexedDB, and isn't just an Incognito window or stolen cookie/localStorage clone.
+ */
+export async function verifyClientVaultPossession(cookieDid?: string | null): Promise<boolean> {
+  if (!isBrowser()) return true;
+  if (!cookieDid) return true;
+
+  // 1. Fast check: localStorage must match
+  if (!validateClientDeviceBinding(cookieDid)) {
+    return false;
+  }
+
+  // 2. Cryptographic Proof: Can this browser actually sign with the non-extractable private key?
+  const testNonce = `vault_challenge_${Date.now()}`;
+  const sig = await signDeviceChallenge(testNonce);
+  if (!sig) {
+    // Private key is missing from IndexedDB!
+    return false;
+  }
+
+  return true;
 }
 
 /**

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 import { extractAuthToken, extractDeviceCookie } from '@/lib/auth-constants';
-import { getClientIp, getClientLocation, getClientUserAgent } from '@/lib/ip';
+import { getClientIp, getClientLocationFromHeaders, getClientUserAgent } from '@/lib/ip';
 import { sendSecurityAlertNotification } from '@/lib/security-alerts';
 
 /**
@@ -112,7 +112,7 @@ export async function proxy(request: NextRequest) {
           tokenDeviceId: decodedPayload?.deviceId || null,
           clientDeviceId: clientDeviceId || null,
           ip: getClientIp(request.headers),
-          location: await getClientLocation(request.headers),
+          location: getClientLocationFromHeaders(request.headers),
           userAgent: getClientUserAgent(request.headers),
           targetPath: pathname,
           triggerSource: 'middleware_proxy',
