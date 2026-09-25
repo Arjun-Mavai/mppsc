@@ -84,6 +84,7 @@ export async function POST() {
 
   // Set no-cache headers to prevent browser/CDN from caching logout response
   const response = NextResponse.json({ success: true });
+  deleteAuthCookies(response);
   response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   return response;
 }

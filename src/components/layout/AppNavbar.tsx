@@ -106,35 +106,50 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
       setUser(null, false);
       setAuthCheckStatus('checked');
 
-      // 1. Nuke persisted Zustand state and device security keys from localStorage FIRST (Synchronous)
+      // 1. Clear user-specific store data from localStorage (Keep device hardware identity intact)
       if (typeof window !== 'undefined') {
         localStorage.removeItem('settings-storage');
-        import('@/lib/device-client').then((m) => m.clearLocalDeviceData()).catch(() => {});
       }
 
-      // 2. Fire background network requests to clear server cookies & service worker caches (with timeout)
+      // 2. Await server logout so auth cookies are deleted BEFORE redirecting
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000);
-      fetch('/api/auth/mppsc-logout', { method: 'POST', keepalive: true, signal: controller.signal })
-        .catch(() => {})
-        .finally(() => clearTimeout(timeoutId));
-      
+      try {
+        await fetch('/api/auth/mppsc-logout', {
+          method: 'POST',
+          credentials: 'include',
+          keepalive: true,
+          signal: controller.signal,
+        });
+      } catch {
+        // Proceed even if network timed out
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      // 3. Clear non-httpOnly auth cookie fallbacks directly if any
+      if (typeof document !== 'undefined') {
+        document.cookie = '_app_sid=; path=/; max-age=0; SameSite=Lax';
+        document.cookie = 'mppsc_token=; path=/; max-age=0; SameSite=Lax';
+      }
+
       if ('caches' in window) {
         Promise.race([
           Promise.all([...(await caches.keys()).map((name) => caches.delete(name))]),
-          new Promise(r => setTimeout(r, 2000))
+          new Promise((r) => setTimeout(r, 1000)),
         ]).catch(() => {});
       }
 
       const safeReason = typeof reason === 'string' ? reason : 'logged_out';
 
-      // 3. Force hard redirect to login page NOW that local storage is clean
-      // This will look like a seamless hard refresh to the user.
+      // 4. Redirect to login page
       window.location.href = `/login?reason=${encodeURIComponent(safeReason)}`;
     } catch (error) {
       logger.error('Logout failed:', error);
-      localStorage.removeItem('settings-storage');
-      window.location.href = '/login?reason=logged_out';
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('settings-storage');
+        window.location.href = '/login?reason=logged_out';
+      }
     }
   }, [setUser, setAuthCheckStatus, setIsLoggingOut]);
 

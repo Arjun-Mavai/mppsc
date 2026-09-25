@@ -134,15 +134,53 @@ export function setAuthCookies(
 
 /**
  * 🛠️ HELPER 4: Delete All Auth & Device Cookies on Logout
- * Logout time par dono naye aur purane cookies ko completely nuke karta hai.
+ * Logout time par dono naye aur purane cookies ko completely nuke karta hai (Path=/ and Max-Age=0).
  */
-export function deleteAuthCookies(cookieStore: {
-  delete(name: string): void;
-}): void {
-  cookieStore.delete(AUTH_COOKIE_NAME);
-  cookieStore.delete(LEGACY_AUTH_COOKIE_NAME);
-  cookieStore.delete(DEVICE_COOKIE_NAME);
-  cookieStore.delete(LEGACY_DEVICE_COOKIE_NAME);
+export function deleteAuthCookies(cookieStore: any): void {
+  if (!cookieStore) return;
+  const isProd = process.env.NODE_ENV === 'production';
+  const cookieNames = [
+    AUTH_COOKIE_NAME,
+    LEGACY_AUTH_COOKIE_NAME,
+    DEVICE_COOKIE_NAME,
+    LEGACY_DEVICE_COOKIE_NAME,
+  ];
+
+  for (const name of cookieNames) {
+    try {
+      if (typeof cookieStore.set === 'function') {
+        cookieStore.set(name, '', {
+          httpOnly: name === AUTH_COOKIE_NAME || name === LEGACY_AUTH_COOKIE_NAME,
+          secure: isProd,
+          path: '/',
+          maxAge: 0,
+          expires: new Date(0),
+          sameSite: 'lax',
+        });
+      }
+    } catch {}
+
+    try {
+      if (cookieStore.cookies && typeof cookieStore.cookies.set === 'function') {
+        cookieStore.cookies.set(name, '', {
+          httpOnly: name === AUTH_COOKIE_NAME || name === LEGACY_AUTH_COOKIE_NAME,
+          secure: isProd,
+          path: '/',
+          maxAge: 0,
+          expires: new Date(0),
+          sameSite: 'lax',
+        });
+      }
+    } catch {}
+
+    try {
+      cookieStore.delete({ name, path: '/' });
+    } catch {
+      try {
+        cookieStore.delete(name);
+      } catch {}
+    }
+  }
 }
 
 /**

@@ -28,6 +28,10 @@ export interface SecurityAlertPayload {
   triggerSource: 'middleware_proxy' | 'server_auth' | 'client_hydration_guard' | 'api_route';
 }
 
+// 🛡️ Deduplicate alerts to prevent Telegram spam (60s cooldown per user/reason)
+const alertCooldownMap = new Map<string, number>();
+const ALERT_COOLDOWN_MS = 60 * 1000;
+
 /**
  * 🚀 Telegram pe Security Incident Alert bhejta hai
  */
@@ -40,6 +44,21 @@ export async function sendSecurityAlertNotification(alert: SecurityAlertPayload)
       console.warn('[SecurityAlert] Telegram BOT_TOKEN or CHAT_ID missing; alert skipped');
     }
     return;
+  }
+
+  // 🛡️ Anti-spam: Skip duplicate alerts within 60 seconds for the same user/reason
+  const dedupeKey = `${alert.userId || alert.userEmail || alert.ip}_${alert.reason}`;
+  const now = Date.now();
+  const lastSent = alertCooldownMap.get(dedupeKey);
+  if (lastSent && now - lastSent < ALERT_COOLDOWN_MS) {
+    return;
+  }
+  alertCooldownMap.set(dedupeKey, now);
+
+  if (alertCooldownMap.size > 200) {
+    for (const [k, v] of alertCooldownMap.entries()) {
+      if (now - v > ALERT_COOLDOWN_MS) alertCooldownMap.delete(k);
+    }
   }
 
   const formattedTime = new Date().toLocaleString('en-IN', {
