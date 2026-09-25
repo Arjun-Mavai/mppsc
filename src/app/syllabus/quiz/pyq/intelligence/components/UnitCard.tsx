@@ -1,14 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Eye, ExternalLink } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { ChevronDown, ChevronUp, ExternalLink, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { UnitBadge } from './shared/UnitBadge';
-import { formatUnitTitle, getUnitColor } from './shared/constants';
+import { formatUnitTitle } from './shared/constants';
 import { QuestionList, QuestionData } from './QuestionItem';
 import { TransitionLink } from '@/components/ui/transition-link';
 
@@ -44,9 +43,9 @@ export function UnitCard({
   theme = 'dark',
 }: UnitCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-  const [showAllQuestions, setShowAllQuestions] = useState(false);
+  // 🟢 State to toggle all answers in this unit
+  const [showAnswers, setShowAnswers] = useState(false);
   const percentage = totalQuestions > 0 ? Math.round((questionCount / totalQuestions) * 100) : 0;
-  const colorClass = getUnitColor(unitId);
 
   // Build View All URL
   const viewAllUrl = `/syllabus/quiz/pyq/intelligence/questions?unit=${unitId}&source=${variant}${year ? `&year=${year}` : ''}`;
@@ -63,63 +62,60 @@ export function UnitCard({
   const colorTheme = cardColors[colorIndex];
 
   return (
-    <div className={cn(
-      "rounded-xl border transition-colors",
-      theme === 'light' 
-        ? `${colorTheme.border} ${isExpanded ? colorTheme.activeBg : cn(colorTheme.bg, colorTheme.hoverBg)}`
-        : "border-slate-800/50 bg-slate-800/30 hover:bg-slate-800/50"
-    )}>
+    <div
+      className={cn(
+        'rounded-[1.5rem] border transition-all duration-300',
+        theme === 'light'
+          ? (isExpanded ? `${colorTheme.border} ${colorTheme.activeBg}` : `${colorTheme.border} ${colorTheme.bg} ${colorTheme.hoverBg}`)
+          : (isExpanded ? 'border-white/10 bg-white/[0.05]' : 'border-white/[0.03] bg-white/[0.02] hover:bg-white/[0.04]')
+      )}
+    >
       {/* Header */}
       <div
         className="flex cursor-pointer items-center gap-4 p-4 sm:p-5"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <UnitBadge unitId={unitId} size="lg" />
-        
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h4 className={cn("text-sm font-bold truncate", theme === 'light' ? "text-[#1D1D1F]" : "text-white")}>
-              {formatUnitTitle(unitId, isHindi)}
-            </h4>
-            <Badge
-              variant="secondary"
-              className={cn(
-                "h-5 shrink-0 px-2 font-mono text-[10px]",
-                theme === 'light' 
-                  ? "border-[#E5E5EA] bg-[#F5F5F7] text-[#86868B]" 
-                  : "border-slate-700 bg-slate-900 text-slate-400"
-              )}
-            >
-              {questionCount}
-            </Badge>
-          </div>
-          <p className={cn("mt-0.5 text-xs truncate", theme === 'light' ? "text-[#86868B]" : "text-slate-500")}>
-            {unitTitle}
-          </p>
-          
-          {showPercentage && (
-            <div className="mt-2 flex items-center gap-2">
-              <Progress
-                value={percentage}
-                className={cn('h-1.5 flex-1', theme === 'light' ? 'bg-[#F5F5F7]' : 'bg-slate-800', `[&>div]:${colorClass}`)}
-              />
-              <span className={cn("text-xs font-medium tabular-nums", theme === 'light' ? "text-[#86868B]" : "text-slate-400")}>
-                {percentage}%
-              </span>
-            </div>
-          )}
-        </div>
+        <UnitBadge
+          unitId={unitId}
+          className="shrink-0"
+        />
 
-        <div className="shrink-0">
-          {isExpanded ? (
-            <ChevronUp className={cn("h-5 w-5", theme === 'light' ? "text-indigo-500" : "text-emerald-400")} />
-          ) : (
-            <ChevronDown className={cn("h-5 w-5", theme === 'light' ? "text-[#86868B]" : "text-slate-600")} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <h4 className={cn("text-base font-bold sm:text-lg", theme === 'light' ? colorTheme.text : "text-white")}>
+              {unitTitle ? `${formatUnitTitle(unitId, isHindi)}: ${unitTitle}` : formatUnitTitle(unitId, isHindi)}
+            </h4>
+            <div className="flex items-center gap-3">
+              <span className={cn("text-sm font-black", theme === 'light' ? colorTheme.text : "text-emerald-400")}>
+                {questionCount} {isHindi ? 'प्रश्न' : 'Questions'}
+              </span>
+              <div
+                className={cn(
+                  'flex h-7 w-7 items-center justify-center rounded-full border transition-all',
+                  isExpanded
+                    ? (theme === 'light' ? `${colorTheme.text} border-current bg-white shadow-xs` : 'border-emerald-400 bg-emerald-500 text-black shadow-xs')
+                    : (theme === 'light' ? 'border-slate-200 bg-white text-[#86868B]' : 'border-white/5 bg-white/5 text-slate-500')
+                )}
+              >
+                {isExpanded ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </div>
+            </div>
+          </div>
+
+          {showPercentage && (
+            <div className="mt-2 flex items-center gap-3">
+              <Progress value={percentage} className="h-1 flex-1 bg-white/5" />
+              <span className="text-[10px] font-black text-slate-500">{percentage}%</span>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Expanded content */}
+      {/* Expanded Content */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -129,31 +125,35 @@ export function UnitCard({
             className="overflow-hidden"
           >
             <div className={cn("border-t", theme === 'light' ? colorTheme.border : "border-slate-800/50")}>
-              {/* Header with View All button */}
+              {/* Header with Show/Hide Answers and View All button */}
               <div className="flex items-center justify-between px-4 py-3 sm:px-5">
                 <span className="text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
                   {isHindi ? 'प्रश्न' : 'Questions'} ({questions.length})
                 </span>
                 <div className="flex items-center gap-2">
+                  {/* 🟢 Minimalist CheckCircle Toggle: उत्तर दिखाएं / उत्तर छिपाएं */}
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setShowAllQuestions(!showAllQuestions);
+                      setShowAnswers(!showAnswers);
                     }}
                     className={cn(
-                      "h-7 gap-1.5 px-2 text-xs transition-all",
-                      theme === 'light' 
-                        ? "text-[#86868B] hover:bg-[#F5F5F7] hover:text-[#1D1D1F]" 
-                        : "text-slate-400 hover:bg-white/10 hover:text-white"
+                      "h-7 gap-1.5 rounded-lg border px-2.5 text-xs font-bold transition-all active:scale-95",
+                      showAnswers
+                        ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100/70 shadow-xs"
+                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                     )}
                   >
-                    <Eye className="h-3.5 w-3.5" />
-                    {showAllQuestions 
-                      ? (isHindi ? 'संक्षिप्त' : 'Collapse')
-                      : (isHindi ? 'विस्तार' : 'Expand')}
+                    <CheckCircle className={cn("h-3.5 w-3.5 transition-colors", showAnswers ? "text-emerald-600" : "text-slate-400")} />
+                    <span>
+                      {isHindi 
+                        ? (showAnswers ? 'उत्तर छिपाएं' : 'उत्तर दिखाएं') 
+                        : (showAnswers ? 'Hide Answers' : 'Show Answers')}
+                    </span>
                   </Button>
+
                   <TransitionLink
                     href={viewAllUrl}
                     onClick={(e) => e.stopPropagation()}
@@ -171,10 +171,7 @@ export function UnitCard({
                 </div>
               </div>
               
-              <div className={cn(
-                'overflow-y-auto',
-                showAllQuestions ? 'max-h-none' : 'max-h-[80vh] sm:max-h-none'
-              )}>
+              <div className="overflow-y-auto max-h-[80vh] sm:max-h-none">
                 <QuestionList
                   questions={questions}
                   isHindi={isHindi}
@@ -182,7 +179,8 @@ export function UnitCard({
                   showYears={true}
                   groupByYear={groupQuestionsByYear}
                   variant={theme === 'light' ? 'compact' : 'card'}
-                  showAllExpanded={showAllQuestions}
+                  showAllExpanded={showAnswers}
+                  showAnswers={showAnswers}
                   theme={theme}
                 />
               </div>

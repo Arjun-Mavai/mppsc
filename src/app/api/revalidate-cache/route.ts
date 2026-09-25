@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag as originalRevalidateTag } from 'next/cache';
-const revalidateTag = originalRevalidateTag as any;
+const revalidateTag = originalRevalidateTag as unknown as (tag: string, profile?: string) => void;
 import { assertAdmin } from '@/lib/auth';
 import { CACHE } from '@/lib/cache';
 import { logger } from '@/lib/logger';
+
+import { invalidateServerIntelligenceCache } from '@/lib/server-intelligence-cache';
 
 /**
  * On-Demand Revalidation API
@@ -31,6 +33,7 @@ export async function POST(req: NextRequest) {
     switch (type) {
       case 'pyq_all':
         // Invalidate entire PYQ library
+        invalidateServerIntelligenceCache();
         revalidateTag(CACHE.PYQ.TAGS.ALL, 'max');
         revalidateTag(CACHE.PYQ.TAGS.ANALYSIS, 'max');
         revalidateTag(CACHE.PYQ.TAGS.TRENDS, 'max');

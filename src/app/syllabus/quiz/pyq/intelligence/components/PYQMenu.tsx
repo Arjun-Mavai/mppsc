@@ -1,18 +1,15 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Sparkles, BookOpen, Lightbulb, BarChart3, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Sparkles, BookOpen, ChevronRight } from 'lucide-react';
 import { CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { ExpandableCard } from './shared/ExpandableCard';
 import { cn } from '@/lib/utils';
 
 interface PYQMenuProps {
   isHindi: boolean;
-  currentPage?: 'intelligence' | 'facts' | 'analysis' | 'repeated';
+  currentPage?: 'intelligence' | 'facts' | 'analysis' | 'repeated' | 'blueprint';
   theme?: 'light' | 'dark';
 }
 
@@ -26,6 +23,16 @@ const menuItems = [
     subtitle: 'Extracting Every Secret of PYQs',
     subtitleHi: 'PYQ के हर रहस्य का विश्लेषण',
     color: 'emerald',
+  },
+  {
+    id: 'blueprint',
+    href: '/syllabus/quiz/pyq/intelligence/blueprint',
+    icon: BookOpen,
+    title: 'Blueprint & Hot Topics',
+    titleHi: 'ब्लूप्रिंट & हॉट टॉपिक्स',
+    subtitle: '7-Yr Cutoff Formula & Cheats',
+    subtitleHi: '7-वर्षीय परीक्षा ब्लूप्रिंट एवं चीट शीट्स',
+    color: 'amber',
   },
   /* NOTE: Temporarily hidden as per user request. Uncomment to re-enable Facts feature.
   {
