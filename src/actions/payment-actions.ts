@@ -22,6 +22,7 @@ import { z } from 'zod';
 import { after } from 'next/server';
 import { headers } from 'next/headers';
 import { sendLeadNotification } from '@/lib/telegram';
+import { getClientIp } from '@/lib/ip';
 import {
   notifyAdminOnVerificationFailure,
   notifyAdminOnEmailFailure,
@@ -75,10 +76,7 @@ export async function startPayment(input: StartPaymentInput) {
 
     // 🌍 Retrieve IP and User Agent for consent audit trail
     const reqHeaders = await headers();
-    const forwardedFor = reqHeaders.get('x-forwarded-for');
-    const ipAddress = forwardedFor 
-      ? forwardedFor.split(',')[0].trim() 
-      : reqHeaders.get('x-real-ip') || '127.0.0.1';
+    const ipAddress = getClientIp(reqHeaders);
     const userAgent = reqHeaders.get('user-agent') || 'unknown';
 
     const consentInfo = {

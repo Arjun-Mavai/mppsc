@@ -17,9 +17,11 @@ export interface AuthenticatedUser {
   sessionVersion?: number | null;
   /** Internal flag for session mismatch detection */
   _mismatch?: boolean;
+  /** Internal flag for device mismatch detection (e.g. copied cookie to incognito) */
+  _deviceMismatch?: boolean;
 }
 
 export interface AuthSessionResponse {
   user: AuthenticatedUser | null;
-  reason?: 'multi_device' | 'expired' | 'invalid';
+  reason?: 'multi_device' | 'expired' | 'invalid' | 'device_mismatch' | 'unauthorized_device';
 }

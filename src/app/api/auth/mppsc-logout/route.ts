@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { v4 as uuidv4 } from 'uuid';
 import { touchAuthLogoutMetadata } from '@/lib/auth-session-metadata';
+import { extractAuthToken, deleteAuthCookies } from '@/lib/auth-constants';
 
 /**
  * Logout API - clean exit choreography
@@ -21,7 +22,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST() {
   const cookieStore = await cookies();
-  const token = cookieStore.get('mppsc_token')?.value;
+  const token = extractAuthToken(cookieStore);
 
   try {
     if (token) {
@@ -72,14 +73,14 @@ export async function POST() {
     logger.error('Logout session clear failed', error, {
       category: 'auth',
     });
-    cookieStore.delete('mppsc_token');
+    deleteAuthCookies(cookieStore);
     const response = NextResponse.json({ success: false }, { status: 500 });
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     return response;
   }
 
-  // Clear the JWT auth cookie
-  cookieStore.delete('mppsc_token');
+  // Clear all auth and device binding cookies
+  deleteAuthCookies(cookieStore);
 
   // Set no-cache headers to prevent browser/CDN from caching logout response
   const response = NextResponse.json({ success: true });

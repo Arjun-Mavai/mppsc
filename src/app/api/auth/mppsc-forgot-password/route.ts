@@ -5,6 +5,7 @@ import { eq, isNull, and } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
+import { getClientIp } from '@/lib/ip';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🔑 ADMIN PASSWORD RESET — Email + New Password → Direct DB update
@@ -20,30 +21,17 @@ import { logger } from '@/lib/logger';
 export async function POST(request: Request) {
   try {
     // ── Rate Limiting ───────────────────────────────────────────
-    const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const ip = getClientIp(request.headers);
     const { resetLimiter, checkRateLimit } = await import('@/lib/rate-limit');
     const { success } = await checkRateLimit(resetLimiter, ip);
     if (!success) {
       return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
     }
 
-    // ── Admin Auth Check ────────────────────────────────────────
-    const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized: Admin session required' }, { status: 401 });
-    }
-
-    const { verifyToken } = await import('@/lib/jwt');
-    const decoded: any = verifyToken(token);
-    if (!decoded?.userId) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
-    }
-
-    const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
-    });
-    if (!adminUser || adminUser.role !== 'admin') {
+    // ── Admin Auth Check (device-aware) ────────────────────────
+    const { verifyAdminApi } = await import('@/lib/auth');
+    const adminUser = await verifyAdminApi();
+    if (!adminUser) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 

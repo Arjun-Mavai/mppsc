@@ -33,6 +33,60 @@ _(Note: Replace with actual screenshot)_
 - Node.js 18+
 - Supabase Account
 
+## 🔐 Device-Bound Authentication & Anti-Cookie-Theft (Architecture)
+
+To prevent credential sharing and cookie theft (such as copying tokens into Incognito or other browsers/devices), sessions are cryptographically device-bound with zero performance overhead:
+
+### 1. Centralized Identifiers (`src/lib/auth-constants.ts`)
+| Identifier | Location | Visibility / Type | Purpose |
+| :--- | :--- | :--- | :--- |
+| `_app_sid` | HTTP Cookie | `HttpOnly; SameSite=Lax; Secure` (30 days) | Primary session JWT (fallback `mppsc_token` supported for legacy users). |
+| `_app_cid` | HTTP Cookie | `SameSite=Lax; Secure` (30 days) | Non-obvious client device cookie (fallback `mppsc_did` supported). |
+| `_sec_cid` | `localStorage` | Client Browser Storage | Persistent local hardware / profile device ID. |
+| `_app_vault` | `IndexedDB` | Client Sandboxed Storage | Durable WebCrypto vault storing non-extractable ECDSA private keys. |
+
+### 2. The Multi-Layer Defense Shield
+1. **Initial Navigation (Server / Middleware)**:
+   - When any protected route (`/dashboard`, `/profile`, `/syllabus/...`) is requested, `src/proxy.ts` inspects the JWT payload via `extractAuthToken()`.
+   - If the token contains a bound `deviceId`, `src/proxy.ts` verifies that the incoming request cookie `_app_cid` (via `extractDeviceCookie()`) matches `deviceId`.
+   - **Incognito Defense**: An attacker copying only `_app_sid` into Incognito has no `_app_cid` $\rightarrow$ immediately redirected to `/login?reason=unauthorized_device`.
+2. **Client Hydration (Cryptographic Proof-of-Possession)**:
+   - On hydration, `src/components/layout/AppNavbar.tsx` calls `verifyClientVaultPossession()`.
+   - It performs an active cryptographic challenge against the non-extractable ECDSA private key stored inside IndexedDB (`_app_vault`).
+   - If someone copies both cookies and localStorage into Incognito or another machine, the non-extractable private key cannot be exported or cloned. The cryptographic signature attempt fails, immediately purging the session and reporting a security incident.
+3. **API & Admin Route Enforcement**:
+   - All `/api/admin/...` and `/api/auth/...` endpoints enforce device verification via centralized `verifyAdminApi()` and `verifyAuth()`.
+4. **100% Backward Compatibility for Existing Users**:
+   - Legacy tokens issued prior to this update have `deviceId: undefined`.
+   - The server, proxy, and client explicitly allow legacy tokens without disruption. No existing student is logged out.
+
+### 3. Real Client IP Extraction vs Proxies (`src/lib/ip.ts`)
+- **X-Forwarded-For Behavior**: `headers.get('x-forwarded-for')` returns a **comma-separated string** (e.g., `"103.21.244.2, 141.101.105.17, 76.76.21.21"`), NOT an array.
+- **The Proxy Chain**:
+  - The **FIRST** IP (`103.21.244.2`) is the genuine client IP (e.g., student's mobile or broadband in India).
+  - The subsequent IPs are intermediate reverse proxies (Cloudflare edge in Singapore, Vercel proxy, AWS ALB).
+- **Hardened IP Resolution (`getClientIp()`)**:
+  1. Priority 1: `x-vercel-forwarded-for` (Vercel edge infrastructure header, tamper-proof on Vercel).
+  2. Priority 2: `cf-connecting-ip` (Validated against `cf-ray` to prevent client header spoofing).
+  3. Priority 3: `x-real-ip` (Nginx/reverse proxy single client IP).
+  4. Priority 4: `x-forwarded-for` (first IP, `.split(',')[0].trim()`).
+  5. Priority 5: `true-client-ip` / `x-client-ip`.
+  6. Fallback: `127.0.0.1` (development/localhost with IPv6 loopback normalization).
+
+### 4. Real-Time Telegram Security Incident Alerts (`src/lib/security-alerts.ts`)
+When an unauthorized device or copied session attempt is detected:
+- **Trigger Points**:
+  - `src/proxy.ts` (Edge Middleware): Catches session cookie copy-pastes where `_app_cid` is missing or mismatched (0ms latency with synchronous edge headers).
+  - `src/components/layout/AppNavbar.tsx`: Catches double-cookie copy-pastes where client-side non-extractable WebCrypto key is absent.
+  - `src/lib/auth.ts`: Catches direct API / server action hits with mismatched device bindings.
+- **Information Sent to Telegram Bot**:
+  - Real Client IP (genuine user IP, not proxy) + Geo-Location (City, Region, Country).
+  - User Details (Name, Email, User ID, Plan Tier).
+  - Device IDs (`Token Device ID` vs `Client Presented ID`).
+  - Detection Source (`middleware_proxy`, `client_hydration_guard`, or `server_auth`).
+  - Redacted Token with One-Way SHA-256 Fingerprint (protects bearer credentials from replay/forwarding).
+  - Sliding-window rate limiting on incident reporting endpoint to prevent alert flooding.
+
 ## 💳 Payment → Welcome Email (MPPSC flow note)
 
 If a user pays and reaches `/thank-you` but **doesn’t receive the “Set Password” email**, the common cause is that the checkout flow verifies payment via a **server action** (e.g. `verifyPayment`) while the welcome email + token logic exists only in an API route.

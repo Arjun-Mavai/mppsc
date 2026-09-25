@@ -18,19 +18,8 @@ const isAdminTokenPayload = (value: unknown): value is AdminTokenPayload => {
 };
 
 export async function getAdminUserFromRequest() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('mppsc_token')?.value;
-  if (!token) return null;
-
-  const decoded = verifyToken(token);
-  if (!isAdminTokenPayload(decoded)) return null;
-
-  const user = await db.query.mppscUsers.findFirst({
-    where: eq(mppscUsers.id, decoded.userId),
-  });
-
-  if (!user || user.role !== 'admin') return null;
-  return user;
+  const { verifyAdminApi } = await import('@/lib/auth');
+  return verifyAdminApi();
 }
 
 export const slugifyTopic = (value: string) =>

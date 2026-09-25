@@ -31,6 +31,14 @@ export async function GET() {
       });
     }
 
+    // 🛡️ Detected device mismatch (copied cookie / unauthorized device)
+    if (user._deviceMismatch) {
+      const response: AuthSessionResponse = { user: null, reason: 'device_mismatch' };
+      return NextResponse.json(response, {
+        headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
+      });
+    }
+
     const response: AuthSessionResponse = {
       user: {
         id: user.id,

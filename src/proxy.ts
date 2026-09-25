@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
+import { extractAuthToken, extractDeviceCookie } from '@/lib/auth-constants';
+import { getClientIp, getClientLocationFromHeaders, getClientUserAgent } from '@/lib/ip';
+import { sendSecurityAlertNotification } from '@/lib/security-alerts';
 
 /**
  * Mumbai Gatekeeper (Proxy/Middleware) - Fast Flow Index
@@ -53,15 +56,33 @@ const AUTH_ROUTES = ['/login', '/signup', '/forgot-password'];
 
 export async function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
-  const token = request.cookies.get('mppsc_token')?.value;
+  const token = extractAuthToken(request.cookies);
   const testId = searchParams.get('testId');
   // 1. Verify Token (Agar token hai to check karo valid hai ya nahi)
   let isValidToken = false;
+  let isDeviceMismatch = false;
+  let decodedPayload: { userId?: string; email?: string; role?: string; name?: string; deviceId?: string } | null = null;
 
   if (token) {
     try {
-      await jwtVerify(token, SECRET_KEY);
-      isValidToken = true;
+      const { payload } = (await jwtVerify(token, SECRET_KEY)) as {
+        payload: { userId?: string; email?: string; role?: string; name?: string; deviceId?: string };
+      };
+      decodedPayload = payload;
+      // 🛡️ Anti-Cookie-Theft: Device Binding Check
+      // - If payload.deviceId is present, it MUST match the request cookie '_app_cid' (or legacy 'mppsc_did').
+      // - If payload.deviceId is absent, this is an existing legacy user session → ALLOW with zero disruption!
+      if (payload.deviceId) {
+        const clientDeviceId = extractDeviceCookie(request.cookies);
+        if (!clientDeviceId || clientDeviceId !== payload.deviceId) {
+          isValidToken = false;
+          isDeviceMismatch = true;
+        } else {
+          isValidToken = true;
+        }
+      } else {
+        isValidToken = true;
+      }
     } catch (error) {
       // Token invalid or expired
       isValidToken = false;
@@ -75,8 +96,31 @@ export async function proxy(request: NextRequest) {
 
   if (isProtectedRoute) {
     if (!isValidToken) {
-      // "Bhai, pehle login karke aao"
-      return NextResponse.redirect(new URL('/login', request.url), {
+      // "Bhai, pehle login karke aao ya unauthorized device se access roko"
+      const redirectUrl = new URL('/login', request.url);
+      if (isDeviceMismatch) {
+        redirectUrl.searchParams.set('reason', 'unauthorized_device');
+
+        // 🚨 Fast Telegram Alert on Unauthorized / Copied Device Attempt
+        const clientDeviceId = extractDeviceCookie(request.cookies);
+        const alertPromise = sendSecurityAlertNotification({
+          reason: 'unauthorized_device',
+          token,
+          userId: decodedPayload?.userId || null,
+          userEmail: decodedPayload?.email || null,
+          userRole: decodedPayload?.role || null,
+          tokenDeviceId: decodedPayload?.deviceId || null,
+          clientDeviceId: clientDeviceId || null,
+          ip: getClientIp(request.headers),
+          location: getClientLocationFromHeaders(request.headers),
+          userAgent: getClientUserAgent(request.headers),
+          targetPath: pathname,
+          triggerSource: 'middleware_proxy',
+        });
+        // Race with 800ms so user redirect is never stalled
+        await Promise.race([alertPromise, new Promise((res) => setTimeout(res, 800))]);
+      }
+      return NextResponse.redirect(redirectUrl, {
         headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' },
       });
     }

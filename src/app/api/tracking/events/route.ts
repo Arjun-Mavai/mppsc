@@ -2,6 +2,7 @@ import { NextResponse, after } from 'next/server';
 import { sendTelemetryEvent, TelemetryEvent } from '@/lib/telegram-events';
 import { logger } from '@/lib/logger';
 import { headers } from 'next/headers';
+import { getClientIp, getClientLocation } from '@/lib/ip';
 
 function normalizeOrigin(origin: string | null | undefined): string | null {
   if (!origin) return null;
@@ -58,25 +59,9 @@ export async function POST(req: Request) {
     const sanitize = <T extends string | null | undefined>(str: T, max = 500): T => 
       typeof str === 'string' ? str.substring(0, max) as T : str;
 
-    // 🌍 EXTRACT IP AND LOCATION FROM VERCEL/CLOUDFLARE HEADERS
-    const isCloudflare = !!headerList.get('cf-connecting-ip');
-    const ip = headerList.get('cf-connecting-ip') || headerList.get('x-forwarded-for')?.split(',')[0]?.trim() || 'Unknown IP';
-    
-    const rawCity = isCloudflare ? headerList.get('cf-ipcity') : (headerList.get('x-vercel-ip-city') || headerList.get('cf-ipcity'));
-    let city: string | null = rawCity;
-    if (rawCity) {
-      try { city = decodeURIComponent(rawCity); } catch { city = rawCity; }
-    }
-    
-    const region = isCloudflare ? null : headerList.get('x-vercel-ip-country-region');
-    const country = isCloudflare ? headerList.get('cf-ipcountry') : (headerList.get('x-vercel-ip-country') || headerList.get('cf-ipcountry'));
-    
-    // Build location string
-    const locationParts: string[] = [];
-    if (city) locationParts.push(city);
-    if (region) locationParts.push(region);
-    if (country) locationParts.push(country);
-    const location = locationParts.length > 0 ? locationParts.join(', ') : undefined;
+    // 🌍 EXTRACT IP AND LOCATION USING CENTRAL UTILITY
+    const ip = getClientIp(headerList);
+    const location = (await getClientLocation(headerList, ip)) || undefined;
 
     const validatedEvent: TelemetryEvent = {
       ...body,

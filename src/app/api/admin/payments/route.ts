@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
-import { cookies } from 'next/headers';
-import { verifyToken } from '@/lib/jwt';
 import { db } from '@/db';
 import { payments, mppscUsers } from '@/db/schema';
 import { desc, eq } from 'drizzle-orm';
@@ -9,21 +7,10 @@ import { desc, eq } from 'drizzle-orm';
 export async function GET(req: Request) {
   let payload: any;
   try {
-    // Auth check — admin only
-    const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    payload = (await verifyToken(token)) as any;
-    if (!payload?.userId) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-
-    const [admin] = await db
-      .select({ role: mppscUsers.role })
-      .from(mppscUsers)
-      .where(eq(mppscUsers.id, payload.userId as string))
-      .limit(1);
-    if (!admin || admin.role !== 'admin')
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    // Auth check — admin only (device-aware)
+    const { verifyAdminApi } = await import('@/lib/auth');
+    const admin = await verifyAdminApi();
+    if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     // Parse query params
     const { searchParams } = new URL(req.url);

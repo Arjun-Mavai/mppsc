@@ -37,6 +37,7 @@ import { verifyAuth } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
 import { notifyAdminOnVerificationFailure } from '@/lib/admin-notify';
+import { getClientIp } from '@/lib/ip';
 
 const startSchema = z.object({
   name: z.string().min(2).max(100),
@@ -51,7 +52,7 @@ export async function POST(req: Request) {
   let planType: string | undefined;
   try {
     // 🚦 Single rate-limit check (instead of 2 separate ones)
-    const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const ip = getClientIp(req.headers);
     const { paymentLimiter } = await import('@/lib/rate-limit');
     const { success } = await checkRateLimit(paymentLimiter, ip);
     if (!success) {

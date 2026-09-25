@@ -45,22 +45,11 @@ export async function POST(request: Request) {
   let adminUserId: string | undefined;
   let targetUserId: string | undefined;
   try {
-    // Admin Auth
-    const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const { verifyToken } = await import('@/lib/jwt');
-    const decodedToken = verifyToken(token);
-    if (!decodedToken?.userId) return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
-    adminUserId = decodedToken.userId;
-
-    const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decodedToken.userId),
-    });
-    if (!adminUser || adminUser.role !== 'admin') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
-    }
+    // Admin Auth (device-aware)
+    const { verifyAdminApi } = await import('@/lib/auth');
+    const adminUser = await verifyAdminApi();
+    if (!adminUser) return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    adminUserId = adminUser.id;
 
     const body = await request.json();
     const parsed = updateUserSchema.parse(body);

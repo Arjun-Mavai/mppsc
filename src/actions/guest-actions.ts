@@ -8,6 +8,8 @@ import { sendTelegramNotification } from '@/lib/telegram';
 import { getTelegramStatsSummary } from '@/lib/telegram-stats-loader';
 import { GUEST_LEAD_SOURCE, getGuestLeadSourceLabel } from '@/lib/lead-source';
 import { escapeHTML } from '@/lib/telegram';
+import { headers } from 'next/headers';
+import { getClientIp, getClientLocation } from '@/lib/ip';
 
 /**
  * 🎯 GUEST DATA MANAGEMENT - UPSERT LOGIC
@@ -102,7 +104,9 @@ function composeGuestTelegramBody(
   email: string | undefined,
   normalizedMobile: string,
   statsSummary: string,
-  referrer: string | undefined
+  referrer: string | undefined,
+  ip?: string,
+  location?: string
 ): string {
   const { title, tag, extra } = buildTelegramHeader(isReturning, leadSource);
   const safeName = escapeHTML(name.trim());
@@ -117,6 +121,8 @@ function composeGuestTelegramBody(
     nameLine +
     `📱 <code>${normalizedMobile}</code>\n` +
     `📧 ${safeEmail}\n` +
+    (ip && ip !== '127.0.0.1' ? `🌐 <b>Real IP:</b> <code>${escapeHTML(ip)}</code>\n` : '') +
+    (location && location !== 'Unknown Location' ? `📍 <b>Location:</b> ${escapeHTML(location)}\n` : '') +
     `🎯 <b>Platform/Exam:</b> MPPSC (Pre & Mains)\n` +
     `🏷️ <b>Lead Source:</b> ${leadSourceLabel}\n` +
     (referrer ? `🔗 <b>Referrer:</b> <code>${escapeHTML(referrer)}</code>\n\n` : '\n') +
@@ -134,6 +140,9 @@ async function sendGuestLeadTelegram(params: {
   normalizedMobile: string;
   referrer: string | undefined;
 }): Promise<void> {
+  const reqHeaders = await headers().catch(() => null);
+  const ip = reqHeaders ? getClientIp(reqHeaders) : '127.0.0.1';
+  const location = reqHeaders ? await getClientLocation(reqHeaders, ip) : 'Unknown Location';
   const stats = await safeStatsSummary();
   const body = composeGuestTelegramBody(
     params.isReturning,
@@ -143,7 +152,9 @@ async function sendGuestLeadTelegram(params: {
     params.email,
     params.normalizedMobile,
     stats,
-    params.referrer
+    params.referrer,
+    ip,
+    location
   );
   await sendTelegramOrLog(body);
 }

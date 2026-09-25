@@ -8,6 +8,9 @@ import { verifyAuth } from '@/lib/auth';
 import { eq, and } from 'drizzle-orm';
 import { sendTelegramNotification } from '@/lib/telegram';
 import { getTelegramStatsSummary } from '@/lib/telegram-stats-loader';
+import { headers } from 'next/headers';
+import { getClientIp, getClientLocation } from '@/lib/ip';
+import { escapeHTML } from '@/lib/telegram';
 
 interface SubmitFeedbackParams {
   testId: string;
@@ -83,17 +86,22 @@ export async function submitTestFeedback(params: SubmitFeedbackParams): Promise<
     
     // 🔥 NEW: Fetch global stats summary
     const statsSummary = await getTelegramStatsSummary();
+    const reqHeaders = await headers().catch(() => null);
+    const ip = reqHeaders ? getClientIp(reqHeaders) : '127.0.0.1';
+    const location = reqHeaders ? await getClientLocation(reqHeaders, ip) : 'Unknown Location';
     
     await sendTelegramNotification(
       `📝 <b>NEW TEST FEEDBACK</b>\n\n` +
-      `<b>👤 Student:</b> ${effectiveName || 'Anonymous'}\n` +
-      `<b>📧 Contact:</b> ${effectiveEmail || 'N/A'}\n` +
-      `<b>📝 Test:</b> ${testName || 'Practice Test'}\n\n` +
+      `<b>👤 Student:</b> ${escapeHTML(effectiveName || 'Anonymous')}\n` +
+      `<b>📧 Contact:</b> ${escapeHTML(effectiveEmail || 'N/A')}\n` +
+      `<b>📝 Test:</b> ${escapeHTML(testName || 'Practice Test')}\n` +
+      `🌐 <b>Real IP:</b> <code>${escapeHTML(ip)}</code>\n` +
+      `📍 <b>Location:</b> ${escapeHTML(location)}\n\n` +
       `<b>📊 Review Details:</b>\n` +
       `━━━━━━━━━━━━━━━━\n` +
       `• <b>Rating:</b> ${stars} (${data.overallRating}/5)\n` +
       `• <b>Difficulty:</b> ${difficultyIcon} ${data.difficultyLevel.toUpperCase()}\n` +
-      `• <b>Comment:</b> "${data.comment || 'No comment provided'}"\n` +
+      `• <b>Comment:</b> "${escapeHTML(data.comment || 'No comment provided')}"\n` +
       `━━━━━━━━━━━━━━━━\n\n` +
       (statsSummary ? statsSummary + '\n\n' : '') +
       `#Feedback #TestReview`

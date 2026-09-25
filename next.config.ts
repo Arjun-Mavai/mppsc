@@ -149,7 +149,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  allowedDevOrigins: ['192.168.1.2', '192.168.1.4','192.168.1.3'],
+  allowedDevOrigins: ['192.168.1.2', '192.168.1.4','192.168.1.3','673b-2401-4900-1ca2-af91-3ceb-e59b-67d6-dad6.ngrok-free.app'],
   logging: {
     browserToTerminal: true,
     // 'error' — errors only (default)

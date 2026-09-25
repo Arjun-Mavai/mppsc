@@ -11,6 +11,7 @@ import { Quote, Loader2, ArrowLeft, Eye, EyeOff, AlertTriangle } from 'lucide-re
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { logger } from '@/lib/logger';
 import { loginUserAction } from '@/actions/auth-actions';
+import { getOrCreateDeviceId } from '@/lib/device-client';
 import { shouldRedirectPreSyllabusToMains } from '@/lib/product-portal-policy';
 import { AuthenticatedUser } from '@/types/auth';
 
@@ -37,7 +38,7 @@ export default function LoginPage() {
   // 🛡️ Handle redirect reasons (e.g. normal logout / multi-device logout)
   useEffect(() => {
     const reason = searchParams.get('reason');
-    if (reason === 'multi_device' || reason === 'logged_out') {
+    if (reason === 'multi_device' || reason === 'logged_out' || reason === 'unauthorized_device' || reason === 'device_mismatch') {
       // Login screen par aate hi stale client auth state ko hard reset.
       useSettingsStore.getState().setUser(null, false);
       useSettingsStore.getState().setAuthCheckStatus('checked');
@@ -50,6 +51,12 @@ export default function LoginPage() {
           duration: 8000,
         });
         setError('You were logged out due to another login session.');
+      } else if (reason === 'unauthorized_device' || reason === 'device_mismatch') {
+        toast.error('Security Alert', {
+          description: 'Session is bound to its original browser. Copy-pasting cookies into incognito or other devices is not permitted.',
+          duration: 8000,
+        });
+        setError('Unauthorized device or copied session detected. Please log in directly.');
       }
     }
   }, [searchParams]);
@@ -60,7 +67,8 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const data = await loginUserAction({ email, password, force });
+      const deviceId = await getOrCreateDeviceId();
+      const data = await loginUserAction({ email, password, force, deviceId });
 
       if (data.requiresConfirmation) {
         setShowConfirmDialog(true);

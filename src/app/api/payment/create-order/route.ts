@@ -7,6 +7,7 @@ import { fetchPricingConfigRow } from '@/lib/pricing-db';
 import { mergePricingRow } from '@/lib/pricing-merge';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { notifyAdminOnVerificationFailure } from '@/lib/admin-notify';
+import { getClientIp } from '@/lib/ip';
 
 const createOrderSchema = z.object({
   planType: z.enum(['lite', 'pro', 'upgrade', 'mains', 'combo']),
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
   try {
     // 🚦 Rate Limit Check: 10 requests / 15 mins
     // Bhai, ye zaroori h taaki koi script lagakar hazaro fake orders na banaye.
-    const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const ip = getClientIp(req.headers);
     const { paymentLimiter } = await import('@/lib/rate-limit');
     const { success } = await checkRateLimit(paymentLimiter, ip);
     if (!success) {

@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import { sendLeadNotification } from '@/lib/telegram';
+import { getClientIp } from '@/lib/ip';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🔐 ADMIN SIGNUP API — Sirf admin hi naya user bana sakta h
@@ -28,7 +29,7 @@ const PLAN_DEFAULT_MONTHS: Record<string, number> = { free: 0, lite: 4, pro: 7 }
 export async function POST(request: Request) {
   try {
     // ── Rate Limiting — brute force se bachao ───────────────────
-    const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const ip = getClientIp(request.headers);
     const { signupLimiter, checkRateLimit } = await import('@/lib/rate-limit');
 
     const { success, limit, remaining, reset } = await checkRateLimit(signupLimiter, ip);
@@ -49,30 +50,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // ── Admin Auth Check — sirf admin bana sakta h user ─────────
-    const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
-
-    if (!token) {
+    // ── Admin Auth Check — sirf admin bana sakta h user (device-aware) ─────────
+    const { verifyAdminApi } = await import('@/lib/auth');
+    const adminUser = await verifyAdminApi();
+    if (!adminUser) {
       return NextResponse.json({ error: 'Unauthorized: Admin session required' }, { status: 401 });
-    }
-
-    const { verifyToken } = await import('@/lib/jwt');
-    const decoded: any = verifyToken(token);
-
-    if (!decoded || !decoded.userId) {
-      return NextResponse.json({ error: 'Unauthorized: Invalid session' }, { status: 401 });
-    }
-
-    const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
-    });
-
-    if (!adminUser || adminUser.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden: Only admins can create accounts.' },
-        { status: 403 }
-      );
     }
 
     // ── Parse Request Body ──────────────────────────────────────

@@ -14,26 +14,11 @@ import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
-    // ── Admin Auth ──────────────────────────────────────────────
-    const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
+    // ── Admin Auth (device-aware) ──────────────────────────────
+    const { verifyAdminApi } = await import('@/lib/auth');
+    const adminUser = await verifyAdminApi();
 
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { verifyToken } = await import('@/lib/jwt');
-    const decoded: any = verifyToken(token);
-
-    if (!decoded?.userId) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
-    }
-
-    const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
-    });
-
-    if (!adminUser || adminUser.role !== 'admin') {
+    if (!adminUser) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
@@ -48,7 +33,7 @@ export async function POST(request: Request) {
     }
 
     // Can't deactivate yourself
-    if (userId === decoded.userId) {
+    if (userId === adminUser.id) {
       return NextResponse.json({ error: "Can't deactivate your own account" }, { status: 400 });
     }
 
@@ -56,7 +41,7 @@ export async function POST(request: Request) {
     await db.update(mppscUsers).set({ isActive }).where(eq(mppscUsers.id, userId));
 
     logger.info(
-      `User ${userId} ${isActive ? 'activated' : 'deactivated'} by admin ${decoded.userId}`
+      `User ${userId} ${isActive ? 'activated' : 'deactivated'} by admin ${adminUser.id}`
     );
 
     return NextResponse.json({

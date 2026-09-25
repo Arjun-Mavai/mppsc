@@ -6,6 +6,7 @@ import { eq, sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { getClientIp } from '@/lib/ip';
 
 
 const passwordSchema = z.object({
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
   let requestToken: string | undefined;
   try {
     // Rate limit
-    const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const ip = getClientIp(req.headers);
     const { setPasswordLimiter } = await import('@/lib/rate-limit');
     const { success } = await checkRateLimit(setPasswordLimiter, ip);
     if (!success) {
