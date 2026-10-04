@@ -54,8 +54,12 @@ export default function TelegramGeneratorClient({
   const [destination, setDestination] = useState<'test' | 'live' | 'constable'>('test');
 
   const getDestinationLabel = (dest: 'test' | 'live' | 'constable') => {
-    if (dest === 'live') return 'MPPSC Live Channel (@mppsc_pyq_questions)';
-    if (dest === 'constable') return 'Constable Live Channel (@mppolice_constable_si)';
+    if (dest === 'live') {
+      return `MPPSC Live Channel (${process.env.NEXT_PUBLIC_MPPSC_TELEGRAM_CHAT_ID || 'not configured'})`;
+    }
+    if (dest === 'constable') {
+      return `Constable Live Channel (${process.env.NEXT_PUBLIC_MP_POLICE_TELEGRAM_CHAT_ID || 'not configured'})`;
+    }
     return 'Test Bot';
   };
 
@@ -496,8 +500,8 @@ Format:
                   </DialogHeader>
                   <div className="text-sm text-slate-600 space-y-4">
                     <p><strong>Test Bot:</strong> Posts messages silently to your configured test Telegram Chat using <code>TELEGRAM_EVENTS_CHAT_ID</code>.</p>
-                    <p><strong>MPPSC Live Channel:</strong> Posts directly to <strong>t.me/mppsc_pyq_questions</strong>.</p>
-                    <p><strong>MP Police Constable Channel:</strong> Posts directly to <strong>t.me/mppolice_constable_si</strong>.</p>
+                    <p><strong>MPPSC Live Channel:</strong> Posts directly to <strong>{process.env.NEXT_PUBLIC_MPPSC_TELEGRAM_CHAT_ID || 'the configured MPPSC channel'}</strong>.</p>
+                    <p><strong>MP Police Constable Channel:</strong> Posts directly to <strong>{process.env.NEXT_PUBLIC_MP_POLICE_TELEGRAM_CHAT_ID || 'the configured MP Police channel'}</strong>.</p>
                     <div className="bg-red-50 text-red-700 p-3 rounded-lg border border-red-100">
                       <strong>⚠️ Crucial Steps for Live Channel:</strong>
                       <ol className="list-decimal list-inside mt-2 space-y-1">
@@ -810,7 +814,7 @@ Format:
               <label className="text-sm font-medium text-emerald-900">URL (Hidden)</label>
               <input
                 type="url"
-                placeholder="e.g. https://t.me/mppsc_pyq_questions"
+                placeholder="e.g. https://t.me/your_channel"
                 value={linkUrl}
                 onChange={(e) => setLinkUrl(e.target.value)}
                 className="w-full px-3 py-2 border border-emerald-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
