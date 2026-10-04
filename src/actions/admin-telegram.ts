@@ -81,9 +81,9 @@ export async function sendTelegramBotMessage(rawText: string, opts?: SendTelegra
   const token = process.env.TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_EVENTS_BOT_TOKEN;
   let chatId = (process.env.TELEGRAM_EVENTS_CHAT_ID || process.env.TELEGRAM_CHAT_ID || '');
   if (opts?.destination === 'live') {
-    chatId = '@MPPSCZenScroll';
+    chatId = process.env.NEXT_PUBLIC_MPPSC_TELEGRAM_CHAT_ID || '';
   } else if (opts?.destination === 'constable') {
-    chatId = '@zenmpconstable';
+    chatId = process.env.NEXT_PUBLIC_MP_POLICE_TELEGRAM_CHAT_ID || '';
   }
 
   if (!token || !chatId) {
@@ -232,9 +232,9 @@ export async function sendTelegramPolls(polls: TelegramPollData[], destination: 
   const token = process.env.TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_EVENTS_BOT_TOKEN;
   let chatId = (process.env.TELEGRAM_EVENTS_CHAT_ID || process.env.TELEGRAM_CHAT_ID || '');
   if (destination === 'live') {
-    chatId = '@MPPSCZenScroll';
+    chatId = process.env.NEXT_PUBLIC_MPPSC_TELEGRAM_CHAT_ID || '';
   } else if (destination === 'constable') {
-    chatId = '@zenmpconstable';
+    chatId = process.env.NEXT_PUBLIC_MP_POLICE_TELEGRAM_CHAT_ID || '';
   }
 
   if (!token || !chatId) {
