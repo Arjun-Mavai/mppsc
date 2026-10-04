@@ -20,7 +20,9 @@ const hostnames = [
 const nextConfig: NextConfig = {
   // ⚡ REACT 19 COMPILER - AUTO-MEMOIZATION
   reactCompiler: true,
-
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
   
   images: {
     remotePatterns: [
