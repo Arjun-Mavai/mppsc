@@ -65,11 +65,31 @@ export default function AboutPage() {
               </div>
               <div>
                 <dt className="font-semibold text-slate-500">Business location</dt>
-                <dd className="mt-1 text-slate-900">{COMPANY.country}</dd>
+                <dd className="mt-1 text-slate-900">{COMPANY.businessLocation}</dd>
               </div>
               <div>
-                <dt className="font-semibold text-slate-500">Founded</dt>
-                <dd className="mt-1 text-slate-900">{COMPANY.foundedYear}</dd>
+                <dt className="font-semibold text-slate-500">Enterprise classification</dt>
+                <dd className="mt-1 text-slate-900">{COMPANY.enterpriseClassification}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-slate-500">Major activity</dt>
+                <dd className="mt-1 text-slate-900">{COMPANY.majorActivity}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-slate-500">Business activity</dt>
+                <dd className="mt-1 text-slate-900">{COMPANY.businessActivity}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-slate-500">Business commencement</dt>
+                <dd className="mt-1 text-slate-900">{COMPANY.commencementDate}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-slate-500">Udyam registration date</dt>
+                <dd className="mt-1 text-slate-900">{COMPANY.udyamRegistrationDate}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-slate-500">Udyam Registration Number</dt>
+                <dd className="mt-1 text-slate-900">{COMPANY.udyamRegistrationNumber}</dd>
               </div>
               <div>
                 <dt className="font-semibold text-slate-500">Business contact</dt>
@@ -79,6 +99,17 @@ export default function AboutPage() {
                     className="text-indigo-700 underline underline-offset-2 hover:text-indigo-900"
                   >
                     {COMPANY.contactEmail}
+                  </a>
+                </dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-slate-500">Founder &amp; Partnerships</dt>
+                <dd className="mt-1">
+                  <a
+                    href={`mailto:${COMPANY.founderEmail}`}
+                    className="text-indigo-700 underline underline-offset-2 hover:text-indigo-900"
+                  >
+                    {COMPANY.founderEmail}
                   </a>
                 </dd>
               </div>

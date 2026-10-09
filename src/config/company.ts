@@ -1,6 +1,6 @@
 /**
  * Public company identity used consistently across the ZenScroll MPPSC site.
- * Private registration documents and registration numbers must not be exposed here.
+ * Keep public business details accurate and aligned with the Udyam certificate.
  */
 export const COMPANY = {
   legalName: 'ZENWEB TECH',
@@ -11,4 +11,11 @@ export const COMPANY = {
   contactEmail: 'mppsc@zenscroll.app',
   founderEmail: 'founder@zenscroll.app',
   foundedYear: 2026,
+  commencementDate: '6 March 2026',
+  udyamRegistrationDate: '8 March 2026',
+  udyamRegistrationNumber: 'UDYAM-MP-20-0106038',
+  enterpriseClassification: 'Micro Enterprise',
+  majorActivity: 'Services',
+  businessActivity: 'Computer programming and related activities',
+  businessLocation: 'Gwalior, Madhya Pradesh, India',
 } as const;

@@ -77,6 +77,18 @@ export default function ContactPage() {
                     </div>
                   </button>
 
+                  <a
+                    href={`mailto:${COMPANY.founderEmail}`}
+                    className="block rounded-2xl border border-violet-100 bg-violet-50 p-4 transition-colors hover:border-violet-300"
+                  >
+                    <p className="text-[17px] font-black tracking-tight text-violet-950">
+                      Founder &amp; Partnerships
+                    </p>
+                    <p className="mt-1 text-[11px] font-bold tracking-wider text-violet-700 uppercase">
+                      {COMPANY.founderEmail}
+                    </p>
+                  </a>
+
                   <button
                     onClick={() => {
                       const waNumber = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP_NUMBER || '917489388350';
