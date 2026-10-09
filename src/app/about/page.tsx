@@ -44,19 +44,21 @@ export default function AboutPage() {
               Company information
             </p>
             <h2 className="font-display text-2xl font-bold text-slate-900">
-              ZenScroll is built by {COMPANY.legalName}
+              {COMPANY.productName} is a product of {COMPANY.legalName}
             </h2>
             <p className="mt-3 leading-relaxed text-slate-600">
-              {COMPANY.productName} is an India-based education technology product operated by{' '}
-              <strong className="text-slate-800">{COMPANY.legalName}</strong>. We are building
-              digital learning tools for civil-services aspirants, beginning with bilingual syllabus
-              resources, previous-year question analysis, practice tests, and structured
-              answer-writing support for MPPSC.
+              {COMPANY.productName} is an India-based education technology product developed and
+              operated by <strong className="text-slate-800">{COMPANY.legalName}</strong>, a micro
+              enterprise registered under the Government of India&apos;s Udyam Registration system.
+              We are building digital learning tools for civil-services aspirants, beginning with
+              bilingual syllabus resources, previous-year question analysis, practice tests, and
+              structured answer-writing support for MPPSC.
             </p>
             <p className="mt-4 leading-relaxed text-slate-600">
               Our product roadmap includes AI-assisted study workflows such as structured
-              explanations, answer evaluation, and personalized practice. These workflows are
-              being developed and tested; they are not presented as guarantees of exam results.
+              explanations, answer evaluation, and personalized practice. These capabilities are
+              being developed and tested progressively and are not guarantees of examination
+              results.
             </p>
             <dl className="mt-6 grid gap-4 border-t border-slate-200 pt-6 text-sm sm:grid-cols-2">
               <div>
