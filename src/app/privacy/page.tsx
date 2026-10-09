@@ -4,9 +4,9 @@ import { contactEmail } from '../contact/page';
 import { COMPANY } from '@/config/company';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | Mindful MPPSC',
+  title: 'Privacy Policy | ZenScroll MPPSC',
   description:
-    'Privacy Policy for Mindful MPPSC — learn how we collect, use, and protect your data on our MPPSC exam preparation platform.',
+    'Privacy Policy for ZenScroll MPPSC, operated by ZENWEB TECH — learn how we collect, use, and protect your data.',
 };
 
 export default function PrivacyPolicyPage() {

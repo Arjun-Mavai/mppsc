@@ -3,6 +3,7 @@
 import UpgradePage from './upgrade/page';
 import dynamic from 'next/dynamic';
 import Script from 'next/script';
+import { COMPANY } from '@/config/company';
 
 const Testimonials = dynamic(() =>
   import('@/components/home/Testimonials').then((m) => m.Testimonials)
@@ -16,10 +17,10 @@ export default function Home() {
     mainEntity: [
       {
         '@type': 'Question',
-        name: 'Does Mindful MPPSC provide traditional textbook or PDF notes?',
+        name: `Does ${COMPANY.productName} provide traditional textbook or PDF notes?`,
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'No. Mindful MPPSC does not provide bulky, boring, or traditional textbook PDF notes to memorize blindly. Instead, we offer complete conceptual clarity of the entire syllabus, topic-by-topic structural breakdowns, smart explanations, and memory mnemonics for active retention.',
+          text: `No. ${COMPANY.productName} does not provide bulky, traditional textbook PDF notes to memorize blindly. Instead, we offer conceptual clarity of the syllabus, topic-by-topic structural breakdowns, smart explanations, and memory mnemonics for active retention.`,
         },
       },
       {
@@ -43,7 +44,7 @@ export default function Home() {
         name: 'Is the content fully bilingual in Hindi and English?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Yes, Mindful MPPSC is fully bilingual. All mock tests, PYQs, model answers, and strategic analytics are natively available in both Hindi and English with a single-click language toggle.',
+          text: `Yes, ${COMPANY.productName} is bilingual. Mock tests, PYQs, model answers, and strategic analytics are available in Hindi and English with a single-click language toggle.`,
         },
       },
     ],
@@ -56,7 +57,9 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
-      <h1 className="sr-only">Mindful MPPSC - Crack MPPSC 2026 with Bilingual Tests & Mnemonics</h1>
+      <h1 className="sr-only">
+        {COMPANY.productName} - MPPSC 2026 bilingual tests and mnemonics
+      </h1>
 
       <UpgradePage />
 
@@ -77,8 +80,8 @@ export default function Home() {
                 data-driven approach. With the introduction of the new{' '}
                 <strong>1/3rd negative marking system</strong> and the shift to{' '}
                 <strong>3 marks per question</strong>, accuracy is now your most valuable asset.
-                Mindful MPPSC is a leading platform designed to help you navigate these changes
-                effectively.
+                {COMPANY.productName} is a focused preparation platform designed to help you navigate
+                these changes effectively.
               </p>
 
               <h3 className="text-2xl font-bold text-slate-800">

@@ -48,9 +48,15 @@ export default function AboutPage() {
             </h2>
             <p className="mt-3 leading-relaxed text-slate-600">
               {COMPANY.productName} is an India-based education technology product operated by{' '}
-              <strong className="text-slate-800">{COMPANY.legalName}</strong>. It helps civil-services
-              aspirants prepare through bilingual syllabus tools, previous-year question analysis,
-              practice tests, and structured answer-writing resources.
+              <strong className="text-slate-800">{COMPANY.legalName}</strong>. We are building
+              digital learning tools for civil-services aspirants, beginning with bilingual syllabus
+              resources, previous-year question analysis, practice tests, and structured
+              answer-writing support for MPPSC.
+            </p>
+            <p className="mt-4 leading-relaxed text-slate-600">
+              Our product roadmap includes AI-assisted study workflows such as structured
+              explanations, answer evaluation, and personalized practice. These workflows are
+              being developed and tested; they are not presented as guarantees of exam results.
             </p>
             <dl className="mt-6 grid gap-4 border-t border-slate-200 pt-6 text-sm sm:grid-cols-2">
               <div>
@@ -80,23 +86,6 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
-
-      {/* Stats Section */}
-      {/* <section className="bg-white border-y border-slate-100">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 divide-x divide-slate-100">
-          {[
-            { label: 'Active Aspirants', value: '5,000+' },
-            { label: 'Mnemonics Created', value: '1,200+' },
-            { label: 'Questions Practiced', value: '1M+' },
-            { label: 'Success Rate', value: 'High' },
-          ].map((stat) => (
-            <div key={stat.label} className="p-6 md:p-8 text-center bg-white hover:bg-slate-50 transition-colors">
-              <div className="text-3xl md:text-4xl font-black text-slate-900 mb-1 tracking-tight">{stat.value}</div>
-              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-      </section> */}
 
       {/* Story / Problem-Solution */}
       <section className="px-4 py-20">
@@ -153,7 +142,7 @@ export default function AboutPage() {
             Ready to ace MPPSC 2026?
           </h2>
           <p className="mb-8 text-lg text-slate-400">
-            Join thousands of serious aspirants who are studying smarter, not harder.
+          Build a clearer MPPSC study workflow with structured practice and revision tools.
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link href="/pricing">

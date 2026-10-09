@@ -4,9 +4,9 @@ import { contactEmail } from '../contact/page';
 import { COMPANY } from '@/config/company';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | Mindful MPPSC',
+  title: 'Terms of Service | ZenScroll MPPSC',
   description:
-    'Terms of Service for Mindful MPPSC — the rules and guidelines for using our MPPSC exam preparation platform.',
+    'Terms of Service for ZenScroll MPPSC, operated by ZENWEB TECH — the rules for using our platform.',
 };
 
 export default function TermsOfServicePage() {
