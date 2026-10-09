@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Info, MessageSquare, Mail, Shield, FileText } from 'lucide-react';
+import { COMPANY } from '@/config/company';
 
 /**
  * AppFooter — Global Footer Component (Tapori Docs 🎬)
@@ -33,12 +34,13 @@ export function AppFooter() {
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 px-6 md:flex-row md:gap-6">
         {/* Brand Section */}
         <div className="order-last w-full text-center md:order-first md:w-auto md:text-left">
-          <p className="text-lg font-bold text-slate-900">Mindful MPPSC</p>
+          <p className="text-lg font-bold text-slate-900">{COMPANY.productName}</p>
+          <p className="mt-1 text-xs text-slate-500">A product of {COMPANY.legalName}</p>
           {/* <p className="mt-1 text-sm text-slate-500">
             House No. 29, Arjun Singh Gurjar, Ankaleshwar Avenue,<br />
             Sirol, Morar, Gwalior, Madhya Pradesh 474006
           </p> */}
-          <p className="mt-3 text-xs text-slate-400">© Mindful MPPSC. All rights reserved.</p>
+          <p className="mt-3 text-xs text-slate-400">© {COMPANY.legalName}. All rights reserved.</p>
           <p className="mt-1 text-[10px] font-medium text-slate-300">Made with ❤️ for MP</p>
         </div>
 

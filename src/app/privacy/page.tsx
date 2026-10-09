@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { contactEmail } from '../contact/page';
+import { COMPANY } from '@/config/company';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy | Mindful MPPSC',
@@ -26,7 +27,8 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-xl font-semibold text-slate-900">1. Data Collection Scope</h2>
             <p className="mt-3">
-              To provide a bespoke educational experience, Mindful MPPSC collects essential
+              To provide a bespoke educational experience, {COMPANY.legalName} (operating{' '}
+              {COMPANY.productName}) collects essential
               information including registration details (name, email), academic progress data (quiz
               scores, study time), and technical metadata to ensure platform stability and
               performance.
@@ -56,7 +58,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-xl font-semibold text-slate-900">4. Third-Party Disclosures</h2>
             <p className="mt-3">
-              Mindful MPPSC does not sell or trade your personal information. Data sharing is
+              {COMPANY.legalName} does not sell or trade your personal information. Data sharing is
               strictly limited to essential service providers (e.g., payment processors, hosting
               partners) who are contractually bound to maintain your privacy. Legal disclosures are
               made only when mandated by valid judicial or governmental orders.

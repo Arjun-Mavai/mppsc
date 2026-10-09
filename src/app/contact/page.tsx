@@ -4,9 +4,10 @@ import { Mail, Phone, Send } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ContactForm } from '@/components/ContactForm';
 import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon';
+import { COMPANY } from '@/config/company';
 
 import { useSettingsStore } from '@/store/useSettingsStore';
-export const contactEmail = 'mppsc@zenscroll.app';
+export const contactEmail = COMPANY.contactEmail;
 export default function ContactPage() {
   const { language } = useSettingsStore();
 
@@ -39,7 +40,10 @@ export default function ContactPage() {
             <h1 className="font-display text-4xl font-black tracking-tight text-slate-900 md:text-5xl">
               {t.title}
             </h1>
-            <p className="mx-auto max-w-2xl text-lg text-slate-500">{t.subtitle}</p>
+            <p className="mx-auto max-w-2xl text-lg text-slate-500">
+              {t.subtitle} This service is operated by {COMPANY.legalName}, the company behind{' '}
+              {COMPANY.brandName}.
+            </p>
           </div>
 
           <div className="grid gap-8 lg:grid-cols-3 lg:gap-12">

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { contactEmail } from '../contact/page';
+import { COMPANY } from '@/config/company';
 
 export const metadata: Metadata = {
   title: 'Terms of Service | Mindful MPPSC',
@@ -26,9 +27,9 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-xl font-semibold text-slate-900">1. Acceptance of Terms</h2>
             <p className="mt-3">
-              By accessing Mindful MPPSC (&ldquo;the Platform&rdquo;), you acknowledge that you have
+              By accessing {COMPANY.productName} (&ldquo;the Platform&rdquo;), you acknowledge that you have
               read, understood, and agree to be bound by these Terms of Service. These terms
-              constitute a legally binding agreement between you and Mindful MPPSC. We reserve the
+              constitute a legally binding agreement between you and {COMPANY.legalName}. We reserve the
               right to amend these terms at our discretion; continued usage after such amendments
               constitutes formal acceptance of the revised terms.
             </p>
@@ -61,7 +62,7 @@ export default function TermsOfServicePage() {
             </h2>
             <div className="mt-3 space-y-3">
               <p>
-                All content hosted on the Platform—including but not limited to study materials, syllabus breakdowns, mock test questions, explanatory notes, mnemonics, UI/UX designs, graphics, and codebase—is the exclusive intellectual property of <strong>Mindful MPPSC</strong> and is protected under applicable Indian and International Copyright and Trademark laws.
+                All content hosted on the Platform—including but not limited to study materials, syllabus breakdowns, mock test questions, explanatory notes, mnemonics, UI/UX                 designs, graphics, and codebase—is the exclusive intellectual property of <strong>{COMPANY.legalName}</strong> and is protected under applicable Indian and International Copyright and Trademark laws.
               </p>
               <p>
                 <strong>Prohibited Activities:</strong> Users and third parties are strictly prohibited from:
@@ -88,7 +89,7 @@ export default function TermsOfServicePage() {
                 access to digital content (test series, mnemonics, etc.), all purchases are final.
               </li>
               <li>
-                <strong>No Refunds:</strong> Under no circumstances shall Mindful MPPSC be liable to
+                <strong>No Refunds:</strong> Under no circumstances shall {COMPANY.legalName} be liable to
                 provide a refund once a subscription has been activated or digital content has been
                 accessed.
               </li>
@@ -102,7 +103,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-xl font-semibold text-slate-900">5. Limitation of Liability</h2>
             <p className="mt-3">
-              Mindful MPPSC provides educational tools on an &ldquo;as-is&rdquo; and
+              {COMPANY.legalName} provides educational tools on an &ldquo;as-is&rdquo; and
               &ldquo;as-available&rdquo; basis. While we strive for the highest degree of accuracy,
               we do not guarantee specific exam results or absolute factual error-freedom. To the
               maximum extent permitted by law, our liability is limited to the subscription fee paid

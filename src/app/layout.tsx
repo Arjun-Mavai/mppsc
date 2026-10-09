@@ -16,6 +16,7 @@ import dynamic from 'next/dynamic';
 import { VersionManager } from '@/components/VersionManager';
 import { PrintWatermark } from '@/components/PrintWatermark';
 import Script from 'next/script';
+import { COMPANY } from '@/config/company';
 
 const InstallPrompt = dynamic(() =>
   import('@/components/InstallPrompt').then((m) => m.InstallPrompt)
@@ -137,7 +138,7 @@ export default async function RootLayout({
   const websiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Mindful MPPSC',
+    name: COMPANY.productName,
     url: baseUrl,
     description:
       'The #1 App for MPPSC 2026 Preparation with Mnemonics, Bilingual Notes, Tests & Quizzes',
@@ -151,10 +152,17 @@ export default async function RootLayout({
   const organizationSchema = {
     '@context': 'https://schema.org',
     '@type': 'EducationalOrganization',
-    name: 'Mindful MPPSC',
+    name: COMPANY.legalName,
+    alternateName: COMPANY.productName,
     url: baseUrl,
     description: "India's first bilingual mnemonic-based MPPSC preparation platform",
-    sameAs: [],
+    email: COMPANY.contactEmail,
+    foundingDate: String(COMPANY.foundedYear),
+    areaServed: COMPANY.country,
+    brand: {
+      '@type': 'Brand',
+      name: COMPANY.brandName,
+    },
   };
 
   return (

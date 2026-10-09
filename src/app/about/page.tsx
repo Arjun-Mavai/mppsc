@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Brain, Target, Users, BookOpen, CheckCircle2 } from 'lucide-react';
+import { COMPANY } from '@/config/company';
 
 export default function AboutPage() {
   return (
@@ -29,10 +30,54 @@ export default function AboutPage() {
             with Science.
           </h1>
           <p className="mx-auto max-w-2xl text-lg leading-relaxed text-slate-600 md:text-xl">
-            We don't just give you Tests. We give you the{' '}
+            We don&apos;t just give you Tests. We give you the{' '}
             <span className="font-semibold text-slate-800">memory hooks</span> to retain them
-            forever. Mindful MPPSC is MP's first bilingual mnemonic-based learning platform.
+            forever. ZenScroll MPPSC is MP&apos;s bilingual mnemonic-based learning platform.
           </p>
+        </div>
+      </section>
+
+      <section className="bg-white px-4 py-16">
+        <div className="mx-auto max-w-3xl">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 md:p-8">
+            <p className="mb-2 text-xs font-bold tracking-widest text-indigo-600 uppercase">
+              Company information
+            </p>
+            <h2 className="font-display text-2xl font-bold text-slate-900">
+              ZenScroll is built by {COMPANY.legalName}
+            </h2>
+            <p className="mt-3 leading-relaxed text-slate-600">
+              {COMPANY.productName} is an India-based education technology product operated by{' '}
+              <strong className="text-slate-800">{COMPANY.legalName}</strong>. It helps civil-services
+              aspirants prepare through bilingual syllabus tools, previous-year question analysis,
+              practice tests, and structured answer-writing resources.
+            </p>
+            <dl className="mt-6 grid gap-4 border-t border-slate-200 pt-6 text-sm sm:grid-cols-2">
+              <div>
+                <dt className="font-semibold text-slate-500">Product</dt>
+                <dd className="mt-1 text-slate-900">{COMPANY.productName}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-slate-500">Business location</dt>
+                <dd className="mt-1 text-slate-900">{COMPANY.country}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-slate-500">Founded</dt>
+                <dd className="mt-1 text-slate-900">{COMPANY.foundedYear}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-slate-500">Business contact</dt>
+                <dd className="mt-1">
+                  <a
+                    href={`mailto:${COMPANY.contactEmail}`}
+                    className="text-indigo-700 underline underline-offset-2 hover:text-indigo-900"
+                  >
+                    {COMPANY.contactEmail}
+                  </a>
+                </dd>
+              </div>
+            </dl>
+          </div>
         </div>
       </section>
 
@@ -58,7 +103,7 @@ export default function AboutPage() {
         <div className="mx-auto max-w-3xl">
           <div className="prose prose-lg prose-slate mx-auto">
             <h2 className="font-display mb-6 text-3xl font-bold text-slate-900">
-              Why we started Mindful MPPSC?
+              Why we started ZenScroll MPPSC?
             </h2>
             <p className="mb-6 text-slate-600">
               The MPPSC syllabus is vast. History, Geography, Polity, MP GK, Ethics — the list goes
@@ -66,7 +111,7 @@ export default function AboutPage() {
               <strong>retaining</strong>.
             </p>
             <p className="mb-6 text-slate-600">
-              We realized that the traditional way of rote memorization wasn't working. Students
+              We realized that the traditional way of rote memorization wasn&apos;t working. Students
               were forgetting key facts in the exam hall due to stress.
             </p>
             <p className="mb-8 text-slate-600">
